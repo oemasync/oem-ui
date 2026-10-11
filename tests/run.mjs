@@ -7828,15 +7828,28 @@ check('the BUILT page ships a working guard, not a truncated comment', () => {
 });
 
 check('the copy button is bound once, however often init runs again', () => {
-	// init() runs on every astro:page-load and initCopy had no bind guard,
-	// so each run attached another click listener: one click, two clipboard
-	// writes. Measured in WebKit at 390px before the fix.
+	// init() runs on every astro:page-load, so the handler must be installed
+	// EXACTLY once: a second install writes the clipboard twice per click.
+	//
+	// The guard used to be per-button (`dataset.cmCopyBound`), which failed
+	// the case that actually happens in a consumer: a component framework
+	// re-renders and REPLACES the button node, so a listener bound to that
+	// node is gone while the button is still on screen. MEASURED live in the
+	// matrix-arrow client -- parsed true, bound false, clipboard empty. The
+	// handler is now delegated from the document with a module flag, so this
+	// asserts the mechanism that exists: one install, guarded, delegated.
 	const copy = /function initCopy[\s\S]*?\n\t}/.exec(runtimeSrc);
 	assert(copy, 'could not parse initCopy');
-	assert(/if \(btn\.dataset\.cmCopyBound\) return;/.test(copy[0]),
-		'initCopy has no bind guard, so astro:page-load double-binds every copy button');
-	assert(/btn\.dataset\.cmCopyBound\s*=\s*'1';/.test(copy[0]),
-		'the guard is never set, so it cannot skip a second bind');
+	assert(/if \(copyDelegated\) return;/.test(copy[0]),
+		'initCopy has no guard, so astro:page-load installs a second handler');
+	assert(/copyDelegated = true;/.test(copy[0]),
+		'the guard is never set, so it cannot skip a second install');
+	assert(/addEventListener\('click'/.test(copy[0]),
+		'the handler is not installed on the document; a per-node bind dies with the node when a consumer re-renders');
+	// The delegated handler must resolve the button from the event, not from
+	// a captured node -- otherwise delegation is delegation in name only.
+	assert(/closest\('\[data-cm-copy\]'\)/.test(copy[0]),
+		'the delegated handler never resolves [data-cm-copy] from the event target');
 });
 
 check('the showcase demonstrates copy with more than one block', () => {

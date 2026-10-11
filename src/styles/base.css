@@ -330,7 +330,7 @@ button:focus-visible,
 	.cm-prose { padding: 0; }
 }
 
-/* ============ prose type, in the component layer's reach ============
+/* ============ prose typography, in the component layer's reach ============
    Every declaration below is a bare-ELEMENT rule, and that is deliberate for
    a full install: a markdown renderer emits `<h2>`, `<ul>`, `<blockquote>`
    with no class on them, so the defaults have to come from the element.
