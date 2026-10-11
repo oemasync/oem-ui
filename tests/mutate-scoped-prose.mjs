@@ -73,8 +73,13 @@ const MUTATIONS = [
 	{
 		name: 'the prose link loses its same-element twin',
 		file: BASE,
-		from: ':where([data-cm-theme]) .cm-prose a,\n:where([data-cm-theme]).cm-prose a {',
-		to: ':where([data-cm-theme]) .cm-prose a {',
+		// A RENAME, not a deletion: deleting the line leaves the selector list's
+		// trailing comma dangling and the declarations outside a block, which is
+		// invalid CSS - the suite then dies in the build and the verdict is a
+		// compile error wearing a kill's clothes. Renaming keeps the file valid
+		// and removes exactly the coverage the check claims.
+		from: ':where([data-cm-theme]).cm-prose a {\n',
+		to: ':where([data-cm-theme]).cm-prose__gone a {\n',
 		expect: 'scoped prose: the prose link twin matches BOTH',
 	},
 	{
@@ -142,7 +147,12 @@ for (const m of MUTATIONS) {
 	const orig = originals.get(m.file);
 	writeFileSync(path, orig.replace(m.from, m.to));
 	const r = spawnSync('node', ['tests/run.mjs'], { cwd: ROOT, encoding: 'utf8' });
-	const fails = (r.stdout.match(/^  FAIL .*$/gm) || []).map((s) => s.trim());
+	// Failures print as `FAIL  <name>` at column 0, `ok` ones as `  ok  <name>`.
+	// A `/^  FAIL /` pattern matched NOTHING, so every kill in the first run
+	// was attributed to "(build failure, not an assertion)" - the sweep was
+	// reporting the right verdicts with the wrong evidence, which is how a
+	// suite that fails for an unrelated reason reads as proof.
+	const fails = (r.stdout.match(/^FAIL .*$/gm) || []).map((s) => s.trim());
 	// Which check caught it. The named check is the strongest evidence; a kill
 	// by some OTHER check is reported honestly rather than counted as proof
 	// that the intended check works.

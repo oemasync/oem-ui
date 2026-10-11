@@ -1076,8 +1076,14 @@ copy button, and `.cm-copy` is the button.
 </div>
 ```
 
-The runtime binds `[data-cm-copy]`; the value is the `id` of the block to
-copy. Or use the component, which throws at build time if you forget the
+The runtime binds `[data-cm-copy]`. The value is EITHER a CSS selector (the
+`id` of the block to copy, as above) OR the literal text to copy — the two are
+told apart by trying to parse the value as a selector, falling back to the
+literal when it does not parse or matches nothing. The literal form is what a
+caller reaches for when the text is not already in the DOM, and it used to fail
+silently: the value went straight to `querySelector`, so a message body read as
+a selector syntax error and the button still flipped to `copied` with an empty
+clipboard. Or use the component, which throws at build time if you forget the
 `id` rather than shipping a button that copies nothing:
 
 ```astro

@@ -16430,8 +16430,16 @@ console.log('\nshadcn-parity: guildrail + composer');
 		// wrong before they were right:
 		//   `:where([data-cm-theme])` alone          -> (0,0,0)
 		//   `pre > :where(code)`                     -> (0,0,1), losing its own size
-		assert(/:where\(\[data-cm-theme\]\) pre > code \{/.test(mirror),
+		// A shape test, and it has to be a shape test: the mirror legitimately
+		// carries `pre > code` TWICE (the base rule and the <680px responsive
+		// step), so asserting that the CORRECT spelling is present passes even
+		// when the other copy has been wrapped and the real one deleted - the
+		// mutation sweep found exactly that survivor. Forbid the broken shape
+		// outright, then require the good one.
+		assert(!/pre\s*>\s*:where\(/.test(mirror),
 			'a descendant pair must not wrap its ELEMENT in :where(): `pre > :where(code)` drops (0,0,2) to (0,0,1) and then loses its own font-size to the plainer `code` rule - measured 12px against 13.12px');
+		assert(/:where\(\[data-cm-theme\]\) pre > code \{/.test(mirror),
+			'the mirror has no `:where([data-cm-theme]) pre > code` rule at all');
 		// A rule whose ENTIRE selector is the bare :where([data-cm-theme]) is
 		// (0,0,0), and it loses to the generator's own theme block at (0,1,0).
 		const bareGated = [...mirror.matchAll(/(^|\})\s*(:where\(\[data-cm-theme\]\))\s*\{/gm)];
@@ -16452,6 +16460,16 @@ console.log('\nshadcn-parity: guildrail + composer');
 		assert(resp !== -1, 'the responsive --head-h1 step is not in the emitted entry');
 		assert(resp > theme,
 			'the responsive --head-h1 step is emitted BEFORE the theme block that ties it on specificity, so source order hands the win to 2rem and a 390px h1 renders 32px where a full install gives 31.2px');
+		// ...and the GENERATOR says so too. The emitted-order assertion above
+		// reads the artifact; a mutant that emits the responsive step twice
+		// survives it, because the LAST copy is still late. The source order
+		// is the mechanism, so assert the mechanism.
+		const scaleAt = genSrc.indexOf('the theme-INDEPENDENT scale, scoped');
+		const respAt = genSrc.indexOf('lines.push(scopedResponsiveTokens())');
+		assert(scaleAt !== -1 && respAt !== -1,
+			'the generator no longer has both token emitters, so this ordering claim is about nothing');
+		assert(respAt > scaleAt,
+			'the generator pushes the responsive step BEFORE the theme-INDEPENDENT scale block, which also declares --head-h1 at (0,1,0) - source order then hands the win to the scale block');
 	});
 
 	check('scoped prose: the prose link twin matches BOTH the ancestor and the same-element tree', () => {
@@ -16460,10 +16478,17 @@ console.log('\nshadcn-parity: guildrail + composer');
 		// container - it IS it. The ancestor-only spelling matches nothing
 		// there, and the twin would be inert on the consumer it exists for:
 		// MEASURED, the link still computed `underline`.
-		assert(/:where\(\[data-cm-theme\]\)\s+\.cm-prose a\b/.test(mirror),
+		// The lookahead is load-bearing. `\b` after `a` also matches `a:hover`,
+		// so the same-element requirement was satisfied by the HOVER twin and
+		// deleting the resting one passed - the mutation sweep found that
+		// survivor. Require the selector to end where the rule's declaration
+		// starts. Forbid the shape that would change the design, too.
+		assert(/:where\(\[data-cm-theme\]\)\s+\.cm-prose a(?=\s*[,{])/.test(mirror),
 			'the prose link has no ancestor-tree twin');
-		assert(/:where\(\[data-cm-theme\]\)\.cm-prose a\b/.test(mirror),
+		assert(/:where\(\[data-cm-theme\]\)\.cm-prose a(?=\s*[,{])/.test(mirror),
 			'the prose link has no SAME-ELEMENT twin, so it is inert on a consumer that puts data-cm-theme on the prose container itself');
+		assert(!/text-decoration:\s*underline/.test(mirror),
+			'a `text-decoration: underline` anywhere in the mirror changes the design: base.css REMOVES the underline, so the scoped twin has to remove it too rather than decorate a link the full install leaves plain');
 		// The value must be the full install's, or the "fix" changes the
 		// design instead of matching it. base.css REMOVES the underline; a
 		// scoped consumer otherwise keeps the UA default.

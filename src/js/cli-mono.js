@@ -490,9 +490,36 @@
 				if (btn.dataset.cmCopyBound) return;
 				btn.dataset.cmCopyBound = '1';
 				btn.addEventListener('click', function () {
-					var sel = btn.getAttribute('data-cm-copy');
-					var src = sel ? document.querySelector(sel) : btn.previousElementSibling;
-					var text = src ? (src.innerText || src.textContent) : '';
+					/* The attribute takes EITHER a CSS selector or the literal
+					   text to copy, and the two are told apart by trying to parse
+					   it as a selector. Before this, the value was ALWAYS passed
+					   to querySelector, so a caller who put the message body in
+					   the attribute -- the obvious reading of the name -- got a
+					   selector syntax error and an empty clipboard, with the
+					   button still flipping to 'copied'. MEASURED against the
+					   matrix-arrow client: data-cm-copy was being set to the
+					   message text, and Copy copied nothing at all while
+					   reporting success. */
+					var val = btn.getAttribute('data-cm-copy') || '';
+					var direct = false;
+					if (val) {
+						try {
+							document.querySelector(val);
+						} catch (e) {
+							direct = true;
+						}
+					}
+					var src = null;
+					if (!direct && val) {
+						src = document.querySelector(val);
+						/* A selector that parses but matches nothing is a caller
+						   meaning text, not a broken page: an element id with a
+						   quote in it parses as a selector and matches nothing. */
+						if (!src) direct = true;
+					} else if (!val) {
+						src = btn.previousElementSibling;
+					}
+					var text = direct ? val : (src ? (src.innerText || src.textContent) : '');
 					if (!text) return;
 					var original = btn.getAttribute('data-cm-label') || btn.textContent;
 					copyText(String(text).trim())
