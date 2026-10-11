@@ -5902,6 +5902,67 @@ button.cm-link:focus-visible {
 	}
 }
 
+/* ---------- the find-in-timeline bar ----------
+   `.cm-search` is a FIELD. What a reader searching a long transcript also
+   needs is the part that makes the search navigable: how many matches, and
+   a way to step through them. Every client ships this and none of it is a
+   new visual idea - so this adds no new shape, only the parts.
+
+   The counter is TEXT ("3 of 12"), not a dot or a chevron pair: a reader who
+   has just typed a term needs to know whether the timeline held anything at
+   all, and "0 of 0" is the answer that stops them retyping. It is a live
+   region so the count is announced as it changes - otherwise a screen-reader
+   user presses Enter and hears nothing.
+
+   The stepper's buttons are the house `--icon-btn`, so they inherit the tap
+   floor and the focus ring rather than re-deriving either. They are
+   disabled at the ends of the range rather than wrapping, because wrapping
+   hides how many matches there are. */
+.cm-findbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--tap);
+}
+.cm-findbar__count {
+	flex: 0 0 auto;
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	color: var(--ink-dim);
+	/* Tabular so stepping 12 -> 13 does not shift the buttons sideways by a
+	   digit's width, which reads as the row itself moving. */
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.cm-findbar__count--none { color: var(--ink-faint); }
+.cm-findbar__steppers {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex: 0 0 auto;
+}
+/* The match itself. A background wash plus an underline, never a hue on its
+   own: the hit has to be findable when the current match is scrolled off
+   and the others are all still on screen, which is the moment a colour-only
+   distinction is most likely to be the only thing distinguishing them.
+   `outline` rather than `border` so a match inside a tight row does not
+   change the row's measured height. */
+.cm-findbar__hit {
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: 0 0 0 2px var(--bg-3);
+	border-radius: var(--radius-sm);
+}
+/* The match the reader is ON. Double rule, no fill: it is distinguished by
+   the WEIGHT of the mark, not by swapping its colour, so it survives
+   greyscale and it is still obvious when the two sit adjacent. */
+.cm-findbar__hit--current {
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: 0 0 0 2px var(--ink);
+	font-weight: 600;
+}
+
 .cm-code {
 	width: 100%;
 	font-family: var(--font-mono);

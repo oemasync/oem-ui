@@ -2238,6 +2238,28 @@ button now empties its sibling `.cm-search__input`, dispatches a bubbling
 `input` event (so a listener can update its model), and returns focus to
 that input.
 
+### Finding in a long timeline
+
+`.cm-search` is a field. Searching a transcript needs three more things, and
+they are not a new visual idea - so `.cm-findbar` adds no new shape:
+
+- `.cm-findbar` wraps the field with `.cm-findbar__count` and
+  `.cm-findbar__steppers`. It is a flex row at the tap floor.
+- `.cm-findbar__count` is **text** ("3 of 12"), not a dot or a chevron pair.
+  A reader who has just typed a term needs to know whether the timeline held
+  anything, and "0 of 0" is the answer that stops them retyping. It is
+  `role="status"` `aria-live="polite"`: without it a screen-reader user
+  presses Enter and hears nothing at all. Tabular numerals, so stepping
+  12 -> 13 does not shift the steppers sideways by a digit's width.
+- `.cm-findbar__hit` marks a match with a background wash plus an
+  `outline`-based ring, never a hue alone - the current match is often
+  scrolled off screen while every other match is still visible, which is
+  exactly when a colour-only distinction is the only thing left to read.
+- `.cm-findbar__hit--current` is the match the reader is ON. It is
+  distinguished by the **weight of the rule** and by weight on the text,
+  not by swapping its colour, so it survives greyscale and stays obvious
+  when two marks sit adjacent.
+
 ### Sortable columns
 
 ```html

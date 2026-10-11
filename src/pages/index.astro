@@ -5570,6 +5570,41 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 								</svg>
 							</button>
 						</div>
+						<div class="cm-findbar">
+							<label class="cm-sr-only" for="q-find">Find in this room</label>
+							<div class="cm-search">
+								<span class="cm-search__icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+										<circle cx="11" cy="11" r="7" />
+										<line x1="16.5" y1="16.5" x2="21" y2="21" />
+									</svg>
+								</span>
+								<input id="q-find" class="cm-search__input" type="search" placeholder="find in this room…" value="receipt" autocomplete="off" />
+								<button type="button" class="cm-search__clear" aria-label="clear search">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+										<line x1="6" y1="6" x2="18" y2="18" />
+										<line x1="18" y1="6" x2="6" y2="18" />
+									</svg>
+								</button>
+							</div>
+							<p class="cm-findbar__count" role="status" aria-live="polite">3 of 12</p>
+							<div class="cm-findbar__steppers">
+								<button type="button" class="cm-icon-btn" aria-label="Previous match">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 15l-6-6-6 6" /></svg>
+								</button>
+								<button type="button" class="cm-icon-btn" aria-label="Next match">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+								</button>
+							</div>
+						</div>
+						<p class="cm-msglist__text cm-msglist__md" style="margin-top: var(--space-3);">
+							The <span class="cm-findbar__hit">receipt</span> landed on the server, then the
+							<span class="cm-findbar__hit cm-findbar__hit--current">receipt</span> resolved on the row,
+							and the third <span class="cm-findbar__hit">receipt</span> is still in flight.
+						</p>
+						<span class="cm-field__help">find-in-a-timeline: the counter is text and a live region, and a match is marked by weight, not hue.</span>
+						<p class="cm-findbar__count cm-findbar__count--none" role="status" aria-live="polite">0 of 0</p>
+						<span class="cm-field__help">no matches: <code>--none</code> drops the count to <code>--ink-faint</code>, so "the room does not contain this" reads differently from a count.</span>
 						<span class="cm-field__help">filled: the right gutter is derived from <code>--search-clear</code>, so the value never runs under the X.</span>
 					</div>
 				</div>
