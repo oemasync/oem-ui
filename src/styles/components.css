@@ -9278,6 +9278,106 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 }
 
+/* ---------- chat rich text ----------
+   The one rendering scope a chat row needs and `.cm-prose` is the wrong
+   shape for. `.cm-prose` is a LONG-FORM READING COLUMN: it owns heading
+   marks (h2::before '## '), a table, and a `--measure` cap for an article
+   page. A message row is none of those things - it is a wrapped run of
+   inline text inside an already-narrow column that must reach the right
+   edge, with no heading scale and no measure cap of its own.
+
+   So this scope adds only what inline chat text needs, and inherits
+   everything else. What it adds is measured against Discord and Element:
+
+   1. A LINK inside a message row keeps the tap floor. `.cm-inline-link`
+      already carries it, but it is registered against `.cm-prose a`, so a
+      row that is not inside a prose container gets the bare-`a` treatment
+      and a reader cannot reliably hit it on a phone. The rule is repeated
+      here so the class is self-sufficient.
+
+   2. INLINE CODE is a chip, not a smaller paragraph. It sits at
+      `--text-xs` in the mono face with a hairline box and a slight
+      vertical lift, because code in a sentence is read at a glance and the
+      `monospace` alone does not separate it from the words around it.
+
+   3. BLOCKQUOTE is a left rule, not a box: quoting inside a row would
+      otherwise draw a second frame inside a row that already has one.
+
+   4. A CODE BLOCK scrolls rather than growing the row, reusing
+      `.cm-code--scroll`'s measurement, and never escapes the row's width -
+      the row grid's `min-width: 0` is what makes that possible, so this
+      scope does NOT restate a width.
+
+   `--min-font` is the floor on every one of these, not `--text-xs`: the
+   library holds 12px as a hard floor and components.css loads after
+   base.css, so a floor declared there would lose the cascade. */
+.cm-msglist__md { color: var(--ink); overflow-wrap: break-word; }
+.cm-msglist__md p { margin: 0; }
+.cm-msglist__md p + p { margin-top: var(--space-2); }
+.cm-msglist__md a,
+.cm-msglist__md .cm-inline-link {
+	display: inline-block;
+	min-height: var(--tap);
+	padding: var(--space-3) 0;
+	margin: calc(var(--space-3) * -1) 0;
+	color: var(--ink-dim);
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-underline-offset: 0.18em;
+}
+.cm-msglist__md a:hover { color: var(--ink); }
+.cm-msglist__md code,
+.cm-msglist__md .cm-inline-code {
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	color: var(--ink);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	padding: 0 var(--space-1);
+}
+.cm-msglist__md pre {
+	margin: var(--space-2) 0 0;
+	max-height: 10rem;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	color: var(--ink-dim);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	padding: var(--space-2);
+}
+.cm-msglist__md pre code {
+	font-size: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	color: inherit;
+}
+.cm-msglist__md blockquote {
+	margin: var(--space-2) 0 0;
+	padding-inline-start: var(--space-3);
+	border-inline-start: 2px solid var(--line);
+	color: var(--ink-dim);
+}
+.cm-msglist__md strong { font-weight: 700; color: var(--ink); }
+.cm-msglist__md em { font-style: italic; }
+.cm-msglist__md ul,
+.cm-msglist__md ol { margin: var(--space-2) 0 0; padding-inline-start: var(--space-5); }
+.cm-msglist__md li + li { margin-top: var(--space-0); }
+/* A mention is the row's own reader, so it is marked with weight and a
+   pill rather than the hue a chat app usually reaches for - a hue is the
+   one signal that does not survive a dark theme, greyscale print, or a
+   red-green colour deficiency, and the text inside must keep clearing
+   AA at --min-font. */
+.cm-msglist__mention {
+	color: var(--ink);
+	font-weight: 600;
+	background: var(--bg-3);
+	padding: 0 var(--space-1);
+}
+
 .cm-auth {
 	min-height: 100dvh;
 	display: grid;

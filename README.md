@@ -2498,6 +2498,35 @@ frame, no radius), a file is `.cm-msglist__file` (a chip capped to
 `.cm-msglist__filenote`). The chip is a real link so a file opens without
 a second reader.
 
+A row that carries formatted text puts `.cm-msglist__md` on its
+`.cm-msglist__text`. It exists because `.cm-prose` is the WRONG shape
+for a message: `.cm-prose` is a long-form reading column that owns
+heading marks (`h2::before '## '`), a table and a `--measure` cap, and a
+row is none of those. What `.cm-msglist__md` adds is only what inline
+chat text needs, and it is deliberately flat:
+
+- a **link** keeps the `--tap` floor. `.cm-inline-link` already carries
+  it, but that rule is registered against `.cm-prose a`, so a row outside
+  a prose container would fall back to the bare-`a` treatment and could
+  not be reliably hit on a phone. The rule is repeated so the class is
+  self-sufficient; the negative margin is what stops the floor from
+  opening the row's line spacing.
+- **inline code** is a chip - mono, a hairline box, `--text-xs` floored
+  at `--min-font` - because monospace alone does not separate code from
+  the words around it at a glance.
+- a **code block** (`pre`) wraps and caps at 10rem rather than growing
+  the row forever, and the scope states NO width: the row grid's
+  `min-width: 0` is what keeps it inside the column.
+- a **blockquote** is a left rule, not a box - a framed quote would draw
+  a second frame inside a row that already has one.
+- **`.cm-msglist__mention`** marks a mention with weight and a pill
+  rather than a hue. A hue is the one signal that does not survive a dark
+  theme, greyscale print or a red-green colour deficiency, and the text
+  inside must still clear AA at `--min-font`.
+
+Sharp corners only: the chat family carries no radius, which is why the
+code chips here use no `border-radius` even though `--radius-sm` is `0`.
+
 The row grid is `--msglist-gutter` (the timestamp column) ·
 `--msglist-avatar` (the avatar column) · the message · a **reserved**
 `.cm-msglist__actions` track. Every part is placed explicitly on its
