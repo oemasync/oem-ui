@@ -7657,6 +7657,20 @@ input.cm-slider:disabled {
 	opacity: 1;
 	pointer-events: auto;
 }
+/* ...and on a TOUCH device none of that happens. `:hover` needs a pointer
+   that can hover: on a coarse pointer it never matches, so the only rule that
+   reveals the toolbar can never fire and the controls are invisible AND
+   untappable -- a touch user cannot act on a message at all. A phone has no
+   hover, so the toolbar is simply always present there (it rides the row
+   absolutely and does not reserve space, so showing it costs no layout).
+   Gated on `hover: none` rather than a width: a narrow DESKTOP window still
+   has a mouse, and a tablet with a trackpad still has hover. */
+@media (hover: none) {
+	.cm-msglist__actions {
+		opacity: 1;
+		pointer-events: auto;
+	}
+}
 /* Delivery state, on the reader's OWN rows only. It rides the meta line,
    which is where a row already says when it was sent, so that is where it
    says whether anyone has seen it. Text, never a glyph: a tick is unreadable
