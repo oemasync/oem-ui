@@ -1102,6 +1102,16 @@ clipboard. Or use the component, which throws at build time if you forget the
 
 Three decisions that are not obvious from the CSS:
 
+- **The copy listener is DELEGATED from the document, never bound per
+  button.** A component framework that re-renders -- React, and the
+  matrix-arrow client is React -- REPLACES the button node, so a listener
+  attached at `init()` dies with the node it was attached to: the button is
+  plainly on screen, the click does nothing, and the clipboard stays empty.
+  MEASURED live: `parsed: true, bound: false` on every click. One delegated
+  listener also removes the double-bind guard the per-button loop needed,
+  because a second `init()` cannot add a second handler -- before, a re-init
+  made one click write the clipboard twice and flicker the label through two
+  state changes.
 - **The button composes `.cm-btn`; it does not re-implement one.** A
   parallel skin would be a second button implementation, and the tap-floor
   bug `.cm-btn` already had would simply recur there.
