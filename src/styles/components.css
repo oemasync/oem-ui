@@ -7615,6 +7615,16 @@ input.cm-slider:disabled {
 }
 .cm-msglist__meta {
 	display: flex;
+	/* WRAPS, and that is the whole fix for a state chip on a phone. The meta
+	   line is one flex line inside the row's main track, which at 402px is
+	   ~148px: an author, a stamp and a delivery state do not fit, and a
+	   non-shrinkable chip does not overflow its line gracefully -- it runs
+	   past the row and gets clipped by the transcript (measured: chip right
+	   edge 452 in a 402 viewport, past its own 365px header). Wrapping moves
+	   the chip to a second line inside the same track instead, so nothing is
+	   hidden and nothing is lost. On a wide screen the line never overflows,
+	   so this changes nothing there. */
+	flex-wrap: wrap;
 	align-items: baseline;
 	gap: var(--space-2);
 	margin: 0;
@@ -7657,6 +7667,11 @@ input.cm-slider:disabled {
 .cm-msglist__sent {
 	font-size: var(--text-micro);
 	color: var(--ink-dim);
+	/* A state is read as a unit -- "Seen by 3" broken across two lines stops
+	   reading as one. `flex: 0 0 auto` keeps the chip whole and lets the meta
+	   line's wrap decide where it goes. */
+	flex: 0 0 auto;
+	white-space: nowrap;
 }
 /* Seen is the one that settles: --ink against the row's dim meta reads as
    "this one landed" without a second colour, and the state is a receipt, so
