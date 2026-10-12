@@ -129,6 +129,108 @@ elements, an outside click refused declaratively by
 `closedby="closerequest"`, Escape still closing, and every action button
 actually settling its dialog (the foot buttons were `type="submit"`
 outside any form, so both actions were inert).
+## Unreleased - the scoped prose mirror
+
+- **`.cm-prose` now renders identically on a SCOPED adoption.** `components.css`
+  declares `.cm-prose` with only `color` and `font-size`; every typographic
+  declaration a reader sees lives in `base.css` as a bare-element rule, and a
+  scoped consumer (`make-scoped-entry.mjs`) cannot import that file at all.
+  MEASURED in WebKit at 390px and 1280px, the same classless prose fixture
+  rendered both ways: **786 deltas across 38 properties**. `pre > code` lost
+  `display: block`, collapsing six lines of code into one paragraph; `td`
+  padding went `0.6em` -> `0`; `blockquote` background went `--bg-2` ->
+  transparent; 74 of 76 elements read `font-family: -webkit-standard` instead
+  of the mono stack. That is not a degraded render of the design system, it is
+  a different one - and it is why `hermes-articles`, which already renders
+  `class="article-content cm-prose"`, still carries ~120 lines of local forks.
+
+  `make-scoped-entry.mjs` now also emits those rules, **extracted** from
+  `base.css` at build time between two banner comments, so they are never
+  retyped and cannot drift from the full install. The same fingerprint now
+  reports **zero deltas** at both widths.
+
+  Four specificity findings came out of it, each MEASURED after the previous
+  fix rather than assumed:
+  - `:where([data-cm-theme]) <element>` contributes nothing to specificity, so
+    it is still (0,0,1) against bare `<element>`'s (0,0,1) - which is why the
+    full install stays a pixel-level no-op.
+  - A bare `:where([data-cm-theme])` is **(0,0,0)**: `:where()` zeroes its
+    ENTIRE argument, not just what it wraps, so the token mirror loses to the
+    generator's own `[data-cm-theme='dark']` block. The mirror keeps an
+    ancestor OUTSIDE the `:where()` and is emitted after that block.
+  - `pre > :where(code)` drops the pair from (0,0,2) to (0,0,1) and it then
+    loses its own `font-size` to the plainer `code` rule - 12px against 13.12px.
+  - The responsive block (`body`, `h1`, `pre` at 680px and under) exists in
+    base.css alone, and a mirror emitted before the rules it overrides silently
+    loses: h1 32px against 31.2px.
+
+  Guards: six contract checks in `tests/run.mjs`, each mutation-proven by
+  `tests/mutate-scoped-prose.mjs`; `tests/verify-scoped-prose.py` renders both
+  adoptions in WebKit and diffs 61 properties per element.
+
+- **Fix: a contract test scoped itself with a phrase instead of a position.**
+  `form controls are element defaults` sliced base.css from
+  `indexOf('form controls')`, which matches the first mention of those two
+  words ANYWHERE in the file - so a comment above the section that named them
+  moved the slice into that comment and the check reported the font-size
+  declaration missing while neither the section nor the value had changed. It
+  now anchors on the section's own banner.
+
+## Unreleased - hero and gradient text
+
+- **`.cm-hero`, `.cm-hero__title`, `.cm-hero__lede`, `.cm-hero__actions`.**
+  The landing composition. It exists because the library's `main` is a
+  READING column (`--maxw: 860px`) and a hero is not prose: five consumer
+  sites each shipped their own `main { width: auto; max-width: none }` to
+  escape it. The width decision now lives on the block that wants it.
+  `.cm-hero__title` is the library's first fluid ramp, floored at
+  `--head-h1` and capped at `4rem`, because a page title must not shift
+  between routes but a hero title is the one thing allowed to be large.
+  The action row's divider is a `::before` on the ROW, never a flex item,
+  so no wrapped line can end with one.
+
+- **`.cm-grad-text` / `.cm-grad-text--none`.** `background-clip: text` as
+  a component, and the system's one painted-surface primitive. The whole
+  rule lives inside an `@supports` gate: the mechanism needs
+  `color: transparent`, which without the clip is INVISIBLE TEXT - the
+  failure every hand-rolled gradient headline shares. The library ships no
+  colour (it is deliberately zero-chroma); the consumer sets
+  `--cm-grad-from` / `--cm-grad-to`, which is why declaring them on the
+  element makes the pair follow `data-theme` for free. Both fall back to
+  `currentColor`, never `transparent`, so an unset stop is flat text
+  rather than nothing. `--none` is the stop sign for forced colours,
+  print, and engines without the clip.
+
+- **Fix: the auth-surface contract test judged the whole tail of the
+  stylesheet.** Its block slice ran from `.cm-auth {` to end of file, so
+  every rule written after the auth block was checked as part of it -
+  adding `.cm-hero` made it report six unrelated classes as "a private
+  vocabulary". It now walks to the next brace-depth-0 rule. The narrowed
+  check is still real: a private class inside the auth block is still
+  killed.
+
+## Unreleased - emoji grid
+
+- **`.cm-popover__emoji` / `.cm-popover__emoji-item` /
+  `.cm-popover__emoji-btn`.** A chat could show reactions but there was no
+  way to CHOOSE one, so a reader could only toggle a key that already
+  existed. The grid is square `--tap` cells in a `repeat(auto-fill,
+  minmax(--tap, 1fr))` track — measured in WebKit at 390px, where a list
+  of full-width rows needed a sideways scroll to reach its last row. Each
+  cell is a real `<button>` with an `aria-label` and an `aria-pressed`
+  that carries the chosen state, and the whole thing sits inside the
+  existing `.cm-popover`, so light dismiss, Escape and focus return are
+  the platform's rather than ours.
+
+## Unreleased - media rows in the message list
+
+- **`.cm-msglist__media` / `.cm-msglist__file`.** The message list could
+  show text and reactions but not the image/file a chat actually sends.
+  An image is a `<figure>` in the row's `main` column capped to
+  `--measure-narrow`; a file is a chip capped to `--measure-title` with
+  `.cm-msglist__filetitle` and `.cm-msglist__filenote`, and the chip is a
+  real link so tapping it opens the file. Both are hairline-only to match
+  the chat family's sharp corners.
 
 ## Unreleased - sidebar mention badge
 

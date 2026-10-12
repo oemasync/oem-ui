@@ -48,7 +48,7 @@ import SectionHead from '../astro/SectionHead.astro';
  *
  * The rail is a scroll-spy, and a scroll-spy is only as good as the order
  * it is given. This was hand-written next to a hand-written list of nav
- * links, and the two drifted: the nav said `lists -> states -> ... ->
+ * links, and the two drifted: the nav said `lists --> states --> ... -->
  * layout -> forms` while the DOM had `forms` sitting right after `lists`,
  * so scrolling lit up `forms` early and then jumped BACK UP to `states`.
  *
@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'cards', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -82,7 +82,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["surfaces", 7],
 	["tables", 6],
 	["panels", 6],
-	["content", 3],
+	["content", 4],
 	["prose", 6],
 	["layout", 7],
 	["composed", 8],
@@ -2658,6 +2658,34 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 					<button type="button" class="cm-btn" data-cm-open="alert-demo">delete a record&hellip;</button>
 				</div>
 
+				<h3 class="cm-kicker">emoji grid</h3>
+				<p>
+					<code>.cm-popover__emoji</code> is the chooser half of a
+					reaction picker: a fixed grid of square cells, each a real
+					button, so a new reaction can be chosen rather than only
+					toggled. Light dismiss, Escape and focus return all come
+					from the platform's <code>[popover]</code>, the same way
+					<code>.cm-popover</code> above gets them.
+				</p>
+				<div class="cm-btn-group">
+					<button type="button" class="cm-btn" popovertarget="pop-emoji" aria-haspopup="dialog">
+						add reaction
+					</button>
+				</div>
+				<div class="cm-popover" id="pop-emoji" popover role="dialog" aria-labelledby="pop-emoji-title">
+					<p class="cm-popover__title" id="pop-emoji-title">pick a reaction</p>
+					<ul class="cm-popover__emoji">
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="thumbs up">&#128077;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="joy">&#128514;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="heart">&#10084;&#65039;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="fire">&#128293;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="true" aria-label="already reacted">&#128075;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="rocket">&#128640;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="eyes">&#128064;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="thinking">&#129300;</button></li>
+						<li class="cm-popover__emoji-item"><button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="check">&#10004;&#65039;</button></li>
+					</ul>
+				</div>
 				<dialog class="cm-dialog" id="dlg-demo" aria-labelledby="dlg-demo-title">
 					<form method="dialog" class="cm-dialog__head">
 						<h3 class="cm-dialog__title" id="dlg-demo-title">Close the build?</h3>
@@ -3386,6 +3414,95 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 							</div>
 						</aside>
 					</div>
+				</div>
+			</section>
+			)}
+
+			<!-- ==================================================== hero
+			     The landing composition. It exists because the
+			     library's `main` is a READING column (--maxw: 860px)
+			     and a hero is not prose: five consumer sites each
+			     shipped their own `main { width: auto; max-width: none }`
+			     to escape it. The width decision now lives on the
+			     block that wants it, and `main` keeps its measure.
+
+			     Both gradient specimens below carry the SAME class
+			     and differ only in the two custom properties. That is
+			     the contract: the library owns the mechanism (the clip,
+			     the transparent colour, the safe fallback) and the
+			     consumer owns the two stops. The second one is
+			     deliberately declared on the ELEMENT, not on :root,
+			     which is how a consumer makes the pair per-theme -
+			     a property resolved on the element follows data-theme
+			     for free, with no second rule and no dark-mode copy.
+
+			     `.cm-grad-text--none` is shown for the same reason
+			     `.cm-shimmer--none` is: an escape hatch nobody can
+			     see is not a guarantee. -->
+			{shows('content') && (
+			<section id="hero" class="cm-section cm-section--pad">
+				<SectionHead title="Hero and gradient text">
+					The landing block, and the one painted-surface
+					primitive in the system. <code>.cm-hero</code> is
+					self-sizing and centred, so a page that wants a landing
+					width applies it and <code>main</code> keeps its reading
+					measure. The title is a ramp between
+					<code>--head-h1</code> and <code>4rem</code> — the
+					first fluid clamp in the library, because a page title must
+					not shift between routes but a hero title is the one thing
+					allowed to be large.
+				</SectionHead>
+
+				<div class="cm-hero cm-card">
+					<p class="cm-kicker cm-kicker--plain">oem-ui</p>
+					<h2 class="cm-hero__title">
+						Everything your oem site needs,
+						<span class="cm-grad-text">down to the colour of the headline</span>.
+					</h2>
+					<p class="cm-lede cm-hero__lede">
+						Tokens, components and a runtime, with zero dependencies —
+						and the measured fixes that keep working after the site stops
+						shipping its own copy of the button.
+					</p>
+					<div class="cm-hero__actions">
+						<a class="cm-btn cm-btn--primary" href="#hero">Read the docs</a>
+						<a class="cm-btn" href="#hero">Browse components</a>
+					</div>
+				</div>
+
+				<p class="cm-head__sub">
+					The gradient is <code>background-clip: text</code>, which is
+					invisible text if the clip does not apply — so the whole rule lives
+					inside an <code>@supports</code> gate, the same guard
+					<code>.cm-shimmer</code> uses. The stops are yours: the library is
+					zero-chroma, so it owns the mechanism and never the colour.
+				</p>
+				<div class="cm-hero cm-card">
+					<h3 class="cm-hero__title" style="--cm-grad-from:#7a4bd0;--cm-grad-to:#2ea3c7">
+						<span class="cm-grad-text">Two stops, declared on the element</span>
+					</h3>
+					<p class="cm-lede cm-hero__lede">
+						A property resolved on the element follows
+						<code>data-theme</code> for free. The stops below are a PAIR —
+						a gradient whose leading step fails contrast on the page is a
+						bug with a smooth edge, because the half that passes is the
+						half that hides it.
+					</p>
+					<div class="cm-hero__actions">
+						<span class="cm-chip">--cm-grad-from</span>
+						<span class="cm-chip">--cm-grad-to</span>
+						<span class="cm-chip">--cm-grad-angle</span>
+					</div>
+				</div>
+
+				<p class="cm-head__sub">
+					The stop sign. Forced colours, print, or an engine without the
+					clip all land here, and <strong>the text is ink, not a blank</strong>:
+				</p>
+				<div class="cm-hero cm-card">
+					<h3 class="cm-hero__title">
+						<span class="cm-grad-text cm-grad-text--none">Plain text when the clip is gone</span>
+					</h3>
 				</div>
 			</section>
 			)}
@@ -5348,6 +5465,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 <header class="cm-msglist__meta">
 												<span class="cm-msglist__author">alex</span>
 												<time class="cm-msglist__stamp" datetime="2026-10-10T11:12">Today at 11:12 AM</time>
+												<span class="cm-msglist__sent cm-msglist__sent--seen">Seen</span>
 											</header>
 											<div class="cm-msglist__text">branch is cut - review the migration step before you approve.</div>
 											<div class="cm-msglist__reactions" role="group" aria-label="Reactions">
@@ -5416,6 +5534,63 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 											</header>
 											<div class="cm-msglist__text">you were mentioned in #build</div>
 										</div>
+										<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
+											<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
+											<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
+											<button type="button" class="cm-icon-btn" aria-label="More actions">⋯</button>
+										</div>
+									</article>
+									<article class="cm-scroller__item cm-msglist__msg cm-msglist__msg--grouped" data-message-id="ml9" data-scroll-anchor>
+										<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:47">11:47</time></div>
+										<span class="cm-msglist__avatar" aria-hidden="true"></span>
+										<div class="cm-msglist__main">
+											<figure class="cm-msglist__media">
+												<img src="https://picsum.photos/seed/build-capture/960/540" alt="A build capture from the CI job" loading="lazy" />
+											</figure>
+											<div class="cm-msglist__text">the runbook capture from this morning.</div>
+										</div>
+										<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
+											<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
+											<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
+											<button type="button" class="cm-icon-btn" aria-label="More actions">⋯</button>
+										</div>
+									</article>
+									<article class="cm-scroller__item cm-msglist__msg" data-message-id="ml10" data-scroll-anchor>
+										<div class="cm-msglist__gutter"><time class="cm-msglist__stamp" datetime="2026-10-10T11:52">Today at 11:52 AM</time></div>
+										<span class="cm-avatar cm-avatar--sm cm-msglist__avatar" aria-hidden="true">PO</span>
+										<div class="cm-msglist__main">
+											<header class="cm-msglist__meta">
+												<span class="cm-msglist__author">priya</span>
+												<time class="cm-msglist__stamp" datetime="2026-10-10T11:52">Today at 11:52 AM</time>
+											</header>
+											<a class="cm-msglist__file" href="#msglist" aria-label="Download sales-dashboard.pdf">
+												<span class="cm-msglist__filetitle">sales-dashboard.pdf</span>
+												<span class="cm-msglist__filenote">4.2 MB · PDF</span>
+											</a>
+											</div>
+											<article class="cm-scroller__item cm-msglist__msg" data-message-id="ml11" data-scroll-anchor>
+											<div class="cm-msglist__gutter"><time class="cm-msglist__stamp" datetime="2026-10-10T11:53">Today at 11:53 AM</time></div>
+											<span class="cm-avatar cm-avatar--sm cm-msglist__avatar" aria-hidden="true">KT</span>
+											<div class="cm-msglist__main">
+												<header class="cm-msglist__meta">
+													<span class="cm-msglist__author">kai</span>
+														<time class="cm-msglist__stamp" datetime="2026-10-10T11:53">Today at 11:53 AM</time>
+												</header>
+												<div class="cm-msglist__text cm-msglist__md">
+													<p>Rolling it back now — <strong>redaction wins</strong> over the edit, and the <code class="cm-inline-code">m.replace</code> event stays on the wire.</p>
+													<p><span class="cm-msglist__mention">@omiinaya</span> can you confirm the read marker lands before I close this out?</p>
+													<blockquote>the sync was already delivering this row before the receipt went out</blockquote>
+													<pre><code>curl -XPOST /rooms/$ROOM/receipt/m.read/$EVENT -d '{}'</code></pre>
+													<ul><li>re-receipt with <code>room.getEventReadUpTo</code></li><li>then the divider</li></ul>
+													<p>Full trace in the <a class="cm-inline-link" href="#msglist">runbook</a>.</p>
+												</div>
+											</div>
+											<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
+												<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
+												<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
+												<button type="button" class="cm-icon-btn" aria-label="More actions">⋯</button>
+											</div>
+											</article>
 										<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
 											<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
 											<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
@@ -5741,6 +5916,41 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 								</svg>
 							</button>
 						</div>
+						<div class="cm-findbar">
+							<label class="cm-sr-only" for="q-find">Find in this room</label>
+							<div class="cm-search">
+								<span class="cm-search__icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+										<circle cx="11" cy="11" r="7" />
+										<line x1="16.5" y1="16.5" x2="21" y2="21" />
+									</svg>
+								</span>
+								<input id="q-find" class="cm-search__input" type="search" placeholder="find in this room…" value="receipt" autocomplete="off" />
+								<button type="button" class="cm-search__clear" aria-label="clear search">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+										<line x1="6" y1="6" x2="18" y2="18" />
+										<line x1="18" y1="6" x2="6" y2="18" />
+									</svg>
+								</button>
+							</div>
+							<p class="cm-findbar__count" role="status" aria-live="polite">3 of 12</p>
+							<div class="cm-findbar__steppers">
+								<button type="button" class="cm-icon-btn" aria-label="Previous match">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 15l-6-6-6 6" /></svg>
+								</button>
+								<button type="button" class="cm-icon-btn" aria-label="Next match">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+								</button>
+							</div>
+						</div>
+						<p class="cm-msglist__text cm-msglist__md" style="margin-top: var(--space-3);">
+							The <span class="cm-findbar__hit">receipt</span> landed on the server, then the
+							<span class="cm-findbar__hit cm-findbar__hit--current">receipt</span> resolved on the row,
+							and the third <span class="cm-findbar__hit">receipt</span> is still in flight.
+						</p>
+						<span class="cm-field__help">find-in-a-timeline: the counter is text and a live region, and a match is marked by weight, not hue.</span>
+						<p class="cm-findbar__count cm-findbar__count--none" role="status" aria-live="polite">0 of 0</p>
+						<span class="cm-field__help">no matches: <code>--none</code> drops the count to <code>--ink-faint</code>, so "the room does not contain this" reads differently from a count.</span>
 						<span class="cm-field__help">filled: the right gutter is derived from <code>--search-clear</code>, so the value never runs under the X.</span>
 					</div>
 				</div>

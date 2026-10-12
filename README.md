@@ -334,6 +334,45 @@ class is load-bearing, not decorative.
 Use `.cm-surface--flat` if your app already paints its own fixed chrome, so
 the library does not composite a second vignette over it.
 
+#### `.cm-prose` renders identically on a scoped adoption (it did not before)
+
+`.cm-prose` declares only `color` and `font-size` in `components.css`. Every
+typographic declaration a reader actually sees — the heading ramp, the `p`
+rhythm, `code`/`pre` fill and `pre > code`'s `display: block`, the blockquote,
+the table's `border-collapse` and cell padding — lived in `base.css` as a
+bare-element rule, which a scoped adoption cannot import.
+
+**MEASURED**, the same classless prose fixture rendered both ways in WebKit at
+390px and 1280px: **786 deltas across 38 properties**. `pre > code` lost
+`display: block`, so six lines of code collapsed into a single paragraph; `td`
+padding went `0.6em` → `0`; `blockquote`’s background went `--bg-2` →
+transparent; and 74 of 76 elements read `font-family: -webkit-standard`
+instead of the mono stack. That is not a degraded render of our design system,
+it is a different one.
+
+The generator now also emits those rules, extracted from `base.css` at build
+time (the banners `/* ============ prose typography …` and
+`/* ============ form controls …` are the block's boundaries, so the rules are
+never retyped and cannot drift). The mirror renders **identically** — the same
+fingerprint now reports **zero deltas** at both widths.
+
+Three things worth knowing if you maintain the block:
+
+- **`:where()` is doing real work.** `:where([data-cm-theme]) h2` contributes
+  nothing to specificity, so it is still (0,0,1) — exactly what bare `h2` was.
+  That is what makes the full install a pixel-level no-op. But `:where()`
+  zeroes its **entire** argument, not just what it wraps, so
+  `:where([data-cm-theme])` alone is **(0,0,0)** and loses to the theme block,
+  and `pre > :where(code)` drops (0,0,2) to (0,0,1) and loses its own size.
+  Both shapes were measured wrong before they were right.
+- **It covers prose, not the page.** `body`, `main`, the scrollbar and the
+  form controls are deliberately out — a scoped consumer owns its own page
+  chrome. Use `.cm-surface` for the paint.
+- **It is engine-verified, not just asserted.** `tests/verify-scoped-prose.py`
+  renders the fixture both ways in WebKit and diffs 61 properties per element;
+  a nonzero delta fails. `tests/mutate-scoped-prose.mjs` proves each contract
+  check can actually fail.
+
 #### A SPA no longer needs to call `init()` by hand
 
 The runtime used to require it, and the README said so. As of the
@@ -836,6 +875,34 @@ which buys light-dismiss, `Escape` and focus return for free.
   `display` outranks it — without this rule a consumer's reset leaves a
   menu on screen that the author closed.
 
+**`.cm-popover__emoji`** — the chooser half of a reaction picker, sized
+to live inside the existing `.cm-popover` so the trigger supplies the
+frame, light dismiss, `Escape` and focus return.
+
+```html
+<div class="cm-popover" id="pop-emoji" popover role="dialog" aria-labelledby="pop-emoji-title">
+  <p class="cm-popover__title" id="pop-emoji-title">pick a reaction</p>
+  <ul class="cm-popover__emoji">
+    <li class="cm-popover__emoji-item">
+      <button type="button" class="cm-popover__emoji-btn" aria-pressed="false" aria-label="thumbs up">👍</button>
+    </li>
+  </ul>
+</div>
+```
+
+- A grid of square cells, not a list. The whole affordance is "pick one
+  of these", so the cells must be equal and equidistant. Measured in
+  WebKit at 390px: full-width rows forced a sideways scroll to reach the
+  last one; a `repeat(auto-fill, minmax(--tap, 1fr))` grid wraps inside
+  the popover's own `max-width`.
+- The cell is `--tap`, so it is a real touch target at any root size with
+  no coarse-pointer override, and the glyph is `calc(--tap * 0.55)` so it
+  cannot overflow its cell.
+- Every cell is a real `<button>` with an `aria-label`: a grid of `div`s
+  would read as an image and take no keyboard focus. `aria-pressed` marks
+  the key the reader has already chosen and carries the filled state, so
+  the selection survives the popover closing.
+
 **`.cm-tooltip`** — a real element, revealed by `:hover` and
 `:focus-within`. No JavaScript at all.
 
@@ -1009,8 +1076,14 @@ copy button, and `.cm-copy` is the button.
 </div>
 ```
 
-The runtime binds `[data-cm-copy]`; the value is the `id` of the block to
-copy. Or use the component, which throws at build time if you forget the
+The runtime binds `[data-cm-copy]`. The value is EITHER a CSS selector (the
+`id` of the block to copy, as above) OR the literal text to copy — the two are
+told apart by trying to parse the value as a selector, falling back to the
+literal when it does not parse or matches nothing. The literal form is what a
+caller reaches for when the text is not already in the DOM, and it used to fail
+silently: the value went straight to `querySelector`, so a message body read as
+a selector syntax error and the button still flipped to `copied` with an empty
+clipboard. Or use the component, which throws at build time if you forget the
 `id` rather than shipping a button that copies nothing:
 
 ```astro
@@ -1029,6 +1102,16 @@ copy. Or use the component, which throws at build time if you forget the
 
 Three decisions that are not obvious from the CSS:
 
+- **The copy listener is DELEGATED from the document, never bound per
+  button.** A component framework that re-renders -- React, and the
+  matrix-arrow client is React -- REPLACES the button node, so a listener
+  attached at `init()` dies with the node it was attached to: the button is
+  plainly on screen, the click does nothing, and the clipboard stays empty.
+  MEASURED live: `parsed: true, bound: false` on every click. One delegated
+  listener also removes the double-bind guard the per-button loop needed,
+  because a second `init()` cannot add a second handler -- before, a re-init
+  made one click write the clipboard twice and flicker the label through two
+  state changes.
 - **The button composes `.cm-btn`; it does not re-implement one.** A
   parallel skin would be a second button implementation, and the tap-floor
   bug `.cm-btn` already had would simply recur there.
@@ -2155,6 +2238,28 @@ button now empties its sibling `.cm-search__input`, dispatches a bubbling
 `input` event (so a listener can update its model), and returns focus to
 that input.
 
+### Finding in a long timeline
+
+`.cm-search` is a field. Searching a transcript needs three more things, and
+they are not a new visual idea - so `.cm-findbar` adds no new shape:
+
+- `.cm-findbar` wraps the field with `.cm-findbar__count` and
+  `.cm-findbar__steppers`. It is a flex row at the tap floor.
+- `.cm-findbar__count` is **text** ("3 of 12"), not a dot or a chevron pair.
+  A reader who has just typed a term needs to know whether the timeline held
+  anything, and "0 of 0" is the answer that stops them retyping. It is
+  `role="status"` `aria-live="polite"`: without it a screen-reader user
+  presses Enter and hears nothing at all. Tabular numerals, so stepping
+  12 -> 13 does not shift the steppers sideways by a digit's width.
+- `.cm-findbar__hit` marks a match with a background wash plus an
+  `outline`-based ring, never a hue alone - the current match is often
+  scrolled off screen while every other match is still visible, which is
+  exactly when a colour-only distinction is the only thing left to read.
+- `.cm-findbar__hit--current` is the match the reader is ON. It is
+  distinguished by the **weight of the rule** and by weight on the text,
+  not by swapping its colour, so it survives greyscale and stays obvious
+  when two marks sit adjacent.
+
 ### Sortable columns
 
 ```html
@@ -2373,6 +2478,7 @@ is why every row also wears `cm-scroller__item` and keeps
     <div class="cm-msglist__main">
       <header class="cm-msglist__meta"><span class="cm-msglist__author">alex</span>
         <time class="cm-msglist__stamp" datetime="2026-10-10T11:12">Today at 11:12 AM</time>
+        <span class="cm-msglist__sent cm-msglist__sent--seen">Seen</span>
       </header>
       <div class="cm-msglist__text">branch is cut - review the migration step.</div>
         <div class="cm-msglist__reactions">
@@ -2397,6 +2503,51 @@ A continuation row has no header, so its time lives in the gutter as
 The row's modifiers are `.cm-msglist__msg--grouped`,
 `.cm-msglist__msg--mention` and `.cm-msglist__msg--system`; the
 reader's own chip is `.cm-msglist__reaction--mine`.
+
+`.cm-msglist__sent` is delivery state and belongs to the reader's OWN
+rows: it rides the meta line, which is where a row already says when it
+was sent, so that is where it says whether anyone has seen it. It is
+text rather than a tick - a tick is unreadable at `--text-micro` and
+silent to a screen reader, and this is a state that has to survive
+both. Absent, not empty, when nothing is known: a row nobody has read
+has no state to announce. `.cm-msglist__sent--seen` is the one that
+settles, at `--ink` against the dim meta.
+
+Media rows sit in the same `main` column as the text: an image is
+`.cm-msglist__media` (a `<figure>` capped to `--measure-narrow`, hairline
+frame, no radius), a file is `.cm-msglist__file` (a chip capped to
+`--measure-title` with `.cm-msglist__filetitle` and
+`.cm-msglist__filenote`). The chip is a real link so a file opens without
+a second reader.
+
+A row that carries formatted text puts `.cm-msglist__md` on its
+`.cm-msglist__text`. It exists because `.cm-prose` is the WRONG shape
+for a message: `.cm-prose` is a long-form reading column that owns
+heading marks (`h2::before '## '`), a table and a `--measure` cap, and a
+row is none of those. What `.cm-msglist__md` adds is only what inline
+chat text needs, and it is deliberately flat:
+
+- a **link** keeps the `--tap` floor. `.cm-inline-link` already carries
+  it, but that rule is registered against `.cm-prose a`, so a row outside
+  a prose container would fall back to the bare-`a` treatment and could
+  not be reliably hit on a phone. The rule is repeated so the class is
+  self-sufficient; the negative margin is what stops the floor from
+  opening the row's line spacing.
+- **inline code** is a chip - mono, a hairline box, `--text-xs` floored
+  at `--min-font` - because monospace alone does not separate code from
+  the words around it at a glance.
+- a **code block** (`pre`) wraps and caps at 10rem rather than growing
+  the row forever, and the scope states NO width: the row grid's
+  `min-width: 0` is what keeps it inside the column.
+- a **blockquote** is a left rule, not a box - a framed quote would draw
+  a second frame inside a row that already has one.
+- **`.cm-msglist__mention`** marks a mention with weight and a pill
+  rather than a hue. A hue is the one signal that does not survive a dark
+  theme, greyscale print or a red-green colour deficiency, and the text
+  inside must still clear AA at `--min-font`.
+
+Sharp corners only: the chat family carries no radius, which is why the
+code chips here use no `border-radius` even though `--radius-sm` is `0`.
 
 The row grid is `--msglist-gutter` (the timestamp column) ·
 `--msglist-avatar` (the avatar column) · the message · a **reserved**
@@ -3232,6 +3383,57 @@ To theme a subtree (an iframe, an embedded widget, a shadow root) use
 ```html
 <div data-cm-theme="light">…</div>
 ```
+
+### Hero and gradient text
+
+`.cm-hero` is the landing composition, and it exists because the library's
+`main` is a READING column (`--maxw: 860px`). That is right for an article
+and wrong for a landing page: a hero's line length is a choice, not an
+inherited value. Every consumer that needed one re-declared `main`, which is
+the drift this library removes. So the width decision lives on the block
+that wants it — `.cm-hero` is self-sizing and centred, `main` keeps its
+reading measure, and a page applies the class rather than widening the page.
+
+`.cm-grad-text` is the system's one painted-surface primitive. It is the
+mechanism of a gradient headline — the clip, the safe fallback — and the
+COLOUR is yours. The library is deliberately zero-chroma (`--accent` is a
+grey ramp), so it never ships a stop; you set the pair:
+
+```html
+<div class="cm-hero">
+  <p class="cm-kicker cm-kicker--plain">oem-ui</p>
+  <h2 class="cm-hero__title">
+    Your headline, <span class="cm-grad-text">with a gradient you own</span>.
+  </h2>
+  <p class="cm-lede cm-hero__lede">One sentence on what this is.</p>
+  <div class="cm-hero__actions">
+    <a class="cm-btn cm-btn--primary" href="/docs">Read the docs</a>
+    <a class="cm-btn" href="/components">Browse</a>
+  </div>
+</div>
+
+<!-- the two stops, per-theme, declared on the element -->
+<h2 style="--cm-grad-from:#7a4bd0; --cm-grad-to:#2ea3c7">
+  <span class="cm-grad-text">Gradient headline</span>
+</h2>
+```
+
+- `--cm-grad-from`, `--cm-grad-to`, `--cm-grad-angle` are the knobs. They
+  fall back to `currentColor`, so an unset value is flat text rather than
+  nothing. Declare them on the ELEMENT and they follow `data-theme` for
+  free — one rule, both themes.
+- The two stops are a PAIR. A gradient whose leading stop fails contrast on
+  the page is a bug with a smooth edge: the half that passes is the half that
+  hides it. Check the leading step, not the trailing one.
+- The rule lives inside an `@supports (background-clip: text)` gate. The
+  mechanism needs `color: transparent`, which without the clip is INVISIBLE
+  TEXT. The gate is the guarantee.
+- `.cm-grad-text--none` is the stop sign, for forced colours, print, or any
+  engine without the clip: it paints the text in ink.
+
+The title is the library's first fluid ramp, floored at `--head-h1` and
+capped at `4rem`. A page title must not shift between routes, so `--head-h1`
+is fixed; a hero title is the one element allowed to be large.
 
 ### JS API
 

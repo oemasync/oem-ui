@@ -476,44 +476,70 @@
 		});
 	}
 
+	/* DELEGATED, once, at the document. Per-button binding was measured to
+	   miss the buttons it exists for: a component framework (React, and the
+	   matrix-arrow client is one) REPLACES the button node on every re-render,
+	   so a listener attached at init() is gone by the time the user clicks and
+	   the clipboard stays empty while the button is plainly on screen. The old
+	   per-button loop also had to guard against double-binding, because init()
+	   runs again on every astro:page-load. One delegated listener has neither
+	   problem: it survives any re-render, and the module flag means a second
+	   init() cannot add a second one (measured before this: a re-init made one
+	   click produce TWO clipboard writes and flicker the label through two
+	   state changes). */
+	var copyDelegated = false;
 	function initCopy(root) {
-		(root || document)
-			.querySelectorAll('[data-cm-copy]')
-			.forEach(function (btn) {
-				/* The bind guard every other init* here has, and the only
-				   one this was missing. init() runs again on every
-				   astro:page-load, and each run added a SECOND click
-				   listener to the same button, so one click copied twice
-				   and the label flickered through two state changes.
-				   Measured in WebKit: after a re-init, one click on a
-				   copy button produced 2 clipboard writes. */
-				if (btn.dataset.cmCopyBound) return;
-				btn.dataset.cmCopyBound = '1';
-				btn.addEventListener('click', function () {
-					var sel = btn.getAttribute('data-cm-copy');
-					var src = sel ? document.querySelector(sel) : btn.previousElementSibling;
-					var text = src ? (src.innerText || src.textContent) : '';
-					if (!text) return;
-					var original = btn.getAttribute('data-cm-label') || btn.textContent;
-					copyText(String(text).trim())
-						.then(function () {
-							setCopyLabel(btn, 'copied');
-							btn.classList.add('is-copied');
-							btn.classList.remove('is-error');
-						})
-						.catch(function () {
-							setCopyLabel(btn, 'press \u2318c');
-							btn.classList.add('is-error');
-						})
-						.then(function () {
-							setTimeout(function () {
-								setCopyLabel(btn, original);
-								btn.classList.remove('is-copied');
-								btn.classList.remove('is-error');
-							}, 1400);
-						});
+		if (copyDelegated) return;
+		copyDelegated = true;
+		(root || document).addEventListener('click', function (e) {
+			var t = e.target;
+			var btn = t && t.closest ? t.closest('[data-cm-copy]') : null;
+			if (!btn) return;
+			/* The attribute takes EITHER a CSS selector or the literal text to
+			   copy, told apart by trying to parse it as a selector. Before this
+			   the value was ALWAYS passed to querySelector, so a caller who put
+			   the message body in the attribute -- the obvious reading of the
+			   name, and what the matrix-arrow client does -- got a selector
+			   syntax error and an EMPTY clipboard, while the button still
+			   flipped to 'copied'. A body like "arrow-delete-1791724585513" is
+			   worse than that: it PARSES (it is a legal custom-element name)
+			   and matches nothing, so the failure is silent either way. */
+			var val = btn.getAttribute('data-cm-copy') || '';
+			var direct = false;
+			var src = null;
+			if (val) {
+				try {
+					src = document.querySelector(val);
+				} catch (err) {
+					direct = true;
+				}
+				/* A selector that parses but matches nothing is a caller meaning
+				   text, not a broken page. */
+				if (!direct && !src) direct = true;
+			} else {
+				src = btn.previousElementSibling;
+			}
+			var text = direct ? val : (src ? (src.innerText || src.textContent) : '');
+			if (!text) return;
+			var original = btn.getAttribute('data-cm-label') || btn.textContent;
+			copyText(String(text).trim())
+				.then(function () {
+					setCopyLabel(btn, 'copied');
+					btn.classList.add('is-copied');
+					btn.classList.remove('is-error');
+				})
+				.catch(function () {
+					setCopyLabel(btn, 'press \u2318c');
+					btn.classList.add('is-error');
+				})
+				.then(function () {
+					setTimeout(function () {
+						setCopyLabel(btn, original);
+						btn.classList.remove('is-copied');
+						btn.classList.remove('is-error');
+					}, 1400);
 				});
-			});
+		});
 	}
 
 	/* Writing btn.textContent DESTROYS the button's own children, so a
@@ -5779,6 +5805,44 @@
 		// keydown for CMD-B and Escape, and a pointer session for the rail
 		// (drag resizes, an unmoved press toggles) - all at the root, so a
 		// panel a consumer re-renders keeps every control.
+		/* ---- lightbox ------------------------------------------------
+		   The image viewer. The frame is a native <dialog> the consumer
+		   renders, so the top layer, Escape, the backdrop and focus
+		   trapping are the platform's. All this binds is the TRIGGER:
+		   any element carrying data-cm-lightbox=<url> opens the dialog
+		   that element names via data-cm-lightbox-target (or the one
+		   <dialog class="cm-lightbox"> on the page) and paints the URL
+		   into its <img>. One delegate, so a timeline of a thousand
+		   thumbnails costs one listener. */
+		function onLightboxClick(e) {
+			var t = e.target;
+			if (!t || typeof t.closest !== 'function') return;
+			var opener = t.closest('[data-cm-lightbox]');
+			if (opener) {
+				var url = opener.getAttribute('data-cm-lightbox');
+				if (!url) return;
+				var id = opener.getAttribute('data-cm-lightbox-target');
+				var dlg = id
+					? document.getElementById(id)
+					: document.querySelector('dialog.cm-lightbox');
+				if (!dlg) return;
+				var img = dlg.querySelector('.cm-lightbox__img');
+				if (img) {
+					img.setAttribute('src', url);
+					/* The opener's own alt is the best description the page
+					   has; falling back to empty keeps the img decorative
+					   rather than announcing a URL. */
+					var alt = opener.getAttribute('data-cm-lightbox-alt') || '';
+					img.setAttribute('alt', alt);
+				}
+				if (typeof dlg.showModal === 'function' && !dlg.open) dlg.showModal();
+				else if (typeof dlg.show === 'function') dlg.show();
+				return;
+			}
+			/* Any [data-cm-close] inside the lightbox closes it, which the
+			   dialog binder already owns; nothing to add here. */
+		}
+		document.addEventListener('click', onLightboxClick);
 		document.addEventListener('click', onSidebarClick);
 		document.addEventListener('keydown', onSidebarKeydown);
 		document.addEventListener('pointerdown', onSidebarPointerDown);

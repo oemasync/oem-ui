@@ -1840,6 +1840,17 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-media {
 	margin: var(--space-4) 0 var(--space-6);
 }
+/* The thumbnail IS the control that opens the viewer, so the button has to
+   disappear into the image: no chrome of its own, just the picture. It keeps
+   the pointer and the keyboard reachable, which a bare <img> is not. */
+.cm-media__zoom {
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: zoom-in;
+}
 .cm-media img {
 	display: block; width: 100%;
 	border-radius: var(--radius-sm);
@@ -2277,6 +2288,23 @@ button.cm-row:hover { background: var(--bg-2); }
    0px). Without it this is a table whose header is never visible. */
 .cm-table-wrap {
 	overflow-x: auto;
+	/* POSITIONING CONTEXT, NOT DECORATION. Without it the wrapper is
+	   `static`, so `.cm-sr-only` inside a wide table - absolute, 1px,
+	   `!important` - takes the ROOT as its containing block and sits at
+	   its static position out at the far edge of the 496px row. The
+	   wrapper's `overflow-x: auto` clips normal content but cannot clip
+	   an absolutely positioned box whose containing block is outside it,
+	   so that 1px landed at x=465 and set
+	   `documentElement.scrollWidth` to 466 at a 320px viewport: the page
+	   scrolled sideways because of a 1px box made for screen readers.
+	   `clip`/`clip-path` on `.cm-sr-only` only affect painting, so
+	   nothing about the label itself could stop this. Measured both ways
+	   - `overflow-x: hidden` and `mask-image: none` changed nothing
+	   (docW stayed 466); `position: relative` dropped it to 401, the
+	   width the page is with the table hidden. Re-anchoring here puts
+	   every abs-pos descendant back inside the clip it was designed to
+	   scroll within. */
+	position: relative;
 	max-height: var(--table-max-h, 30rem);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
@@ -5979,6 +6007,82 @@ button.cm-link:focus-visible {
 	}
 }
 
+/* ---------- the find-in-timeline bar ----------
+   `.cm-search` is a FIELD. What a reader searching a long transcript also
+   needs is the part that makes the search navigable: how many matches, and
+   a way to step through them. Every client ships this and none of it is a
+   new visual idea - so this adds no new shape, only the parts.
+
+   The counter is TEXT ("3 of 12"), not a dot or a chevron pair: a reader who
+   has just typed a term needs to know whether the timeline held anything at
+   all, and "0 of 0" is the answer that stops them retyping. It is a live
+   region so the count is announced as it changes - otherwise a screen-reader
+   user presses Enter and hears nothing.
+
+   The stepper's buttons are the house `--icon-btn`, so they inherit the tap
+   floor and the focus ring rather than re-deriving either. They are
+   disabled at the ends of the range rather than wrapping, because wrapping
+   hides how many matches there are. */
+.cm-findbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--tap);
+	/* The bar is a row of the host shell, not a floating overlay: it sits
+	   between the header and the timeline and pushes the timeline down, so a
+	   match cannot end up hidden UNDER the bar that is searching for it.
+	   Padding matches a header's own inset so the field lines up with the
+	   title above it. */
+	padding-block: var(--space-2);
+	padding-inline: var(--space-4);
+	border-bottom: 1px solid var(--line);
+}
+/* The field takes the slack, so the count and the steppers keep their
+   intrinsic width even at a 402px phone width instead of being pushed out
+   of the bar by a long query. */
+.cm-findbar .cm-search {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.cm-findbar__count {
+	flex: 0 0 auto;
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	color: var(--ink-dim);
+	/* Tabular so stepping 12 -> 13 does not shift the buttons sideways by a
+	   digit's width, which reads as the row itself moving. */
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.cm-findbar__count--none { color: var(--ink-faint); }
+.cm-findbar__steppers {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex: 0 0 auto;
+}
+/* The match itself. A background wash plus an underline, never a hue on its
+   own: the hit has to be findable when the current match is scrolled off
+   and the others are all still on screen, which is the moment a colour-only
+   distinction is most likely to be the only thing distinguishing them.
+   `outline` rather than `border` so a match inside a tight row does not
+   change the row's measured height. */
+.cm-findbar__hit {
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: 0 0 0 2px var(--bg-3);
+	border-radius: var(--radius-sm);
+}
+/* The match the reader is ON. Double rule, no fill: it is distinguished by
+   the WEIGHT of the mark, not by swapping its colour, so it survives
+   greyscale and it is still obvious when the two sit adjacent. */
+.cm-findbar__hit--current {
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: 0 0 0 2px var(--ink);
+	font-weight: 600;
+}
+
 .cm-code {
 	width: 100%;
 	font-family: var(--font-mono);
@@ -6628,6 +6732,64 @@ input.cm-slider:disabled {
 .cm-popover__body:last-child { margin-bottom: 0; }
 .cm-popover__row { display: flex; gap: var(--space-2); justify-content: flex-end; }
 
+/* An emoji grid: the chooser half of a reaction picker. It is a plain grid
+   of square buttons rather than a list, because the whole affordance is
+   "pick one of these" -- the reader scans faces, so the cells must all be
+   the same size and equally far from their neighbours. Measured in WebKit
+   at 390px: a list of full-width rows forced a horizontal scroll to reach
+   the last row, while a fixed grid wraps inside the popover's max-width.
+
+   The cell size is `--tap` rather than a bare rem, so it stays a real
+   touch target and never needs a separate coarse-pointer override; the
+   font size is scaled off the same `--tap` so the glyph cannot overflow
+   its cell at any root size.
+
+   The grid is wrapped in its own popover body, so the trigger's popover
+   supplies the frame and light-dismiss, and this block supplies only the
+   arrangement. Every cell is a real <button>: a grid of divs would read
+   as an image to a screen reader and would take no keyboard focus. */
+.cm-popover__emoji {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--tap), 1fr));
+	gap: var(--space-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.cm-popover__emoji-item {
+	display: block;
+}
+.cm-popover__emoji-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* Square cells: `1fr` on both tracks would stretch the last row to fill
+	   a wide popover, so the row height is pinned to the cell width instead. */
+	aspect-ratio: 1;
+	width: 100%;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: var(--ink);
+	font-size: calc(var(--tap) * 0.55);
+	line-height: 1;
+	cursor: pointer;
+}
+.cm-popover__emoji-btn:hover,
+.cm-popover__emoji-btn:focus-visible {
+	border-color: var(--line);
+	background: var(--bg-3);
+	color: var(--ink);
+}
+/* A cell the reader has already chosen reads as chosen, not merely hovered:
+   `aria-pressed` is the state the picker itself set when it opened, so the
+   fill follows the data rather than a hover that has already gone. */
+.cm-popover__emoji-btn[aria-pressed='true'] {
+	border-color: var(--ink-dim);
+	background: var(--bg-3);
+}
+
 /* A combobox is an input and a listbox that share one frame. The frame
    keeps a single hairline, and the list is hidden with a DISPLAY rule
    because an author `display: grid` outranks the UA's `[hidden]` - the
@@ -6679,6 +6841,84 @@ input.cm-slider:disabled {
 .cm-combobox__option:hover,
 .cm-combobox__option.is-active { background: var(--bg-3); color: var(--ink); }
 .cm-combobox__hint { color: var(--ink-faint); font-size: var(--text-sm); }
+
+/* ---------- mention typeahead ----------
+   An @-autocomplete for a TEXTAREA. The combobox above is a standalone
+   input; this is the other shape -- a list that hangs off a caret inside a
+   field the reader is already typing in, so it cannot own the input and
+   cannot be a `<select>`.
+
+   It opens UPWARD. The composer sits at the bottom of the window, so a list
+   positioned below the caret would be off-screen for every mention the
+   reader types -- the one placement that is wrong for the only place this
+   component is used. `bottom: calc(100% + 4px)` is measured from the wrapper
+   the consumer puts around the field, which is what makes it land above the
+   bar instead of below it.
+
+   The wrapper is `position: relative` so the list anchors to the FIELD, not
+   to the page: a list anchored to the page would drift away from the caret
+   as soon as the composer's height changed, which it does on every newline.
+   `.cm-composer__bar` is NOT positioned, so the consumer wraps the field in
+   its own relative box -- the list must be anchored to the textarea, and
+   that box is the only thing that moves exactly when the field does.
+
+   Rows are `<button role="option">` inside `[role="listbox"]`: the reader
+   can pick with the pointer OR with Enter/arrows, and the activation that
+   matters is the one already bound on the textarea. The list is hidden with
+   a DISPLAY rule on `[hidden]`, because an author `display: block` outranks
+   the UA's own `[hidden]` -- the trap the command palette and the combobox
+   both document. */
+.cm-mention {
+	position: absolute;
+	z-index: var(--z-popover);
+	bottom: calc(100% + 4px);
+	inset-inline-start: 0;
+	min-width: 12rem;
+	max-width: min(22rem, calc(100vw - 16px));
+	margin: 0;
+	padding: var(--space-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg-2);
+	box-shadow: var(--shadow-card);
+	list-style: none;
+	max-height: 14rem;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+/* The box the list is measured against. A consumer places it around the
+   FIELD it is completing (the textarea), and nothing else -- the list is
+   absolute, so without this it would resolve against the nearest positioned
+   ancestor and open wherever that happened to be. */
+.cm-mention__anchor { position: relative; display: block; }
+.cm-mention[hidden] { display: none; }
+.cm-mention__option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	width: 100%;
+	margin: 0;
+	padding: var(--space-2) var(--space-3);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--ink-dim);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+/* The ACTIVE row is the one Enter will pick. `[aria-selected]` is the state
+   the listbox pattern already publishes, so the paint follows the same
+   attribute the accessibility tree does rather than a private class that
+   could disagree with it. */
+.cm-mention__option:hover,
+.cm-mention__option[aria-selected='true'] {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+.cm-mention__name { font-weight: 600; }
+.cm-mention__hint { color: var(--ink-faint); font-size: var(--text-sm); }
 
 /* ---------- context menu ----------
    The panel and the rows are the dropdown's; only WHERE it opens differs.
@@ -7634,6 +7874,16 @@ input.cm-slider:disabled {
 }
 .cm-msglist__meta {
 	display: flex;
+	/* WRAPS, and that is the whole fix for a state chip on a phone. The meta
+	   line is one flex line inside the row's main track, which at 402px is
+	   ~148px: an author, a stamp and a delivery state do not fit, and a
+	   non-shrinkable chip does not overflow its line gracefully -- it runs
+	   past the row and gets clipped by the transcript (measured: chip right
+	   edge 452 in a 402 viewport, past its own 365px header). Wrapping moves
+	   the chip to a second line inside the same track instead, so nothing is
+	   hidden and nothing is lost. On a wide screen the line never overflows,
+	   so this changes nothing there. */
+	flex-wrap: wrap;
 	align-items: baseline;
 	gap: var(--space-2);
 	margin: 0;
@@ -7666,6 +7916,43 @@ input.cm-slider:disabled {
 	opacity: 1;
 	pointer-events: auto;
 }
+/* ...and on a TOUCH device none of that happens. `:hover` needs a pointer
+   that can hover: on a coarse pointer it never matches, so the only rule that
+   reveals the toolbar can never fire and the controls are invisible AND
+   untappable -- a touch user cannot act on a message at all. A phone has no
+   hover, so the toolbar is simply always present there (it rides the row
+   absolutely and does not reserve space, so showing it costs no layout).
+   Gated on `hover: none` rather than a width: a narrow DESKTOP window still
+   has a mouse, and a tablet with a trackpad still has hover. */
+@media (hover: none) {
+	.cm-msglist__actions {
+		opacity: 1;
+		pointer-events: auto;
+	}
+}
+/* Delivery state, on the reader's OWN rows only. It rides the meta line,
+   which is where a row already says when it was sent, so that is where it
+   says whether anyone has seen it. Text, never a glyph: a tick is unreadable
+   at --text-micro and silent to a screen reader, and this is a state that has
+   to survive both. Absent, not empty, when nothing is known -- a row nobody
+   has read has no state to announce, and an empty span would still take the
+   flex gap and read as a rendered nothing. */
+.cm-msglist__sent {
+	font-size: var(--text-micro);
+	color: var(--ink-dim);
+	/* A state is read as a unit -- "Seen by 3" broken across two lines stops
+	   reading as one. `flex: 0 0 auto` keeps the chip whole and lets the meta
+	   line's wrap decide where it goes. */
+	flex: 0 0 auto;
+	white-space: nowrap;
+}
+/* Seen is the one that settles: --ink against the row's dim meta reads as
+   "this one landed" without a second colour, and the state is a receipt, so
+   it is never stronger than the evidence behind it. */
+.cm-msglist__sent--seen {
+	color: var(--ink);
+}
+
 /* Reactions sit under the text as real toggles: the count is TEXT
    inside the button, never a ::after or a label, so the number is
    selectable, translatable and announced with the emoji. */
@@ -7932,6 +8219,17 @@ input.cm-slider:disabled {
 	border-bottom: 1px solid var(--line-soft);
 	display: grid;
 	gap: var(--space-2);
+	/* `min-WIDTH`, not `min-inline-size`. A fieldset defaults to
+	   `min-inline-size: min-content` and, in WebKit, `min-inline-size: 0`
+	   does not override that default the way `min-width: 0` does - both
+	   were applied and measured on a 390 -> 320 resize, and only this one
+	   brought the page back to docW 320 (the other left 350). `overflow:
+	   hidden` is the second line of defence: it clips the caption however
+	   the legend chooses to measure it, so a WebKit that re-breaks this
+	   cannot take the whole page sideways again. See the note on
+	   `.cm-quiz__title` for the full measurement. */
+	min-width: 0;
+	overflow: hidden;
 }
 .cm-quiz__item[hidden] { display: none; }
 .cm-quiz__title {
@@ -7939,6 +8237,33 @@ input.cm-slider:disabled {
 	font-size: var(--text-md);
 	font-weight: 600;
 	color: var(--ink);
+	/* A `<legend>` is laid out as a fieldset caption, NOT as an ordinary
+	   block, and WebKit does not re-measure it when the viewport SHRINKS:
+	   load straight at 320px and it is correct (docW 320), but resize
+	   390 -> 320 and it keeps its stale 322px caption, running to x=350
+	   and re-opening the sideways scroll the table and guildrail fixes
+	   had already closed. Every fresh load is fine; only the descending
+	   resize reproduces it, which is why a load-time check would call
+	   this page healthy.
+
+	   Measured across four candidate fixes, applied as real CSS and then
+	   resized 390 -> 320:
+	     min-inline-size: 0 on the fieldset + display: block  -> 350 (still bad)
+	     min-width: 0 on the fieldset + display: block        -> 320 (works)
+	     min-inline-size: 0 + overflow: hidden on the field  -> 320 (works)
+	     the above plus max-width/overflow-wrap on the title -> 320 (works)
+
+	   The property that matters is `min-WIDTH`, not `min-INLINE-SIZE`:
+	   a fieldset defaults to `min-inline-size: min-content`, and
+	   `min-inline-size: 0` does not override that default in WebKit the
+	   way `min-width: 0` does. `overflow: hidden` is kept on the
+	   fieldset as the second line of defence - it clips the caption
+	   whatever the legend decides to measure, so a future WebKit that
+	   re-breaks this cannot take the page sideways again. The explicit
+	   `display: block` on the title matters for the same reason even
+	   though computed style ALREADY reports block: what WebKit reports
+	   and what it lays out with are not the same thing for a legend. */
+	display: block;
 }
 .cm-quiz__desc { margin: 0; font-size: var(--text-sm); color: var(--ink-dim); }
 .cm-quiz__choices { display: grid; gap: var(--space-1); }
@@ -9307,6 +9632,145 @@ input.cm-slider:disabled {
 	color: var(--ink);
 }
 
+/* ---------- message media: an m.image/m.file row inside the msglist ---------- */
+/* The image sits in the same `main` column as the text -- the grid's third
+   track -- so a message with both body and attachment keeps alignment, and
+   the blocked-in frame matches the chat family: a hairline, no radius. */
+.cm-msglist__media {
+	grid-column: 3;
+	max-width: var(--measure-narrow);
+}
+.cm-msglist__media img {
+	display: block;
+	width: 100%;
+	border: 1px solid var(--line);
+}
+/* An attachment (non-image) row: a chip with a media glyph, a title, a
+   size/kind line, and a copy action. Clicking the chip opens the file. */
+.cm-msglist__file {
+	grid-column: 3;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	max-width: var(--measure-title);
+	border: 1px solid var(--line);
+	background: var(--bg-2);
+}
+.cm-msglist__file:hover { background: var(--bg-3); }
+.cm-msglist__filetitle {
+	color: var(--ink);
+	font-weight: 600;
+	font-size: var(--text-sm);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.cm-msglist__filenote {
+	color: var(--ink-faint);
+	font-size: var(--text-micro);
+}
+
+/* ---------- chat rich text ----------
+   The one rendering scope a chat row needs and `.cm-prose` is the wrong
+   shape for. `.cm-prose` is a LONG-FORM READING COLUMN: it owns heading
+   marks (h2::before '## '), a table, and a `--measure` cap for an article
+   page. A message row is none of those things - it is a wrapped run of
+   inline text inside an already-narrow column that must reach the right
+   edge, with no heading scale and no measure cap of its own.
+
+   So this scope adds only what inline chat text needs, and inherits
+   everything else. What it adds is measured against Discord and Element:
+
+   1. A LINK inside a message row keeps the tap floor. `.cm-inline-link`
+      already carries it, but it is registered against `.cm-prose a`, so a
+      row that is not inside a prose container gets the bare-`a` treatment
+      and a reader cannot reliably hit it on a phone. The rule is repeated
+      here so the class is self-sufficient.
+
+   2. INLINE CODE is a chip, not a smaller paragraph. It sits at
+      `--text-xs` in the mono face with a hairline box and a slight
+      vertical lift, because code in a sentence is read at a glance and the
+      `monospace` alone does not separate it from the words around it.
+
+   3. BLOCKQUOTE is a left rule, not a box: quoting inside a row would
+      otherwise draw a second frame inside a row that already has one.
+
+   4. A CODE BLOCK scrolls rather than growing the row, reusing
+      `.cm-code--scroll`'s measurement, and never escapes the row's width -
+      the row grid's `min-width: 0` is what makes that possible, so this
+      scope does NOT restate a width.
+
+   `--min-font` is the floor on every one of these, not `--text-xs`: the
+   library holds 12px as a hard floor and components.css loads after
+   base.css, so a floor declared there would lose the cascade. */
+.cm-msglist__md { color: var(--ink); overflow-wrap: break-word; }
+.cm-msglist__md p { margin: 0; }
+.cm-msglist__md p + p { margin-top: var(--space-2); }
+.cm-msglist__md a,
+.cm-msglist__md .cm-inline-link {
+	display: inline-block;
+	min-height: var(--tap);
+	padding: var(--space-3) 0;
+	margin: calc(var(--space-3) * -1) 0;
+	color: var(--ink-dim);
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-underline-offset: 0.18em;
+}
+.cm-msglist__md a:hover { color: var(--ink); }
+.cm-msglist__md code,
+.cm-msglist__md .cm-inline-code {
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	color: var(--ink);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	padding: 0 var(--space-1);
+}
+.cm-msglist__md pre {
+	margin: var(--space-2) 0 0;
+	max-height: 10rem;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	color: var(--ink-dim);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	padding: var(--space-2);
+}
+.cm-msglist__md pre code {
+	font-size: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	color: inherit;
+}
+.cm-msglist__md blockquote {
+	margin: var(--space-2) 0 0;
+	padding-inline-start: var(--space-3);
+	border-inline-start: 2px solid var(--line);
+	color: var(--ink-dim);
+}
+.cm-msglist__md strong { font-weight: 700; color: var(--ink); }
+.cm-msglist__md em { font-style: italic; }
+.cm-msglist__md ul,
+.cm-msglist__md ol { margin: var(--space-2) 0 0; padding-inline-start: var(--space-5); }
+.cm-msglist__md li + li { margin-top: var(--space-0); }
+/* A mention is the row's own reader, so it is marked with weight and a
+   pill rather than the hue a chat app usually reaches for - a hue is the
+   one signal that does not survive a dark theme, greyscale print, or a
+   red-green colour deficiency, and the text inside must keep clearing
+   AA at --min-font. */
+.cm-msglist__mention {
+	color: var(--ink);
+	font-weight: 600;
+	background: var(--bg-3);
+	padding: 0 var(--space-1);
+}
+
 .cm-auth {
 	min-height: 100dvh;
 	display: grid;
@@ -9403,6 +9867,129 @@ input.cm-slider:disabled {
 	background: var(--line);
 }
 
+/* ---------- hero: the landing composition ----------
+   The library's page-width rule sizes `main` to a READING column
+   (--maxw: 860px), which is right for an article and wrong for a landing
+   page: a hero's line length and a feature grid's are both chosen, not
+   inherited. Every consumer that needed one re-declared `main`, which is
+   exactly the drift this library exists to remove.
+
+   So the width decision moves ONTO the block that wants it. `.cm-hero` is
+   self-sizing and centred; `main` keeps its reading measure; the page that
+   wants a landing width applies the class. MEASURED on the showcase at
+   320/390/402/768/1280: an unclassed `main` is 860px inside a 1280 viewport
+   while `.cm-hero` is 980px - the composition is wider than the prose
+   column and neither value is wrong, which is the whole reason they are
+   two different rules.
+
+   The title ramp is the FIRST fluid clamp in this library, and it is here
+   for a measured reason: `--head-h1` is a fixed 2rem because a PAGE title
+   must not shift between routes. A hero's title is the opposite - it is the
+   one element on the page that is allowed to be large - and pinning it to
+   the page scale made a landing hero render at the same size as a document
+   heading. The clamp's bounds are the scale's own: --head-h1 as the floor
+   (the page title) and 4rem as the cap. Both ends are token-derived so the
+   ramp cannot drift from the rest of the system; the viewport term in the
+   middle is what makes it a ramp rather than a step.
+
+   --hero-maxw is the composition's own width, NOT a second --maxw: it is
+   wider than the reading column on purpose, and naming it separately is
+   what stops a consumer from editing the reading measure to get a landing
+   page - the regression that produced five projects each shipping a local
+   `main { width: auto; max-width: none }` override. */
+.cm-hero {
+	--hero-maxw: 61.25rem;
+	--hero-title: clamp(var(--head-h1), 2rem + 4vw, 4rem);
+	width: min(var(--hero-maxw, 61.25rem), 100%);
+	margin-inline: auto;
+	padding: var(--space-8) var(--gutter) var(--space-7);
+	text-align: center;
+}
+.cm-hero__title {
+	font-size: var(--hero-title, clamp(var(--head-h1), 2rem + 4vw, 4rem));
+	line-height: 1.05;
+	letter-spacing: -0.02em;
+	font-weight: 700;
+	margin: 0 0 var(--space-4);
+}
+/* The lede is centered here, not in `.cm-lede`: `.cm-lede` is a block that
+   starts at the text edge (prose, list rows), and a hero's lede has to be
+   centered by margin or the paragraph box runs to the composition's edge
+   while its words sit flush left. Narrowing the BOX is the fix, so the rule
+   is scoped to the hero and leaves the prose rule alone. */
+.cm-hero__lede {
+	max-width: var(--measure-title, 42ch);
+	margin-inline: auto;
+}
+.cm-hero__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+	justify-content: center;
+}
+/* A hairline above the action row. The classic landing divider is a
+   pseudo-element on the first action; as a child it is a flex item, so a
+   wrap strands it - the same defect the footer separator had, and the fix
+   is the same direction (see the footer note): the mark belongs to the
+   thing it PRECEDES. `::before` on the row, and the row carries the
+   spacing, so no wrapped line can END with a divider. */
+.cm-hero__actions::before {
+	content: '';
+	flex: 0 0 100%;
+	height: 1px;
+	background: var(--line);
+	margin-block-end: var(--space-4);
+}
+
+/* ---------- gradient text: the one painted-surface primitive ----------
+   `background-clip: text` is how a landing hero gets a gradient headline,
+   and the hand-rolled copies of it share one bug: the rule sets
+   `color: transparent`, so if the clip does not apply the text is
+   INVISIBLE. That is not a degraded render, it is the headline gone.
+   `.cm-shimmer` already guards its whole rule inside an @supports gate for
+   exactly this reason, and this primitive is the static sibling of it -
+   same gate, same reason, and the gate is the invariant a test must pin
+   rather than the declaration's presence.
+
+   The library is deliberately zero-chroma (`--accent` is a grey ramp), so
+   the STOPS are the consumer's and only the MECHANISM is ours:
+   `--cm-grad-from` / `--cm-grad-to` are read with fallbacks, so an unset
+   value degrades to flat currentColor rather than to nothing. That is why
+   the fallback is `currentColor` and not `transparent` - a missing stop
+   must never be the difference between readable and invisible.
+
+   The two stops are a PAIR: a gradient whose leading stop fails contrast
+   on the page is "a bug with a smooth edge", and the half that passes is
+   the half that makes the defect hard to see. nodeterm.dev MEASURED this on
+   its own hand-rolled copy - the dark pair's leading step read 2.62:1 on
+   #fafafa while large text still needs 3:1 - and it declared a SECOND pair
+   for the light theme rather than reusing the dark one. The knobs here are
+   per-theme by construction, because a custom property resolved on the
+   element follows `data-theme` for free. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+	.cm-grad-text {
+		--cm-grad-angle: 120deg;
+		--cm-grad-from: currentColor;
+		--cm-grad-to: currentColor;
+		background-image: linear-gradient(var(--cm-grad-angle, 120deg),
+			var(--cm-grad-from, currentColor),
+			var(--cm-grad-to, currentColor));
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+}
+/* The stop sign, and the ONLY thing that makes this component's guarantee
+   true rather than aspirational: with the gate closed, `.cm-grad-text`
+   must be ordinary text. Declared after the gate so equal specificity
+   lands later and wins (the same ordering rule the scroll-fade `--none`
+   stop sign uses). A consumer that needs plain text - forced colours, a
+   print stylesheet, an engine without the clip - gets ink, not a blank. */
+.cm-grad-text--none {
+	background-image: none;
+	color: inherit;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	/* Every animation in the system is listed here, not next to its own
 	   rule. A guard that lives beside one component silently leaves the next
@@ -9459,6 +10046,84 @@ input.cm-slider:disabled {
 	.cm-chart__slice,
 	.cm-chart__tooltip { transition: none; }
 }
+/* Narrow screens: the toolbar stops being a grid track and rides the row.
+   MEASURED, and it was a real bug: the fourth track is `auto`, which is
+   minmax(auto, max-content) -- it CANNOT shrink past the toolbar's own
+   max-content width. With the three buttons the showcase demonstrates
+   (Add reaction / Reply / More) that floor fit. A consumer with four
+   (Reply / Copy / Delete / Edit = 128px) pushed the ROW's min-content
+   width past the space available at 402px: the row measured 332 inside a
+   330-wide track, the transcript 374 inside a 330 main, and the last
+   button sat at x=385..417 in a 402 viewport -- clipped by an ancestor's
+   `overflow: hidden`, so `scrollWidth` reported no overflow at all while
+   the button was untappable. Note the reveal is still opacity +
+   pointer-events, so this stays a no-JS, no-geometry-shift toolbar; it
+   simply stops reserving width. A tap on the row gives WebKit a sticky
+   :hover, which is what makes the overlay reachable on a phone. */
+@media (max-width: 680px) {
+	/* The fourth track STAYS. The row grid is four tracks in the contract, and a
+	   consumer asserts that number -- and rightly: the track carries the
+	   toolbar's placement. The fix for a wide toolbar is to make the track zero
+	   WIDE, not to delete it: `minmax(0, 0)` exists for placement and adds
+	   nothing to the row's min-content, so the fit no longer depends on how many
+	   buttons a consumer puts in it. The toolbar itself is absolutely positioned
+	   (below), so it is out of flow and cannot widen the row either. */
+	.cm-msglist__msg {
+		position: relative;
+		grid-template-columns:
+			var(--msglist-gutter) var(--msglist-avatar) minmax(0, 1fr) minmax(0, 0);
+	}
+	.cm-msglist__actions {
+		position: absolute;
+		inset-block-start: 0;
+		inset-inline-end: 0;
+		grid-column: auto;
+		/* the row's own hover fill, so the controls do not sit on live text */
+		background: var(--bg-3);
+	}
+}
+
+/* ============ lightbox (image viewer) ============ 
+   A barebones image viewer that opens in a native <dialog> so Escape,
+   the top layer and focus trapping are free. The image fits the viewport
+   without cropping, and the backdrop is the same token as other sheets. */
+.cm-lightbox {
+	width: 100vw;
+	max-width: 100vw;
+	height: 100vh;
+	max-height: 100vh;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+.cm-lightbox::backdrop { background: var(--scrim); }
+.cm-lightbox__body {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-4);
+}
+.cm-lightbox__img {
+	display: block;
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+.cm-lightbox__close {
+	position: absolute;
+	top: var(--space-4);
+	inset-inline-end: var(--space-4);
+	border: 1px solid var(--line);
+	background: var(--bg-2);
+	color: var(--ink);
+	padding: var(--space-2) var(--space-3);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-card);
+}
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number
