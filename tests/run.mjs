@@ -16244,3 +16244,46 @@ check('shadcn-parity: the component ledger agrees with itself', () => {
 	assert(!/\*\*Not implemented/.test(readme),
 		'the README still carries a "Not implemented" section after parity was reached');
 });
+
+/* ---------- the spacing scale is the ONLY spacing ----------
+
+   `components.css` opens by claiming "no raw rem anywhere in the layers,
+   not one" - and it shipped NINETEEN hand-written spacing literals across
+   FIFTEEN rules, every one of them off the --space-N scale. That is the
+   honest form of the "some things have x spacing, others y" complaint:
+   measured, each rule was its own number, so no two of them could be
+   reasoned about together.
+
+   This check holds the claim. It scans the LAYER SOURCES (not the built
+   bundle, where a typo would be invisible), strips comments first - the
+   prose in these files is full of rem values it is explaining - and fails
+   on any spacing declaration whose value is a numeric rem literal that is
+   not a var().
+
+   Deliberately NOT a blanket ban on rem in these files: min-width,
+   height, font-size and the measure tokens legitimately carry rem, and
+   `--gutter` is the maximum-width system's own unit. The rule is about
+   SPACING - padding, margin and gap - which is exactly what --space-N
+   exists to own. */
+check('every spacing declaration comes off the --space-N scale', () => {
+	const SPACING = /(?:^|[;{\s])((?:row-|column-)?gap|padding|margin)(?:-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?\s*:\s*([^;{}]+);/g;
+	const problems = [];
+	for (const rel of ['src/styles/components.css', 'src/styles/base.css']) {
+		// Comments carry rem values BY DESIGN (each converted literal keeps
+		// its old number in the note explaining the conversion), so a scan
+		// that reads them as code reports its own documentation.
+		const src = read(rel).replace(/\/\*[\s\S]*?\*\//g, '');
+		for (const m of src.matchAll(SPACING)) {
+			const value = m[2];
+			// `var(--space-N)`, `0`, `auto`, `calc(...)` and `0.5ch` are all
+			// fine. What is not fine is a bare numeric rem that is not a
+			// token reference.
+			if (!/(?<![\w-])\d*\.?\d+rem/.test(value)) continue;
+			if (value.includes('var(')) continue;
+			problems.push(`${rel}: ${m[0].trim().slice(0, 80)}`);
+		}
+	}
+	assert(problems.length === 0,
+		`${problems.length} spacing declaration(s) carry a raw rem literal instead of a --space-N token:\n  ` +
+		problems.join('\n  '));
+});

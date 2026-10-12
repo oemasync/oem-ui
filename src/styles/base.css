@@ -57,7 +57,7 @@ main,
 	   NO horizontal padding: the max-width already reserves the gutter,
 	   so padding it too put content at 40px while the header sat at 20px.
 	   Two left rails is a bug, not a design choice. */
-	padding: 0 0 6rem;
+	padding: 0 0 var(--space-10);
 }
 
 a {
@@ -320,7 +320,7 @@ button:focus-visible,
 	   gutter, and re-adding it here is what put content at 40px while
 	   the header sat at 20px. Only the bottom padding shrinks. */
 	main,
-	.cm-shell { padding: 0 0 4rem; }
+	.cm-shell { padding: 0 0 var(--space-9); }
 	/* The page title must stay clearly above a section h2 (23.2px).
 	   1.7rem rendered at 27.2px, too close to shout at the same volume. */
 	:root { --head-top: 2rem; --head-h1: 1.95rem; }
@@ -405,7 +405,7 @@ select:not(.cm-search__input) {
 	background-color: var(--bg-2);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
-	padding: 0.55rem 0.7rem;
+	padding: var(--space-2) var(--space-3);
 	/* `width: 100%` is declared SEPARATELY, below, so a component that
 	   sizes its own input can outrank it. Inside this block it is (0,6,1)
 	   and beats every plain class in the sheet: a bare
@@ -549,7 +549,7 @@ input[type='radio']:checked {
 /* the label is the tap target, so a phone-sized hit area is the text row */
 label { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; }
 fieldset { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-4); margin: 0; }
-legend { padding: 0 0.4rem; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+legend { padding: 0 var(--space-2); color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; }
 
 /* ============ touch ergonomics ============
    Phones get a coarse pointer, so every interactive element must clear

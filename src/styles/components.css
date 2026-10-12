@@ -135,7 +135,7 @@
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 }
-.cm-section--pad { padding: 1.1rem 1.2rem; }
+.cm-section--pad { padding: var(--space-4) var(--space-5); }
 /* A section that opens with a heading must not also pad AND carry the
    heading's own top margin: measured gap from the card border to its h2
    was 65px against 17.6px of padding, so the padding was invisible. The
@@ -266,7 +266,7 @@
 	   the div, so a page's title weight depended on its markup. */
 	font-weight: 700;
 	line-height: 1.15;
-	margin: 0 0 0.6rem;
+	margin: 0 0 var(--space-2);
 	letter-spacing: -0.01em;
 }
 .cm-head__sub {
@@ -941,12 +941,12 @@
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
-	gap: 0.4rem 0.7rem;
-	padding: 0.8rem 1.1rem;
+	gap: var(--space-1) var(--space-3);
+	padding: var(--space-3) var(--space-4);
 	background: var(--panel);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
-	margin: 0 0 1.8rem;
+	margin: 0 0 var(--space-6);
 	font-family: var(--font-mono);
 	font-size: var(--text-micro);
 	color: var(--ink-dim);
@@ -997,7 +997,7 @@ html {
 	display: flex;
 	align-items: center;
 	gap: var(--space-4);
-	padding: 0.85rem 0.5rem;
+	padding: var(--space-3) var(--space-2);
 	border-bottom: 1px solid var(--line);
 	text-decoration: none;
 	color: var(--ink);
@@ -1286,7 +1286,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	max-width: 100%;
 }
 
-.cm-rows--stacked .cm-row { align-items: flex-start; padding: 1rem 0.6rem; }
+.cm-rows--stacked .cm-row { align-items: flex-start; padding: var(--space-4) var(--space-2); }
 .cm-rows--stacked .cm-row__body { display: block; }
 .cm-rows--stacked .cm-row__title { display: block; white-space: normal; font-size: var(--text-md); }
 .cm-rows--stacked .cm-row__desc {
@@ -1791,7 +1791,7 @@ button.cm-row:hover { background: var(--bg-2); }
 
 /* ---------- media frame ---------- */
 .cm-media {
-	margin: 1rem 0 2rem;
+	margin: var(--space-4) 0 var(--space-6);
 }
 .cm-media img {
 	display: block; width: 100%;
@@ -1811,7 +1811,7 @@ button.cm-row:hover { background: var(--bg-2); }
 @keyframes cm-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
 /* ---------- mono divider with optional label ---------- */
-.cm-rule { display: flex; align-items: center; gap: var(--space-3); margin: 2rem 0; }
+.cm-rule { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-6) 0; }
 .cm-rule::before,
 .cm-rule::after { content: ''; height: 1px; background: var(--line); flex: 1; }
 .cm-rule__label {
@@ -1829,7 +1829,7 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 .cm-term__bar {
 	display: flex; align-items: center; gap: var(--space-2);
-	padding: 0.5rem 0.9rem;
+	padding: var(--space-2) var(--space-3);
 	border-bottom: 1px solid var(--line);
 	background: var(--bg-3);
 	font-family: var(--font-mono); font-size: var(--text-micro); color: var(--ink-faint);
@@ -1851,7 +1851,7 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-kv {
 	display: grid;
 	grid-template-columns: minmax(7rem, max-content) 1fr;
-	gap: 0.55rem 1.2rem;
+	gap: var(--space-2) var(--space-5);
 	margin: 0 0 1.4em;
 	font-family: var(--font-mono);
 	font-size: var(--text-xs);
@@ -2562,7 +2562,7 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-footer__meta a { color: var(--ink-dim); }
 .cm-footer__meta a:hover { color: var(--ink); }
 .cm-footer__status {
-	margin: 1.4rem auto 0; padding-top: var(--space-4);
+	margin: var(--space-5) auto 0; padding-top: var(--space-4);
 	border-top: 1px dashed var(--line);
 	font-family: var(--font-mono); font-size: var(--text-micro); color: var(--ink-faint);
 	/* The status line is a ROW for the same reason the meta row is: a
@@ -2714,7 +2714,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	font-family: var(--font-mono);
 	font-size: var(--text-xs);
 	color: var(--ink-dim);
-	padding: 0 0.7rem;
+	padding: 0 var(--space-3);
 	text-decoration: none;
 	transition: color var(--cm-t) var(--cm-ease);
 }
@@ -2991,7 +2991,7 @@ button.cm-row:hover { background: var(--bg-2); }
 		height: auto;
 		min-height: 60px;
 		row-gap: var(--space-2);
-		padding: 0.55rem 0;
+		padding: var(--space-2) 0;
 	}
 	/* The burger is the FIRST child of .cm-header__nav in the DOM, so it
 	   leads the row with no `order` at all - visual order and tab order
@@ -5497,7 +5497,7 @@ button.cm-link:focus-visible {
 	background-position: calc(100% - 1.1rem) 52%, calc(100% - 0.75rem) 52%;
 	background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
 	background-repeat: no-repeat;
-	padding: 0.55rem 0.7rem;
+	padding: var(--space-2) var(--space-3);
 	/* The value must never run UNDER the wedges. --space-7 clears the pair
 	   by a whole space step, which is the same clearance the shift in
 	   `.cm-field__control` uses for its icon button (measured there at
@@ -6514,7 +6514,7 @@ input.cm-slider:disabled {
 	justify-content: center;
 	min-width: 1.75rem;
 	height: 1.75rem;
-	padding: 0 0.25rem;
+	padding: 0 var(--space-1);
 	border: 1px solid var(--line);
 	background: var(--bg-2);
 	color: var(--ink-dim);
