@@ -96,7 +96,7 @@ const compSrc = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '
 // as a check that reads only the showcase source.
 const baseSrc = read('src/styles/base.css').replace(/\/\*[\s\S]*?\*\//g, '');
 const allCss = compSrc + '\n' + baseSrc;
-const showcase = read('src/pages/index.astro');
+const showcase = read('src/pages/[...family].astro');
 
 /* The DECLARATION that rule gives the selector, or null.
    A selector LIST - `.a .b::before, .a .c::before { content: 'x' }` - is one
@@ -1017,7 +1017,7 @@ check('form controls are element defaults, so a bare input is on-brand', () => {
 		assert(comp.includes(sel), `${sel} is missing from the components layer`);
 	}
 	// and the showcase proves they render
-	const idx = read('src/pages/index.astro');
+	const idx = read('src/pages/[...family].astro');
 	assert(idx.includes('id="forms"'), 'showcase has no forms section');
 	assert(/<input[^>]*type="checkbox"/.test(idx), 'showcase renders no checkbox');
 	assert(/<textarea/.test(idx), 'showcase renders no textarea');
@@ -1194,7 +1194,7 @@ check('a list box drops the chevron and a picker keeps it', () => {
 	assert(/overflow-y:\s*auto/.test(multi),
 		'a list box taller than its own box must scroll, or its later options are unreachable');
 	// ...and BOTH halves demonstrated on the one page.
-	const idx = read('src/pages/index.astro');
+	const idx = read('src/pages/[...family].astro');
 	assert(/<select[^>]*class="cm-select"\s*>/.test(idx),
 		'the showcase never demonstrates a plain picker with .cm-select, so the arrow is unproven');
 	assert(/<select[^>]*class="cm-select cm-select--multi"[^>]*\bmultiple\b/.test(idx),
@@ -1272,7 +1272,7 @@ check('checkbox and radio rows are real tap targets, and on-brand', () => {
 check('the demo form does not mix checkbox and radio in one fieldset', () => {
 	// A fieldset is one question. Showing "listed in nav" (checkbox) beside
 	// "public" (radio) implied a relationship that does not exist.
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	for (const fs of page.matchAll(/<fieldset[^>]*>([\s\S]*?)<\/fieldset>/g)) {
 		const types = new Set([...fs[1].matchAll(/type="(checkbox|radio)"/g)].map(m => m[1]));
 		assert(types.size <= 1,
@@ -1283,7 +1283,7 @@ check('the demo form does not mix checkbox and radio in one fieldset', () => {
 check('a fieldset with a choice must have a legend', () => {
 	// An unlabelled radio group is unusable with a screen reader; the
 	// legend is what names the question.
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	for (const fs of page.matchAll(/<fieldset([^>]*)>([\s\S]*?)<\/fieldset>/g)) {
 		if (!/type="(checkbox|radio)"/.test(fs[2])) continue;
 		assert(/<legend(?:\s|>)/.test(fs[2]),
@@ -1346,14 +1346,14 @@ check('the macOS traffic lights are circles, not squares', () => {
 		`.cm-term__dot must be a 4px circle on its 8px box; found: ` +
 		(/border-radius:[^;]*;/.exec(rule.body)?.[0] ?? 'no declaration'));
 	// and the window chrome must still ship all three of them
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const bar = [...page.matchAll(/<div class="cm-term__bar">[\s\S]*?<\/div>/g)]
 		.find(b => (b[0].match(/cm-term__dot/g) || []).length >= 3);
 	assert(bar, 'the terminal window must still show three traffic lights');
 });
 
 check('the showcased radius values match the sharp tokens', () => {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const rows = [...page.matchAll(/<span class="cm-spec__label"><code>(--radius(?:-sm)?)<\/code><\/span>([\s\S]*?)<\/div>/g)];
 	assert(rows.length === 2, `expected both radius specimens, got ${rows.length}`);
 	for (const [, name, body] of rows) {
@@ -1511,7 +1511,7 @@ check('the showcase demonstrates a wrapped kv pair beside a direct one', () => {
 	// this check did exactly that and failed on its own fixture, which
 	// is the only reason it was caught. The block runs from its own
 	// heading to the next heading of the same level.
-	const show = read('src/pages/index.astro');
+	const show = read('src/pages/[...family].astro');
 	const start = show.indexOf('key-value, wrapped pairs');
 	assert(start !== -1, 'the showcase has no section demonstrating wrapped dt/dd pairs');
 	const end = show.indexOf('<h3 class="cm-kicker', start + 10);
@@ -1638,7 +1638,7 @@ check('the showcase demonstrates a whole-row kv link', () => {
 	// the <a> has to WRAP the dt/dd, because the entire point is that
 	// the target is the row. A class on the dd, or an <a> inside the
 	// dd, builds, renders, and is exactly the bug this component fixes.
-	const show = read('src/pages/index.astro');
+	const show = read('src/pages/[...family].astro');
 	const start = show.indexOf('key-value, whole row is the link');
 	assert(start !== -1, 'the showcase has no section demonstrating a whole-row kv link');
 	const end = show.indexOf('<h3 class="cm-kicker', start + 10);
@@ -2332,7 +2332,7 @@ check('the toggle binds legacy .theme-toggle markup as well as the library one',
 /* ================= runtime actually ships ================= */
 console.log('\nruntime ships');
 check('the showcase loads the runtime as a bundled module', () => {
-	const s = read('src/pages/index.astro');
+	const s = read('src/pages/[...family].astro');
 	// A relative <script src="../js/cli-mono.js"> is NOT a build asset: Astro
 	// emitted the tag verbatim and dist/ shipped ZERO JS, so the theme toggle
 	// and every runtime feature were dead in the one place that demos them.
@@ -2356,7 +2356,7 @@ check('the FOUC guard is the first node in <head>, not inside <header>', () => {
 	);
 
 	for (const [name, path] of [
-		['showcase', 'src/pages/index.astro'],
+		['showcase', 'src/pages/[...family].astro'],
 		['Head.astro', 'src/astro/Head.astro'],
 	]) {
 		const s = read(path);
@@ -2748,7 +2748,7 @@ check('--stacked and --column do not collide', () => {
 
 check('every class the showcase demonstrates is defined in the library', () => {
 	// A demo of a class the library does not own is a lie in the showcase.
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const demoed = new Set([...page.matchAll(/class="(cm-[a-z0-9_ -]+)"/g)]
 		.flatMap(m => m[1].split(/\s+/)));
 	// BOTH layers, not just components.css. A class is part of the library
@@ -2820,7 +2820,7 @@ check('a short window scrolls the rail rather than hiding links', () => {
 // so a check that greps for a literal `href: '#x'` reports a section as
 // unreachable when it is exactly as reachable as before.
 const showcaseIndex = (() => {
-	const m = read('src/pages/index.astro').match(/const SECTION_ORDER = \[([\s\S]*?)\]/);
+	const m = read('src/pages/[...family].astro').match(/const SECTION_ORDER = \[([\s\S]*?)\]/);
 	if (!m) return [];
 	return m[1].split(',').map((x) => x.trim().replace(/^['"]|['"].*$/g, '')).filter(Boolean);
 })();
@@ -2839,7 +2839,7 @@ const showcaseIndex = (() => {
 // One array, SECTION_ORDER, feeds both. These checks are what keep it true.
 
 check('the showcase declares one section index, and the nav is built from it', () => {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const decl = page.match(/const SECTION_ORDER = \[([\s\S]*?)\]/);
 	if (!decl) throw new Error('SECTION_ORDER is gone; the nav must derive from it, not restate it');
 	// The nav may take SECTION_ORDER whole (a flat rail) or in slices (a
@@ -2871,7 +2871,7 @@ check('the showcase declares one section index, and the nav is built from it', (
 });
 
 check('every id in the section index is a real section in the markup', () => {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const order = [...page.matchAll(/const SECTION_ORDER = \[([\s\S]*?)\]/g)][0][1]
 		.split(',')
 		.map((x) => x.trim().replace(/^['"]|['"].*$/g, ''))
@@ -2891,7 +2891,7 @@ check('every id in the section index is a real section in the markup', () => {
 });
 
 check('the section index is in the order the sections actually appear', () => {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const order = [...page.matchAll(/const SECTION_ORDER = \[([\s\S]*?)\]/g)][0][1]
 		.split(',')
 		.map((x) => x.trim().replace(/^['"]|['"].*$/g, ''))
@@ -3217,7 +3217,7 @@ check('the header opts in through a documented rail prop', () => {
 });
 
 check('the showcase opts in, and a mobile reader still gets the burger', () => {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	// `/rail/` was satisfied by a sentence of prose about a rail being drawn
 	// on an item. The opt-in is the PROP on the <Header> call, so anchor
 	// there: a bare `rail` line inside the tag's attribute block.
@@ -3665,7 +3665,7 @@ check('a trailing slash on the target does not invent drift', () => {
 			"import themeGuard from '../js/cli-mono-theme-guard.js?raw';\n" +
 			'<script is:inline set:html={themeGuard} />\n' +
 			'<script is:inline src="/cli-mono.js"></script>\n');
-		writeFileSync(join(dir, 'src/pages/index.astro'), '<html></html>\n');
+		writeFileSync(join(dir, 'src/pages/[...family].astro'), '<html></html>\n');
 
 		const env = { ...process.env, OEM_UI_SRC: root };
 		const plain = spawnSync('bash', [join(root, 'scripts/check-design-sync.sh'), dir],
@@ -3783,7 +3783,7 @@ check('the drift checker grades src/astro/, and only the part it owns', () => {
 		writeFileSync(join(dir, 'src/styles/site.css'),
 			"@import './cli-mono/tokens.css';\n@import './cli-mono/base.css';\n" +
 			"@import './cli-mono/components.css';\n");
-		writeFileSync(join(dir, 'src/pages/index.astro'), '<html></html>\n');
+		writeFileSync(join(dir, 'src/pages/[...family].astro'), '<html></html>\n');
 
 		const run = () => spawnSync('bash', [join(root, 'scripts/check-design-sync.sh'), dir],
 			{ encoding: 'utf8', env: { ...process.env, OEM_UI_SRC: root } });
@@ -3898,7 +3898,7 @@ check('the drift checker fails on a vendored-but-never-imported layer', () => {
 		// A source file must exist for the check to apply: a bare install
 		// with no pages is not drifted, it is not built yet.
 		mkdirSync(join(dir, 'src/pages'), { recursive: true });
-		writeFileSync(join(dir, 'src/pages/index.astro'), '<html></html>\n');
+		writeFileSync(join(dir, 'src/pages/[...family].astro'), '<html></html>\n');
 		const orphan = run();
 		assert(orphan.status === 1,
 			`a consumer that vendors the library and imports none of it must fail, got ${orphan.status}: ${orphan.stdout.trim()}`);
@@ -3954,7 +3954,7 @@ check('the drift checker fails on a vendored-but-never-imported layer', () => {
 		// The guard is still required: loading CSS by @import says nothing
 		// about the theme, and a site that loads the layers but drops the
 		// guard still flashes black for every light-theme visitor.
-		writeFileSync(join(dir, 'src/pages/index.astro'),
+		writeFileSync(join(dir, 'src/pages/[...family].astro'),
 			'<html>\n<head>\n<script is:inline src="/cli-mono-theme-guard.js"></script>\n</head>\n</html>\n');
 		const viaCss = run();
 		assert(viaCss.status === 0,
@@ -3972,7 +3972,7 @@ check('the drift checker fails on a vendored-but-never-imported layer', () => {
 		// but an unused guard is a black flash, and the file sitting there
 		// reads as adoption. This is the dev-blog trap exactly, one file
 		// down: the layers loaded, the guard did not.
-		writeFileSync(join(dir, 'src/pages/index.astro'), '<html></html>\n');
+		writeFileSync(join(dir, 'src/pages/[...family].astro'), '<html></html>\n');
 		const noGuard = run();
 		assert(noGuard.status === 1,
 			`a consumer that vendors the guard but no head loads it must fail, got ${noGuard.status}: ${noGuard.stdout.trim()}`);
@@ -4279,7 +4279,7 @@ check('the drift checker catches a shadow copy of the runtime on an unchecked pa
 			"import themeGuard from '../js/cli-mono-theme-guard.js?raw';\n" +
 			'<script is:inline set:html={themeGuard} />\n' +
 			'<script is:inline src="/cli-mono.js"></script>\n');
-		writeFileSync(join(dir, 'src/pages/index.astro'), '<html></html>\n');
+		writeFileSync(join(dir, 'src/pages/[...family].astro'), '<html></html>\n');
 		const clean = run();
 		assert(clean.status === 0,
 			`a consumer with a current public/ copy must pass, got ${clean.status}: ${clean.stdout.trim()}`);
@@ -4395,7 +4395,7 @@ check('the drift checker finds a consumer that renamed its files and kept them e
 			"import guard from '../../web/oem-ui/theme-guard.js?raw';\n"
 			+ '<script is:inline set:html={guard} />\n'
 			+ '<script is:inline src="/oem-ui/runtime.js"></script>\n');
-		writeFileSync(join(dir, 'src/pages/index.astro'),
+		writeFileSync(join(dir, 'src/pages/[...family].astro'),
 			'<html><header class="cm-header"></header></html>\n');
 
 		const run = () => spawnSync('bash', [join(root, 'scripts/check-design-sync.sh'), dir], {
@@ -7423,7 +7423,7 @@ check('menu rows keep the tap floor on a coarse pointer', () => {
 
 // The showcase is the library's documentation. A component the showcase
 // does not demonstrate is a component nobody can find.
-const MC_PAGE = read('src/pages/index.astro');
+const MC_PAGE = read('src/pages/[...family].astro');
 check('the showcase demonstrates the mobile disclosure', () => {
 	if (!MC_PAGE.includes('cm-nav-toggle__bars'))
 		throw new Error('the burger is not demonstrated anywhere on the page');
@@ -7783,7 +7783,7 @@ function builtHtml() {
 
 // The component that emits the markup. Several checks below have to read
 // THIS rather than the showcase source: the button is not written in
-// src/pages/index.astro, so a source-level assertion cannot see it.
+// src/pages/[...family].astro, so a source-level assertion cannot see it.
 const cb = read('src/astro/CodeBlock.astro');
 
 check('the copy button is a house button, not a new visual language', () => {
@@ -7858,7 +7858,7 @@ check('the copy button keeps its glyph slot when the label changes', () => {
 		'the runtime has no label slot to write into');
 	// The slot must be RENDERED, and this has to read the BUILT page. The
 	// button comes out of <CodeBlock>, so the markup is not in
-	// src/pages/index.astro at all: a source-level assertion here can only
+	// src/pages/[...family].astro at all: a source-level assertion here can only
 	// ever fail, or (worse) be written against something else and pass
 	// forever. The runtime's own lesson, verbatim: a relative
 	// <script src> tag compiled fine, was dropped from dist/ entirely, and
@@ -7951,7 +7951,7 @@ check('the showcase demonstrates copy with more than one block', () => {
 	// is exactly what happened for as long as the surface did not exist.
 	//
 	// Built html, not source: the buttons are emitted by <CodeBlock>, so
-	// src/pages/index.astro contains none of them. Counting there would be
+	// src/pages/[...family].astro contains none of them. Counting there would be
 	// counting a string that can never grow past the two mentions in the
 	// prose.
 	const built = builtHtml();
@@ -9551,7 +9551,7 @@ check('the drift checker names surface built inside a vendored layer', () => {
 
 check('a kicker owns its own gap, and one modifier means one thing', () => {
 	const comp = read("src/styles/components.css");
-	const page = read("src/pages/index.astro");
+	const page = read("src/pages/[...family].astro");
 
 	// The kicker bug, in the shape it had: a MODIFIER carried the only
 	// bottom margin, so whether a label had space under it depended on
@@ -10216,7 +10216,7 @@ check('a numeric column outranks the cell rule to align on the digit', () => {
 });
 
 check('the log specimen is long enough to scroll inside its own cap', () => {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const spec = /id="table"[\s\S]*?<\/section>/.exec(page);
 	assert(spec, 'no table showcase section');
 	// A sticky header on a table that fits is a sticky header nobody has
@@ -11044,7 +11044,7 @@ for (const [name, fn] of pending.splice(0)) {
 		// Not the <body> regex: in an Astro page the first tag inside <body>
 		// is the <Header COMPONENT call, not a literal <header>, so a source
 		// regex reads "the header is not first" on a perfectly correct page.
-		const page = read("src/pages/index.astro");
+		const page = read("src/pages/[...family].astro");
 		const body = page.match(/<body[^>]*>\s*\n?\s*<(\w+)/);
 		if (!body) throw new Error("cannot find <body> in the showcase");
 		if (body[1] !== "Header")
@@ -11073,11 +11073,11 @@ for (const [name, fn] of pending.splice(0)) {
 	// single source of truth was the one thing the page never read. A config
 	// nothing reads is a comment.
 	const config = read("src/astro/config.ts");
-	const page = read("src/pages/index.astro");
+	const page = read("src/pages/[...family].astro");
 
 	check("the showcase imports SITE from the shared config", () => {
 		if (!/import\s*\{\s*SITE\s*\}\s*from\s*['"][^'"]*astro\/config['"]/.test(page))
-			throw new Error("src/pages/index.astro does not import SITE from astro/config");
+			throw new Error("src/pages/[...family].astro does not import SITE from astro/config");
 	});
 
 	check("the showcase takes its GitHub link from SITE, not a literal", () => {
@@ -11349,7 +11349,7 @@ for (const [name, fn] of pending.splice(0)) {
 //     visible in any stylesheet, so it is asserted on the page.
 {
 	const crumbsSrc = compSrc;
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 
 	check('the breadcrumb trail is defined', () => {
 		assert(/\.cm-crumbs\s*\{/.test(crumbsSrc), '.cm-crumbs is not defined');
@@ -11538,7 +11538,7 @@ for (const [name, fn] of pending.splice(0)) {
 	// reads that explanation as a declaration and the suite fails on
 	// prose. Assert DECLARATIONS, never text.
 	const comp2 = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
-	const page2 = read('src/pages/index.astro');
+	const page2 = read('src/pages/[...family].astro');
 
 	check('the prose table is a DIFFERENT component from the data grid', () => {
 		// Both exist, and neither is defined in terms of the other. If the
@@ -11706,7 +11706,7 @@ console.log('\ngenerated table labels');
 		/* `page2` is scoped to the prose-table block above, and reading the
 		   showcase again here is one `read()` call - cheaper than hoisting a
 		   variable that six other blocks do not need. */
-		const pageLbl = read('src/pages/index.astro');
+		const pageLbl = read('src/pages/[...family].astro');
 		/* A DOM built from a literal spec. Every accessor the runtime can
 		   reach is implemented; anything else is a hard error, so the probe
 		   cannot silently answer a question the DOM does not have. */
@@ -12059,7 +12059,7 @@ console.log('\ngenerated table labels');
 		// An excuse is not a demonstration. The prop accepting an array is
 		// not evidence that the row lays out; the showcase page has to carry
 		// two real fragments, and the built page has to carry both.
-		assert(/status=\{\[/.test(read('src/pages/index.astro')),
+		assert(/status=\{\[/.test(read('src/pages/[...family].astro')),
 			'the showcase still passes status a single string, so the array form is never rendered');
 		const dist = (() => { try { return read('dist/index.html'); } catch { return ''; } })();
 		assert(dist === '' || (dist.match(/cm-footer__status-part/g) || []).length >= 2,
@@ -12073,7 +12073,7 @@ check('the leading dot is the COMPONENT\'s, so a caller cannot double it', () =>
 		// screenshot of a footer is exactly the kind of thing nobody reads
 		// closely. So the fixture must not carry a leading `●`: the dot
 		// belongs to the component, which is why it is emitted at all.
-		const page = read('src/pages/index.astro');
+		const page = read('src/pages/[...family].astro');
 		const m = /status=\{\[([\s\S]*?)\]\}/.exec(page);
 		assert(m, 'the showcase does not pass an array status, so this fixture is not the one being measured');
 		assert(!/●/.test(m[1]),
@@ -12806,7 +12806,7 @@ check('the scoped entry and the library tokens cannot drift apart', () => {
 		// this section a demonstration rather than a decoration, and
 		// removing it leaves the section LOOKING fine while proving
 		// nothing - which is the failure this whole file exists to stop.
-		const page = read('src/pages/index.astro');
+		const page = read('src/pages/[...family].astro');
 		const at = page.indexOf('<section id="surface-paint"');
 		assert(at !== -1, 'the showcase has no surface-paint section');
 		const body = page.slice(at, page.indexOf('</section>', at));
@@ -12910,7 +12910,7 @@ check('the scoped entry and the library tokens cannot drift apart', () => {
 		// spacing, which is the author's business - and a test that
 		// forbade those would be a test nobody could satisfy honestly, so
 		// it would just get deleted. The rhythm is a page-level contract.
-		const page = read("src/pages/index.astro");
+		const page = read("src/pages/[...family].astro");
 		const mainAt = page.indexOf("<main");
 		const main = page.slice(mainAt);
 		// Derive the child indent from <main>'s own line rather than
@@ -12947,7 +12947,7 @@ check('the scoped entry and the library tokens cannot drift apart', () => {
 // ---------- shadcn-parity: outline button + range slider ----------
 check("the outline button variant exists and inverts on hover", () => {
 	const css = read("src/styles/components.css");
-	const page = read("src/pages/index.astro");
+	const page = read("src/pages/[...family].astro");
 	assert(/\.cm-btn--outline:hover,[\s\S]{0,200}?background:\s*var\(--ink\)/.test(css),
 		".cm-btn--outline must fill with --ink on hover");
 	assert(/\.cm-btn--outline:hover[\s\S]{0,200}?color:\s*var\(--bg\)/.test(css),
@@ -12958,7 +12958,7 @@ check("the outline button variant exists and inverts on hover", () => {
 
 check("the slider is a native range input wearing house chrome", () => {
 	const css = read("src/styles/components.css");
-	const page = read("src/pages/index.astro");
+	const page = read("src/pages/[...family].astro");
 	assert(/<input[^>]*class="cm-slider"[^>]*type="range"/.test(page),
 		"the slider must be a real input[type=range], not a div");
 	assert(css.includes("input.cm-slider::-webkit-slider-runnable-track"),
@@ -12995,7 +12995,7 @@ process.on('exit', () => {
 // ---------- shadcn-parity: hover card + input group ----------
 check("the hover card is visibility-gated, not merely faded", () => {
 	const css = read("src/styles/components.css");
-	const page = read("src/pages/index.astro");
+	const page = read("src/pages/[...family].astro");
 	assert(/\.cm-hovercard__panel \{[\s\S]{0,300}?visibility: hidden/.test(css),
 		"the panel must be visibility: hidden at rest - opacity alone still catches touches");
 	assert(/\.cm-hovercard:focus-within \.cm-hovercard__panel/.test(css),
@@ -13005,7 +13005,7 @@ check("the hover card is visibility-gated, not merely faded", () => {
 
 check("the input group collapses to one hairline", () => {
 	const css = read("src/styles/components.css");
-	const page = read("src/pages/index.astro");
+	const page = read("src/pages/[...family].astro");
 	assert(/\.cm-input-group__addon \{[^}]*border-inline-end-width: 0;/s.test(css),
 		"the addon gives up its right border so the field's own border is the only seam");
 	assert(!/\.cm-input-group[^{]*\{[^}]*margin-left: -/.test(css) &&
@@ -13019,7 +13019,7 @@ check("the input group collapses to one hairline", () => {
 
 // ---------- shadcn-parity: OTP input + command palette ----------
 {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const js = read('src/js/cli-mono.js');
 	const css = read('src/styles/components.css');
 
@@ -13085,7 +13085,7 @@ check("the input group collapses to one hairline", () => {
 {
 	const css = read('src/styles/components.css');
 	const js = read('src/js/cli-mono.js');
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 
 	check('the carousel is a scrollport with snap, not a transform slideshow', () => {
 		const track = css.match(/\.cm-carousel__track\s*\{([^}]*)\}/);
@@ -13166,7 +13166,7 @@ check("the input group collapses to one hairline", () => {
 
 // ---------- shadcn-parity: popover + combobox ----------
 {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const css = read('src/styles/components.css');
 	const js = read('src/js/cli-mono.js');
 
@@ -13218,7 +13218,7 @@ check("the input group collapses to one hairline", () => {
 
 // ---------- shadcn-parity: context menu + menubar ----------
 {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const css = read('src/styles/components.css');
 	const js = read('src/js/cli-mono.js');
 
@@ -13308,7 +13308,7 @@ check("the input group collapses to one hairline", () => {
 
 // ---------- shadcn-parity: tree + resizable ----------
 {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const css = read('src/styles/components.css');
 	const js = read('src/js/cli-mono.js');
 
@@ -13369,7 +13369,7 @@ check("the input group collapses to one hairline", () => {
 
 // ---------- shadcn-parity: calendar ----------
 {
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const css = read('src/styles/components.css');
 	const js = read('src/js/cli-mono.js');
 	const keyFn = js.slice(js.indexOf('function onCalKey'),
@@ -13456,7 +13456,7 @@ check("the input group collapses to one hairline", () => {
 	// OR that harness).
 	check('shadcn-parity: calendar carries shadcn\'s multiple mode', () => {
 		const js = read('src/js/cli-mono.js');
-		const page = read('src/pages/index.astro');
+		const page = read('src/pages/[...family].astro');
 		const pick = js.slice(js.indexOf('function calPick'), js.indexOf('function onCalClick'));
 		const render = js.slice(js.indexOf('function calRender'), js.indexOf('function calFocus'));
 		const cells = render.slice(render.indexOf('var cells = []'),
@@ -13906,7 +13906,7 @@ check('the data table: delegation, one refresh, and the controls that must not m
 });
 
 check('the data table specimen: registered, opted in, every control present, far buttons hide', () => {
-	const html = read('src/pages/index.astro');
+	const html = read('src/pages/[...family].astro');
 	const css = read('src/styles/components.css');
 
 	assert(html.includes("'data-table'"), 'SECTION_ORDER must list the specimen');
@@ -14266,7 +14266,7 @@ check('the sidebar: the CSS derives from the attributes alone, and none keeps it
 });
 
 check('the sidebar specimen: registered, opted in, every affordance the JS routes on', () => {
-	const html = read('src/pages/index.astro');
+	const html = read('src/pages/[...family].astro');
 
 	assert(html.includes("'sidebar'"), 'SECTION_ORDER must list the specimen');
 	assert(html.includes('id="sidebar"') && html.includes('data-cm-sidebar'),
@@ -14935,7 +14935,7 @@ console.log('\nshadcn-parity: menubar');
 	// browser would run. Every driven assertion carries its control: "nothing
 	// happened" is indistinguishable from "the handler never ran" unless the
 	// case that must fire is shown firing first.
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const html = read('dist/index.html');
 	const js = rt;        // the runtime, comments stripped
 	const css = compSrc;  // the stylesheet, comments stripped
@@ -15288,7 +15288,7 @@ console.log('\ncontract: .cm-msglist (batch 30)');
 	// moving the thing it acts on. Geometry claims that need a layout
 	// are measured in WebKit (tests/verify-msglist.py); everything
 	// here is what a reader of the source can be held to.
-	const page = read('src/pages/index.astro');
+	const page = read('src/pages/[...family].astro');
 	const html = read('dist/index.html');
 	const css = compSrc;                       // comments stripped
 	const raw = read('src/styles/components.css');
@@ -16324,4 +16324,106 @@ check('every spacing declaration comes off the --space-N scale', () => {
 	assert(problems.length === 0,
 		`${problems.length} spacing declaration(s) carry a raw rem literal instead of a --space-N token:\n  ` +
 		problems.join('\n  '));
+});
+
+/* ------------------------------------------------------------------
+ * The page is divided into families, and every family page is a real
+ * document. This is the check that the division is honest: the family
+ * pages must partition the whole page's sections exactly - no specimen
+ * rendered twice, none missing - and no rail row may point at an anchor
+ * that does not exist in the document it is read in.
+ * ------------------------------------------------------------------ */
+const FAMILY_LIST = ['foundation','surfaces','tables','panels','content','prose','layout','composed','reference'];
+
+check('every family page exists and the whole page still renders', () => {
+	assert(exists('dist/index.html'), 'the whole page is gone; the reference document has to stay reachable');
+	for (const f of FAMILY_LIST) {
+		assert(exists(`dist/f/${f}/index.html`), `no family page at dist/f/${f}/index.html`);
+	}
+});
+
+check('the family pages partition the page: each section on exactly one', () => {
+	const ids = (p) => [...read(p).matchAll(/<section id="([\w-]+)"/g)].map((m) => m[1]);
+	const whole = ids('dist/index.html');
+	assert(whole.length > 40, `the whole page rendered only ${whole.length} sections`);
+
+	const seen = new Map();
+	for (const f of FAMILY_LIST) {
+		for (const id of ids(`dist/f/${f}/index.html`)) {
+			if (seen.has(id)) {
+				throw new Error(`#${id} renders on both ${seen.get(id)} and ${f}`);
+			}
+			seen.set(id, f);
+		}
+	}
+	const missing = whole.filter((id) => !seen.has(id));
+	assert(missing.length === 0,
+		`${missing.length} section(s) render on the whole page but on no family page: ${missing.slice(0, 6).join(', ')}`);
+	const extra = [...seen.keys()].filter((id) => !whole.includes(id));
+	assert(extra.length === 0,
+		`${extra.length} section(s) exist only on a family page: ${extra.slice(0, 6).join(', ')}`);
+	assert(seen.size === whole.length,
+		`the family pages carry ${seen.size} sections against the whole page's ${whole.length}`);
+});
+
+check('every rail row resolves in the document it is rendered in', () => {
+	const pages = ['dist/index.html', ...FAMILY_LIST.map((f) => `dist/f/${f}/index.html`)];
+	const problems = [];
+	for (const p of pages) {
+		const html = read(p);
+		const ids = new Set([...html.matchAll(/id="([\w-]+)"/g)].map((m) => m[1]));
+		const start = html.indexOf('id="cm-header-links"');
+		if (start === -1) { problems.push(`${p}: the rail is gone`); continue; }
+		const end = html.indexOf('</nav>', start);
+		const rail = html.slice(start, end > start ? end : start + 40000);
+		for (const m of rail.matchAll(/href="([^"]+)"/g)) {
+			const href = m[1];
+			if (!href.startsWith('#')) continue;
+			if (!ids.has(href.slice(1))) problems.push(`${p}: rail row ${href} has no target in this document`);
+		}
+	}
+	assert(problems.length === 0,
+		`${problems.length} rail row(s) point at nothing:\n  ` + problems.slice(0, 8).join('\n  '));
+});
+
+check('the family routes derive from the one group list, not a restated one', () => {
+	const page = read('src/pages/[...family].astro');
+	// The route file names the families twice: once in getStaticPaths (which
+	// cannot see component scope) and once as sizes in NAV_GROUP_SIZES. Two
+	// lists drift, so the suite requires them to agree exactly.
+	const routes = [...page.matchAll(/^\s*'([a-z]+)',?\s*$/gm)].map((m) => m[1]);
+	const sizes = [...page.matchAll(/\["([\w-]+)",\s*\d+\]/g)].map((m) => m[1]);
+	assert(sizes.length >= 2, 'NAV_GROUP_SIZES is gone');
+	const inRoutes = FAMILY_LIST.filter((f) => page.includes(`'${f}'`));
+	assert(inRoutes.length === FAMILY_LIST.length, 'a family in the suite list is not routable');
+	for (const f of sizes) {
+		assert(inRoutes.includes(f), `${f} is a rail group but has no route, so its rows cannot resolve`);
+	}
+	assert(sizes.length === inRoutes.length,
+		`${sizes.length} rail group(s) against ${inRoutes.length} route(s)`);
+});
+
+check('the whole page carries a way into every family route', () => {
+	/* The families are the leaf documents a reader arrives at, so the whole
+	   page has to advertise them. A split whose pages are only reachable by
+	   typing a URL is not a split, it is a hidden route. */
+	const whole = read('dist/index.html');
+	for (const f of FAMILY_LIST) {
+		assert(whole.includes(`href="/f/${f}/"`),
+			`the whole page has no link to /f/${f}/, so that family page is unreachable by clicking`);
+	}
+});
+
+check('a family page does not link to itself as if it were elsewhere', () => {
+	/* On a family build the group labels are plain text on purpose: linking a
+	   page to itself is noise, and a self-link that looks like navigation is
+	   the kind of dead affordance this suite exists to catch. */
+	const page = read('src/pages/[...family].astro');
+	const m = page.match(/href:\s*family === null \? `\/f\/\$\{label\}\/` : undefined/);
+	assert(m, 'the group label no longer distinguishes the whole-page build from a family build');
+	for (const f of FAMILY_LIST) {
+		const fam = read(`dist/f/${f}/index.html`);
+		assert(!fam.includes(`href="/f/${f}/"`),
+			`/f/${f}/ links to itself`);
+	}
 });

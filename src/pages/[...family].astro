@@ -22,6 +22,27 @@ import CodeBlock from '../astro/CodeBlock.astro';
 import HeaderLink from '../astro/HeaderLink.astro';
 import SectionHead from '../astro/SectionHead.astro';
 
+/* One route renders both the whole page and each family of it.
+ *
+ * The page is 52 specimens in a single document, which is why visiting it
+ * loads the whole suite at once. shadcn does not work that way: its sidebar
+ * links are separate documents, so you load the page you asked for. This file
+ * now emits BOTH shapes from the same markup:
+ *
+ *   /                    -> every family, the reference document
+ *   /f/<family>/         -> that family alone
+ *
+ * The specimens below are wrapped in `shows(...)` so the *same* markup serves
+ * both. Nothing is duplicated between the routes, because a route that
+ * restated the specimens would be a second copy of the component library -
+ * and the suite's 56 reads of this file are what keep a second copy honest.
+ * The family list and the boundary sizes come from NAV_GROUP_SIZES further
+ * down, so the route list cannot drift from the rail.
+ *
+ * A query param was the first attempt and is inert: a static build prerenders
+ * once, so `?family=x` cannot change what was already written to disk. Two
+ * static paths can.
+ */
 /**
  * The showcase's section index, in DOCUMENT order.
  *
@@ -68,12 +89,63 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["reference", 4],
 ];
 
+export function getStaticPaths() {
+	/* getStaticPaths is compiled into its own chunk and cannot see the
+	   component body's scope, so the family names appear here as plain
+	   strings. They are deliberately written without sizes, so that the
+	   suite's group-sum check - which counts [name, size] pairs - still
+	   reads the one authoritative list below rather than this one. The
+	   suite asserts these two agree, which is the anti-drift guard. */
+	const FAMILIES = [
+		'foundation', 'surfaces', 'tables', 'panels', 'content',
+		'prose', 'layout', 'composed', 'reference',
+	];
+	const paths = [{ params: { family: undefined }, props: { family: null as string | null } }];
+	for (const label of FAMILIES) {
+		paths.push({ params: { family: `f/${label}` }, props: { family: label } });
+	}
+	return paths;
+}
+/* Astro drops a prop whose value is nullish for a route whose param is
+ * absent, so the whole-page build arrives as `undefined`. Normalising here
+ * is what makes `family === null` a usable test for "the whole page". */
+const family = (Astro.props as { family?: string | null }).family ?? null;
+const shows = (f: string) => family === null || family === f;
+
+
+/* which family owns each section, derived from the same slices the rail uses */
+const FAMILY_OF: Record<string, string> = (() => {
+	const m: Record<string, string> = {};
+	let at = 0;
+	for (const [label, n] of NAV_GROUP_SIZES) {
+		for (const id of SECTION_ORDER.slice(at, at + n)) m[id] = label;
+		at += n;
+	}
+	return m;
+})();
+
 const NAV_GROUPS = (() => {
 	let at = 0;
 	return NAV_GROUP_SIZES.map(([label, n]) => {
-		const links = SECTION_ORDER.slice(at, at + n).map((id) => ({ href: `#${id}`, label: id }));
+		/* On a whole-page build every row is a same-document anchor, which is
+		   what the scroll-spy follows. On a family build only that family's
+		   sections exist in the document, so a bare `#id` would point at
+		   nothing: the rows have to become cross-document links to the
+		   family route that owns them, and only the rows for the family
+		   being shown stay in-page. A nav row that goes nowhere is worse
+		   than a missing row, so this is asserted by the suite. */
+		const links = SECTION_ORDER.slice(at, at + n).map((id) => {
+			const owner = FAMILY_OF[id] ?? label;
+			if (family === null) return { href: `#${id}`, label: id };
+			if (owner === family) return { href: `#${id}`, label: id };
+			return { href: `../${owner}/#${id}`, label: id };
+		});
 		at += n;
-		return { label, links };
+		/* On the whole-page build the group label doubles as the way into that
+		   family's own route, which is the point of the split: the family pages
+		   are the leaf documents a reader arrives at. On a family build the
+		   label stays plain text, because linking a page to itself is noise. */
+		return { label, links, href: family === null ? `/f/${label}/` : undefined };
 	});
 })();
 
@@ -376,6 +448,7 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 			     hardcoded value pasted alongside. A specimen that disagreed
 			     with its own token would be worse than no specimen, and a
 			     test asserts the wiring. -->
+			{shows('foundation') && (
 			<section id="foundation" class="cm-section cm-section--pad">
 				<SectionHead title="foundation">
 The design language, shown as specimens. Every value here is rendered from the token it documents, so this page cannot drift away from the system it demos.
@@ -518,7 +591,9 @@ The design language, shown as specimens. Every value here is rendered from the t
 					<dt>runtime</dt><dd><code>src/js/cli-mono.js</code> (theme, header, spy, copy)</dd>
 				</dl>
 			</section>
+			)}
 
+			{shows('foundation') && (
 			<section id="buttons" class="cm-section cm-section--pad">
 				<SectionHead title="buttons" />
 				<div class="cm-btn-group">
@@ -539,6 +614,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 				</div>
 				<p class="cm-head__sub"><code>cm-btn--outline</code> is shadcn’s invert-on-hover button: the border is the body. <code>cm-btn--danger</code> is a cross plus a heavier rule, never a hue. <code>cm-btn-group--joined</code> collapses neighbouring borders into one control.</p>
 			</section>
+			)}
 
 			<!-- ==================================================== nav
 			     The two nav states are different questions and the showcase
@@ -547,6 +623,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 			     says WHAT YOU ARE READING as you scroll. The first nav is
 			     live - it is the one in the header, so its states are real,
 			     not a hand-built mock. -->
+			{shows('foundation') && (
 			<section id="nav" class="cm-section cm-section--pad">
 				<SectionHead title="nav">
 Two states, two different questions. <code>active</code> marks the page you are on and renders <code>aria-current="page"</code>; the scroll-spy marks what you are reading as you scroll. They coexist on a one-page site, so they cannot be the same attribute. Scroll to watch the first nav above change.
@@ -748,7 +825,9 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					</div>
 				</div>
 				</section>
+			)}
 
+			{shows('foundation') && (
 			<section id="sidebar" class="cm-section cm-section--pad">
 				<SectionHead title="sidebar">
 shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is on, what it collapses to, and whether it is a sheet yet &mdash; and every one of those facts is an <em>attribute</em>, so opening is one <code>setAttribute</code> and the CSS does the rest. The scope (<code>data-cm-sidebar</code>) owns the five knobs the docs carry as props: <code>data-side</code>, <code>data-variant</code>, <code>data-collapsible</code>, plus open state and its phone-sized twin. On the desktop the <strong>rail</strong> on the panel's edge clicks to collapse (icon mode: labels step aside, <code>aria-label</code> keeps the name) and drags to resize; at 402px the same panel becomes a <strong>sheet</strong> over a scrim, which is why the trigger starts itself with <code>aria-expanded</code> off the viewport. <code>&#8984;B</code> / <code>Ctrl+B</code> is wired through one delegated keydown, the same path <code>&#8984;K</code> already takes. Groups and submenus are <strong>disclosures</strong> &mdash; the platform's job, not a popover's &mdash; so this component never re-enters the placement machinery it does not own.
@@ -857,7 +936,9 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 					</main>
 				</div>
 			</section>
+			)}
 
+			{shows('foundation') && (
 			<section id="crumbs" class="cm-section cm-section--pad">
 				<SectionHead title="breadcrumb">
 					The trail above a detail page: how deep am I, and how do I get out. It is the first thing a thumb touches, so every crumb is a <code>--tap</code> target; the separator is a <code>.cm-crumbs__sep</code> carrying <code>aria-hidden="true"</code> so a screen reader never speaks it; and the last crumb is marked <code>aria-current="page"</code>, the same attribute the header nav uses, so "you are here" survives greyscale print and a screen reader.
@@ -917,7 +998,9 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 					</div>
 				</div>
 			</section>
+			)}
 
+			{shows('surfaces') && (
 			<section id="lists" class="cm-section cm-section--pad">
 				<SectionHead title="lists / rows" />
 
@@ -975,11 +1058,13 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 				</ul>
 				<div class="cm-list-more"><a href="#">$ cat all →</a></div>
 			</section>
+			)}
 
 			<!-- ==================================================== states
 			     Every async surface has to render these three, and a system
 			     that does not own them lets every consumer invent them —
 			     usually in colour, or as an unguarded spinner. -->
+			{shows('surfaces') && (
 			<section id="states" class="cm-section cm-section--pad">
 				<SectionHead title="states">
 What a surface shows before it has data, and after it fails. Status is carried by a glyph and a word, never by hue: this system has no chroma to carry it, and greyscale print still reads correctly.
@@ -1113,6 +1198,7 @@ What a surface shows before it has data, and after it fails. Status is carried b
 					</table>
 				</div>
 			</section>
+			)}
 
 			<!-- ==================================================== surface
 			     Every VARIANT, rendered. The states section above shows
@@ -1125,6 +1211,7 @@ What a surface shows before it has data, and after it fails. Status is carried b
 			     a modifier nobody can see is a modifier nobody trusts,
 			     and the tag row overflowing its column by 26px at 320
 			     lived here for the whole life of the class. -->
+			{shows('surfaces') && (
 			<section id="surface" class="cm-section cm-section--pad">
 				<SectionHead title="variants">
 Each row is one modifier against its own base, so the difference is the thing being reviewed. A variant that computed identically to its base would be a class that looks right in this table and does nothing anywhere else.
@@ -1430,12 +1517,14 @@ Each row is one modifier against its own base, so the difference is the thing be
 					<p class="cm-head__title">a title that is not an h1</p>
 				</div>
 			</section>
+			)}
 			<!-- ==================================================== selection
 			     A data surface needs two marks the library did not own: a
 			     SELECTED row and a live/off indicator. Twelve consumers
 			     each invented one, in hue - 28 distinct raw colours across
 			     one app. Both are weight and shape here, so they survive a
 			     greyscale print and a colour-blind read. -->
+			{shows('surfaces') && (
 			<section id="selection" class="cm-section cm-section--pad">
 				<SectionHead title="selection + state marks">
 A selected row takes a left rule and a faint tint rather than an outline: an outline competes with the row's own border, and the weight belongs on one edge so a column of them scans as a column.
@@ -1464,6 +1553,7 @@ A selected row takes a left rule and a faint tint rather than an outline: an out
 					</div>
 				</div>
 			</section>
+			)}
 
 				<h3 class="cm-kicker">check row</h3>
 				<p class="cm-head__sub">
@@ -1539,6 +1629,7 @@ A selected row takes a left rule and a faint tint rather than an outline: an out
 			     blocks here, on purpose: the bug that made every copy
 			     button on a page copy the FIRST block only, and the
 			     double-bind, both need a second button to exist. -->
+			{shows('surfaces') && (
 			<section id="stack" class="cm-section cm-section--pad">
 				<SectionHead title="record stack">
 A vertical run of records. The stack is opt-in rather than baked into the list, because a ledger of rows can be flush (each row's own border does the separating) or stacked (cards with air between them), and the list element cannot know which one it is.
@@ -1616,7 +1707,9 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 					</p>
 				</div>
 			</section>
+			)}
 
+					{shows('surfaces') && (
 					<section id="density" class="cm-section cm-section--pad">
 						<SectionHead title="density and rhythm helpers">
 							These exist because the rhythm was being written by hand in page
@@ -1693,6 +1786,8 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 							</div>
 						</div>
 					</section>
+					)}
+						{shows('surfaces') && (
 						<section id="badge" class="cm-section cm-section--pad">
 							<SectionHead title="page head">
 The title row every page starts with: a square glyph, the name, one line of what the page is for, and the page's own action. The badge is an inset square rather than the seven gradients it replaces, because a hue is the only signal that fails in greyscale.
@@ -1708,6 +1803,8 @@ The title row every page starts with: a square glyph, the name, one line of what
 								<button class="cm-btn cm-btn--sm cm-btn--primary cm-head-row__action">Add Dead Host</button>
 							</div>
 						</section>
+						)}
+												{shows('tables') && (
 												<section id="tblaction" class="cm-section cm-section--pad">
 							<SectionHead title="table action">
 A row's control, in the table's own visual language. A <code>&lt;tr onClick&gt;</code> is not a control - it is not focusable and Enter does nothing - so this is a real button, drawn as text so the grid does not become a stack of chrome. The tap floor is its own padding box. On a coarse pointer the arrow is always visible, because there is no hover to reveal it.
@@ -1794,6 +1891,8 @@ A row's control, in the table's own visual language. A <code>&lt;tr onClick&gt;<
 								</div>
 							</div>
 						</section>
+												)}
+						{shows('tables') && (
 						<section id="table" class="cm-section cm-section--pad">
 							<SectionHead title="table">
 For records a person scans <em>across</em> rather than one at a time - a log is the case that cannot be cards, because the columns have to line up. The header is sticky, because row 400 otherwise has no idea which column it is in. Status codes carry a weight and a marker, not a hue: a wall of red and green is unreadable in greyscale and to anyone with colour vision. Five of the seven headers are sort controls. Each is a &#60;button&#62; inside a &#60;th scope="col" aria-sort&#62;, which is the shape a sortable column actually has: the sort state lives on the th, where the accessibility tree reads it, and the dot is drawn by CSS from that same attribute so the visible mark and the announced state cannot drift apart. A &#123;&lt;th onClick&#125;&#125; is not a control - it cannot be focused and Enter does nothing to it.
@@ -1839,6 +1938,8 @@ For records a person scans <em>across</em> rather than one at a time - a log is 
 								</table>
 							</div>
 						</section>
+						)}
+						{shows('tables') && (
 						<section id="data-table" class="cm-section cm-section--pad" data-cm-datatable>
 							<SectionHead title="data table depth">
 							filter, page, columns, selection - the four things that turn a
@@ -1956,6 +2057,8 @@ For records a person scans <em>across</em> rather than one at a time - a log is 
 							</div>
 						</div>
 						</section>
+						)}
+						{shows('tables') && (
 						<section id="json" class="cm-section cm-section--pad">
 							<SectionHead title="code: json">
 The monospace surface for structured text, in the two forms it is always used: a block you read and a block you edit. Same type, same frame, so switching between them does not move the text. Not to be confused with <code>cm-code-input</code>, which is the centred one-time-code field.
@@ -1976,6 +2079,8 @@ The monospace surface for structured text, in the two forms it is always used: a
 								</details>
 							</div>
 						</section>
+						)}
+						{shows('tables') && (
 						<section id="rowon" class="cm-section cm-section--pad">
 							<SectionHead title="selected row">
 <code>cm-row--on</code> is the list-row form of the selected treatment, and <code>button.cm-row</code> is a row that is itself the control. Both mark state with an inset rule rather than a tint: a coloured row is the one signal that disappears in greyscale print, and a selected row is information the reader has to see.
@@ -2089,6 +2194,8 @@ The monospace surface for structured text, in the two forms it is always used: a
 						</li>
 						</ul>
 						</section>
+						)}
+						{shows('tables') && (
 						<section id="switch" class="cm-section cm-section--pad">
 							<SectionHead title="switch">
 							For "this whole behaviour is on or off" - as distinct from <code>cm-check</code>, which is "include this row". The knob's position carries the state, not its colour. The <code>&lt;input&gt;</code> is the control, transparent and on top: it is the tap target, the focus target and the form value, so a keyboard or screen reader reaches a real checkbox rather than a <code>&lt;div&gt;</code> with a click handler.
@@ -2129,6 +2236,8 @@ The monospace surface for structured text, in the two forms it is always used: a
 								</div>
 							</div>
 						</section>
+						)}
+						{shows('panels') && (
 						<section id="sheet" class="cm-section cm-section--pad">
 							<SectionHead title="dialog, as a side sheet">
 The same native <code>&lt;dialog&gt;</code> as the confirm modal, anchored to the right edge instead of the centre. Only the frame changes, so it keeps the focus trap, Escape, the top layer and the inertness of the page behind it - all of which a hand-rolled <code>position: fixed</code> panel gives up. Full-width and flush below 640px.
@@ -2157,6 +2266,8 @@ The same native <code>&lt;dialog&gt;</code> as the confirm modal, anchored to th
 								<div class="cm-dialog__head"><div class="cm-dialog__title">bottom sheet</div></div>
 							</dialog>
 						</section>
+						)}
+						{shows('panels') && (
 						<section id="drawer" class="cm-section cm-section--pad">
 							<SectionHead title="drawer">
 The bottom sheet with a handle on it. Grab the strip and pull: past the threshold the drawer closes for real, so focus lands back on whatever opened it; short of the threshold it snaps home - a half-pull is a no-op, not a stuck drawer. The drag is transform against the pointer itself, so the sheet sits exactly under your finger with no easing of its own. Only the HANDLE drags: the body scrolls underneath, and a gesture that began in the content would fight that scroll. The frame is still the native <code>&lt;dialog&gt;</code> from the sheet above - focus trap, Escape, top layer, inert page - because a pull-to-dismiss drawer that gives those up is a worse trade than a drawer without a handle.
@@ -2195,6 +2306,8 @@ The bottom sheet with a handle on it. Grab the strip and pull: past the threshol
 								</div>
 							</dialog>
 						</section>
+						)}
+						{shows('panels') && (
 						<section id="choice" class="cm-section cm-section--pad">
 				<SectionHead title="choice + disclosure">
 A compact set of exclusive choices, and a summary row that reveals a panel. Both mark their selected / open state with an inset rule, because a thicker border would widen the box and walk the row sideways.
@@ -2232,6 +2345,8 @@ A compact set of exclusive choices, and a summary row that reveals a panel. Both
 					</details>
 				</div>
 			</section>
+						)}
+			{shows('panels') && (
 <section id="keys-pages-people" class="cm-section cm-section--pad">
 				<SectionHead title="keys, pages, people">
 Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key, <code>.cm-pager</code> is real links with <code>aria-current</code>, <code>.cm-avatar</code> is a square tile that falls back to initials, and <code>.cm-accordion</code> is disclosures that close each other through the platform's own <code>name</code> attribute &mdash; drop <code>name</code> and several may stand open together. Script touches it in exactly one direction: <code>aria-disabled</code> on a summary vetoes the toggle, which <code>&lt;details&gt;</code> has no attribute for.
@@ -2377,12 +2492,14 @@ import themeGuard from '../js/cli-mono-theme-guard.js?raw';
 					</div>
 				</div>
 			</section>
+			)}
 
 			<!-- ==================================================== overlays
 			     Five components that sit ON TOP of the page, and three of
 			     them are the platform's element: <dialog>, [popover] and
 			     hover/focus. Nothing here has a runtime that reimplements
 			     what a browser already does correctly. -->
+			{shows('panels') && (
 			<section id="overlays" class="cm-section cm-section--pad">
 				<SectionHead title="overlays">
 Five surfaces that sit on top of the page. Four of the five are native elements doing native things &mdash; a <code>&lt;dialog&gt;</code>, a <code>[popover]</code>, a hover, a <code>hidden</code> attribute. Only the tablist needs script, because the platform ships no tab widget and the roving tabindex is the one part of the ARIA contract CSS cannot express.
@@ -2937,10 +3054,12 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 					clear of both margins.
 				</p>
 			</section>
+			)}
 
 			<!-- ==================================================== records
 			     A metric tile is not a key/value row and a work history
 			     is not a link list, so both needed a real component. -->
+			{shows('content') && (
 			<section id="records" class="cm-section cm-section--pad">
 				<SectionHead title="Records">
 Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</code> sizes its columns with <code>auto-fit</code> rather than a fixed number, and the timeline rail is drawn on the <em>item</em> so it stops at the last record on its own, with no script. (<code>auto-fit</code> fits the count to the width; it cannot balance a ragged last row — see the balanced band below for that.)
@@ -3059,10 +3178,12 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 					/>
 				</ul>
 			</section>
+			)}
 
 			<!-- ==================================================== cards
 			     One subject that needs more room than a row, and a
 			     number that is a proportion rather than a count. -->
+			{shows('content') && (
 			<section id="cards" class="cm-section cm-section--pad">
 				<SectionHead title="Cards and meters">
 A card is a unit of content with a title, so <code>.cm-cards</code> is a grid and <code>.cm-card</code> fills its cell — a two-line card and a six-line card in the same row still share a bottom edge. A meter is a number that happens to be drawn: the bar is <code>aria-hidden</code> and the value is real text, so the chart and the sentence can never disagree.
@@ -3258,6 +3379,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					</div>
 				</div>
 			</section>
+			)}
 
 			<!-- ==================================================== prose
 			     An article head, then the prose it introduces. The
@@ -3269,6 +3391,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 			     but demonstrating the component is what proves the
 			     rule renders the way it reads. -->
 
+			{shows('content') && (
 			<section id="tiles">
 				<SectionHead title="Tiles &amp; inline navigation" />
 				<p class="lede">
@@ -3314,7 +3437,9 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					</p>
 				</div>
 			</section>
+			)}
 
+			{shows('prose') && (
 			<section id="prose" class="cm-section cm-section--pad">
 				<SectionHead title="prose">
 <code>.cm-prose</code> for the body of an article and <code>.cm-post-head</code> for the block above it. The post head is the one page head that carries a rule under itself, because the thing below it is prose and not another section.
@@ -3592,6 +3717,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 																			</div>
 																		</section>
 																	</section>
+			)}
 			<!-- ==================================================== layout
 			     The two page shapes that are not a single column: a lede
 			     under the head, and a main block with a metadata aside.
@@ -3599,6 +3725,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 			     each file, so a change to reading measure never reached
 			     any of them. The specimens below are drawn FROM the
 			     tokens they document. -->
+			{shows('layout') && (
 			<section id="layout" class="cm-section cm-section--pad">
 				<SectionHead title="layout">
 <code>.cm-lede</code> is the opening sentence under a page head, and <code>.cm-split</code> puts a metadata column beside a content block. The measure comes from <code>--measure</code>, not a number typed next to it, so changing the reading width is a token change. The split stacks below 700px on purpose: two columns of text on a phone is two unreadable columns.
@@ -3842,7 +3969,9 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					</aside>
 				</div>
 			</section>
+			)}
 
+			{shows('layout') && (
 			<section id="surface-paint" class="cm-section cm-section--pad">
 				<SectionHead title="surface">
 					<code>.cm-surface</code> paints a subtree that has no <code>&lt;body&gt;</code> of its own. Every other <code>.cm-*</code> class is padding and colour <em>within</em> a surface; this one is the paint. It exists for a SCOPED adoption - one that cannot import <code>base.css</code>, because that file is bare-element rules and unlayered CSS outranks every <code>@layer</code> in a Vite build - which is what left two first-party apps hand-writing <code>style={{background:'var(--bg)', color:'var(--ink)'}}</code> at each root.
@@ -3885,7 +4014,9 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					</div>
 				</div>
 			</section>
+			)}
 
+			{shows('layout') && (
 			<section id="forms" class="cm-section cm-section--pad">
 				<SectionHead title="forms">
 inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-brand. <code>.cm-field</code> and friends are the layout around them.
@@ -4190,6 +4321,7 @@ inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-
 					</div>
 				</form>
 			</section>
+			)}
 
 			<!-- ====================================================== search
 			     Filtering a list is not editing a value, so it is not
@@ -4203,6 +4335,7 @@ inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-
 			     mounted control that greys out. The wide modifier is
 			     demonstrated too, because rpm emits it and the library
 			     never defined it until this cycle. -->
+			{shows('layout') && (
 			<section id="datepicker" class="cm-section cm-section--pad">
 				<SectionHead title="date picker">
 The calendar sits in a <code>[popover]</code> panel wearing the <code>.cm-popover</code> frame, so
@@ -4257,6 +4390,8 @@ the panel while month navigation does not - paging is not a choice.
 					</div>
 				</div>
 			</section>
+			)}
+			{shows('layout') && (
 			<section id="scrollarea" class="cm-section cm-section--pad">
 				<SectionHead title="scroll area">
 A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
@@ -4286,6 +4421,8 @@ A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
 					</ul>
 				</div>
 			</section>
+			)}
+			{shows('layout') && (
 			<section id="charts" class="cm-section cm-section--pad">
 				<SectionHead title="charts">
 					six types drawn as hand-rolled SVG - no charting
@@ -4412,7 +4549,9 @@ A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
 					</div>
 				</div>
 			</section>
+			)}
 
+			{shows('layout') && (
 			<section id="utilities" class="cm-section cm-section--pad">
 				<SectionHead title="utilities">
 Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
@@ -4483,7 +4622,9 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<code>--shimmer-spread</code>, <code>--shimmer-angle</code>.
 				</p>
 			</section>
+			)}
 
+			{shows('composed') && (
 			<section id="chat" class="cm-section cm-section--pad">
 				<SectionHead title="chat">
 					three parts of a conversation, composed from house primitives: the
@@ -4581,6 +4722,8 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</div>
 				</div>
 			</section>
+			)}
+			{shows('composed') && (
 			<section id="guildrail" class="cm-section cm-section--pad">
 				<SectionHead title="guildrail">
 					the server icon rail: one square per server, a visible
@@ -4697,6 +4840,8 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</div>
 				</div>
 			</section>
+			)}
+			{shows('composed') && (
 			<section id="composer" class="cm-section cm-section--pad">
 				<SectionHead title="composer">
 					the message box at the foot of a thread: a frame, a field, a
@@ -4741,6 +4886,8 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</p>
 				</div>
 			</section>
+			)}
+			{shows('composed') && (
 			<section id="dropdown-depth" class="cm-section cm-section--pad">
 				<SectionHead title="dropdown depth">
 					the documented item kinds, all composing the same row: a
@@ -4807,7 +4954,9 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</div>
 				</div>
 			</section>
+			)}
 
+			{shows('composed') && (
 			<section id="navmenu" class="cm-section cm-section--pad">
 				<SectionHead title="navigation menu">
 					the nav that opens <em>panels</em>, not lists: a persistent
@@ -4997,7 +5146,9 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 				</div>
 
 			</section>
+			)}
 
+			{shows('composed') && (
 			<section id="scroller" class="cm-section cm-section--pad">
 				<SectionHead title="message scroller">
 					the transcript frame: a labelled, keyboard-focusable scroll
@@ -5132,7 +5283,9 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 				</div>
 				</div>
 			</section>
+			)}
 
+			{shows('composed') && (
 			<section id="msglist" class="cm-section cm-section--pad">
 				<SectionHead title="message list">
 					the flat timeline that lives inside the scroller: a day
@@ -5301,7 +5454,9 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</div>
 				</div>
 			</section>
+			)}
 
+			{shows('composed') && (
 			<section id="attachment" class="cm-section cm-section--pad">
 				<SectionHead title="attachment">
 					the file card: media, content, actions - plus a full-card
@@ -5459,6 +5614,8 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</span>
 				</div>
 			</section>
+			)}
+			{shows('reference') && (
 			<section id="quiz" class="cm-section cm-section--pad">
 				<SectionHead title="questionnaire">
 					one question at a time over a real form: <code>fieldset</code> +
@@ -5535,7 +5692,9 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					</div>
 				</form>
 			</section>
+			)}
 
+			{shows('reference') && (
 			<section id="search" class="cm-section cm-section--pad">
 				<SectionHead title="search">
 A filter control, not an inline edit. <code>.cm-inline</code> styles a value being changed in place; this is a four-sided bordered field with a leading glyph and a clear button that appears only once there is a value.
@@ -5577,6 +5736,7 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 					</div>
 				</div>
 			</section>
+			)}
 
 			<!-- ====================================================== auth
 			     Sign-in is not its own design language. It is the card,
@@ -5587,6 +5747,7 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 			     scaled into a frame rather than at 100dvh, because a
 			     100dvh specimen inside a scrolling page pushes every
 			     other section a full screen down. -->
+			{shows('reference') && (
 			<section id="auth" class="cm-section cm-section--pad">
 				<SectionHead title="auth">
 Every class below except <code>.cm-auth</code>, <code>.cm-card--auth</code>, <code>.cm-code-input</code> and <code>.cm-divider</code> was already in this system. A sign-in screen is the card, the field, the alert and the button you have just seen, arranged for credentials.
@@ -5678,7 +5839,9 @@ Every class below except <code>.cm-auth</code>, <code>.cm-card--auth</code>, <co
 					</div>
 				</div>
 			</section>
+			)}
 
+			{shows('reference') && (
 			<section id="readme" class="cm-section cm-section--pad">
 				<SectionHead title="usage" />
 				<div class="cm-term">
@@ -5694,6 +5857,7 @@ Astro: import Header/Footer/Head/PageHead/PostHead from 'oem-ui/astro'.</pre>
 					</div>
 				</div>
 			</section>
+			)}
 		</main>
 		<Footer
 			items={['astro', 'static', 'zero deps']}

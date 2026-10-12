@@ -128,6 +128,7 @@ const withSpy = (l: Link) => ({
 const navGroups = groups.map((g) => ({
 	label: g.label,
 	links: g.links.map(withSpy),
+	href: (g as any).href,
 }));
 const groupedSpy = navGroups.some((g) => g.links.some((l) => l.spyId));
 
@@ -184,7 +185,9 @@ const currentPath = Astro.url.pathname;
 			<div class="cm-header__links" id="cm-header-links" data-cm-nav={anySpy || groupedSpy ? true : undefined}>
 				{navGroups.map((g) => (
 					<div class="cm-header__group">
-						<span class="cm-header__group-label">{g.label}</span>
+						{g.href
+							? <a class="cm-header__group-label" href={g.href}>{g.label}</a>
+							: <span class="cm-header__group-label">{g.label}</span>}
 						<div class="cm-header__links">
 							{g.links.map((l) => (
 								<a

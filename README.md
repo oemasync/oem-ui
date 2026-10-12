@@ -3343,7 +3343,7 @@ This is a static showcase with no write routes and no credentials, so it is
 fine unauthenticated inside your own network. It is bound to the LAN only: no
 DNS record points at it and no port is forwarded on the router.
 
-The `showcase/` and `src/pages/index.astro` pages render every component, so
+The `showcase/` and `src/pages/[...family].astro` pages render every component, so
 `npm run build` is a real compile of the whole library.
 
 ## Contributing

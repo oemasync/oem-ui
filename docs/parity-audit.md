@@ -56,7 +56,7 @@ everywhere.
 
 ## 3. What oem-ui is today
 
-- ONE page: `src/pages/index.astro`, 316 KB, 5740 lines, 55 `<section>`
+- ONE page: `src/pages/[...family].astro`, 316 KB, 5740 lines, 55 `<section>`
   elements, **52 of them top-level and individually linked in the nav**.
 - The entire suite is in the initial HTML payload. Every visitor downloads
   and parses all 52 sections plus one 248 KB runtime before reading
