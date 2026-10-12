@@ -157,7 +157,7 @@ const currentPath = Astro.url.pathname;
 		    by CSS unless the runtime has set `.cm-js` on <html>, so a no-JS
 		    reader keeps the full nav. */}
 		{
-			links.length > 0 && (
+			(links.length + navGroups.length) > 0 && (
 				<button
 					class="cm-icon-btn cm-nav-toggle"
 					type="button"

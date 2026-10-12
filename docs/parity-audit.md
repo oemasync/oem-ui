@@ -133,6 +133,29 @@ everywhere.
    rail navigation; any lazy-loading must not break `href="#…"`.
 3. **Navigation**: 52 flat links, no grouping, no on-this-page TOC.
 
+   FIXED, measured (2026-10-12). The rail is divided into **9 labelled
+   groups** as contiguous `SECTION_ORDER.slice()` ranges, so there is
+   still ONE section index and the groups cannot drift from it. MEASURED
+   on the built page in WebKit at 1280x577: 9 `cm-header__group-label`
+   elements render, 52 links, all 52 carry `data-cm-spy`, and the rail
+   list is a scroll container (2641px of rows in a 426px viewport) whose
+   last link is reachable by scrolling it — the same arrangement shadcn
+   uses for its 64-item component list.
+
+   A boundary that overshoots would DROP sections off the rail while they
+   still render in the page: present, anchorable, unreachable from the
+   nav. The derivation asserts its own coverage at module scope, and the
+   suite re-checks the property (the slices must sum to `SECTION_ORDER`).
+   Mutation-proven: setting the first group's size 5 -> 3 reports
+   "the rail groups sum to 50 rows against 52 sections, so 2 section(s)
+   are unreachable from the nav".
+
+   Still missing vs shadcn's IA (measured from its own sidebar, 8 groups):
+   a **right-hand on-this-page TOC** (shadcn's content page carries one
+   sticky TOC at ~288px alongside the ~640px content column), and the
+   non-component areas — Blocks, Typeset, Directory, Create — which have
+   no oem-ui equivalent at all.
+
 ## 5. Rebuild plan (matching shadcn's structure, keeping house tokens)
 
 House identity is preserved (mono, sharp corners, no hue, dark default);

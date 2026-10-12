@@ -6959,17 +6959,32 @@ check('the toggle is a real button', () => {
 check('the panel has the id the button points at', () => {
 	if (!MC_HDR.includes('id="cm-header-links"')) throw new Error('aria-controls points at an id that does not exist');
 });
-check('the toggle only renders when there are links to disclose', () => {
+check('the toggle only renders when there is nav to disclose', () => {
 	// The toggle is its own {cond && (...)} expression, so the guard that
 	// matters is the one immediately wrapping `data-cm-nav-toggle`. A
 	// file-wide search for `links.length > 0 && (` is satisfied by the LINKS
 	// block elsewhere in the header, so removing the toggle's own guard left
 	// the test green.
+	//
+	// The guard must count BOTH sources of nav. It read `links.length > 0`
+	// alone, which was right when `links` was the only way to pass nav - and
+	// became a real defect the moment the header learned to render GROUPS: a
+	// page passing `groups={...}` and no `links` got no burger at all, so
+	// `.cm-js` was never set and every `.cm-js`-gated rule went dead. This
+	// check is what should have caught that, so it asserts the property
+	// ("the guard is false only when there is genuinely nothing to disclose")
+	// rather than one spelling of it.
 	const at = MC_HDR.indexOf('data-cm-nav-toggle');
 	if (at === -1) throw new Error('no burger toggle in the header');
-	const before = MC_HDR.slice(Math.max(0, at - 300), at);
-	if (!/links\.length > 0/.test(before))
+	const before = MC_HDR.slice(Math.max(0, at - 400), at);
+	if (!/>\s*0\s*&&/.test(before))
 		throw new Error('a burger with nothing behind it is a dead control');
+	// Both nav sources must be in the count, or a `groups`-only header gets
+	// no toggle and `.cm-js` is never set for the whole enhanced path.
+	if (!/navGroups/.test(before))
+		throw new Error(
+			'the burger guard does not count `navGroups`, so a header passed ' +
+			'`groups` and no `links` renders no toggle at all');
 });
 
 /* Runtime checks are scoped to initNavToggle. Searching the whole runtime
