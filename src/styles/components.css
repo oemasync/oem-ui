@@ -6748,6 +6748,84 @@ input.cm-slider:disabled {
 .cm-combobox__option.is-active { background: var(--bg-3); color: var(--ink); }
 .cm-combobox__hint { color: var(--ink-faint); font-size: var(--text-sm); }
 
+/* ---------- mention typeahead ----------
+   An @-autocomplete for a TEXTAREA. The combobox above is a standalone
+   input; this is the other shape -- a list that hangs off a caret inside a
+   field the reader is already typing in, so it cannot own the input and
+   cannot be a `<select>`.
+
+   It opens UPWARD. The composer sits at the bottom of the window, so a list
+   positioned below the caret would be off-screen for every mention the
+   reader types -- the one placement that is wrong for the only place this
+   component is used. `bottom: calc(100% + 4px)` is measured from the wrapper
+   the consumer puts around the field, which is what makes it land above the
+   bar instead of below it.
+
+   The wrapper is `position: relative` so the list anchors to the FIELD, not
+   to the page: a list anchored to the page would drift away from the caret
+   as soon as the composer's height changed, which it does on every newline.
+   `.cm-composer__bar` is NOT positioned, so the consumer wraps the field in
+   its own relative box -- the list must be anchored to the textarea, and
+   that box is the only thing that moves exactly when the field does.
+
+   Rows are `<button role="option">` inside `[role="listbox"]`: the reader
+   can pick with the pointer OR with Enter/arrows, and the activation that
+   matters is the one already bound on the textarea. The list is hidden with
+   a DISPLAY rule on `[hidden]`, because an author `display: block` outranks
+   the UA's own `[hidden]` -- the trap the command palette and the combobox
+   both document. */
+.cm-mention {
+	position: absolute;
+	z-index: var(--z-popover);
+	bottom: calc(100% + 4px);
+	inset-inline-start: 0;
+	min-width: 12rem;
+	max-width: min(22rem, calc(100vw - 16px));
+	margin: 0;
+	padding: var(--space-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg-2);
+	box-shadow: var(--shadow-card);
+	list-style: none;
+	max-height: 14rem;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+/* The box the list is measured against. A consumer places it around the
+   FIELD it is completing (the textarea), and nothing else -- the list is
+   absolute, so without this it would resolve against the nearest positioned
+   ancestor and open wherever that happened to be. */
+.cm-mention__anchor { position: relative; display: block; }
+.cm-mention[hidden] { display: none; }
+.cm-mention__option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	width: 100%;
+	margin: 0;
+	padding: var(--space-2) var(--space-3);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--ink-dim);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+/* The ACTIVE row is the one Enter will pick. `[aria-selected]` is the state
+   the listbox pattern already publishes, so the paint follows the same
+   attribute the accessibility tree does rather than a private class that
+   could disagree with it. */
+.cm-mention__option:hover,
+.cm-mention__option[aria-selected='true'] {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+.cm-mention__name { font-weight: 600; }
+.cm-mention__hint { color: var(--ink-faint); font-size: var(--text-sm); }
+
 /* ---------- context menu ----------
    The panel and the rows are the dropdown's; only WHERE it opens differs.
    It opens at the POINTER, so the base menu rule's `right: 0;
