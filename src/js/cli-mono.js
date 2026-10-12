@@ -5593,6 +5593,44 @@
 		// keydown for CMD-B and Escape, and a pointer session for the rail
 		// (drag resizes, an unmoved press toggles) - all at the root, so a
 		// panel a consumer re-renders keeps every control.
+		/* ---- lightbox ------------------------------------------------
+		   The image viewer. The frame is a native <dialog> the consumer
+		   renders, so the top layer, Escape, the backdrop and focus
+		   trapping are the platform's. All this binds is the TRIGGER:
+		   any element carrying data-cm-lightbox=<url> opens the dialog
+		   that element names via data-cm-lightbox-target (or the one
+		   <dialog class="cm-lightbox"> on the page) and paints the URL
+		   into its <img>. One delegate, so a timeline of a thousand
+		   thumbnails costs one listener. */
+		function onLightboxClick(e) {
+			var t = e.target;
+			if (!t || typeof t.closest !== 'function') return;
+			var opener = t.closest('[data-cm-lightbox]');
+			if (opener) {
+				var url = opener.getAttribute('data-cm-lightbox');
+				if (!url) return;
+				var id = opener.getAttribute('data-cm-lightbox-target');
+				var dlg = id
+					? document.getElementById(id)
+					: document.querySelector('dialog.cm-lightbox');
+				if (!dlg) return;
+				var img = dlg.querySelector('.cm-lightbox__img');
+				if (img) {
+					img.setAttribute('src', url);
+					/* The opener's own alt is the best description the page
+					   has; falling back to empty keeps the img decorative
+					   rather than announcing a URL. */
+					var alt = opener.getAttribute('data-cm-lightbox-alt') || '';
+					img.setAttribute('alt', alt);
+				}
+				if (typeof dlg.showModal === 'function' && !dlg.open) dlg.showModal();
+				else if (typeof dlg.show === 'function') dlg.show();
+				return;
+			}
+			/* Any [data-cm-close] inside the lightbox closes it, which the
+			   dialog binder already owns; nothing to add here. */
+		}
+		document.addEventListener('click', onLightboxClick);
 		document.addEventListener('click', onSidebarClick);
 		document.addEventListener('keydown', onSidebarKeydown);
 		document.addEventListener('pointerdown', onSidebarPointerDown);
