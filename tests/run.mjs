@@ -3231,7 +3231,7 @@ check('the showcase opts in, and a mobile reader still gets the burger', () => {
 	// `cm-shell cm-shell--rail cm-stack cm-stack--section`), which is a
 	// legitimate change - so assert the rail is PRESENT, not that it is
 	// alone.
-	assert(/<main class="[^"]*\bcm-shell--rail\b/.test(page),
+	assert(/<main class=(?:"[^"]*\bcm-shell--rail\b|\{[\s\S]{0,200}?cm-shell--rail\b)/.test(page),
 		'the showcase does not offset its own content for the rail');
 	// The burger is a phone control. In rail mode the links are permanent,
 	// so the button would open something already open.
@@ -7798,7 +7798,7 @@ check('the copy button is a house button, not a new visual language', () => {
 	// source here would pass on the three inert state specimens while the
 	// real button in <CodeBlock> went unstyled - which is exactly what the
 	// first mutation of this test proved.
-	const built = builtHtml();
+const built = builtHtml();
 	if (built) {
 		const btns = built.match(/<button[^>]*data-cm-copy\b[\s\S]*?<\/button>/g) || [];
 		assert(btns.length > 0, 'the built page has no copy button to inspect');
@@ -8113,7 +8113,19 @@ check('the copy button is a real button a keyboard can reach', () => {
    class named in a comment reads as alive. The only honest question -
    does this class appear in the markup the browser actually got? - is
    answered by the BUILT page. */
-const built = builtHtml();
+/* The family routes. The class-reachability check and the family checks all
+   read every emitted page, so this lives at module scope: a `const` inside one
+   check()'s closure is invisible to the next, and the failure reads like a typo
+   rather than a missing fixture. */
+const FAMILY_LIST = ['foundation','surfaces','tables','panels','content','prose','layout','composed','reference'];
+
+const built = builtHtml() + FAMILY_LIST.flatMap((f) => {
+	// A class that renders ONLY on a family route (the doc TOC's cm-doc__*,
+	// the cm-shell--toc reservation) is real markup, built and served -- it is
+	// just not on the whole page. So "rendered somewhere" is the union across
+	// every emitted page, or TOC-only classes are called dead.
+	return exists(`dist/f/${f}/index.html`) ? [read(`dist/f/${f}/index.html`)] : [];
+}).join('\n');
 // Only real class TOKENS, not every `cm-` substring on the page. Three
 // families collide with this prefix and none of them is a class:
 //   --cm-t, --cm-ease, --cm-meter-fill   CSS custom properties
@@ -16333,7 +16345,6 @@ check('every spacing declaration comes off the --space-N scale', () => {
  * rendered twice, none missing - and no rail row may point at an anchor
  * that does not exist in the document it is read in.
  * ------------------------------------------------------------------ */
-const FAMILY_LIST = ['foundation','surfaces','tables','panels','content','prose','layout','composed','reference'];
 
 check('every family page exists and the whole page still renders', () => {
 	assert(exists('dist/index.html'), 'the whole page is gone; the reference document has to stay reachable');
@@ -16425,5 +16436,27 @@ check('a family page does not link to itself as if it were elsewhere', () => {
 		const fam = read(`dist/f/${f}/index.html`);
 		assert(!fam.includes(`href="/f/${f}/"`),
 			`/f/${f}/ links to itself`);
+	}
+});
+
+check('the docs TOC carries exactly the sections of the document it is in', () => {
+	/* The right-hand column lists the sections of the page you are reading.
+	   On the whole-page build the rail already lists all 52, so a TOC there
+	   would be a second nav for the same document - which is why it is
+	   rendered on the family routes only. The rows must match the section
+	   ids of that page exactly: a TOC that lists a section the page does not
+	   contain is a link to nothing, and one that omits a section is a
+	   heading the reader cannot reach. */
+	assert(!read('dist/index.html').includes('cm-doc__toc-link'),
+		'the whole page renders a TOC although its rail already lists every section');
+	for (const f of FAMILY_LIST) {
+		const html = read(`dist/f/${f}/index.html`);
+		const ids = [...html.matchAll(/<section id="([\w-]+)"/g)].map((m) => m[1]);
+		const rows = [...html.matchAll(/class="cm-doc__toc-link"[^>]*href="#([\w-]+)"/g)].map((m) => m[1]);
+		assert(rows.length === ids.length,
+			`/f/${f}/ has ${ids.length} section(s) but ${rows.length} TOC row(s)`);
+		const missing = ids.filter((id) => !rows.includes(id));
+		assert(missing.length === 0,
+			`/f/${f}/ has section(s) missing from its TOC: ${missing.join(', ')}`);
 	}
 });

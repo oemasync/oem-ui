@@ -4098,6 +4098,13 @@ dialog.cm-dialog--spec:not([open]) {
 	.cm-shell--rail--fill {
 		padding-inline-end: var(--gutter);
 	}
+	/* A shell carrying a docs TOC reserves the third column, so the content
+	   column does not shift sideways when the TOC appears at 1180px. The
+	   reservation is symmetric with the rail: rail 288 + measure + toc 288,
+	   which is the shape measured on shadcn's docs shell. */
+	.cm-shell--toc {
+		padding-inline-end: calc(var(--doc-toc-w) + var(--gutter));
+	}
 	/* `width: auto` matters as much as `max-width: none`. base.css
 	   gives `main` `width: var(--maxw)`, so a rule that only relaxes
 	   the cap leaves the box 860px wide with `max-width: none`
@@ -9232,6 +9239,74 @@ input.cm-slider:disabled {
 	color: var(--ink);
 	font-weight: 700;
 }
+/* ============ docs table of contents ============
+   The right-hand column, matching shadcn's docs shell: a sticky list of
+   the sections in the document you are reading.
+
+   It exists on the FAMILY routes only, and that is deliberate. On the
+   whole-page build the rail already lists all 52 sections, so a second
+   list of the same 52 would be two navs disagreeing about the same
+   document. On a family page the rail has to point at other families
+   (its rows for those sections are cross-document links), so nothing
+   in-page lists what THAT document holds - which is exactly the job
+   shadcn's TOC does.
+
+   The list is rendered by the page, not injected by script: the spy
+   only ever ADDS `aria-current` to rows it is handed, so the markup is
+   readable and navigable with scripting off. */
+.cm-doc__toc {
+	display: none;
+}
+@media (min-width: 1180px) {
+	.cm-doc__toc {
+		display: block;
+		position: sticky;
+		top: calc(var(--doc-header-h) + var(--space-6));
+		align-self: start;
+		width: var(--doc-toc-w);
+		max-height: calc(100vh - var(--doc-header-h) - (2 * var(--space-6)));
+		overflow-y: auto;
+		font-size: var(--text-sm);
+	}
+}
+.cm-doc__toc-label {
+	margin: 0 0 var(--space-3);
+	color: var(--ink-faint);
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.cm-doc__toc-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-inline-start: 1px solid var(--line);
+}
+.cm-doc__toc-link {
+	display: block;
+	padding: var(--space-1) var(--space-3);
+	margin-inline-start: calc(-1 * 1px);
+	border-inline-start: 1px solid transparent;
+	color: var(--ink-dim);
+	line-height: 1.4;
+}
+.cm-doc__toc-link:hover {
+	color: var(--ink);
+}
+/* The active row is the one the reader is in, so it is marked by a rule
+   on the spine rather than by a filled chip: this column sits beside
+   prose, and a filled row here is the "some things have backgrounds"
+   inconsistency the page was rebuilt to remove. */
+/* The spy toggles `is-active` (see initScrollSpy), which is the same signal
+   the rail's rows use - so the TOC highlights with the system's existing
+   vocabulary rather than a second one. This was first written against
+   `[aria-current]`, which nothing ever sets: the CSS was dead and the
+   column never marked the section the reader was in. */
+.cm-doc__toc-link.is-active {
+	border-inline-start-color: var(--accent-bright);
+	color: var(--ink);
+}
+
 .cm-auth {
 	min-height: 100dvh;
 	display: grid;

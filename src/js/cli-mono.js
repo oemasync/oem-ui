@@ -4234,7 +4234,14 @@
 		syncToggles();
 		initHeader(document.querySelector('[data-cm-header]'));
 		initNavToggle(root);
+		/* The spy is generic over whatever `[data-cm-spy]` rows it is handed,
+		   so the docs TOC gets highlighting from the same pass as the rail -
+		   no second implementation, and no second set of scroll listeners.
+		   Both hooks are bound here because both are rendered: the page emits
+		   `[data-cm-nav]` on the rail always, and `[data-cm-toc]` on the
+		   family routes, where the rail cannot list the local sections. */
 		initScrollSpy(document.querySelector('[data-cm-nav]'));
+		initScrollSpy(document.querySelector('[data-cm-toc]'));
 		initCopy(root);
 		initTabs(root);
 		initMenubar(root);

@@ -124,6 +124,15 @@ const FAMILY_OF: Record<string, string> = (() => {
 	return m;
 })();
 
+/* The sections THIS document contains, in page order - the doc TOC's rows.
+   On the whole-page build the rail already lists all 52 sections, so a TOC
+   there would be a second nav for the same document; it is rendered on the
+   family routes, where the rail's rows for other families are
+   cross-document links and nothing in-page lists what this document holds. */
+const TOC_IDS = family === null
+	? []
+	: SECTION_ORDER.filter((id) => FAMILY_OF[id] === family);
+
 const NAV_GROUPS = (() => {
 	let at = 0;
 	return NAV_GROUP_SIZES.map(([label, n]) => {
@@ -436,7 +445,7 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 			extraLinks={[{ href: SITE.github, label: 'github' }]}
 			rail
 		/>
-		<main class="cm-shell cm-shell--rail cm-stack cm-stack--section">
+		<main class={`cm-shell cm-shell--rail cm-stack cm-stack--section${TOC_IDS.length > 0 ? ' cm-shell--toc' : ''}`}>
 			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." />
 			<StatusStrip label="status" status="ok">
 				css, js and astro components verified. build-testable.
@@ -5857,6 +5866,21 @@ Astro: import Header/Footer/Head/PageHead/PostHead from 'oem-ui/astro'.</pre>
 					</div>
 				</div>
 			</section>
+			)}
+			{/* The doc TOC's rows are server-rendered, and the spy only adds
+			    aria-current to rows it is handed - so with scripting off the
+			    list is still readable and still navigates. */}
+			{TOC_IDS.length > 0 && (
+				<nav class="cm-doc__toc" aria-label="On this page" data-cm-toc>
+					<p class="cm-doc__toc-label">on this page</p>
+					<ul class="cm-doc__toc-list">
+						{TOC_IDS.map((id) => (
+							<li>
+								<a class="cm-doc__toc-link" href={`#${id}`} data-cm-spy={id}>{id}</a>
+							</li>
+						))}
+					</ul>
+				</nav>
 			)}
 		</main>
 		<Footer
