@@ -2849,6 +2849,37 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 						</span>
 					</span>
 				</p>
+
+				<!-- The Direction baseline, on the one overlay whose room is
+				     computed in script. `--start` / `--end` are spelled
+				     logically in the stylesheet, so under `dir="rtl"` the
+				     tip grows toward the OTHER screen edge and the clamp has
+				     to read the rendered direction before choosing which side
+				     to measure - otherwise it caps the tip against the space
+				     behind it. No locale state is involved either way: the
+				     subtree declares the direction, which is the whole of what
+				     a "direction provider" has to do. -->
+				<h3 class="cm-kicker">direction</h3>
+				<p class="cm-head__sub">
+					The same two variants inside <code>dir="rtl"</code>. Compare
+					which edge each tip is capped against with the row above: the
+					markup is unchanged, only the direction is.
+				</p>
+				<p class="cm-btn-group" dir="rtl">
+					<span class="cm-tooltip cm-tooltip--start">
+						<button type="button" class="cm-btn" aria-describedby="tip-rtl-start"> --start </button>
+						<span class="cm-tooltip__tip" id="tip-rtl-start" role="tooltip">
+							Pinned to the trigger's leading edge, which is now the right one.
+						</span>
+					</span>
+					<span class="cm-tooltip cm-tooltip--end">
+						<button type="button" class="cm-btn" aria-describedby="tip-rtl-end"> --end </button>
+						<span class="cm-tooltip__tip" id="tip-rtl-end" role="tooltip">
+							Pinned to the trailing edge, which is now the left one. The clamp
+							measures the room on that side, not the other.
+						</span>
+					</span>
+				</p>
 				<p class="cm-head__sub">
 					A tip is capped at the viewport, and the page root clips
 					horizontal overflow, so an overlay that is wider than its

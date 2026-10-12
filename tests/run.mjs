@@ -16190,3 +16190,57 @@ console.log('\nshadcn-parity: guildrail + composer');
 		assert(!hint, 'the runtime has a partial composer implementation');
 	});
 }
+
+/* ---------- the parity ledger is internally consistent ----------
+
+   The ledger rotted once already: the prose said the catalog was "(57)"
+   while the list under it held 63 entries. Nothing checked the two
+   against each other, so the number was only ever as fresh as the last
+   person to edit it.
+
+   These checks deliberately do NOT try to re-derive the component list
+   from shadcn's site or from the stylesheets. The stylesheet names are
+   not a slug of the catalog name (Message is .cm-msglist, Typography is
+   the prose classes, Checkbox is .cm-check), so a derived check would
+   need a hand-maintained alias map of its own - a second ledger, with
+   the same staleness problem, and a failure mode that blames the code
+   for a mapping error. What IS checkable without a mapping is that the
+   ledger agrees with ITSELF, which is exactly the bug that happened. */
+check('shadcn-parity: the component ledger agrees with itself', () => {
+	const readme = read('README.md');
+	const decl = /\*\*Implemented \((\d+)\):\*\*/.exec(readme);
+	assert(decl, 'the README has no "**Implemented (N):**" ledger line');
+	const claimed = Number(decl[1]);
+	// The list runs from the ledger line to the paragraph that follows it.
+	const after = readme.slice(decl.index + decl[0].length);
+	const stop = after.search(/\n\n/);
+	const list = after.slice(0, stop < 0 ? after.length : stop);
+	assert(list.trim().length > 0, 'the ledger line is followed by no list');
+	// Names are comma-separated, but several entries carry a parenthetical
+	// explanation that itself contains commas, so a plain split overcounts.
+	// Parenthesised spans are removed first for the COUNT only.
+	let depth = 0;
+	const flat = [...list].map((ch) => {
+		if (ch === '(') { depth += 1; return ''; }
+		if (ch === ')') { depth -= 1; return ''; }
+		return depth > 0 ? '' : ch;
+	}).join('');
+	const names = flat.split(',').map((n) => n.replace(/\s+/g, ' ').trim()).filter(Boolean);
+	assert(names.length === claimed,
+		`the ledger claims ${claimed} components but lists ${names.length} - the count and the list disagree`);
+	// The catalog total is named in the prose; it must match the ledger too.
+	const total = /catalog is (\d+) components/.exec(readme);
+	assert(total, 'the README never states the catalog size');
+	assert(Number(total[1]) === claimed,
+		`the prose says the catalog is ${total[1]} but the ledger implements ${claimed}`);
+	// No entry may appear twice - a duplicate inflates the count.
+	const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+	assert(dupes.length === 0, `duplicate ledger entries: ${[...new Set(dupes)].join(', ')}`);
+	// Direction was the last item closed, and it is the one most likely to
+	// be quietly dropped again, so it is named.
+	assert(names.includes('Direction'),
+		'Direction is no longer in the ledger - the dir-aware clamp and its RTL fixtures still ship');
+	// And the ledger must not still be advertising a gap it closed.
+	assert(!/\*\*Not implemented/.test(readme),
+		'the README still carries a "Not implemented" section after parity was reached');
+});

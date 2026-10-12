@@ -2849,50 +2849,29 @@ commit messages.
 
 The standing goal is component parity with
 [shadcn/ui](https://ui.shadcn.com/docs/components) in the established
-theme. The catalog is 64 components as of this writing: this library
-implements **63** and does not yet implement **1**, for a
-stated reason.
+theme. The catalog is 64 components as of this writing, and this library
+implements **all 64**.
 
-**Implemented (63):** Accordion, Alert, Alert Dialog (a Dialog carrying
+**Implemented (64):** Accordion, Alert, Alert Dialog (a Dialog carrying
 `role="alertdialog"` and `closedby="closerequest"`, so an outside click
 is a no-op while Escape still closes - both declarative, and measured on
-real WebKit), Aspect Ratio, Attachment, Avatar, Badge, Bubble,
-Breadcrumb, Button (including
+real WebKit), Aspect Ratio, Attachment, Avatar, Badge, Breadcrumb, Bubble, Button (including
 destructive, outline and joined), Button Group, Calendar (single, range and
-multiple in one component), Card,
-Carousel, Chart (six hand-rolled SVG types - see *Charts* above; no
+multiple in one component), Card, Carousel, Chart (six hand-rolled SVG types - see *Charts* above; no
 Recharts, no runtime dependency), Checkbox, Collapsible, Combobox, Command (palette), Context
-Menu, Data Table (filter, pagination, column visibility, row selection), Date Picker, Dialog, Drawer, Dropdown
+Menu, Data Table (filter, pagination, column visibility, row selection), Date Picker, Dialog, Direction (the `dir`-aware half only - see *Direction* below; there is no
+provider, because a framework-free library has no context to provide
+through), Drawer, Dropdown
 Menu, Empty, Field (label/help/error wiring), Hover Card, Input, Input
-Group, Input OTP, Item, Kbd, Label, Marker, Message, Message Scroller, Menubar (roving single tab stop, disabled-word refusal, submenus, checkbox/radio rows, group labels + icons + shortcut hints), Native Select (a styled
+Group, Input OTP, Item, Kbd, Label, Marker, Menubar (roving single tab stop, disabled-word refusal, submenus, checkbox/radio rows, group labels + icons + shortcut hints), Message, Message Scroller, Native Select (a styled
 `<select>`), Navigation Menu (a real one - see *Navigation menu* below; the
-rail + sticky header remain the house pattern for this site's own pages),
-Pagination, Popover, Progress, Questionnaire, Radio Group,
-Resizable, Scroll Area, Select, Separator, Sheet, Sidebar, Skeleton,
-Slider, Spinner, Switch, Table, Tabs, Textarea, Toast, Toggle, Toggle
+rail + sticky header remain the house pattern for this site's own pages), Pagination, Popover, Progress, Questionnaire, Radio Group, Resizable, Scroll Area, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Spinner, Switch, Table, Tabs, Textarea, Toast, Toggle, Toggle
 Group, Tooltip, Typography.
 
-**Not implemented (1):**
+Three of those were once listed as missing or substituted, and the
+reasons they are not any more are worth keeping:
 
-- **Direction** - an RTL/i18n direction helper; this system is LTR and
-  owns no locale state. Declined as a *component* - but the part that
-  needs no locale state is DONE: every directional declaration in the
-  stylesheets is LOGICAL (`margin-inline-start`, `padding-inline-end`,
-  `border-inline-start` and its longhands, `inset-inline-start` /
-  `inset-inline-end`, `text-align: start` / `end`), so a consumer who
-  flips the document to `dir="rtl"` gets mirrored layout for free. Three
-  declarations stay physical, each commented at its rule: the hover
-  card's runtime-written `left` (`cmClampHovercards()` writes viewport
-  pixels), the nav-menu chevron's glyph border (a rotated caret is
-  geometry, not an axis), and the chart tooltip's anchor (an offset
-  derived from SVG user space, which has no logical axis). Three checks
-  in `tests/run.mjs` hold the
-  baseline - source scan, permit list, built CSS - and
-  `tests/mutate-logical-props.py` reverts all 153 logical declarations
-  one at a time to prove they are caught.
-
-Chart was the other one, listed for the same reason Navigation Menu was
-listed as a *substitution*: shadcn's Chart is a wrapper over Recharts, so
+Chart was listed because shadcn's Chart is a wrapper over Recharts, so
 the catalog item looked like a dependency rather than a component. That
 reason does not survive the question "what does a consumer actually get?".
 shadcn documents six chart types and a container, a style pass-through, a
@@ -2910,6 +2889,66 @@ a WebKit harness and a mutation runner. Every
 portable component above is proven by a WebKit harness plus a mutation
 runner per batch; the `shadcn-parity: *` blocks in `tests/run.mjs` pin
 the contracts.
+
+Direction is the one that took the longest to see, because the first
+answer was "not applicable". shadcn's Direction is a React context
+provider plus a `useDirection()` accessor, and a framework-free library
+has no context to provide through - so it was declined as a *component*.
+What makes it real is the half that needs no framework, and that half was
+on this page as a *baseline* long before it had a name.
+
+The baseline is that **every directional declaration in the stylesheets
+is LOGICAL**: `margin-inline-start`, `padding-inline-end`,
+`border-inline-start` and its longhands, `inset-inline-start` /
+`inset-inline-end`, `text-align: start` / `end`. A consumer who flips
+`dir="rtl"` gets mirrored layout with no extra code, and three checks in
+`tests/run.mjs` hold it (source scan, permit list, built CSS) while
+`tests/mutate-logical-props.py` reverts all 153 logical declarations one
+at a time to prove they are caught. Three declarations stay physical,
+each commented at its rule: the hover card's runtime-written `left`
+(`cmClampHovercards()` writes viewport pixels), the nav-menu chevron's
+glyph border (a rotated caret is geometry, not an axis), and the chart
+tooltip's anchor (an offset derived from SVG user space, which has no
+logical axis).
+
+**The gap was in the script.** Logical CSS only covers what the
+stylesheet positions. One overlay computes its room in JS - the tooltip
+clamp - and it read the physical `left` / `right` while the stylesheet
+pinned `--start` / `--end` logically. In an RTL subtree that measured the
+space *behind* the tip: `--start` was capped against the room on the side
+it does not grow into, which for the specimen below works out to a 20px
+cap - narrower than the word "tooltip". The clamp now reads the RENDERED
+direction off the host (`getComputedStyle(host).direction`, a read and
+never a written declaration, so the baseline stays intact) and derives
+which physical edge each variant pins to, because RTL swaps them:
+`--start`/`--end` pin to the inline start/end, not to left/right.
+
+That is the whole of what a Direction component can mean without a
+framework: direction is declared in the DOM by the consumer, and the
+runtime READS it rather than owning a parallel copy that can disagree.
+
+```
+<!-- the consumer declares it, once, anywhere above -->
+<p class="cm-btn-group" dir="rtl">
+  <span class="cm-tooltip cm-tooltip--start">
+    <button type="button" class="cm-btn" aria-describedby="tip-rtl-start">--start</button>
+    <span class="cm-tooltip__tip" id="tip-rtl-start" role="tooltip">
+      Pinned to the trigger's leading edge - which is the RIGHT edge in RTL.
+    </span>
+  </span>
+</p>
+```
+
+Proven by `tests/verify-direction-rtl.py`, a real-WebKit harness whose
+assertions are built to FAIL on the old formula rather than merely pass on
+the new one: for each of four fixtures it recomputes BOTH candidate rooms
+from live geometry and requires the applied cap to match the
+direction-aware one *and* to miss the LTR-only one, so a refactor that
+drops the read cannot pass by accident. With the LTR-only formula the
+`rtl --start` tip is capped at 20.2px; with the read it is 202.8px.
+`tests/mutate-direction.py` proves the checks bite, including the sneaky
+mutant that keeps the `direction` read and discards its answer - a check
+that merely scanned for the read would pass it.
 
 
 ## Navigation menu

@@ -1050,15 +1050,27 @@
 			host.dataset.cmClamp = '1';
 			var apply = function () {
 				// Measure the natural tip and the room the anchor leaves.
-				// `left`/`right` say which edge the variant pinned to.
+				// The VARIANT class says which logical edge it pinned to;
+				// the rendered direction maps that to a screen edge.
 				var cs = getComputedStyle(tip);
 				// Which EDGE the variant pins to is a class, not a
 				// computed style: `getComputedStyle().right` is resolved
 				// to a used pixel value, so it is never 'auto' and
 				// testing for it always failed. Read the class.
-				var pinnedRight = host.classList.contains('cm-tooltip--end');
+				var pinnedEnd = host.classList.contains('cm-tooltip--end');
 				var tr = host.getBoundingClientRect();
 				var vw = document.documentElement.clientWidth;
+				/* `--start` and `--end` are spelled LOGICALLY in the
+				   stylesheet (inset-inline-start / -end), so which screen
+				   edge the tip is pinned to depends on the RENDERED
+				   direction, not on the class alone. Measuring the room
+				   from the physical `right` in an RTL subtree reads the
+				   opposite side from the one the tip actually grows into.
+				   Flip the two room branches, not the class. */
+				var rtl = false;
+				try {
+					rtl = getComputedStyle(host).direction === 'rtl';
+				} catch (e) { rtl = false; }
 				// A centred tip is centred on the trigger; an anchored one
 				// starts at the trigger's edge and runs toward the far one.
 				// `room` is how much of the VIEWPORT the tip is allowed to
@@ -1096,10 +1108,20 @@
 				var gutter = pxOf('--gutter');
 				var left = tr.left, right = vw - tr.right;
 				var room;
-				if (pinnedRight) {
-					room = tr.right - gutter;
-				} else if (host.classList.contains('cm-tooltip--start')) {
+				/* `--start` pins to the trigger's inline-START and grows
+				   toward its END; `--end` does the reverse. Mapped onto a
+				   screen edge that is: pin LEFT and grow right when the
+				   two agree (LTR --start, RTL --end), pin RIGHT and grow
+				   left otherwise. The room is then the distance from the
+				   pinned edge to the viewport edge on the side it grows
+				   INTO - which is why the physical read has to be chosen
+				   by direction rather than fixed. */
+				if (pinnedEnd === rtl) {
+					/* pinned to the physical LEFT edge, growing right */
 					room = vw - tr.left - gutter;
+				} else if (pinnedEnd || rtl) {
+					/* pinned to the physical RIGHT edge, growing left */
+					room = tr.right - gutter;
 				} else {
 					// A CENTRED tip hangs half its width either side of the
 					// trigger, so the room is twice the NARROWER side —

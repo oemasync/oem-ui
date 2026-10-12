@@ -1,5 +1,42 @@
 # Changelog
 
+## Unreleased - Direction: the clamp reads the rendered direction
+
+Every directional declaration in the stylesheets was already logical, so a
+consumer who flips `dir="rtl"` gets mirrored LAYOUT for free. The gap was
+the one overlay whose room is computed in script.
+
+- **The tooltip clamp measured the wrong side in RTL.** `--start` /
+  `--end` are spelled `inset-inline-start` / `inset-inline-end`, so which
+  screen edge a tip pins to depends on the rendered direction - but
+  `initTooltipClamp()` computed room from the physical `left` / `right`
+  as if it were always LTR. In an RTL subtree `--start` was capped
+  against the space *behind* the tip. The clamp now reads
+  `getComputedStyle(host).direction` (a read, never a written
+  declaration, so the logical-properties baseline is untouched) and picks
+  the physical branch by direction, because RTL swaps which edge each
+  variant pins to.
+- **Two RTL tooltip fixtures** in the showcase, so the mapping is
+  observable rather than asserted.
+- **`tests/verify-direction-rtl.py`** measures four fixtures and, for
+  each, recomputes BOTH candidate rooms from live geometry: the applied
+  cap must match the direction-aware room AND miss the LTR-only one, so a
+  refactor that drops the read cannot pass by accident. It also proves
+  the page cannot be PANNED sideways (by attempting the pan) rather than
+  comparing `scrollWidth`, which legitimately exceeds `clientWidth` under
+  the root's `overflow-x: clip`.
+- **`tests/mutate-direction.py`** kills both regressions, including the
+  mutant that keeps the `direction` read and discards its answer - a
+  check that merely scanned for the read would pass it.
+
+`tests/mutate-alert.py` and `tests/verify-alert-dialog.py` came with the
+AlertDialog work and prove the semantics that separate it from a Dialog:
+`role="alertdialog"`, a name and a description that are different
+elements, an outside click refused declaratively by
+`closedby="closerequest"`, Escape still closing, and every action button
+actually settling its dialog (the foot buttons were `type="submit"`
+outside any form, so both actions were inert).
+
 ## Unreleased - sidebar mention badge
 
 - **`.cm-sidebar__badge--mention`.** The mention count a channel carries
