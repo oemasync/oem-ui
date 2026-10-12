@@ -1,3 +1,30 @@
+## Unreleased - grouped rail, and the .cm-js regression it exposed
+
+The rail is divided into **9 labelled groups** (foundation, surfaces,
+tables, panels, content, prose, layout, composed, reference) as
+contiguous `SECTION_ORDER.slice()` ranges, so the single-source
+invariant is kept: the nav is still derived from SECTION_ORDER, not a
+restated list, and the slices assert their own total coverage at module
+scope. shadcn's own sidebar uses 8 groups; 52 flat links was the last
+structural difference in the shell.
+
+That change exposed a real regression, caught by the AlertDialog harness
+rather than the suite: the burger's guard read `links.length > 0`, so a
+page passing `groups` and no `links` got no burger - and `initNavToggle`
+returned BEFORE setting `.cm-js` on <html>. Every `.cm-js`-gated rule
+went dead at once; measured in WebKit, `window.cliMono` was an object
+while `document.documentElement.className` was `''`.
+
+The suite check that should have caught it asserted one SPELLING of the
+guard rather than the property, so it was satisfied by the buggy version.
+It now asserts the property (the guard must count both nav sources) and
+is mutation-proven: reverting the guard reports "the burger guard does
+not count `navGroups`, so a header passed `groups` and no `links` renders
+no toggle at all".
+
+Gates: 636 checks, verify-alert-dialog 15/15, verify-section-rhythm 6/6,
+verify-direction-rtl 28/28.
+
 ## Unreleased - the page is one rhythm, and sections are regions not cards
 
 Omar's report, and both halves of it measured rather than argued.

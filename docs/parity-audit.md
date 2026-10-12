@@ -156,16 +156,39 @@ everywhere.
    non-component areas — Blocks, Typeset, Directory, Create — which have
    no oem-ui equivalent at all.
 
-## 5. Rebuild plan (matching shadcn's structure, keeping house tokens)
+## 5. Status against that plan (measured 2026-10-12)
 
-House identity is preserved (mono, sharp corners, no hue, dark default);
-what changes is the STRUCTURE and the RHYTHM, which are what shadcn gets
-right:
+Done:
 
-- a `DocsLayout` shell: sticky header, fixed left rail, constrained
-  content measure, right-hand on-this-page TOC;
-- **one page per component family** instead of one page for all 52
-  sections, so a visit loads one family;
-- a single section rhythm in CSS (no per-section background) with one
-  filled surface reserved for demo/preview blocks;
-- nav grouped by family, with the current family marked.
+- **one rhythm, one surface** — `.cm-section` carries no fill and no
+  border; neighbours are divided by a hairline. 51 of 51 sections lay
+  their children on a single 20px gap (was 32 of 51 mixed).
+- **nav grouped** — 9 labelled groups, derived as contiguous slices of
+  `SECTION_ORDER` so there is still one section index. 52 links, all 52
+  with scroll-spy, rail scrollable (2641px of rows in a 426px viewport).
+- **every spacing declaration is off the `--space-N` scale** — the 19
+  raw rem literals across 15 rules are gone, plus one in the markup, and
+  the suite now fails on any new one.
+
+Not done, and known:
+
+- **one page per family.** The payload is still a single 316KB
+  `index.astro`; shadcn splits by route. This is the remaining half of
+  "the whole thing loads". It is not free: ~50 suite checks slice
+  `index.astro` by section id, so splitting the page moves the fixtures
+  those checks read.
+- **a right-hand on-this-page TOC.** shadcn's content page carries a
+  sticky ~288px TOC beside the ~640px measure; oem-ui has only the rail.
+  The scroll-spy is already generic (it reads whatever `[data-cm-spy]`
+  rows it is handed), so a TOC would get highlighting without new JS —
+  but nothing renders one yet, so no JS was added for it. Wiring a TOC
+  with no TOC in the page would be dead code that reads as live.
+- **the non-component areas**: Blocks, Typeset, Directory, Create have
+  no oem-ui equivalent at all.
+
+A note on ordering, since it is the honest part: `content-visibility:
+auto` was the cheap way to make one page behave like many, and it was
+measured and rejected — it skips 49 of 51 sections but breaks in-page
+anchors (jumps landed 1342–3586px past the target). Any future
+lazy-loading has to preserve `href="#…"`.
+
