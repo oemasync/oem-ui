@@ -2321,6 +2321,96 @@ never rebuilt, and each `tbody` sorts independently.
 <footer class="cm-footer">…</footer>
 ```
 
+### The mention typeahead
+
+An `@`-autocomplete that hangs off a caret **inside a field the reader is
+already typing in**. The combobox is the other shape — a standalone input
+whose value *is* the answer; here the field is a message, the list completes
+one token inside it, and the key that commits a mention is the key the
+field's own behaviour already wants for itself.
+
+```html
+<div class="cm-mention__anchor" data-cm-mention data-cm-mention-source="msg">
+  <textarea class="cm-composer__input" id="msg" rows="1"
+            role="combobox" aria-autocomplete="list"
+            aria-expanded="false" aria-controls="mention-list"></textarea>
+  <ul class="cm-mention" id="mention-list" role="listbox" aria-label="people" hidden>
+    <li class="cm-mention__option" role="option" id="m-0"
+        data-cm-mention-value="alex">
+      <span class="cm-mention__name">alex</span>
+      <span class="cm-mention__hint">idle · 3m</span>
+    </li>
+  </ul>
+</div>
+```
+
+- **It opens upward.** `bottom: calc(100% + 4px)`. A composer lives at the
+  foot of the window, so a list placed below the caret is off screen for
+  every mention anyone types — the one placement that is wrong for the only
+  place this is used.
+- **`.cm-mention__anchor` is the measuring box.** The list is `absolute`, so
+  without it the list resolves against the nearest positioned ancestor and
+  opens wherever that happened to be. The anchor wraps the **field**, so the
+  list follows the field when the field grows on a newline. `.cm-composer__bar`
+  is not positioned, which is why the anchor is the consumer's to add.
+- **The list is hidden by attribute** — `.cm-mention[hidden] { display: none }`
+  is load-bearing, not redundant: an author `display` outranks the UA's own
+  `[hidden]` rule, so without it a closed roster paints under every composer.
+- **The rows are re-rendered by the consumer**, so every listener binds to the
+  anchor and the field, never to a row. A re-render costs no re-bind; calling
+  `cliMono.init(document)` again is safe.
+- **A row is a name *and* a hint.** The runtime commits
+  `data-cm-mention-value` (or `.cm-mention__name`) and **never** the row's
+  text — a hand-rolled version sends `alex idle 3m` as somebody's handle.
+
+#### Consumer JS — documented, not implemented
+
+| behaviour | who | what the library owes |
+|---|---|---|
+| **the roster of people** | consumer | the listbox markup; the library does not know who is in the room |
+| **the query and the filter** | library | reads `@token` from the caret back to whitespace, filters rows, opens and closes the list |
+| **commit a name** | library | replaces the token, **restores the caret** (WebKit leaves it at the end of a programmatic value write, so the reader's next keystroke would land after the rest of the message), fires `cm:mention` on the anchor |
+| **keys** | shared | arrows/Enter/Tab/Escape are consumed **only while the list is open**. Enter is the consumer's send key, so a handler that swallowed it unconditionally would leave the reader unable to send for the rest of the session — and nothing would throw |
+| **what to do with the choice** | consumer | nothing, if it wants the DOM write. Listen for `cm:mention` (`detail.value`) to own the state instead |
+
+The runtime is in the library (unlike the composer's send behaviour) because
+the roster is data and the token/caret arithmetic is not a design decision —
+every hand-rolled attempt gets the caret and the commit-value wrong in the
+same two ways.
+
+### The image viewer
+
+A native `<dialog>`, so the top layer, `Escape`, the backdrop and focus
+trapping are the platform's. The runtime binds **one** delegate for the whole
+document, so a timeline of a thousand thumbnails costs one listener.
+
+```html
+<figure class="cm-media">
+  <button type="button" class="cm-media__zoom"
+          data-cm-lightbox="full.png"
+          data-cm-lightbox-target="lb"
+          data-cm-lightbox-alt="A described image.">
+    <img src="thumb.png" alt="" />
+  </button>
+</figure>
+<dialog class="cm-lightbox" id="lb" aria-label="image viewer">
+  <div class="cm-lightbox__body"><img class="cm-lightbox__img" src="" alt="" /></div>
+  <button type="button" class="cm-lightbox__close" data-cm-close aria-label="Close">close</button>
+</dialog>
+```
+
+- The thumbnail **is** the control: `.cm-media__zoom` drops its chrome so the
+  button disappears into the picture, while keeping the keyboard and pointer
+  reachable — which a bare `<img>` is not.
+- `data-cm-lightbox-target` names the dialog. Without it the runtime takes the
+  **first** `dialog.cm-lightbox` on the page, skipping specimens.
+- `data-cm-lightbox-alt` describes the enlarged image. Falling back to empty
+  keeps the `<img>` decorative rather than announcing a URL.
+- **A `<dialog>` specimen needs an override or it paints nothing.**
+  `dialog:not([open]) { display: none }` is a UA rule and does not care about
+  `position: static`. `.cm-lightbox--spec` re-shows it as a bounded frame;
+  the modifier is never set by the runtime, so it cannot reach a live viewer.
+
 ### Every class is rendered, and every rendered class is styled
 
 Both directions are contract-tested against the **built** page

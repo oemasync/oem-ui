@@ -3633,6 +3633,169 @@
 		});
 	}
 
+	/* ---------- mention typeahead ----------
+	   An @-autocomplete inside a field the reader is ALREADY typing in.
+	   The combobox above is the other shape: a standalone input whose
+	   value is the whole answer. Here the field is a message, the list
+	   completes ONE token inside it, and the key that commits a mention is
+	   the key the FIELD'S OWN behaviour already wants for itself.
+
+	   So this handler takes a key ONLY while the list is open, and hands
+	   it straight back the moment the list closes. That is the whole
+	   contract, and it is what stops a typeahead from breaking the send
+	   key for the rest of the session - the failure a consumer reports as
+	   "the message box stopped working".
+
+	   Scope: `[data-cm-mention]` is the anchor, `data-cm-mention-source`
+	   names the field (defaulting to the first textarea/input inside it),
+	   and the list is the `.cm-mention` in that anchor. The roster is the
+	   consumer's - it re-renders the `<li>`s and calls init() again, so
+	   every listener here hangs off the ANCHOR and the FIELD, never off
+	   a row, and a re-render of the rows costs no re-bind.
+
+	   `cm:mention` fires on the anchor when a name is taken, carrying
+	   the chosen value, so a consumer that owns its own state can ignore
+	   the DOM write entirely and listen for that. */
+	function cmInitMentions(root) {
+		var scope = root && root.querySelectorAll ? root : document;
+		Array.prototype.forEach.call(scope.querySelectorAll('[data-cm-mention]'), function (anchor) {
+			if (anchor.dataset.cmMentionBound) return;
+			anchor.dataset.cmMentionBound = '1';
+			var srcId = anchor.getAttribute('data-cm-mention-source');
+			var field = srcId ? document.getElementById(srcId) : anchor.querySelector('textarea, input');
+			var list = anchor.querySelector('.cm-mention');
+			if (!field || !list) return;
+			/* The token the list is completing: the `@` and everything
+			   after it, back to the nearest whitespace or the start. */
+			var TOKEN = /(^|\s)@([A-Za-z0-9_-]*)$/;
+			var queryAt = -1;
+			var queryLen = 0;
+			function options() {
+				return Array.prototype.slice.call(list.querySelectorAll('.cm-mention__option'));
+			}
+			function visible() {
+				return options().filter(function (o) { return !o.hidden; });
+			}
+			function setOpen(v) {
+				list.hidden = !v;
+				field.setAttribute('aria-expanded', v ? 'true' : 'false');
+				if (!v) setActive(null);
+			}
+			function setActive(el) {
+				options().forEach(function (o) {
+					var on = o === el;
+					o.classList.toggle('is-active', on);
+					/* `aria-selected` is the state the listbox pattern
+					   publishes, and the paint follows the SAME attribute
+					   so the accessibility tree and the pixels cannot
+					   disagree. */
+					o.setAttribute('aria-selected', on ? 'true' : 'false');
+				});
+				if (el && el.id) field.setAttribute('aria-activedescendant', el.id);
+				else field.removeAttribute('aria-activedescendant');
+			}
+			/* Read the caret, and only the text BEFORE it: an `@name` the
+			   reader has already typed past must not reopen the list when
+			   they type a space at the end of the line. */
+			function readToken() {
+				var pos = field.selectionStart;
+				if (typeof pos !== 'number') return null;
+				var m = TOKEN.exec(field.value.slice(0, pos));
+				if (!m) return null;
+				queryAt = pos - m[2].length - 1;
+				queryLen = m[2].length;
+				return m[2].toLowerCase();
+			}
+			function filter() {
+				var q = readToken();
+				if (q === null) { setOpen(false); return; }
+				var shown = 0;
+				options().forEach(function (o) {
+					var name = o.getAttribute('data-cm-mention-value') || o.textContent;
+					var hit = !q || name.trim().toLowerCase().indexOf(q) !== -1;
+					o.hidden = !hit;
+					if (hit) shown++;
+				});
+				if (!shown) { setOpen(false); return; }
+				setOpen(true);
+				setActive(visible()[0]);
+			}
+			/* The name, not the row: a row carries a hint beside the name
+			   (`@alex  idle 3m`), and writing the row into the message is
+			   how a hand-rolled version sends "alex idle 3m" as a mention. */
+			function mentionName(o) {
+				var v = o.getAttribute('data-cm-mention-value');
+				if (v) return v;
+				var name = o.querySelector('.cm-mention__name');
+				return (name ? name.textContent : o.textContent).trim();
+			}
+			function choose(o) {
+				var name = mentionName(o);
+				var before = field.value.slice(0, queryAt);
+				var after = field.value.slice(queryAt + queryLen + 1);
+				field.value = before + '@' + name + after;
+				var caret = before.length + name.length + 1;
+				/* WebKit moves the caret to the end on a programmatic value
+				   write, so setting it is not optional: without this the
+				   reader's next keystroke lands after the rest of the
+				   message instead of where they were typing. */
+				if (typeof field.setSelectionRange === 'function') {
+					field.setSelectionRange(caret, caret);
+				}
+				setOpen(false);
+				field.focus();
+				if (typeof CustomEvent === 'function') {
+					anchor.dispatchEvent(new CustomEvent('cm:mention', {
+						bubbles: true, detail: { value: name }
+					}));
+				}
+			}
+			field.addEventListener('input', filter);
+			field.addEventListener('click', function () { if (list.hidden) filter(); });
+			field.addEventListener('keydown', function (e) {
+				var vis = visible();
+				/* NOTHING is taken while the list is closed. Enter belongs
+				   to the consumer's send path, and Escape to whatever else
+				   the reader has open. */
+				if (list.hidden) {
+					if (e.key === 'ArrowUp' || e.key === 'ArrowDown') filter();
+					return;
+				}
+				if (e.key === 'Escape') { setOpen(false); e.preventDefault(); return; }
+				if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+					vis = visible();
+					if (!vis.length) return;
+					var cur = vis.filter(function (o) { return o.classList.contains('is-active'); })[0];
+					var i = vis.indexOf(cur);
+					var next = e.key === 'ArrowDown'
+						? vis[(i + 1) % vis.length]
+						: vis[(i - 1 + vis.length) % vis.length];
+					setActive(next);
+					e.preventDefault();
+					return;
+				}
+				if (e.key === 'Enter' || e.key === 'Tab') {
+					var active = visible().filter(function (o) { return o.classList.contains('is-active'); })[0];
+					if (active) { choose(active); e.preventDefault(); }
+				}
+			});
+			/* Rows are DELEGATED off the anchor: a consumer re-rendering
+			   its roster replaces every `<li>`, which takes a per-row
+			   binding with it. `pointerdown` would fight the field's own
+			   blur, so this is a click. */
+			anchor.addEventListener('click', function (e) {
+				var t = e.target;
+				if (!t || typeof t.closest !== 'function') return;
+				var o = t.closest('.cm-mention__option');
+				if (o && list.contains(o)) { choose(o); e.preventDefault(); }
+			});
+			document.addEventListener('click', function (e) {
+				if (!anchor.contains(e.target)) setOpen(false);
+			});
+			setOpen(false);
+		});
+	}
+
 	/* ---------- drawer: the bottom sheet you can PULL DOWN ----------
 	   Everything structural belongs to the sheet below it - showModal()
 	   gives the trap, Escape, the top layer and focus restore, so this
@@ -3865,12 +4028,44 @@
 					}
 					markAnchor();
 				}
+				// The live edge, as a reusable promise. A single
+				// `scrollTo({top: scrollHeight})` reads its target ONCE, from a
+				// `scrollHeight` that is still growing while content-visibility
+				// rows resolve their intrinsic size -- so the jump lands SHORT of
+				// the newest message, and a smooth one is worse because it commits
+				// to the stale target for the whole animation. Re-pin on every
+				// frame for a bounded window instead; any scroll we did not ask
+				// for is the reader, and the loop stands down for them.
+				var edgePin = { frames: 0, asked: 0, moved: false, on: false };
+				vp.addEventListener('scroll', function () {
+					if (edgePin.on && Math.abs(vp.scrollTop - edgePin.asked) > 2) {
+						edgePin.moved = true;
+					}
+				}, { passive: true });
+				function pinToEdge() {
+					edgePin.moved = false;
+					edgePin.frames = 120;
+					if (edgePin.on) return;
+					edgePin.on = true;
+					function step() {
+						if (edgePin.moved || edgePin.frames <= 0) {
+							edgePin.on = false;
+							paint();
+							return;
+						}
+						vp.scrollTop = vp.scrollHeight;
+						edgePin.asked = vp.scrollTop;
+						edgePin.frames--;
+						requestAnimationFrame(step);
+					}
+					requestAnimationFrame(step);
+				}
 				function scrollToStart(smooth) {
 					vp.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
 				}
-				function scrollToEnd(smooth) {
-					vp.scrollTo({ top: vp.scrollHeight,
-						behavior: smooth ? 'smooth' : 'auto' });
+				function scrollToEnd() {
+					vp.scrollTop = vp.scrollHeight;
+					pinToEdge();
 				}
 				function scrollToMessage(id) {
 					var row = content
@@ -3886,7 +4081,7 @@
 				frame.__scroller = {
 					scrollToMessage: scrollToMessage,
 					scrollToStart: function () { scrollToStart(true); },
-					scrollToEnd: function () { scrollToEnd(true); },
+					scrollToEnd: function () { scrollToEnd(); },
 					atStart: atStart,
 					atEnd: atEnd
 				};
@@ -3895,10 +4090,10 @@
 					scrollToStart(true);
 				});
 				if (btnEnd) btnEnd.addEventListener('click', function () {
-					scrollToEnd(true);
+					scrollToEnd();
 				});
 				if (pill) pill.addEventListener('click', function () {
-					scrollToEnd(true);
+					scrollToEnd();
 				});
 				frame.addEventListener('click', function (e) {
 					var jump = e.target.closest ? e.target.closest('[data-jump-to]') : null;
@@ -3942,24 +4137,7 @@
 				// no flash on load: open at the live edge when asked
 				if (frame.hasAttribute('data-start-at-end')) {
 					vp.scrollTop = vp.scrollHeight;
-					// content-visibility rows keep resizing their intrinsic size
-					// for a few frames after bind, which would strand the
-					// position mid-log. Re-pin every frame for a bounded
-					// window; any scroll we did not ask for is the reader,
-					// and the loop stands down for them.
-					var pinFrames = 0;
-					var asked = vp.scrollTop;
-					var readerMoved = false;
-					var pinEdge = function () {
-						if (readerMoved) return;
-						vp.scrollTop = vp.scrollHeight;
-						asked = vp.scrollTop;
-						if (++pinFrames < 120) requestAnimationFrame(pinEdge);
-					};
-					vp.addEventListener('scroll', function () {
-						if (Math.abs(vp.scrollTop - asked) > 2) readerMoved = true;
-					}, { passive: true });
-					requestAnimationFrame(pinEdge);
+					pinToEdge();
 				}
 				paint();
 			})(frames[i]);
@@ -4236,6 +4414,7 @@
 		cmInitShortcuts();
 		cmInitSliders(root);
 		cmInitComboboxes(root);
+		cmInitMentions(root);
 		cmInitCarousels(root);
 		cmInitSteppers(root);
 		cmInitOtp(root);
@@ -5612,7 +5791,7 @@
 				var id = opener.getAttribute('data-cm-lightbox-target');
 				var dlg = id
 					? document.getElementById(id)
-					: document.querySelector('dialog.cm-lightbox');
+					: document.querySelector('dialog.cm-lightbox:not(.cm-lightbox--spec)');
 				if (!dlg) return;
 				var img = dlg.querySelector('.cm-lightbox__img');
 				if (img) {

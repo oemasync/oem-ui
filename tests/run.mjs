@@ -16588,3 +16588,274 @@ console.log('\nshadcn-parity: guildrail + composer');
 		}
 	});
 }
+
+/* ================= the mention typeahead and the image viewer (batch 31) ==
+   Both shipped as CSS ONLY, and the suite said so: `every class the library
+   defines is rendered somewhere on the page` listed ten classes and stayed
+   red for two commits. A component whose classes appear in no page is not a
+   feature, it is a promise nobody can check - and the two that were missing
+   here were the two the composer genuinely needs.
+
+   What this block holds to account, in the order the defects actually
+   shipped:
+
+   * the mention list is hidden BY ATTRIBUTE and the demo depends on it -
+     an author `display: block` outranks the UA's `[hidden]`, so a
+     regression paints a roster under every composer on the page;
+   * the typeahead takes a key ONLY while the list is open. This is the one
+     that breaks a consumer silently: a handler that swallows Enter
+     unconditionally leaves the reader unable to send for the rest of the
+     session, and nothing throws.
+   * it writes the NAME, never the whole row - the row carries a hint
+     beside the name, so a hand-rolled version sends "alex idle 3m";
+   * the caret is put back after the programmatic value write, because
+     WebKit moves it to the end and the reader's next keystroke would land
+     after the rest of the message;
+   * the list opens UPWARD, off the field's own anchor box, which is the
+     only placement that is on screen for the one place a composer lives.
+
+   The lightbox is the `--spec` trap: a bare `<dialog>` is `display: none`
+   until it is open, so a specimen with no override describes itself to
+   nobody - and this component's OWN rule claims 100vw/100vh, so an
+   in-flow preview without a bounded override would cover the page instead
+   of sitting in it.
+
+   Geometry that needs a layout is measured in WebKit
+   (tests/verify-mention-lightbox.py); everything here is what a reader of
+   the source can be held to. */
+console.log('\ncontract: mention typeahead + image viewer (batch 31)');
+{
+	const page = read('src/pages/index.astro');
+	const html = read('dist/index.html');
+	const css = compSrc;
+	const raw = read('src/styles/components.css');
+	const js = read('src/js/cli-mono.js');
+	const readme = read('README.md');
+
+	// The mention block is bracketed by its own neighbours so a scan below
+	// reads THIS family and not the combobox above it.
+	const from = raw.indexOf('/* ---------- mention typeahead');
+	const to = raw.indexOf('/* ---------- context menu ----------');
+	assert(from !== -1 && to > from,
+		'the mention block moved: its slice anchors no longer bracket it');
+	const block = raw.slice(from, to);
+	assert(block.length > 1000,
+		`the mention block is only ${block.length} chars - the anchors cut it short`);
+
+	// The BUILT specimen, bounded by its own section. Grepping the source
+	// reads what Astro was ASKED to render, not what the browser got.
+	const sec = html.slice(html.indexOf('id="composer"'),
+		html.indexOf('id="dropdown-depth"'));
+	assert(sec.length > 500,
+		'the built page has no composer section between #composer and #dropdown-depth');
+	const media = html.slice(html.indexOf('id="surface"'), html.indexOf('id="code"'));
+	assert(media.length > 500, 'the built page has no #surface section');
+
+	check('batch 31: every mention class is defined, and the specimen emits each one', () => {
+		for (const c of ['cm-mention', 'cm-mention__anchor', 'cm-mention__option',
+			'cm-mention__name', 'cm-mention__hint']) {
+			assert(isDeclared(raw, c), `components.css never defines .${c}`);
+		}
+		// The name is what the typeahead COMMITS, so it is not optional
+		// decoration: it is the selector the runtime reads the value from.
+		assert(/cm-mention__name/.test(block) &&
+			/cm-mention__name/.test(page),
+			'.cm-mention__name is styled but never emitted, so the runtime has no name to read');
+		// `.cm-mention__anchor` is NOT a second anchor: it is the same name
+		// the component already publishes, reused by the composer.
+		assert(/class="cm-mention__anchor"[^>]*data-cm-mention/.test(page),
+			'the mention anchor is missing from the composer specimen');
+		// The roster must be long enough that filtering has something to
+		// separate, and every row must carry the value the runtime writes.
+		const rows = (sec.match(/cm-mention__option/g) || []).length;
+		assert(rows >= 4, `the roster has ${rows} options - too few to filter`);
+		const values = (sec.match(/data-cm-mention-value="/g) || []).length;
+		assert(values === rows,
+			`${values} of ${rows} options carry data-cm-mention-value, so the rest commit their row text`);
+	});
+
+	check('batch 31: the list is hidden by ATTRIBUTE, and the demo depends on that rule', () => {
+		// The trap: `.cm-mention { ... }` in the same block sets layout, and
+		// an author display outranks the UA's own [hidden]. Without this
+		// rule the roster paints under every composer on the page.
+		assert(/\.cm-mention\[hidden\]\s*\{[^}]*display:\s*none/.test(css),
+			'the mention list has no [hidden] display rule: author display beats the UA rule, so it would paint closed');
+		// The list is a listbox, so the ATTR the runtime toggles is the
+		// one that has to be honoured. Assert the rule names it.
+		assert(/\.cm-mention\s*\{[^}]*position:\s*absolute/.test(css),
+			'the list does not overlay, so it would push the composer out of the page');
+		// Opens UPWARD: `bottom: 100% + 4px` is the whole point - a list
+		// below the caret is off screen for the only place this is used.
+		assert(/\.cm-mention\s*\{[^}]*bottom:\s*calc\(100%\s*\+\s*4px\)/.test(css),
+			'the list does not open upward, so it is off screen under the composer at the foot of the window');
+		assert(/\.cm-mention__anchor\s*\{[^}]*position:\s*relative/.test(css),
+			'the anchor is not positioned, so the absolute list resolves against the nearest ancestor instead of the field');
+	});
+
+	check('batch 31: the typeahead takes a key ONLY while the list is open', () => {
+		assert(/function cmInitMentions\(root\)/.test(js), 'cmInitMentions is missing');
+		assert(/cmInitMentions\(root\);/.test(js), 'cmInitMentions is never called from init');
+		// The one that breaks a consumer silently. The handler must READ
+		// the open state before it decides to consume a key.
+		assert(/if \(list\.hidden\)\s*\{[\s\S]{0,200}?return;/.test(js),
+			'the key handler does not bail while the list is closed, so it would steal the send key for the rest of the session');
+		// ...and the bail must be the FIRST thing the handler does. A
+		// guard written after the Escape branch passes a loose pattern
+		// and still eats the key.
+		const kd = js.slice(js.indexOf("field.addEventListener('keydown'"));
+		const firstGuard = kd.indexOf('list.hidden');
+		const firstEscape = kd.indexOf("'Escape'");
+		assert(firstGuard !== -1 && firstGuard < firstEscape,
+			'the closed-state guard runs after a key is already handled - the guard must come first');
+		assert(/function filter\(\)/.test(js) && /readToken\(\)/.test(js),
+			'the query is not read from the caret');
+		// Read as a SUBSTRING, not as a regex literal. The first version
+		// of this assertion was written as one and silently carried a
+		// level of escaping too many: it matched the literal text
+		// `\/(\^\|\\s)` and so reported the real pattern MISSING on the
+		// build that has it. A check that fails on its own fix is
+		// indistinguishable from a real defect, and the tempting repair
+		// is to weaken the claim. String.raw takes the backslash out of
+		// the argument entirely, so there is no level to get wrong.
+		// Built from char codes so this assertion contains NO literal
+		// backslash: every attempt to spell the pattern with one lost or
+		// gained a level somewhere between the editor and the regex
+		// engine, and a check that reports the real pattern MISSING on
+		// the build that has it is indistinguishable from a real defect.
+		// The happy path that proves it: the runtime's own TOKEN line.
+		const BS = String.fromCharCode(92);
+		const TOKEN_SRC = 'var TOKEN = /(^|' + BS + 's)@([A-Za-z0-9_-]*)' + String.fromCharCode(36) + '/;';
+		assert(js.includes(TOKEN_SRC),
+			'the token pattern does not anchor on whitespace or line start, so an address like omar@example would open the roster');
+		assert(js.includes('TOKEN.exec('),
+			'the token pattern is never applied to the text before the caret');
+	});
+
+	check('batch 31: a mention commits the NAME, never the row, and puts the caret back', () => {
+		// The row carries a hint beside the name. Writing the row is how a
+		// hand-rolled version sends "alex idle 3m" as somebody's handle.
+		assert(/function mentionName\(o\)/.test(js),
+			'the runtime has no way to read the commit value from the row');
+		assert(/data-cm-mention-value/.test(js),
+			'the commit value does not prefer the explicit attribute, so a renamed row would change what is sent');
+		// Scoped to the MENTION binder, and bounded at its next statement.
+		// Two traps, both of which produced a confident wrong answer here:
+		// an unbounded slice to EOF reached the chart renderer's own
+		// `innerHTML` 2000 lines down and reported a defect in code this
+		// check is not about; and a bare `indexOf('function choose(o)')`
+		// found the COMBOBOX's choose, because both components name the
+		// function the same thing. Search from the mention binder forward.
+		const mFrom = js.indexOf('function cmInitMentions(root)');
+		assert(mFrom > 0, 'the mention binder is gone, so this slice reads the wrong component');
+		const choose = js.slice(js.indexOf('function choose(o)', mFrom),
+			js.indexOf("field.addEventListener('input', filter)", mFrom));
+		assert(choose.length > 0 && choose.length < 2000,
+			`the choose-body slice is ${choose.length} chars - it is not bracketing the function`);
+		assert(/setSelectionRange/.test(choose),
+			'the caret is not restored after the value write - WebKit leaves it at the end, so the next keystroke lands after the message');
+		assert(/queryAt/.test(choose) && /queryLen/.test(choose),
+			'the replacement does not use the caret offsets it measured, so it would rewrite the wrong span');
+		// The write must not go through innerHTML: a mention is text.
+		assert(!/innerHTML/.test(choose),
+			'the mention is written through innerHTML');
+		assert(/cm:mention/.test(js),
+			'no cm:mention event, so a consumer that owns its own state cannot hear the choice');
+	});
+
+	check('batch 31: the roster is delegated, so a re-render cannot strand a row', () => {
+		// Rows are re-rendered by the consumer, so a per-row listener dies
+		// with the first render. The binding has to be on the ANCHOR.
+		assert(/anchor\.addEventListener\('click'/.test(js),
+			'the option click is not delegated off the anchor, so a re-rendered roster is dead');
+		assert(/closest\('\.cm-mention__option'\)/.test(js),
+			'the delegated handler never resolves the option from the event target');
+		assert(/document\.addEventListener\('click'/.test(js) &&
+			/!anchor\.contains\(e\.target\)\)\s*setOpen\(false\)/.test(js),
+			'a click outside does not close the list - the part every hand-rolled version forgets');
+		// A consumer that re-renders calls init() again; the binder must
+		// be idempotent through the same dataset flag the rest of the
+		// runtime uses.
+		assert(/anchor\.dataset\.cmMentionBound/.test(js),
+			'the binder is not idempotent, so a second init() double-binds every listener');
+	});
+
+	check('batch 31: the built specimen exposes the listbox contract to a reader', () => {
+		// A typeahead nobody can hear is a typeahead only a pointer user has.
+		assert(/role="combobox"[^>]*aria-autocomplete="list"/s.test(sec),
+			'the field does not announce itself as an autocompleting combobox');
+		assert(/aria-expanded="false"/.test(sec),
+			'the field does not publish its collapsed state');
+		assert(/aria-controls="mention-list"/.test(sec),
+			'the field does not name the list it controls');
+		assert(/<ul class="cm-mention"[^>]*role="listbox"/.test(sec),
+			'the roster is not a listbox');
+		assert(/<li class="cm-mention__option"[^>]*role="option"/.test(sec),
+			'the rows are not options');
+		// The runtime writes aria-activedescendant, so the ids must exist.
+		assert(/id="mention-0"/.test(sec),
+			'the rows have no ids, so aria-activedescendant can never point at one');
+	});
+
+	check('batch 31: the viewer is a real <dialog>, and its preview actually PAINTS', () => {
+		assert(/<dialog class="cm-lightbox"[^>]*id="lb-demo"/.test(media),
+			'the showcase has no live <dialog class="cm-lightbox">');
+		assert(/data-cm-lightbox="/.test(media),
+			'the thumbnail is not a viewer trigger');
+		assert(/data-cm-lightbox-target="lb-demo"/.test(media),
+			'the trigger does not name the dialog it opens, so it would take whichever one comes first');
+		// The trap this block exists to police: a bare <dialog> is
+		// display:none until open, so a specimen with no override renders
+		// NOTHING and reads as "the component is missing".
+		assert(/dialog\.cm-lightbox--spec:not\(\[open\]\)\s*\{[^}]*display:\s*block/.test(css),
+			'the lightbox specimen has no :not([open]) display rule, so it paints nothing');
+		// ...and the component's own rule claims 100vw/100vh, so the
+		// preview needs BOTH bounded: an unbounded one covers the page.
+		const spec = css.match(/dialog\.cm-lightbox--spec:not\(\[open\]\)\s*\{([^}]*)\}/);
+		assert(spec, 'the lightbox spec rule is gone');
+		assert(/max-width:/.test(spec[1]) && /max-height:/.test(spec[1]),
+			'the lightbox preview is unbounded - the component claims 100vw/100vh, so it would cover the page');
+		// The image inside a viewer is max-width/max-height 100%; a
+		// preview frame has no height to be a percentage OF, so it needs
+		// the natural size or it renders 0 tall.
+		assert(/dialog\.cm-lightbox--spec:not\(\[open\]\)[^{]*\.cm-lightbox__img[^{]*\{[^}]*height:\s*auto/.test(css),
+			'the preview image has no intrinsic height, so the frame collapses');
+		// And the frame must not CROP: the dialog is overflow:auto, so a
+		// fixed height scrolls the picture instead of growing.
+		assert(!/dialog\.cm-lightbox--spec[^{]*\{[^}]*height:\s*\d/.test(css),
+			'the lightbox preview sets a fixed height, so the picture is cropped');
+	});
+
+	check('batch 31: the viewer trigger never picks the inert PREVIEW dialog', () => {
+		// Both dialogs carry `.cm-lightbox`, so a bare querySelector takes
+		// whichever is first in the document - which is the preview, and
+		// opening it would paint a second copy of the specimen over the
+		// page instead of the viewer.
+		assert(/querySelector\('dialog\.cm-lightbox:not\(\.cm-lightbox--spec\)'\)/.test(js),
+			'the fallback trigger lookup does not exclude the spec preview, so an unnamed trigger opens the specimen');
+		// The preview is a SPECIMEN: its close control must not be wired
+		// to the dialog binder, or clicking it would close a preview that
+		// was never open.
+		const previewDlg = media.match(/<dialog class="cm-lightbox cm-lightbox--spec"[\s\S]*?<\/dialog>/);
+		assert(previewDlg, 'the preview dialog is not in the built page');
+		assert(!/data-cm-close/.test(previewDlg[0]),
+			'the specimen close control carries data-cm-close, so the dialog binder treats a preview as a live dialog');
+		assert(/class="cm-lightbox__close"[^>]*data-cm-close/.test(media),
+			'the LIVE viewer has no close control, so a phone has no way out of it');
+	});
+
+	check('batch 31: the README documents both components and who owns what', () => {
+		for (const want of ['cm-mention', 'cm-lightbox']) {
+			assert(readme.includes(want), `the README never documents .${want}`);
+		}
+		const at = readme.indexOf('### The mention typeahead');
+		assert(at > 0, 'the README has no section for the mention typeahead');
+		const sec2 = readme.slice(at, readme.indexOf('\n### ', at + 4) > 0
+			? readme.indexOf('\n### ', at + 4) : undefined);
+		// The roster is the consumer's: the library does not know who is
+		// in the room. Say who owns what, or the next reader implements it.
+		assert(/consumer/i.test(sec2),
+			'the README does not say which half the consumer owns');
+		assert(/cm:mention/.test(sec2),
+			'the README does not document the event a consumer listens for');
+	});
+}
