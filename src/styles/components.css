@@ -3369,12 +3369,14 @@ button.cm-row:hover { background: var(--bg-2); }
 
 /* ---------- dialog: the ALERT variant ----------
    shadcn's AlertDialog, as the honest CSS half of it. The semantic
-   half is `role="alertdialog"` in the markup and the light-dismiss
-   guard in the runtime; what is left for the stylesheet is the frame
-   that says "this one is a decision, not a panel" without reaching
-   for a hue the theme does not carry.
+   half is `role="alertdialog"` plus `closedby="closerequest"` in the
+   markup - both declarative, neither needing a script; see the note in
+   cli-mono.js for the measurement that deleted the script this used to
+   have. What is left for the stylesheet is the frame that says "this
+   one is a decision, not a panel" without reaching for a hue the theme
+   does not carry.
 
-   Three differences, each with a reason:
+   Two differences, each with a reason:
    - the accent is a TOP RULE, in --ink rather than a red. The theme
      has no hue (see --danger's own note), so urgency is said with
      weight and position, the same way .cm-alert says it.

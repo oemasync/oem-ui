@@ -2854,9 +2854,9 @@ implements **63** and does not yet implement **1**, for a
 stated reason.
 
 **Implemented (63):** Accordion, Alert, Alert Dialog (a Dialog carrying
-`role="alertdialog"`, with a top-rule frame and a runtime guard that
-re-opens it on a backdrop click so a destructive confirm cannot be
-dismissed by muscle memory), Aspect Ratio, Attachment, Avatar, Badge, Bubble,
+`role="alertdialog"` and `closedby="closerequest"`, so an outside click
+is a no-op while Escape still closes - both declarative, and measured on
+real WebKit), Aspect Ratio, Attachment, Avatar, Badge, Bubble,
 Breadcrumb, Button (including
 destructive, outline and joined), Button Group, Calendar (single, range and
 multiple in one component), Card,

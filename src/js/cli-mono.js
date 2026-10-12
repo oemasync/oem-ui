@@ -783,42 +783,34 @@
 			});
 		});
 
-		/* An ALERT dialog is a dialog that interrupts and expects an
-		   answer, and the one behaviour it must NOT have is closing on a
-		   click outside. <dialog>.showModal() light-dismisses by default,
-		   which is right for a Dialog and wrong for the destructive
-		   confirm a reader reaches by muscle memory - the answer to "are
-		   you sure?" should never be "I clicked near it".
+	/* An ALERT dialog carries `closedby="closerequest"` in its markup and
+	   needs NO script here. That is the whole implementation, and it is
+	   worth saying why, because the obvious script is wrong.
 
-		   CSS cannot turn light dismiss off; it is the platform's. So the
-		   click on the backdrop itself is caught and the dialog is
-		   re-opened, because re-opening inside the closing click is
-		   swallowed by the same event. Every OTHER route out - Escape, a
-		   form submit, data-cm-close - is untouched: the flag is set only
-		   when the event target is the dialog element itself, never a
-		   descendant, and it is cleared on the close. */
-		(root || document)
-			.querySelectorAll('dialog.cm-dialog--alert')
-			.forEach(function (dlg) {
-				if (dlg.dataset.cmAlertBound) return;
-				dlg.dataset.cmAlertBound = '1';
-				dlg.addEventListener('click', function (e) {
-					/* A click on anything inside the dialog - the panel,
-					   a button, the text - targets a descendant, so this
-					   is the backdrop and nothing else. */
-					if (e.target !== dlg) return;
-					dlg.dataset.cmAlertReopen = '1';
-				});
-				dlg.addEventListener('close', function () {
-					if (dlg.dataset.cmAlertReopen !== '1') return;
-					delete dlg.dataset.cmAlertReopen;
-					if (!dlg.isConnected) return;
-					if (typeof dlg.showModal === 'function' && !dlg.open) dlg.showModal();
-					else if (typeof dlg.show === 'function' && !dlg.open) dlg.show();
-				});
-			});
+	   The tempting guard is a click handler that re-opens the dialog when
+	   the reader clicks the backdrop. It was written, it passed, and then
+	   it was measured and deleted:
+
+	     - <dialog>.showModal() does NOT light-dismiss on an outside click.
+	       The spec default is closedby="closerequest", so an outside click
+	       is already ignored. Verified on real WebKit, real pointer, four
+	       builds: with closedby absent, "any", "closerequest" and "none",
+	       only "any" closed on an outside click. The premise the guard was
+	       built on was inverted.
+	     - The reopen handler was therefore dead code: it reproduced the
+	       platform's own default. Worse, it DID have a live effect - a
+	       stale flag left a later Escape springing the dialog back open,
+	       trapping the reader in a confirm they had asked to leave.
+
+	   So the semantics are declared, not scripted. closedby is enforced by
+	   the engine (checks/closerequest/none), and a browser that does not
+	   know the attribute falls back to the same ignore-the-click default.
+	   Escape still closes, which is what the reader expects from a confirm.
+
+	   If a future engine ever gains real light dismiss, this attribute is
+	   already the correct opt-out and no code changes. */
+
 	}
-
 	/* ---------- toasts ----------
 	   Transient is the whole contract, so the retirement has to be
 	   somebody's job and it is ours. The node is inert in the document

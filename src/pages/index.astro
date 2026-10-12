@@ -2452,18 +2452,19 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 				</div>
 				<!-- shadcn's AlertDialog, and the ONE thing a Dialog cannot
 				     be: it interrupts and expects an answer, so it carries
-				     role="alertdialog" (announced as urgent) and never
-				     closes on a click outside. That second half is the
-				     whole difference and it is a script concern - a native
-				     modal dismisses on light dismiss by default, which on a
-				     destructive confirm is the wrong default and the one
-				     nobody notices until it loses someone's data. The
-				     trigger is data-cm-open, the same binder the command
-				     palette uses, so focus return and the top layer are
-				     the platform's. -->
+				     role="alertdialog" (announced as urgent) and does not
+				     close on a click outside. Both halves are declarative,
+				     and neither needed a script. closedby="closerequest"
+				     is what makes the outside click a no-op, and it is the
+				     platform default anyway - measured on real WebKit with
+				     a real pointer, where only closedby="any" dismisses.
+				     Escape still closes, which is the escape a confirm owes
+				     its reader. The trigger is data-cm-open, the same
+				     binder the command palette uses, so focus return and
+				     the top layer stay the platform's. -->
 				<dialog class="cm-dialog cm-dialog--alert" id="alert-demo"
 				        role="alertdialog" aria-labelledby="alert-demo-title"
-				        aria-describedby="alert-demo-desc">
+				        aria-describedby="alert-demo-desc" closedby="closerequest">
 					<form method="dialog" class="cm-dialog__head">
 						<h3 class="cm-dialog__title" id="alert-demo-title">Delete this record?</h3>
 						<button type="submit" class="cm-toast__close" aria-label="Close" value="close">&times;</button>
@@ -2475,8 +2476,8 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 						</p>
 					</div>
 					<div class="cm-dialog__foot">
-						<button type="submit" class="cm-btn" value="cancel">cancel</button>
-						<button type="submit" class="cm-btn cm-btn--danger" value="confirm">delete</button>
+						<button type="button" class="cm-btn" data-cm-close="alert-demo" value="cancel">cancel</button>
+						<button type="button" class="cm-btn cm-btn--danger" data-cm-close="alert-demo" value="confirm">delete</button>
 					</div>
 				</dialog>
 				<div class="cm-btn-group">
@@ -2506,8 +2507,8 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 						</p>
 					</div>
 					<div class="cm-dialog__foot">
-						<button type="submit" class="cm-btn" value="cancel">cancel</button>
-						<button type="submit" class="cm-btn cm-btn--primary" value="confirm">close it</button>
+						<button type="button" class="cm-btn" data-cm-close="dlg-demo" value="cancel">cancel</button>
+						<button type="button" class="cm-btn cm-btn--primary" data-cm-close="dlg-demo" value="confirm">close it</button>
 					</div>
 				</dialog>
 
