@@ -1510,7 +1510,48 @@ Each row is one modifier against its own base, so the difference is the thing be
 						</span>
 						<span class="cm-spec__val"><code>frame</code></span>
 					</div>
+					<div class="cm-spec__row">
+						<span class="cm-spec__label"><code>lightbox</code></span>
+						<span class="cm-spec__sample" style="width:100%">
+							<figure class="cm-media" style="margin:0">
+								<button type="button" class="cm-media__zoom"
+									data-cm-lightbox="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect width='640' height='360' fill='%23262626'/%3E%3Cpath d='M140 250l70-90 50 60 40-45 90 75z' fill='%23a5a5a5'/%3E%3Ccircle cx='470' cy='120' r='34' fill='%23d0d0d0'/%3E%3C/svg%3E"
+									data-cm-lightbox-target="lb-demo"
+									data-cm-lightbox-alt="The same placeholder frame, enlarged in the viewer."
+									aria-label="Open the sample image in the viewer">
+									<img
+										src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='120'%3E%3Crect width='640' height='120' fill='%23262626'/%3E%3C/svg%3E"
+										alt="" width="640" height="120" loading="lazy" />
+								</button>
+							</figure>
+						</span>
+						<span class="cm-spec__val"><code>tap to open · esc closes</code></span>
+					</div>
 				</div>
+				<p class="cm-head__sub">
+					the viewer is a native <code>&lt;dialog&gt;</code>, so the top
+					layer, <code>Escape</code>, the backdrop and focus trapping are
+					the platform's and not this library's. the frame below is a
+					<code>--spec</code> preview: a bare <code>&lt;dialog&gt;</code> is
+					<code>display: none</code> until it is open, so a specimen with no
+					override describes itself to nobody.
+				</p>
+				<dialog class="cm-lightbox cm-lightbox--spec" aria-label="image viewer, preview">
+					<div class="cm-lightbox__body">
+						<img class="cm-lightbox__img"
+							src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect width='640' height='360' fill='%23262626'/%3E%3Cpath d='M140 250l70-90 50 60 40-45 90 75z' fill='%23a5a5a5'/%3E%3Ccircle cx='470' cy='120' r='34' fill='%23d0d0d0'/%3E%3C/svg%3E"
+							alt="The sample image as the viewer presents it." width="640" height="360" />
+					</div>
+					<button type="button" class="cm-lightbox__close" aria-disabled="true" aria-label="Close the viewer (preview)">close</button>
+				</dialog>
+				<dialog class="cm-lightbox" id="lb-demo" aria-label="image viewer">
+					<div class="cm-lightbox__body">
+						<img class="cm-lightbox__img"
+							src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect width='640' height='360' fill='%23262626'/%3E%3C/svg%3E"
+							alt="" />
+					</div>
+					<button type="button" class="cm-lightbox__close" data-cm-close aria-label="Close the viewer">close</button>
+				</dialog>
 
 				<h3 class="cm-kicker">head title hook</h3>
 				<p class="cm-head__sub">
@@ -5000,7 +5041,15 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						</div>
 						<div class="cm-composer__bar">
 							<button type="button" class="cm-icon-btn cm-composer__attach" aria-label="Attach a file">＋</button>
-							<textarea class="cm-composer__input" rows="1" placeholder="Message #general" aria-label="Message"></textarea>
+							<div class="cm-mention__anchor" data-cm-mention data-cm-mention-source="mention-input">
+								<textarea class="cm-composer__input" id="mention-input" rows="1" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mention-list" placeholder="Message #general — try @a" aria-label="Message"></textarea>
+								<ul class="cm-mention" id="mention-list" role="listbox" aria-label="people" hidden>
+									<li class="cm-mention__option" role="option" id="mention-0" data-cm-mention-value="alex"><span class="cm-mention__name">alex</span><span class="cm-mention__hint">idle · 3m</span></li>
+									<li class="cm-mention__option" role="option" id="mention-1" data-cm-mention-value="ana"><span class="cm-mention__name">ana</span><span class="cm-mention__hint">typing</span></li>
+									<li class="cm-mention__option" role="option" id="mention-2" data-cm-mention-value="aster"><span class="cm-mention__name">aster</span><span class="cm-mention__hint">offline</span></li>
+									<li class="cm-mention__option" role="option" id="mention-3" data-cm-mention-value="ciel"><span class="cm-mention__name">ciel</span><span class="cm-mention__hint">online</span></li>
+								</ul>
+							</div>
 							<div class="cm-composer__tools">
 								<button type="button" class="cm-icon-btn" aria-label="Emoji">☺</button>
 								<button type="button" class="cm-icon-btn cm-composer__send" aria-label="Send message">➤</button>

@@ -6891,6 +6891,13 @@ input.cm-slider:disabled {
    absolute, so without this it would resolve against the nearest positioned
    ancestor and open wherever that happened to be. */
 .cm-mention__anchor { position: relative; display: block; }
+/* The list is hidden by ATTRIBUTE, with a DISPLAY rule of its own. An author
+   `display: block` outranks the UA's `[hidden]` outright - the trap the
+   command palette, the combobox and the context menu all document - and
+   this rule is what closed it the day the component shipped. It is now
+   also what the demo depends on: the list is rendered OPEN in the showcase
+   only by removing the attribute, so a regression here paints a mention
+   list under every composer on the page. */
 .cm-mention[hidden] { display: none; }
 .cm-mention__option {
 	display: flex;
@@ -9473,6 +9480,41 @@ input.cm-slider:disabled {
 	overflow-y: auto;
 	line-height: 1.5;
 }
+/* The SAME declarations again, because the mention typeahead wraps the
+   field in `.cm-composer__anchor` and the rule above is a DIRECT CHILD
+   selector - so the moment a consumer adds the anchor the field silently
+   loses its width, its `padding: 0` and its transparency, and the bar stops
+   being the visible box. MEASURED in WebKit the day the mention demo was
+   added: with the anchor in place and no rule here, the field computed its
+   base.css `inline-size: 100%` (the whole row, pushing send off the end)
+   and `padding: 0.55rem 0.7rem` inside a bar that is already the padding.
+
+   Written as its own rule rather than a second selector arm on the one
+   above: the contract test anchors on that rule's EXACT text
+   (`...input {`), so widening its selector list would break a check that is
+   right about the specificity it describes. This rule is (0,2,1) - the same
+   tie base.css's own field block holds - so neither order can lose it. */
+.cm-mention__anchor > textarea.cm-composer__input {
+	flex: 1 1 auto;
+	inline-size: auto;
+	min-inline-size: 0;
+	/* NOT a cap. The contract's six-line limit is the consumer's
+	   auto-grow; a `max-block-size` here would clip line seven and make
+	   the library the thing that broke the scroll. */
+	max-block-size: none;
+	/* base.css reserves 2x--tap for a FORM field. A composer's
+	   reservation is its row count plus the tap floor, and the consumer
+	   grows it from there. */
+	min-block-size: var(--tap);
+	padding: 0;
+	border: 0;
+	/* `background`, not `background-color`: the field must be
+	   transparent, and the base rule's own longhand is what is undone. */
+	background: transparent;
+	resize: none;
+	overflow-y: auto;
+	line-height: 1.5;
+}
 .cm-composer__tools {
 	display: flex;
 	align-items: center;
@@ -9525,6 +9567,23 @@ input.cm-slider:disabled {
 /* Layout only: the semantics stay on the composed `.cm-marker` inside
    it, exactly as the marker docs require. */
 .cm-composer__typing { margin: var(--space-1) 0 0; }
+/* The mention typeahead's anchor has to wrap the FIELD and nothing else,
+   because `.cm-mention` is absolute and measures against the nearest
+   positioned ancestor. `.cm-mention__anchor` already exists for exactly
+   that job, so the composer reuses it rather than inventing a second
+   anchor class with the same meaning - one name per concept.
+
+   What the composer adds is only the ROW'S sizing: the anchor takes the
+   leftover width so it can shrink beside the attach and send controls.
+   `min-inline-size: 0` is load-bearing - a flex child defaults to
+   `min-width: auto`, so a long placeholder would refuse to shrink and push
+   send off the end of the bar. `align-self: stretch` keeps the anchor as
+   tall as the field it wraps, so the bar's `flex-end` baseline does not
+   change. */
+.cm-composer__bar > .cm-mention__anchor {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
 
 /* A reply quote inside a row: the message this one answers, shown
    above its text as a one-line context strip. It sits in the MAIN
@@ -10122,6 +10181,51 @@ input.cm-slider:disabled {
 	padding: var(--space-2) var(--space-3);
 	border-radius: var(--radius-sm);
 	box-shadow: var(--shadow-card);
+}
+/* A `<dialog>` specimen with `position: static` paints NOTHING, ever.
+   MEASURED in WebKit (batch 13, the sheet previews): the UA rule is
+   `dialog:not([open]) { display: none }` and it does not care about
+   position, so four dialogs described themselves to nobody for a whole
+   batch. The lightbox is the same trap AND one more: its own rule claims
+   `100vw`/`100vh` for a real full-viewport viewer, so an in-flow preview
+   would cover the page rather than sit in it. This rule re-shows it as a
+   bounded frame - four borders, the house radius, the card shadow - and
+   the harness reads `getBoundingClientRect().height > 0` so it cannot
+   regress to invisible. `--spec` is a modifier the RUNTIME never sets, so
+   it can never reach a live viewer. */
+dialog.cm-lightbox--spec:not([open]) {
+	display: block;
+	width: 100%;
+	max-width: 22rem;
+	height: auto;
+	max-height: none;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-card);
+	overflow: hidden;
+}
+/* `.cm-lightbox__img` is `max-width/max-height: 100%` with no height of its
+   own - correct for a viewer whose body is a full-viewport flex box, and
+   invisible for a preview whose frame has no height to be a percentage OF.
+   `height: auto` on a replaced element with an explicit aspect is the
+   natural size, so the preview needs the body to have a height at all. */
+dialog.cm-lightbox--spec:not([open]) .cm-lightbox__img {
+	width: 100%;
+	height: auto;
+}
+/* The frame is in flow, so `inset: 0` plus `position: absolute` on the body
+   would resolve against the nearest positioned ancestor rather than the
+   dialog - the same containing-block trap the popover documents. The
+   preview's body is the static column instead. */
+dialog.cm-lightbox--spec:not([open]) .cm-lightbox__body {
+	position: static;
+	display: block;
+	padding: 0;
+}
+dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
+	position: static;
+	display: inline-block;
+	margin: var(--space-2) var(--space-3);
 }
 
 /* ============ stack ownership (LAST, on purpose) ============
