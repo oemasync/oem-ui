@@ -5,6 +5,20 @@ viewport on `ui.shadcn.com/docs/components` and
 `.../docs/components/base/button`, not read off screenshots or guessed
 from class names.
 
+## 0. The verdict, checked live and exactly
+
+The "All Components" list on `ui.shadcn.com/docs/components` enumerates
+**64** names. oem-ui's README ledger enumerates **64**. Compared
+name-by-name and in order, on 2026-10-12:
+
+- missing from oem-ui: **none**
+- present in oem-ui but not listed by shadcn: **none**
+- **order identical** across all 64
+
+So the catalogue half of "full parity" is complete and verifiable. What
+remains is not components - it is the *shape of the site* (section 3) and
+the non-component areas (section 1).
+
 ## 1. What shadcn actually ships
 
 Two sources disagree, which matters for parity claims:
@@ -19,6 +33,20 @@ stated against ONE of them and the other named as different. Data Table and
 Date Picker are documented **compositions** of Table + Calendar + Popover
 plus a data-table extension, not registry items; `form` and `sonner` are
 registry items that the components index does not list.
+
+Those two were checked rather than dismissed, because "we skip the two the
+other list has" is exactly the kind of claim that hides a gap:
+
+- **`form`** is listed in the registry with `"files": []` and no
+  dependencies - it is documents-only. It describes wiring React Hook Form
+  to the Field components. oem-ui has `Field` (label/help/error wiring) and
+  has no React, so the item is not portable and there is nothing to port.
+- **`sonner`** wraps the third-party `sonner` npm package (its dependencies
+  are `sonner` and `next-themes`) with React theming. oem-ui's Toast is
+  hand-rolled and zero-dependency by design, so adopting it would mean
+  taking on a dependency to replace working code.
+
+Both exclusions are therefore deliberate and recorded, not oversights.
 
 Beyond components, the site has sections oem-ui has no equivalent of at all:
 

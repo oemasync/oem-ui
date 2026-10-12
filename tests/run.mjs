@@ -16460,3 +16460,46 @@ check('the docs TOC carries exactly the sections of the document it is in', () =
 			`/f/${f}/ has section(s) missing from its TOC: ${missing.join(', ')}`);
 	}
 });
+
+check('the ledger names the 64 shadcn components, in the order shadcn lists them', () => {
+	/* Parity is a claim about a list that lives on someone else's site, so the
+	   list is pinned HERE, as measured from the "All Components" index on
+	   ui.shadcn.com/docs/components. The check is name-and-ORDER: a rename, a
+	   silent drop, or a reordering all fail, and the message says which.
+	   It cannot re-fetch the live page (the suite is offline), so the pinned
+	   copy is the thing to update when shadcn adds a component - which is the
+	   point, because that update should be a deliberate act with a diff. */
+	const SHADCN = [
+		'Accordion', 'Alert', 'Alert Dialog', 'Aspect Ratio', 'Attachment', 'Avatar', 'Badge',
+		'Breadcrumb', 'Bubble', 'Button', 'Button Group', 'Calendar', 'Card', 'Carousel', 'Chart',
+		'Checkbox', 'Collapsible', 'Combobox', 'Command', 'Context Menu', 'Data Table', 'Date Picker',
+		'Dialog', 'Direction', 'Drawer', 'Dropdown Menu', 'Empty', 'Field', 'Hover Card', 'Input',
+		'Input Group', 'Input OTP', 'Item', 'Kbd', 'Label', 'Marker', 'Menubar', 'Message',
+		'Message Scroller', 'Native Select', 'Navigation Menu', 'Pagination', 'Popover', 'Progress',
+		'Questionnaire', 'Radio Group', 'Resizable', 'Scroll Area', 'Select', 'Separator', 'Sheet',
+		'Sidebar', 'Skeleton', 'Slider', 'Spinner', 'Switch', 'Table', 'Tabs', 'Textarea', 'Toast',
+		'Toggle', 'Toggle Group', 'Tooltip', 'Typography',
+	];
+	const readme = read('README.md');
+	const ledger = readme.slice(readme.indexOf('**Implemented ('));
+	const body = ledger.slice(0, ledger.indexOf('Three of those were once listed'));
+	// Parentheses carry the detail prose, and it contains commas, so strip
+	// balanced parens before splitting or the list shatters mid-sentence.
+	let clean = '';
+	let depth = 0;
+	for (const ch of body) {
+		if (ch === '(') depth++;
+		else if (ch === ')') depth = Math.max(0, depth - 1);
+		else if (depth === 0) clean += ch;
+	}
+	// The paren-strip above already ate the count, so the header reads
+	// `**Implemented :**`; match that shape rather than assuming the number.
+	clean = clean.replace(/\*\*Implemented[^*]*:\*\*/, '').replace(/\s+/g, ' ');
+	const names = clean.split(',').map((x) => x.trim().replace(/\.$/, '')).filter(Boolean);
+	assert(names.length === SHADCN.length,
+		`the ledger lists ${names.length} components against shadcn's ${SHADCN.length}`);
+	const wrong = SHADCN.filter((n, i) => names[i] !== n);
+	assert(wrong.length === 0,
+		`${wrong.length} ledger entr(y|ies) differ from shadcn's list, at: ` +
+		wrong.slice(0, 5).map((n) => `expected "${n}", got "${names[SHADCN.indexOf(n)]}"`).join('; '));
+});
