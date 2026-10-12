@@ -481,7 +481,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 					<a class="cm-btn cm-btn--sm">Small</a>
 					<a class="cm-btn cm-btn--block">Block</a>
 				</div>
-				<div class="cm-btn-group" style="margin-top:var(--space-4)">
+				<div class="cm-btn-group">
 					<button class="cm-btn cm-btn--danger">Delete</button>
 					<span class="cm-btn-group cm-btn-group--joined" role="group" aria-label="View">
 						<button class="cm-btn">Day</button>
@@ -571,7 +571,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					</div>
 				</div>
 
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					A group's list is a <code>.cm-header__links</code> of its own, so its links sit
 					one level deeper than a flat rail's &mdash; which is why the rail row rule
 					carries a second selector for the group. It used to be
@@ -579,7 +579,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					nothing: no tap floor and no current marker, measured in WebKit at
 					1280&times;900 at 34&nbsp;px rows with <code>border-left-width: 0</code>.
 				</p>
-				<p class="cm-head__sub" style="margin-top:var(--space-2)">
+				<p class="cm-head__sub">
 					The specimen above is that nest inside a real <code>.cm-header--rail</code>
 					&mdash; nesting alone is not enough, because every rail rule is keyed on that
 					class &mdash; with two labelled groups and five rows, so the marker is visibly
@@ -614,7 +614,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 						<span class="cm-spec__val"><code>aria-expanded</code></span>
 					</div>
 				</div>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					Tapping a link closes the panel, so the menu never sits on top of the
 					section you just asked for. <code>Escape</code> closes it and returns
 					focus to the button, and rotating to a desktop width clears the state
@@ -661,7 +661,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 						<span class="cm-spec__val"><code>cm-icon-btn--bare</code></span>
 					</div>
 				</div>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					Both stay square on a phone. The bare form is what
 					<a href="https://links.oem.ngo/">oem-links</a> and
 					<a href="https://log.oem.ngo/">oem-log</a> each hand-rolled; the
@@ -919,7 +919,7 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 						</details>
 					</li>
 				</ul>
-				<div class="cm-list-head" style="margin-bottom:0.4rem">Index / compact</div>
+				<div class="cm-list-head">Index / compact</div>
 				<ul class="cm-rows cm-rows--inline">
 					<PostRow href="#1" index={3} title="Extract components from a design" description="separate tokens, base, components and runtime." date={new Date('2025-09-26')} />
 					<PostRow href="#2" index={2} title="Make them portable" description="zero deps, plain classes, works in any framework." date={new Date('2025-09-25')} />
@@ -981,7 +981,7 @@ What a surface shows before it has data, and after it fails. Status is carried b
 					<div class="cm-skeleton__line cm-skeleton__line--w60"></div>
 					<div class="cm-skeleton__line cm-skeleton__line--w40"></div>
 				</div>
-				<p class="cm-spinner-row" role="status" style="margin-top:var(--space-4)">
+				<p class="cm-spinner-row" role="status">
 					<span class="cm-spinner" aria-hidden="true"></span>
 					working…
 				</p>
@@ -990,12 +990,12 @@ What a surface shows before it has data, and after it fails. Status is carried b
 				     is for a surface with nothing to show yet; a refresh arrow inside
 				     its own button should keep being an arrow and just turn. Same
 				     keyframes, so the two cannot drift out of step side by side. -->
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					<strong>cm-glyph-spin</strong> turns a glyph that is already the right
 					shape - a refresh arrow inside its own button - where a
 					<strong>spinner</strong> would draw a second ring beside the label.
 				</p>
-				<p style="margin-top:var(--space-2)">
+				<p>
 					<button type="button" class="cm-btn cm-btn--sm">
 						<svg class="cm-glyph-spin" width="14" height="14" viewBox="0 0 24 24"
 							fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -1960,7 +1960,7 @@ The monospace surface for structured text, in the two forms it is always used: a
 									</button>
 								</li>
 							</ul>
-							<p class="cm-head__sub" style="margin:var(--space-6) 0 var(--space-5)">
+							<p class="cm-head__sub">
 								<code>cm-row__meta--wrap</code> is for a meta slot that carries
 								a CONTROL rather than a label. The plain meta slot is nowrap and
 								unshrinkable, which is right for a status and wrong for a
@@ -1987,7 +1987,7 @@ The monospace surface for structured text, in the two forms it is always used: a
 									</div>
 								</li>
 							</ul>
-							<p class="cm-head__sub" style="margin:var(--space-6) 0 var(--space-5)">
+							<p class="cm-head__sub">
 								<code>cm-inline__input--tight</code> sizes the INPUT rather than
 								the display span. <code>cm-inline--wide</code> is a max-width on the
 								span; an IP or a port is short, and
@@ -2002,7 +2002,7 @@ The monospace surface for structured text, in the two forms it is always used: a
 								<input class="cm-inline__input cm-inline__input--tight" value="8443" aria-label="Forward port" />
 						</div>
 
-						<p class="cm-head__sub" style="margin:var(--space-6) 0 var(--space-5)">
+						<p class="cm-head__sub">
 						<code>cm-row__meta--nowrap</code> is the other direction from
 						<code>--wrap</code>: a meta slot carrying ONE value that must not
 						split, given its own line by <code>cm-row__body--wrap</code> rather
@@ -2085,7 +2085,7 @@ The monospace surface for structured text, in the two forms it is always used: a
 							<SectionHead title="dialog, as a side sheet">
 The same native <code>&lt;dialog&gt;</code> as the confirm modal, anchored to the right edge instead of the centre. Only the frame changes, so it keeps the focus trap, Escape, the top layer and the inertness of the page behind it - all of which a hand-rolled <code>position: fixed</code> panel gives up. Full-width and flush below 640px.
 							</SectionHead>
-							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet" style="position:static;margin:0 auto">
+							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet" style="position:static">
 								<div class="cm-dialog__head">
 									<div>
 										<div class="cm-dialog__title">app.example.com</div>
@@ -2099,13 +2099,13 @@ The same native <code>&lt;dialog&gt;</code> as the confirm modal, anchored to th
 									</p>
 								</div>
 							</dialog>
-							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-left" style="position:static;margin-top:var(--space-4)">
+							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-left" style="position:static">
 								<div class="cm-dialog__head"><div class="cm-dialog__title">left sheet</div></div>
 							</dialog>
-							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-top" style="position:static;margin-top:var(--space-4)">
+							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-top" style="position:static">
 								<div class="cm-dialog__head"><div class="cm-dialog__title">top sheet</div></div>
 							</dialog>
-							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom" style="position:static;margin-top:var(--space-4)">
+							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom" style="position:static">
 								<div class="cm-dialog__head"><div class="cm-dialog__title">bottom sheet</div></div>
 							</dialog>
 						</section>
@@ -2113,7 +2113,7 @@ The same native <code>&lt;dialog&gt;</code> as the confirm modal, anchored to th
 							<SectionHead title="drawer">
 The bottom sheet with a handle on it. Grab the strip and pull: past the threshold the drawer closes for real, so focus lands back on whatever opened it; short of the threshold it snaps home - a half-pull is a no-op, not a stuck drawer. The drag is transform against the pointer itself, so the sheet sits exactly under your finger with no easing of its own. Only the HANDLE drags: the body scrolls underneath, and a gesture that began in the content would fight that scroll. The frame is still the native <code>&lt;dialog&gt;</code> from the sheet above - focus trap, Escape, top layer, inert page - because a pull-to-dismiss drawer that gives those up is a worse trade than a drawer without a handle.
 							</SectionHead>
-							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer" style="position:static;margin-top:var(--space-4)">
+							<dialog class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer" style="position:static">
 								<div class="cm-drawer__handle" aria-hidden="true"></div>
 								<div class="cm-dialog__head">
 									<div class="cm-dialog__title">pull me down</div>
@@ -2127,7 +2127,7 @@ The bottom sheet with a handle on it. Grab the strip and pull: past the threshol
 									</p>
 								</div>
 							</dialog>
-							<div style="margin-top:var(--space-4)">
+							<div>
 								<button type="button" class="cm-btn" data-cm-open="drawer-demo">open drawer</button>
 							</div>
 							<dialog id="drawer-demo" class="cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer">
@@ -2904,7 +2904,7 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 					<Stat value="5,000+" label="users and devices" note="global estate" />
 					<Stat value="3" label="CompTIA certs" note="A+, Tech+, ITF+" />
 				</ul>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					The note line is optional. It is the qualifier that makes a
 					number honest: “5,000+” on its own is a boast, “5,000+ across
 					the estate” is a fact.
@@ -2913,7 +2913,7 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 				<h3 class="cm-kicker";margin-bottom:var(--space-3)>
 					balanced bands, and a header row with a trailing chip
 				</h3>
-				<p class="cm-head__sub" style="margin-bottom:var(--space-5)">
+				<p class="cm-head__sub">
 					<code>auto-fit</code> cannot stop a stranded tile. It always fits as
 					many columns as the width allows, so the last row keeps whatever
 					is left — measured on a seven-tile band at 1280px: six columns
@@ -2931,12 +2931,12 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 					<Stat value="24" label="certificates" />
 					<Stat value="1" label="user" />
 				</ul>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					Seven tiles over four columns: 4 + 3, one dead column, which is
 					the best a single count can do for an odd total.
 				</p>
 
-				<div class="cm-head-row" style="margin-top:var(--space-7);margin-bottom:var(--space-4)">
+				<div class="cm-head-row">
 					<div class="cm-head-row__text">
 						<span class="cm-head__badge" aria-hidden="true">●</span>
 						<h3 class="cm-section__title">A header row with a trailing chip</h3>
@@ -2959,7 +2959,7 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 						<div class="cm-tile__val">0</div>
 					</div>
 				</div>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					The badge and the title share one line. When the row has
 					the width, the chip trails them at the right edge;
 					when it does not - every phone - it stops pretending to
@@ -2970,22 +2970,22 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 					same fix for a card row, where a fitted grid left two and one.
 				</p>
 
-				<div class="cm-row" style="margin-top:var(--space-5);align-items:stretch">
+				<div class="cm-row" style="align-items:stretch">
 					<span class="cm-row__body">Trailing meta</span>
 					<span class="cm-row__meta cm-row__meta--wrap cm-stick-top">top-aligned, not stretched</span>
 					<span class="cm-row__meta cm-row__meta--wrap cm-push">last, so .cm-push holds it right</span>
 				</div>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					Both are position utilities, and <code>.cm-push</code> only means
 					something as the LAST child: <code>margin-left: auto</code>
 					distributes the slack that follows it, so an element with
 					siblings after it is pushed away from them instead of the edge.
 				</p>
-				<div class="cm-btn-group cm-push-group" style="margin-top:var(--space-4)">
+				<div class="cm-btn-group cm-push-group">
 					<span class="cm-tag">left</span>
 					<span class="cm-tag cm-push">right</span>
 				</div>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					<code>.cm-push</code> and <code>.cm-stick-top</code> replace four
 					inline <code>marginLeft: 'auto'</code> copies in rpm. An inline
 					style cannot be overridden by a stylesheet and cannot respond to
@@ -3077,7 +3077,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 						</p>
 					</Card>
 				</ul>
-				<p class="cm-head__sub" style="margin-top:var(--space-3)">
+				<p class="cm-head__sub">
 					<code>--accent</code> marks the one card a reader should look
 					at first. It is a 2px rule, not a hue: the palette has none
 					to spend, and a border cannot drift from the tokens in
@@ -3097,8 +3097,8 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 				     separate items instead of one index. The third card also
 				     carries the note slot, and the fourth is the reserved slot,
 				     which is a <div> and so has no hover and no tab stop. -->
-				<div class="cm-block" style="margin-top:var(--space-7)">
-					<div class="cm-head-row" style="margin-bottom:var(--space-4)">
+				<div class="cm-block">
+					<div class="cm-head-row">
 						<div class="cm-head-row__text">
 							<h3 class="cm-section__title">Project index</h3>
 							<p class="cm-head__sub">
@@ -3632,7 +3632,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					     uses all the rest. Rendered nested here because the
 					     showcase's own shell is the prose variant. -->
 					<div class="cm-shell cm-shell--rail cm-shell--rail--fill"
-						 style="border:1px solid var(--line);margin-bottom:var(--space-5)">
+						 style="border:1px solid var(--line)">
 						<div style="padding:var(--space-4)">
 							<p class="cm-head__sub" style="margin:0">
 								An application column. It fills the space beside the rail
@@ -3642,7 +3642,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 						</div>
 					</div>
 
-				<div class="cm-spec" style="margin-bottom:var(--space-6)">
+				<div class="cm-spec">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--measure</code></span>
 						<span class="cm-spec__sample"><span class="cm-lede" style="margin:0">The widest a reading column gets, in characters.</span></span>
@@ -3679,7 +3679,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 				</p>
 
 				<h3 class="cm-kicker">key-value, wrapped pairs</h3>
-				<p class="cm-head__sub" style="margin-bottom:var(--space-4)">
+				<p class="cm-head__sub">
 					HTML lets you group <code>dt</code>/<code>dd</code> inside a
 					<code>div</code> when a row needs a control of its own - a link
 					around the whole row, a toggle, a popover trigger. The
@@ -3727,7 +3727,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					</div>
 
 				<h3 class="cm-kicker">key-value, whole row is the link</h3>
-				<p class="cm-head__sub" style="margin-bottom:var(--space-4)">
+				<p class="cm-head__sub">
 					<code>.cm-kv--link</code> is the case above where the
 					per-row control is an <code>&lt;a&gt;</code>. Link only
 					the <code>dt</code> and the target is the term - measured
@@ -3761,7 +3761,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 				</dl>
 
 				<h3 class="cm-kicker">split</h3>
-				<p class="cm-head__sub" style="margin-bottom:var(--space-4)">
+				<p class="cm-head__sub">
 					The main block and the aside below are the same DOM at every
 					width; only the column count changes. Narrow the window past
 					700px and the aside drops under the content rather than
@@ -4409,7 +4409,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					The inline styles are the box chrome only; the class carries the
 					behaviour.
 				</p>
-				<div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);">
+				<div style="display: flex;flex-wrap: wrap;gap: var(--space-2)">
 					<div class="cm-scroll-fade-y cm-scroll-fade--t" style="width: 7rem; height: 4rem; overflow-y: auto; border: 1px solid var(--line); padding: var(--space-1); font-size: var(--text-xs);">top edge only<br>line two<br>line three<br>line four<br>line five</div>
 					<div class="cm-scroll-fade cm-scroll-fade--b" style="width: 7rem; height: 4rem; overflow-y: auto; border: 1px solid var(--line); padding: var(--space-1); font-size: var(--text-xs);">bottom edge only<br>line two<br>line three<br>line four<br>line five</div>
 					<div class="cm-scroll-fade-x cm-scroll-fade--l" style="width: 7rem; height: 2.6rem; overflow-x: auto; border: 1px solid var(--line); padding: var(--space-1); font-size: var(--text-xs);"><span style="white-space: nowrap;">left edge: the long row scrolls on in this direction and fades behind</span></div>
@@ -4467,11 +4467,11 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<div class="cm-bubble cm-bubble--ghost">ghost - assistant text with no frame, full width,
 						<code>code allowed</code></div>
 				</div>
-				<div class="cm-bubble-group" style="width: 100%; margin-top: var(--space-4);">
+				<div class="cm-bubble-group" style="width: 100%">
 					<div class="cm-bubble cm-bubble--secondary">aligned to the start - the default side</div>
 					<div class="cm-bubble cm-bubble--end">aligned to the end - the user's side</div>
 				</div>
-				<div class="cm-bubble-group" style="width: 100%; margin-top: var(--space-4);">
+				<div class="cm-bubble-group" style="width: 100%">
 					<div class="cm-bubble cm-bubble--danger">Are you sure I can run this?</div>
 					<div class="cm-bubble__reactions" role="img" aria-label="reacted with eyes and rocket, plus 2">
 						<span class="cm-bubble__reaction">👀</span>
@@ -4483,14 +4483,14 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<span class="cm-bubble__reaction">👍</span>
 					</div>
 				</div>
-				<p class="cm-row__meta" style="margin-top: var(--space-4);">
+				<p class="cm-row__meta">
 					an interactive bubble is a REAL link or button - focusable, correct
 					role, the text is the accessible name:
 				</p>
 				<div class="cm-bubble cm-bubble--outline">
 					<a class="cm-bubble__content cm-bubble__content--interactive" href="#chat">something else. talk to a human.</a>
 				</div>
-				<div class="cm-msg" style="margin-top: var(--space-4);">
+				<div class="cm-msg">
 					<div class="cm-msg__avatar"><span class="cm-avatar cm-avatar--sm" aria-hidden="true">ol</span></div>
 					<div class="cm-msg__body">
 						<p class="cm-msg__header">olivia</p>
@@ -4506,7 +4506,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<p class="cm-msg__footer">read · 4:55pm <button class="cm-msg__action" type="button">retry</button></p>
 					</div>
 				</div>
-				<div class="cm-msg-group" style="margin-top: var(--space-4);">
+				<div class="cm-msg-group">
 					<div class="cm-msg">
 						<div class="cm-msg__avatar"></div>
 						<div class="cm-msg__body">
@@ -4520,7 +4520,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						</div>
 					</div>
 				</div>
-				<div style="display: grid; gap: var(--space-3); margin-top: var(--space-4);">
+				<div style="display: grid;gap: var(--space-3)">
 					<div class="cm-marker" role="status">
 						<span class="cm-marker__icon" aria-hidden="true"><span class="cm-spinner"></span></span>
 						<span class="cm-marker__content">compacting conversation</span>
@@ -4560,7 +4560,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<span class="cm-spec__val">the rail owns it; the bleed is empty padding</span>
 					</div>
 				</div>
-				<div style="display: grid; grid-template-columns: var(--guildrail-w) minmax(0, 1fr); block-size: 16rem; margin-top: var(--space-4); border: 1px solid var(--line);">
+				<div style="display: grid;grid-template-columns: var(--guildrail-w) minmax(0, 1fr);block-size: 16rem;border: 1px solid var(--line)">
 					<nav class="cm-guildrail" aria-label="Servers">
 						<span class="cm-tooltip">
 							<button type="button" class="cm-guildrail__item cm-guildrail__item--home"
@@ -4673,7 +4673,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<span class="cm-spec__val">data-cm-sending on the form; the input stays usable</span>
 					</div>
 				</div>
-				<div style="margin-top: var(--space-4); max-width: 42rem;">
+				<div style="max-width: 42rem">
 					<form class="cm-composer" data-cm-composer>
 						<div class="cm-composer__reply" hidden>
 							<span class="cm-composer__replytext">Replying to <strong>Ciel</strong></span>
@@ -5073,7 +5073,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<div class="cm-scroller__bar">
 						<button class="cm-btn cm-scroller__pill" type="button" data-scroller-pill hidden>1 new message - jump to the live edge</button>
 					</div>
-				<div class="cm-scroller__outline" style="margin-top: var(--space-3);">
+				<div class="cm-scroller__outline">
 					<span class="cm-scroller__outline-title">transcript outline</span>
 					<button class="cm-scroller__link" type="button" data-jump-to="m1">deploy the branch?</button>
 					<button class="cm-scroller__link" type="button" data-jump-to="m3">include the migration step</button>
@@ -5111,11 +5111,11 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<span class="cm-spec__val">consumer groups; CSS only tightens the row</span>
 					</div>
 				</div>
-				<p class="cm-row__meta" style="margin-top: var(--space-4);">
+				<p class="cm-row__meta">
 					hover a row for its toolbar - or tab into it: the button stays in
 					the tab order even while it is invisible
 				</p>
-				<div class="cm-scroller" data-cm-scroller style="margin-top: var(--space-2);">
+				<div class="cm-scroller" data-cm-scroller>
 					<div class="cm-scroller__bar">
 						<span class="cm-scroller__status" data-scroller-status>transcript</span>
 						<span class="cm-scroller__bar">
@@ -5359,7 +5359,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						</span>
 					</div>
 				</div>
-				<p class="cm-row__meta" style="margin-top: var(--space-4);">
+				<p class="cm-row__meta">
 					the group: a keyboard-scrollable snapping row (tabindex + role +
 					label for presentational rows) with an edge fade:
 				</p>
@@ -5399,7 +5399,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						</span>
 					</div>
 				</div>
-				<div class="cm-attach" style="margin-top: var(--space-4);">
+				<div class="cm-attach">
 					<span class="cm-attach__media" aria-hidden="true">PDF</span>
 					<span class="cm-attach__content">
 						<span class="cm-attach__title">full-card trigger demo</span>
@@ -5593,7 +5593,7 @@ Every class below except <code>.cm-auth</code>, <code>.cm-card--auth</code>, <co
 					</p>
 				</div>
 
-				<h3 style="margin-top:var(--space-5)">a wider frame</h3>
+				<h3>a wider frame</h3>
 				<p class="cm-head__sub">
 					<code>.cm-auth--wide</code> is the same frame at a larger
 					measure, for a page that has to fit more than a

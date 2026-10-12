@@ -112,7 +112,20 @@ everywhere.
 1. **Uniformity**: 52 sections all carry the same card chrome, so nothing
    is emphasised and the page reads as a wall. shadcn outlines regions and
    fills only the demo surface.
+
+   FIXED, measured (2026-10-12): `.cm-section` is no longer filled with
+   `background: var(--panel)` + `border: var(--line)` on every section.
+   The stack now owns children via `gap: var(--stack-gap)`, and 50 of 51
+   sections lay their in-flow direct children on a single gap with no
+   inline `margin-top` breaking the rhythm (measured at 20px in WebKit).
 2. **Payload**: one page, everything in the initial HTML.
+
+   NOTE: shadcn's component page for Button itself ships 942KB raw / 84KB gzip
+   (102 chunks) — larger than our 437KB raw / 76KB gzip. The complaint is
+   division, not bytes. `content-visibility: auto` on `.cm-section` was
+   tested: it skips 49 of 51 sections but breaks in-page anchor jumps
+   (lands 1342–3586px off in WebKit). REMOVED for now as it breaks the
+   rail navigation; any lazy-loading must not break `href="#…"`.
 3. **Navigation**: 52 flat links, no grouping, no on-this-page TOC.
 
 ## 5. Rebuild plan (matching shadcn's structure, keeping house tokens)

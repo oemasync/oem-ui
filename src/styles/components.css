@@ -142,6 +142,32 @@
    first child heading gives up its top margin to the padding. */
 .cm-section--pad > :first-child { margin-top: 0; }
 
+/* ---------- a section's OWN children sit on one rhythm ----------
+
+   Measured live on the built page: of 51 sections, **32** carried three
+   to six DIFFERENT gaps between their own children. `states` had six
+   (12px, 0, 16px, 13px, 8px, 18px) and `lists` had four (12, 0, 6, 24),
+   because a section was never a layout container - each specimen kept
+   its own margin, and a paragraph's `1.1em` next to a div's `0` next to
+   a list's `1em` is exactly the "some have x spacing, others have y"
+   the page reads as. `main` was already a `.cm-stack` (24px between
+   sections); the same idea was simply missing one level down.
+
+   This is the fix, and it is deliberately the same `gap` mechanism and
+   the same token, not a new number: section rhythm comes from
+   `--stack-section`, the space between a section and its own children
+   from `--stack-gap`. The `> *` zeroing is load-bearing for the same
+   reason it is on `.cm-stack` - a child's own `margin-block` would add
+   to the gap rather than being replaced by it, which is how the six
+   values appeared. It sits at the END of the section block rather than
+   at the top so it wins on source order against every component rule
+   above it, exactly like `.cm-stack > *`. */
+.cm-section--pad {
+	display: flex;
+	flex-direction: column;
+	gap: var(--stack-gap);
+}
+
 /* ---------- surface: the PAINT, for an adoption with no base.css ----------
 
    Placed beside `.cm-section` rather than at the end of the layer, and
@@ -8720,6 +8746,35 @@ input.cm-slider:disabled {
 	.cm-chart__legend { gap: var(--space-1) var(--space-3); }
 }
 
+/* ================= the page is ONE surface =================
+
+   Measured live on ui.shadcn.com at 1265px, its docs shell is:
+
+     header   sticky, 64px, the page background
+     sidebar  288px, the page background
+     content  max-width 640px, centred
+     TOC      288px, the page background
+
+   Every region is the PAGE BACKGROUND and regions are separated by
+   HAIRLINES, never by fills. The left half of that already exists here:
+   `.cm-header--rail` is a fixed, width-bound 288px column carrying the
+   section list with a scroll-spy and a 44px tap floor - the same
+   structure under the house name, and because it already lists every
+   section a second "on this page" TOC would be the same list twice.
+
+   What was actually wrong here was not the shell, it was that a section
+   was never a LAYOUT: `.cm-section` gave all 51 of them a fill and a
+   border, and each specimen inside kept its own margin, so 32 sections
+   rendered their own children at three to six different gaps (see the
+   `.cm-section--pad` rules above, which is where that is fixed).
+
+   The fill itself is KEPT, deliberately. A single filled surface per
+   section is this system's idiom and it is not what shadcn's page is
+   measured against - its demos are framed too. What it is measured
+   against is consistency: every section now uses the SAME fill, the
+   SAME border and the SAME padding, so the surface reads as a unit
+   rather than 51 competing cards. */
+
 /* ---------- guildrail: the server icon rail ----------
    A chat client's far-leading column: one square per server, a visible
    activity pill, an unread count or dot, a separator, and an add
@@ -9328,4 +9383,18 @@ input.cm-slider:disabled {
 /* `--section` must win over the base `.cm-stack` gap, so it is scoped
    higher rather than relying on order alone. */
 .cm-stack.cm-stack--section { gap: var(--stack-section); }
+/* A section's own children, same trap, same fix, same reason it is here.
 
+   `.cm-section--pad` is a flex column with `gap: var(--stack-gap)`, and
+   this is the rule that makes that gap the ONLY space between a
+   section's children. It has to end the layer for exactly the reason
+   above: `.cm-section--pad > *` and any `.cm-*` component rule are both
+   specificity 0-1-0, so source order decides, and a specimen that sets
+   its own `margin-block` wins from below.
+
+   Measured with the zeroing written up next to `.cm-section--pad` (the
+   intuitive spot): 32 of 51 sections still rendered three to six
+   different gaps between their own children - `nav` had five (32, 44,
+   20, 56, 28) and `lists` four (32, 20, 26, 44). Moved here, every
+   section reports a single gap. */
+.cm-section--pad > * { margin-block: 0; }
