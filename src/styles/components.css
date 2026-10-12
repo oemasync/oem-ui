@@ -9782,40 +9782,40 @@ input.cm-slider:disabled {
    the top layer and focus trapping are free. The image fits the viewport
    without cropping, and the backdrop is the same token as other sheets. */
 .cm-lightbox {
-  width: 100vw;
-  max-width: 100vw;
-  height: 100vh;
-  max-height: 100vh;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
+	width: 100vw;
+	max-width: 100vw;
+	height: 100vh;
+	max-height: 100vh;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
 }
 .cm-lightbox::backdrop { background: var(--scrim); }
 .cm-lightbox__body {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-4);
 }
 .cm-lightbox__img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+	display: block;
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
 }
 .cm-lightbox__close {
-  position: absolute;
-  top: var(--space-4);
-  inset-inline-end: var(--space-4);
-  border: 1px solid var(--line);
-  background: var(--bg-2);
-  color: var(--ink);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-card);
+	position: absolute;
+	top: var(--space-4);
+	inset-inline-end: var(--space-4);
+	border: 1px solid var(--line);
+	background: var(--bg-2);
+	color: var(--ink);
+	padding: var(--space-2) var(--space-3);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-card);
 }
 
 /* ============ stack ownership (LAST, on purpose) ============
