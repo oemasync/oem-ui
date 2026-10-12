@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 
 URL = os.environ.get('CM_BASE', 'http://127.0.0.1:4471/')
 FAMILIES = {
-    'foundation': 5, 'surfaces': 7, 'tables': 6, 'panels': 6, 'content': 3,
+    'foundation': 5, 'surfaces': 7, 'tables': 6, 'panels': 6, 'content': 4,
     'prose': 6, 'layout': 7, 'composed': 8, 'reference': 4,
 }
 passed = failed = 0
@@ -52,7 +52,8 @@ with sync_playwright() as p:
     pg.goto(URL, wait_until='networkidle')
     check('the whole page renders no TOC', pg.evaluate("!document.querySelector('.cm-doc__toc')"))
     check('the whole page still renders every section',
-          pg.evaluate("document.querySelectorAll('main section[id]').length") == 52)
+          pg.evaluate("document.querySelectorAll('main section[id]').length")
+          == sum(FAMILIES.values()))
 
     # ---- each family page ----
     for fam, n in FAMILIES.items():
