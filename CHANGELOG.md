@@ -1,3 +1,33 @@
+## Unreleased - the page is one rhythm, and sections are regions not cards
+
+Omar's report, and both halves of it measured rather than argued.
+
+"some things have backgrounds, others dont" - all 51 sections carried the
+same `background: var(--panel)` + `border` card chrome, so the page was 51
+identical competing cards and nothing inside them could be emphasised.
+shadcn's own component page carries NO fill and NO border in its content
+column: the only filled things are code blocks, controls and cards inside
+the demos. `.cm-section` is now `background: none; border: 0`, with a
+hairline `border-block-start` between neighbours.
+
+"some have x spacing, others have y" - MEASURED: 32 of 51 sections
+rendered three to six DIFFERENT gaps between their own direct children
+(`states`: 12, 0, 16, 13, 8, 18). Two causes: a zeroing rule placed early
+at equal specificity, and 47 direct children carrying an inline
+`style="margin-top:var(--space-N)"` that an inline property outranks.
+Both fixed; now 51 of 51 uniform, pinned by tests/verify-section-rhythm.py.
+
+Also: 19 raw rem literals across 15 rules moved onto the `--space-N` scale
+(plus one `margin-bottom:0.4rem` hiding in the markup a CSS-only scan had
+missed), and tests/run.mjs now fails on any raw rem in a spacing
+declaration - proven to fail by reintroducing one.
+
+`content-visibility: auto` on `.cm-section` was tested and REJECTED: it
+does skip 49 of 51 sections, but in WebKit it breaks in-page anchors - a
+jump landed 1342/1479/3586px past the target section. The rail is this
+page's primary navigation, so the payload must be divided by something
+that does not break it. 636 checks pass.
+
 # Changelog
 
 ## Unreleased - Direction: the clamp reads the rendered direction

@@ -129,11 +129,32 @@
 .cm-stack--airy  { gap: var(--space-6); }
 .cm-stack--loose { gap: var(--space-7); }
 
-/* ---------- section shell: flat panel, mono border ---------- */
+/* ---------- section shell: a region, not a card ----------
+
+   Measured against shadcn's component page in WebKit (2026-10-12): the
+   content column carries NO background and NO border. h2 sits at
+   18.75px/600 with a 32.8px top margin and the only filled things in the
+   column are CODE BLOCKS, CONTROLS and CARDS INSIDE THE DEMOS. Region
+   boundaries come from whitespace, not chrome.
+
+   Ours was the opposite: all 51 sections carried
+   `background: var(--panel)` + `border: 1px solid var(--line)`, so the
+   page was 51 identical competing cards and nothing inside them could be
+   emphasised - which is the "some things have backgrounds, others dont"
+   complaint. A section is EXPLANATION; the specimen is the artefact. The
+   fill belongs to the artefact.
+
+   The separation is a hairline ABOVE each section after the first, which
+   is how shadcn divides two prose regions. It is `border-block-start`
+   rather than a margin so it stays 1px regardless of the rhythm, and it
+   is scoped to `+ .cm-section` so the first section never draws one. */
 .cm-section {
-	background: var(--panel);
-	border: 1px solid var(--line);
-	border-radius: var(--radius-sm);
+	background: none;
+	border: 0;
+}
+.cm-section + .cm-section {
+	border-block-start: 1px solid var(--line);
+	padding-block-start: var(--stack-section);
 }
 .cm-section--pad { padding: var(--space-4) var(--space-5); }
 /* A section that opens with a heading must not also pad AND carry the

@@ -113,11 +113,16 @@ everywhere.
    is emphasised and the page reads as a wall. shadcn outlines regions and
    fills only the demo surface.
 
-   FIXED, measured (2026-10-12): `.cm-section` is no longer filled with
-   `background: var(--panel)` + `border: var(--line)` on every section.
-   The stack now owns children via `gap: var(--stack-gap)`, and 50 of 51
-   sections lay their in-flow direct children on a single gap with no
-   inline `margin-top` breaking the rhythm (measured at 20px in WebKit).
+   FIXED, measured (2026-10-12). `.cm-section` is `background: none;
+   border: 0`; two neighbouring sections are divided by a
+   `border-block-start: 1px solid var(--line)` scoped to `+ .cm-section`,
+   so the first section draws no rule. The stack owns the space between a
+   section's children via `gap: var(--stack-gap)`.
+
+   MEASURED after, in WebKit, by tests/verify-section-rhythm.py:
+   51 of 51 sections lay their in-flow direct children on ONE gap (20px),
+   0 section children carry an inline margin any more (was 47), and the
+   computed section background is `rgba(0, 0, 0, 0)`.
 2. **Payload**: one page, everything in the initial HTML.
 
    NOTE: shadcn's component page for Button itself ships 942KB raw / 84KB gzip
