@@ -2450,6 +2450,39 @@ Five surfaces that sit on top of the page. Four of the five are native elements 
 						<button type="button" class="cm-btn cm-btn--sm cm-btn--primary" popovertarget="pop-demo" popovertargetaction="hide">deploy</button>
 					</div>
 				</div>
+				<!-- shadcn's AlertDialog, and the ONE thing a Dialog cannot
+				     be: it interrupts and expects an answer, so it carries
+				     role="alertdialog" (announced as urgent) and never
+				     closes on a click outside. That second half is the
+				     whole difference and it is a script concern - a native
+				     modal dismisses on light dismiss by default, which on a
+				     destructive confirm is the wrong default and the one
+				     nobody notices until it loses someone's data. The
+				     trigger is data-cm-open, the same binder the command
+				     palette uses, so focus return and the top layer are
+				     the platform's. -->
+				<dialog class="cm-dialog cm-dialog--alert" id="alert-demo"
+				        role="alertdialog" aria-labelledby="alert-demo-title"
+				        aria-describedby="alert-demo-desc">
+					<form method="dialog" class="cm-dialog__head">
+						<h3 class="cm-dialog__title" id="alert-demo-title">Delete this record?</h3>
+						<button type="submit" class="cm-toast__close" aria-label="Close" value="close">&times;</button>
+					</form>
+					<div class="cm-dialog__body">
+						<p id="alert-demo-desc">
+							This removes the record and everything filed under it.
+							It cannot be undone.
+						</p>
+					</div>
+					<div class="cm-dialog__foot">
+						<button type="submit" class="cm-btn" value="cancel">cancel</button>
+						<button type="submit" class="cm-btn cm-btn--danger" value="confirm">delete</button>
+					</div>
+				</dialog>
+				<div class="cm-btn-group">
+					<button type="button" class="cm-btn" data-cm-open="alert-demo">delete a record&hellip;</button>
+				</div>
+
 				<dialog class="cm-dialog" id="dlg-demo" aria-labelledby="dlg-demo-title">
 					<form method="dialog" class="cm-dialog__head">
 						<h3 class="cm-dialog__title" id="dlg-demo-title">Close the build?</h3>

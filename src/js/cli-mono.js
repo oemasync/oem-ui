@@ -780,6 +780,41 @@
 					var v = btn.getAttribute('value');
 					if (v !== null && 'returnValue' in dlg) dlg.returnValue = v;
 					if (dlg.open) dlg.close();
+			});
+		});
+
+		/* An ALERT dialog is a dialog that interrupts and expects an
+		   answer, and the one behaviour it must NOT have is closing on a
+		   click outside. <dialog>.showModal() light-dismisses by default,
+		   which is right for a Dialog and wrong for the destructive
+		   confirm a reader reaches by muscle memory - the answer to "are
+		   you sure?" should never be "I clicked near it".
+
+		   CSS cannot turn light dismiss off; it is the platform's. So the
+		   click on the backdrop itself is caught and the dialog is
+		   re-opened, because re-opening inside the closing click is
+		   swallowed by the same event. Every OTHER route out - Escape, a
+		   form submit, data-cm-close - is untouched: the flag is set only
+		   when the event target is the dialog element itself, never a
+		   descendant, and it is cleared on the close. */
+		(root || document)
+			.querySelectorAll('dialog.cm-dialog--alert')
+			.forEach(function (dlg) {
+				if (dlg.dataset.cmAlertBound) return;
+				dlg.dataset.cmAlertBound = '1';
+				dlg.addEventListener('click', function (e) {
+					/* A click on anything inside the dialog - the panel,
+					   a button, the text - targets a descendant, so this
+					   is the backdrop and nothing else. */
+					if (e.target !== dlg) return;
+					dlg.dataset.cmAlertReopen = '1';
+				});
+				dlg.addEventListener('close', function () {
+					if (dlg.dataset.cmAlertReopen !== '1') return;
+					delete dlg.dataset.cmAlertReopen;
+					if (!dlg.isConnected) return;
+					if (typeof dlg.showModal === 'function' && !dlg.open) dlg.showModal();
+					else if (typeof dlg.show === 'function' && !dlg.open) dlg.show();
 				});
 			});
 	}

@@ -3367,6 +3367,33 @@ button.cm-row:hover { background: var(--bg-2); }
    has to be theme-owned or the light theme gets an unusable dialog. */
 .cm-dialog::backdrop { background: var(--scrim); }
 
+/* ---------- dialog: the ALERT variant ----------
+   shadcn's AlertDialog, as the honest CSS half of it. The semantic
+   half is `role="alertdialog"` in the markup and the light-dismiss
+   guard in the runtime; what is left for the stylesheet is the frame
+   that says "this one is a decision, not a panel" without reaching
+   for a hue the theme does not carry.
+
+   Three differences, each with a reason:
+   - the accent is a TOP RULE, in --ink rather than a red. The theme
+     has no hue (see --danger's own note), so urgency is said with
+     weight and position, the same way .cm-alert says it.
+   - it is narrower. A confirm is a question with two answers, and a
+     32rem panel suggests a form.
+
+   That is the whole of it, and deliberately. The base .cm-dialog__foot
+   is already `justify-content: flex-end`, so both actions already sit
+   at the END and the safe answer already leads; a
+   `margin-inline-start: auto` on the destructive button would have no
+   free space to absorb and would be a rule that claims a difference it
+   does not make. The one ordering thing worth owning is that the
+   destructive action comes LAST in the markup, which is a markup
+   fact, not a stylesheet one. */
+.cm-dialog--alert {
+	width: min(26rem, calc(100% - (2 * var(--gutter))));
+	border-top: 3px solid var(--ink);
+}
+
 /* A dialog anchored to the right edge instead of the centre: the same
    native element, so focus trapping, Escape, the top layer and the
    inertness of the page behind it are still the platform's job.

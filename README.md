@@ -2853,8 +2853,10 @@ theme. The catalog is 64 components as of this writing: this library
 implements **63** and does not yet implement **1**, for a
 stated reason.
 
-**Implemented (57):** Accordion, Alert, Alert Dialog (a confirming
-Dialog), Aspect Ratio, Attachment, Avatar, Badge, Bubble,
+**Implemented (63):** Accordion, Alert, Alert Dialog (a Dialog carrying
+`role="alertdialog"`, with a top-rule frame and a runtime guard that
+re-opens it on a backdrop click so a destructive confirm cannot be
+dismissed by muscle memory), Aspect Ratio, Attachment, Avatar, Badge, Bubble,
 Breadcrumb, Button (including
 destructive, outline and joined), Button Group, Calendar (single, range and
 multiple in one component), Card,
