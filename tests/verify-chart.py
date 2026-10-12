@@ -29,9 +29,32 @@ angles with the values they are supposed to encode.
 import re
 import sys
 from playwright.sync_api import sync_playwright
+from harness_wait import boot_timeout
 
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:4471/'
 WIDTHS = (320, 360, 390, 402, 768, 1280)
+
+# Playwright's DEFAULT navigation ceiling is 30s, and every goto below
+# pays it. Two separate reasons the 30s default is wrong here, both
+# measured on this host while it ran at load average 78:
+#
+#   1. A real navigation took 24.8s to reach 'load' on a page that was
+#      serving HTTP 200 throughout, and the runtime booted 2.0s after
+#      that. So 30s left ~5s of headroom for a page whose own load is
+#      most of the budget - and an expired ceiling is indistinguishable
+#      in the log from a dead server. The mutation driver records any
+#      non-zero harness exit as a KILL, so a busy box here manufactures
+#      proof it never got.
+#   2. boot_timeout() scales against os.cpu_count(), and this host has
+#      64 cores, so load 78 only nudges the ceiling by a few percent.
+#      The scale factor assumes the load is spread over few cores; it
+#      under-corrects by an order of magnitude on a big box that is
+#      nonetheless saturated. Hence the higher base rather than a
+#      larger multiplier.
+#
+# A slow run is still bounded - 90s x 6 is the cap - so a genuinely
+# wedged preview fails instead of hanging.
+NAV_TIMEOUT = boot_timeout(base=90000)
 
 passed = 0
 failed = []
@@ -88,8 +111,16 @@ PROBE = """() => {
       // y = base+16 and the box is base+26, so "within 4px of the
       // bottom" catches them all - measured 17 of 17 counted as y
       // labels on a 5-tick axis.
+      // The value axis is counted as end OR start: an LTR chart
+      // anchors it 'end' (right-aligned against the axis) and an RTL
+      // chart anchors it 'start', because the axis has moved to the
+      // other edge. Counting only 'end' made the RTL specimen look
+      // like a chart with no value axis at all - four gridlines
+      // against zero labels - which is a probe that assumed one
+      // direction, not a chart that lost its axis.
       labelsY: [...f.querySelectorAll('.cm-chart__tick-label')]
-          .filter(t => t.getAttribute('text-anchor') === 'end').length,
+          .filter(t => { const a = t.getAttribute('text-anchor');
+                         return a === 'end' || a === 'start'; }).length,
       labelsX: [...f.querySelectorAll('.cm-chart__tick-label')]
           .filter(t => t.getAttribute('text-anchor') === 'middle').length,
       legend: n('.cm-chart__legend-item'),
@@ -154,9 +185,10 @@ def run(pw):
         page = browser.new_page(viewport={'width': w, 'height': 874})
         errs = []
         page.on('pageerror', lambda e: errs.append(str(e)))
-        page.goto(URL, wait_until='load')
+        page.goto(URL, wait_until='load', timeout=NAV_TIMEOUT)
         page.wait_for_function(
-            "() => window.cliMono && document.documentElement.classList.contains('cm-js')")
+            "() => window.cliMono && document.documentElement.classList.contains('cm-js')",
+            timeout=NAV_TIMEOUT)
         page.wait_for_timeout(250)
         got = page.evaluate(PROBE)
         sw, iw = got['scrollW'], got['innerW']
@@ -212,9 +244,10 @@ def run(pw):
     page = browser.new_page(viewport={'width': 402, 'height': 874})
     errs = []
     page.on('pageerror', lambda e: errs.append(str(e)))
-    page.goto(URL, wait_until='load')
+    page.goto(URL, wait_until='load', timeout=NAV_TIMEOUT)
     page.wait_for_function(
-        "() => window.cliMono && document.documentElement.classList.contains('cm-js')")
+        "() => window.cliMono && document.documentElement.classList.contains('cm-js')",
+        timeout=NAV_TIMEOUT)
     page.wait_for_timeout(250)
     got = page.evaluate(PROBE)
     figs = {f['type']: f for f in got['figs']}
@@ -227,21 +260,36 @@ def run(pw):
 
     # ---- 2. the marks are there, per type ----
     bar = [f for f in all_figs if f['type'] == 'bar']
+    # "One rect per category per SERIES", so the count is
+    # categories x series - an exact multiple of the row count, at
+    # least one row, and never fewer rects than categories. The
+    # series count is deliberately NOT hardcoded: the page carries a
+    # one-series specimen beside the two-series ones, and a constant
+    # of 24 here was a test of the fixture rather than of the
+    # library. The invariant survives a fixture gaining a specimen.
     check('a bar chart draws one rect per category per series',
-          all(f['bars'] == 24 for f in bar),
-          str([(f['id'], f['bars'], f['barStacked']) for f in bar]))
-    # Grouped and stacked draw the SAME number of rects - two series
-    # over twelve categories is 24 either way - so a rect count cannot
-    # tell them apart, and asserting it can is asserting nothing. The
-    # modifier class is the declaration and the GEOMETRY is the proof,
-    # and both are asserted below.
+          all(f['bars'] > 0 and f['bars'] % max(f['srRows'], 1) == 0
+              for f in bar),
+          str([(f['id'], f['bars'], f['srRows'], f['barStacked'])
+               for f in bar]))
+    # Grouped and stacked draw the SAME number of rects per series -
+    # two series over twelve categories is 24 either way - so a rect
+    # count cannot tell them apart, and asserting it can is asserting
+    # nothing. The modifier class is the declaration and the GEOMETRY
+    # is the proof, and both are asserted below.
+    # "Exactly one of each" was a claim about the fixture, not about
+    # the library: the page now carries a bare single-series specimen,
+    # so the claim is that BOTH arrangements are present, that each
+    # chart declares itself consistently (all its rects stacked, or
+    # none of them), and that the two agree on rect count.
     grouped = [f for f in bar if f['barStacked'] == 0]
     stacked = [f for f in bar if f['barStacked'] > 0]
-    check('exactly one bar specimen is stacked and one is not, and the '
-          'stacked one says so in its markup',
-          len(grouped) == 1 and len(stacked) == 1
-          and stacked[0]['bars'] == grouped[0]['bars'] == 24
-          and stacked[0]['barStacked'] == 24,
+    check('both bar arrangements are on the page, each declaring '
+          'itself consistently in its markup',
+          len(grouped) >= 1 and len(stacked) >= 1
+          and all(f['barStacked'] == f['bars'] for f in stacked)
+          and all(f['barStacked'] == 0 for f in grouped)
+          and stacked[0]['bars'] == grouped[0]['bars'],
           f'grouped={[(f["id"], f["bars"], f["barStacked"]) for f in grouped]} '
           f'stacked={[(f["id"], f["bars"], f["barStacked"]) for f in stacked]}')
 
@@ -385,6 +433,63 @@ def run(pw):
       out.tallest = Math.max(...[...document.querySelectorAll('#cmc-line tbody td')]
         .map(td => parseInt(td.textContent.replace(/,/g, ''), 10)));
       out.hits = document.querySelectorAll('#cmc-pie .cm-chart__hit').length;
+      // ---- the RTL specimen, measured against the LTR one ----
+      // Both charts plot the SAME twelve categories, so mirroring is
+      // a claim about two numbers, not about eyeballing a picture:
+      // in RTL the value axis moves to the RIGHT edge (its labels are
+      // anchored 'start' and sit past the plot) and the first category
+      // moves to the right edge too (jan > dec in x).
+      // The bug this pins was an ordering hazard: a legacy padding
+      // ternary read `rtl` ABOVE the `var rtl = ...` that decided it,
+      // so it hoisted to undefined and always padded for LTR, and a
+      // leftover swap line below made the source read as correct. A
+      // test that only checked "does it render" would have stayed
+      // green through all of that.
+      const mirror = (id) => {
+        const box = document.getElementById(id);
+        const svg = box.querySelector('svg');
+        const W = +svg.getAttribute('width');
+        const labs = [...box.querySelectorAll('.cm-chart__tick-label')]
+          .map(t => ({x: +t.getAttribute('x'),
+                      a: t.getAttribute('text-anchor'),
+                      s: t.textContent.trim()}));
+        // The value axis is told from the category axis by its
+        // AUTHORED anchor, the same promise the LTR side keeps.
+        const val = labs.filter(t => t.a === 'start' || t.a === 'end')
+                        .map(t => t.x);
+        const cat = labs.filter(t => t.a === 'middle');
+        // The category AXIS as x1/x2, so the plot's own edges can be
+        // told from where the labels sit. A horizontal gridline runs
+        // from the plot's left edge to its right one in both
+        // directions, so min/max over both attributes is the plot box.
+        const gx = [...box.querySelectorAll('.cm-chart__grid')]
+          .flatMap(l => [+l.getAttribute('x1'), +l.getAttribute('x2')])
+          .filter(n => !Number.isNaN(n));
+        return {
+          W,
+          // valMin is the value axis nearest the START of the line of
+          // text and valMax the furthest. Every tick on a value axis
+          // shares one x, so these are normally equal; they are kept
+          // apart so the assertion can say WHERE the axis is without
+          // assuming an anchor that RTL changes.
+          valMin: val.length ? Math.min(...val) : null,
+          valMax: val.length ? Math.max(...val) : null,
+          // The FIRST and LAST category by document order, with their
+          // coordinates. Comparing these two x values is the mirror:
+          // a mirrored plot puts the first category at the LARGER x.
+          catFirstX: cat.length ? cat[0].x : null,
+          catLastX: cat.length ? cat[cat.length - 1].x : null,
+          catMin: cat.length ? Math.min(...cat.map(t => t.x)) : null,
+          catMax: cat.length ? Math.max(...cat.map(t => t.x)) : null,
+          first: cat.length ? cat[0].s : null,
+          last: cat.length ? cat[cat.length - 1].s : null,
+          // The plot box itself: where the gridlines actually run.
+          plotLo: gx.length ? Math.min(...gx) : null,
+          plotHi: gx.length ? Math.max(...gx) : null,
+        };
+      };
+      out.ltr = mirror('cmc-line');
+      out.rtl = mirror('cmc-rtl');
       return out;
     }""")
     # The y axis is the ticks drawn at the LEFT of the plot, the x axis
@@ -420,6 +525,61 @@ def run(pw):
     check('a gridline sits at every y tick',
           len(geo['gridY']) == len(geo['ytext']) and len(geo['gridY']) >= 3,
           f'gridlines={len(geo["gridY"])} y ticks={len(geo["ytext"])} ys={geo["gridY"]}')
+
+    # ---- RTL, measured against the LTR chart it mirrors ----
+    # The specimen exists so this has something to measure. "It renders"
+    # is not the claim; the claim is that the plot is a MIRROR of the
+    # LTR plot, which is two facts about coordinates:
+    #   the value axis moved to the right edge, and
+    #   the first category moved to the right edge.
+    # A chart that merely drew its labels inside the plot would pass a
+    # render check and fail this one - which is exactly the bug this
+    # pins, since the hoisted ternary padded for LTR and left every
+    # label where an LTR chart puts it.
+    ltr, rtl = geo['ltr'], geo['rtl']
+    # Measured in WebKit at the default viewport, both specimens 304
+    # wide: LTR puts its value axis at x=16.4 (the left edge) and RTL
+    # at x=287.6 (the right edge), and the two are mirror images about
+    # the centre at 152. So the claim is a RELATIVE one - the axis
+    # crossed the plot - never an absolute pixel, which would be a test
+    # that only passes at this viewport.
+    mid = ltr['W'] / 2
+    check('an RTL chart moves its value axis to the other edge of the '
+          'plot, where LTR puts it',
+          # The axis crossed the midline. That is the whole claim, and
+          # it is a relation between the two charts rather than a pixel,
+          # so it survives any viewport.
+          rtl['valMin'] > mid > ltr['valMax']
+          and rtl['W'] == ltr['W']
+          and ltr['valMax'] - ltr['valMin'] == 0,   # one axis, one x
+          f'rtl axis x={rtl["valMin"]}..{rtl["valMax"]} W={rtl["W"]} | '
+          f'ltr axis x={ltr["valMin"]}..{ltr["valMax"]} W={ltr["W"]}')
+    check('an RTL chart puts the FIRST category at the far edge, so the '
+          'categories run backwards',
+          # Document order is preserved (jan is still first in the DOM),
+          # so what flips is the coordinate: jan sits at the LARGER x in
+          # RTL and the SMALLER x in LTR, on the same plot width.
+          rtl['first'] == ltr['first'] and rtl['last'] == ltr['last']
+          and rtl['catFirstX'] > rtl['catLastX']
+          and ltr['catFirstX'] < ltr['catLastX'],
+          f'rtl {rtl["first"]}={rtl["catFirstX"]} .. {rtl["last"]}='
+          f'{rtl["catLastX"]} | ltr {ltr["first"]}={ltr["catFirstX"]} .. '
+          f'{ltr["last"]}={ltr["catLastX"]}')
+    # A mirror that moves the labels but not the plot is a half fix, and
+    # the gridlines are what the eye reads as "the chart itself". The
+    # plot box must be the SAME width in both, only read from the other
+    # edge: LTR leaves a left gutter for the value labels and RTL leaves
+    # a right one.
+    check('the RTL plot is mirrored as geometry, not just its labels - '
+          'the plot box is the same width, with its gutter on the '
+          'other side',
+          None not in (rtl['plotLo'], rtl['plotHi'], ltr['plotLo'], ltr['plotHi'])
+          and abs((rtl['plotHi'] - rtl['plotLo'])
+                  - (ltr['plotHi'] - ltr['plotLo'])) < 2
+          and ltr['plotLo'] - ltr['valMax'] > 1          # gutter on the LEFT
+          and rtl['plotHi'] - rtl['valMin'] < 1,          # gutter on the RIGHT
+          f'rtl plot {rtl["plotLo"]}..{rtl["plotHi"]} axis={rtl["valMin"]} | '
+          f'ltr plot {ltr["plotLo"]}..{ltr["plotHi"]} axis={ltr["valMax"]}')
 
     # THE OFF-BY-ONE, measured. A top gridline drawn at the data peak is
     # the classic near-miss: it looks right in a screenshot and leaves

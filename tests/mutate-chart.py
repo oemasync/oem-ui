@@ -104,6 +104,19 @@ PATTERNS = [
      "return '--cm-chart-' + chIdent(s.key) + ':var(--chart-c' + s.tone + ')';",
      "return '--cm-chart-' + chIdent(s.key) + ':#808080';",
      'harness'),
+
+    # ---- RTL mirroring ----
+    # This is the exact bug that shipped once: force the direction to
+    # LTR and the chart renders perfectly - every mark is in the right
+    # place for an LTR reader, no mark is missing, and the harness's
+    # "the marks are there" and "it fits" checks all stay green. Only a
+    # check that compares the RTL figure's coordinates against the LTR
+    # one's can see it, which is why the three RTL checks exist.
+    ('break RTL mirroring: an rtl chart is laid out left-to-right',
+     JS,
+     'function chDir(explicit, box) {',
+     'function chDir(explicit, box) { return false;',
+     'harness'),
 ]
 
 
