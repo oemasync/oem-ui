@@ -43,6 +43,54 @@ const SECTION_ORDER = [
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
+/* The rail's groups, written as SLICES of SECTION_ORDER rather than as a
+   second list of names. A restated list is a second ledger, and two
+   ledgers drift - the suite already fails when the index and the document
+   disagree, and it should not have to be taught a third spelling of the
+   same list. A boundary can only be wrong about WHERE a group ends, and
+   that is checkable in one line (the slices must concatenate back to
+   SECTION_ORDER, which the suite asserts).
+
+   Twelve groups would have been arbitrary at this size; nine keeps the
+   longest group short enough to scan, which is the only thing grouping is
+   for. The labels name the KIND of thing in the slice - a reader looking
+   for the chart helpers should not have to know they were filed under
+   "utilities". */
+const NAV_GROUP_SIZES: [string, number][] = [
+	["foundation", 5],
+	["surfaces", 7],
+	["tables", 6],
+	["panels", 6],
+	["content", 3],
+	["prose", 6],
+	["layout", 7],
+	["composed", 8],
+	["reference", 4],
+];
+
+const NAV_GROUPS = (() => {
+	let at = 0;
+	return NAV_GROUP_SIZES.map(([label, n]) => {
+		const links = SECTION_ORDER.slice(at, at + n).map((id) => ({ href: `#${id}`, label: id }));
+		at += n;
+		return { label, links };
+	});
+})();
+
+/* A boundary that overshoots would silently DROP sections off the rail -
+   they would exist in the page and be unreachable from the nav, which is
+   the bug the single-index rule exists to prevent. So the slices are
+   checked here, at module scope, and the build fails rather than shipping
+   a rail that is missing rows. */
+{
+	const covered = NAV_GROUPS.reduce((n, g) => n + g.links.length, 0);
+	if (covered !== SECTION_ORDER.length)
+		throw new Error(
+			`the rail groups cover ${covered} of ${SECTION_ORDER.length} sections; ` +
+			`NAV_GROUP_SIZES and SECTION_ORDER disagree, so some section is unreachable from the nav`,
+		);
+}
+
 /* The log specimen. Long enough to actually scroll, because a sticky
    header on a table that fits is a sticky header nobody has tested - and
    `.cm-table-wrap` is capped with a max-height precisely so the wrapper
@@ -312,10 +360,10 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 		<Header
 			brand={SITE.title}
 			homeHref="/"
-			links={SECTION_ORDER.map((id) => ({ href: `#${id}`, label: id }))}
-		extraLinks={[{ href: SITE.github, label: 'github' }]}
-		rail
-	/>
+			groups={NAV_GROUPS}
+			extraLinks={[{ href: SITE.github, label: 'github' }]}
+			rail
+		/>
 		<main class="cm-shell cm-shell--rail cm-stack cm-stack--section">
 			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." />
 			<StatusStrip label="status" status="ok">

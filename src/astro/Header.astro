@@ -71,6 +71,24 @@ interface Props {
 	 * the rail. The class is `cm-header--rail`; nothing else is implied.
 	 */
 	rail?: boolean;
+	/**
+	 * The same nav, divided into labelled groups.
+	 *
+	 * A flat list is fine for five links and unusable for fifty: shadcn's
+	 * own rail groups its 64 components under headings, because a reader
+	 * looking for `Tooltip` should not scan past `Accordion`..`Toast`.
+	 *
+	 * `links` stays the flat form and `groups` is the divided one; passing
+	 * both is a programming error, so `groups` wins and `links` is left
+	 * alone. The ORDER is the caller's: this component never sorts, because
+	 * the rail doubles as a scroll-spy and its order has to match the
+	 * document.
+	 *
+	 * The label is its own element rather than a link. A heading wearing a
+	 * link's class inherits the 44px tap floor and becomes a target that
+	 * does nothing when pressed - for a thumb and for a screen reader.
+	 */
+	groups?: { label: string; links: Link[] }[];
 }
 
 const {
@@ -80,6 +98,7 @@ const {
 	showThemeToggle = true,
 	extraLinks = [],
 	rail = false,
+	groups = [],
 } = Astro.props;
 
 /* A link can be current in two ways, and conflating them is a real bug.
@@ -96,6 +115,21 @@ const navLinks = links.map((l) => ({
 	spyId: l.spy ?? (l.href.startsWith('#') ? l.href.slice(1) : undefined),
 }));
 const anySpy = navLinks.some((l) => l.spyId);
+
+/* The grouped form gets the SAME `spyId` inference as the flat one. Doing
+   it twice is the trap: a group whose links were not walked would render
+   without `data-cm-spy`, and the rail would silently stop highlighting for
+   every row inside a group - which is the whole list, once the rail is
+   grouped. One helper, used by both. */
+const withSpy = (l: Link) => ({
+	...l,
+	spyId: l.spy ?? (l.href.startsWith('#') ? l.href.slice(1) : undefined),
+});
+const navGroups = groups.map((g) => ({
+	label: g.label,
+	links: g.links.map(withSpy),
+}));
+const groupedSpy = navGroups.some((g) => g.links.some((l) => l.spyId));
 
 /* The nav uses the same matcher as HeaderLink, so a nav written with the
    primitive <a> cannot disagree with a nav written with <HeaderLink>. This
@@ -146,28 +180,49 @@ const currentPath = Astro.url.pathname;
 			<span class="cm-cursor" aria-hidden="true"></span>
 		</a>
 
-		{
-			links.length > 0 && (
-				<div class="cm-header__links" id="cm-header-links" data-cm-nav={anySpy ? true : undefined}>
-					{navLinks.map((l) => (
-						<a
-							href={l.href}
-							class="cm-header__link"
-							aria-current={
-								l.active !== undefined
-									? l.active
-									: isCurrentPage(l.href, currentPath, base, l.matchSegment)
-										? 'page'
-										: undefined
-							}
-							data-cm-spy={l.spyId}
-						>
-							{l.label}
-						</a>
-					))}
-				</div>
-			)
-		}
+		{(links.length + navGroups.length) > 0 && (
+			<div class="cm-header__links" id="cm-header-links" data-cm-nav={anySpy || groupedSpy ? true : undefined}>
+				{navGroups.map((g) => (
+					<div class="cm-header__group">
+						<span class="cm-header__group-label">{g.label}</span>
+						<div class="cm-header__links">
+							{g.links.map((l) => (
+								<a
+									href={l.href}
+									class="cm-header__link"
+									aria-current={
+										l.active !== undefined
+											? l.active
+											: isCurrentPage(l.href, currentPath, base, l.matchSegment)
+												? 'page'
+												: undefined
+									}
+									data-cm-spy={l.spyId}
+								>
+									{l.label}
+								</a>
+							))}
+						</div>
+					</div>
+				))}
+				{navLinks.map((l) => (
+					<a
+						href={l.href}
+						class="cm-header__link"
+						aria-current={
+							l.active !== undefined
+								? l.active
+								: isCurrentPage(l.href, currentPath, base, l.matchSegment)
+									? 'page'
+									: undefined
+						}
+						data-cm-spy={l.spyId}
+					>
+						{l.label}
+					</a>
+				))}
+			</div>
+		)}
 
 		<div class="cm-header__controls">
 			{

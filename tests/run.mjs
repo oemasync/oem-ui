@@ -2842,9 +2842,32 @@ check('the showcase declares one section index, and the nav is built from it', (
 	const page = read('src/pages/index.astro');
 	const decl = page.match(/const SECTION_ORDER = \[([\s\S]*?)\]/);
 	if (!decl) throw new Error('SECTION_ORDER is gone; the nav must derive from it, not restate it');
-	assert(/links=\{SECTION_ORDER\.map/.test(page),
+	// The nav may take SECTION_ORDER whole (a flat rail) or in slices (a
+	// grouped rail). Both derive from the one index; what must never happen
+	// is a second list of section NAMES, because that is the drift this
+	// check exists to catch. So the assertion is on the derivation, not on
+	// one spelling of it.
+	assert(/links=\{SECTION_ORDER\.map/.test(page) || /SECTION_ORDER\.slice/.test(page),
 		'the nav is not built from SECTION_ORDER, so the two can drift again');
 	assert(/extraLinks/.test(page), 'the external links were dropped from the nav');
+
+	// A grouped rail adds a second way to be wrong: a boundary that
+	// overshoots drops sections off the rail while they still render in the
+	// page. The derivation has to prove its own coverage, or the failure is
+	// invisible - the section exists, the anchor works, and no rail row ever
+	// lights up for it.
+	if (/SECTION_ORDER\.slice/.test(page)) {
+		assert(/covered\s*!==\s*SECTION_ORDER\.length/.test(page),
+			'the grouped rail derives its rows from a slice without checking that the slices cover every section');
+		// The sizes must actually sum to the index, or the runtime guard is
+		// the only thing standing between a typo and an unreachable section.
+		const sizes = [...page.matchAll(/\["[\w-]+",\s*(\d+)\]/g)].map((m) => Number(m[1]));
+		const total = sizes.reduce((a, b) => a + b, 0);
+		const count = decl[1].split(',').map((x) => x.trim().replace(/^['\"]|['\"].*$/g, '')).filter(Boolean).length;
+		assert(sizes.length >= 2, `the grouped rail lists ${sizes.length} group(s); grouping one group is not grouping`);
+		assert(total === count,
+			`the rail groups sum to ${total} rows against ${count} sections, so ${Math.abs(total - count)} section(s) are unreachable from the nav`);
+	}
 });
 
 check('every id in the section index is a real section in the markup', () => {
