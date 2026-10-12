@@ -4857,6 +4857,24 @@
 	function chIdent(s) {
 		return String(s || 'k').toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'k';
 	}
+	function chDir(explicit, box) {
+		/* `explicit` is the `dir` ATTRIBUTE read off the chart's own
+		   markup, so an author can pin one chart RTL inside an LTR page
+		   (and pin it back) without touching the document. When it is
+		   absent the RENDERED direction is asked for instead of
+		   `document.dir`, because a chart inside an RTL subtree of an
+		   LTR document inherits `ltr` from the document while actually
+		   laying out right to left - the one case a document-level read
+		   gets wrong. `getComputedStyle().direction` is the rendered
+		   answer, and it is a READ, not a written declaration, so the
+		   Direction baseline stays intact. */
+		if (explicit === 'rtl') return true;
+		if (explicit === 'ltr') return false;
+		try {
+			return !!(box && box.ownerDocument && box.ownerDocument.defaultView &&
+				box.ownerDocument.defaultView.getComputedStyle(box).direction === 'rtl');
+		} catch (e) { return false; }
+	}
 	function chSeries(cfg) {
 		return (cfg.series || []).map(function (s, i) {
 			var tone = Math.round(chNum(s.tone) || i + 1);
@@ -4897,14 +4915,48 @@
 	}
 
 	function chTipMarkup(cfg, ser) {
+		/* shadcn's TOOLTIP PROPS, on the same five data attributes the
+		   rest of the chart uses. Each one is OFF unless the markup asks
+		   for it, so every existing chart renders byte-identically.
+
+		     labelKey      which column is the tooltip's TITLE. Here the
+		                   title is the x value, which is what a cartesian
+		                   row already carries, so the default is the x
+		                   key and `none` suppresses the title line.
+		     hideLabel     drop the series NAME from each row (the number
+		                   and the indicator stay - this is what you want
+		                   when a chart has one series).
+		     hideIndicator drop the coloured dot; the row keeps its
+		                   name and value.
+		     indicator     dot | line | dashed. The shape is a class on
+		                   the indicator, not a new element, so the
+		                   per-series colour rule (which selects
+		                   `.cm-chart__tip-dot[data-cm-k=...]`) keeps
+		                   working untouched.
+		     nameKey       which per-series field is the displayed NAME.
+		                   shadcn reads `label` from the config, we read
+		                   it from `data-cm-label`, and that IS the
+		                   nameKey: setting it is a no-op restatement,
+		                   kept so the prop surface reads the same.
+
+		   The four that change OUTPUT are honoured here, at markup
+		   time, and the values are written at hover time by the same
+		   code that always wrote them - so there is no second path to
+		   keep in sync. */
+		var ind = cfg.indicator || 'dot';
+		var hideInd = cfg.hideIndicator ? ' cm-chart__tip-row--no-indicator' : '';
+		var hideName = cfg.hideLabel ? ' cm-chart__tip-row--no-name' : '';
+		var titleEl = (cfg.labelKey === 'none' || cfg.hideTooltipLabel)
+			? '' : '<p class="cm-chart__tip-title"></p>';
 		var rows = ser.map(function (s) {
-			return '<div class="cm-chart__tip-row">' +
-				'<span class="cm-chart__tip-dot" data-cm-k="' + chEsc(s.key) + '"></span>' +
+			return '<div class="cm-chart__tip-row' + hideInd + hideName + '">' +
+				'<span class="cm-chart__tip-dot cm-chart__tip-dot--' + chEsc(ind) +
+				'" data-cm-k="' + chEsc(s.key) + '"></span>' +
 				'<span class="cm-chart__tip-name">' + chEsc(s.label) + '</span>' +
 				'<span class="cm-chart__tip-val">0</span></div>';
 		}).join('');
 		return '<div class="cm-chart__tooltip" data-cm-chart-tip role="status" aria-live="polite">' +
-			'<p class="cm-chart__tip-title"></p>' + rows + '</div>';
+			titleEl + rows + '</div>';
 	}
 	function chHead(uid, cfg) {
 		return '<title id="' + uid + '-title">' + chEsc(cfg.title || 'chart') + '</title>' +
@@ -4936,14 +4988,69 @@
 		var widest = 0;
 		ticks.forEach(function (t) { widest = Math.max(widest, chFmt(t).length); });
 
-		var pad = { l: Math.max(18, widest * 7.2 + 10), r: 10, t: 10, b: 26 };
-		var pw = Math.max(1, w - pad.l - pad.r), ph = Math.max(1, h - pad.t - pad.b);
+		/* RTL MIRRORING, decided once here and obeyed everywhere else in
+				   this function. Two things move together or the chart is not
+				   mirrored, it is broken: the value axis moves to the RIGHT (so
+				   the `l`/`r` padding must put the GUTTER on the right), and
+				   the first category moves to the right edge (`xAt` counts down
+				   instead of up).
+
+				   That means `rtl` must be known BEFORE `pad` is built, because
+				   `pad`'s shape depends on it. The earlier naive version built
+				   `pad` first and then swapped `pad.l`/`pad.r` afterwards - but
+				   with `var` hoisting `rtl` was `undefined` at build time, so the
+				   ternary always took the LTR branch and the swap was the only
+				   thing that actually ran. Result: the value axis landed at
+				   x=18 (left) in RTL, labels painting inside the plot. Fix is
+				   structural - compute `rtl` first, then branch `pad` on it,
+				   and drop the post-swap entirely.
+
+				   `axEdge` is the plot edge the VALUE axis stands on, and
+				   `axOut` the direction the labels sit in - so the tick code
+				   below does not need its own RTL branch, it just measures
+				   from the edge the axis is actually on.
+
+				   Nothing here is a physical CSS declaration - it is a number
+				   read out of the rendered direction - so the Direction baseline
+				   in tests/run.mjs still holds, and the tooltip anchor it
+				   permits stays the only permitted physical chart declaration.
+
+				   `dir` is read from the CHART, not the document: a chart can
+				   sit inside an RTL subtree of an LTR page, and that is the case
+				   a document-level read would silently get wrong. */
+				var rtl = chDir(cfg.rtl, cfg.box);
+
+				/* THE GUTTER MOVES, IT DOES NOT SHRINK. The left inset is
+				   `max(18, widest * 7.2 + 10)` - it is sized to the widest
+				   y-axis LABEL, not to a constant - and the right inset is a
+				   flat 10. In RTL the value axis belongs on the RIGHT, so the
+				   GUTTER value moves to `pad.r` and the flat 10 moves to
+				   `pad.l`.
+
+				   Swapping the two variables naively (the obvious first
+				   attempt) puts the flat 10 on the left and collapses the
+				   gutter: measured, the RTL plot then ran 10 -> 770 in a 794
+				   canvas with the tick labels at x=18 anchored `start`, which
+				   paints the labels INSIDE the plot rather than beside an
+				   axis on the right. It looked mirrored in the category
+				   order and was wrong about the axis. The swap has to move
+				   the SIZED value across. */
+				var gut = Math.max(18, widest * 7.2 + 10), edge = 10;
+				var pad = rtl ? { l: edge, r: gut, t: 10, b: 26 }
+						: { l: gut, r: edge, t: 10, b: 26 };
+			var pw = Math.max(1, w - pad.l - pad.r), ph = Math.max(1, h - pad.t - pad.b);
 		var band = pw / Math.max(1, n);
 		var isBar = cfg.type === 'bar';
 		var base = pad.t + ph;
+		/* axEdge is the x-coordinate of the VALUE (y) axis, and axOut
+		   is how far the tick labels step OFF that edge - both must flip
+		   with direction so ticks land on the correct side. */
+		var axEdge = rtl ? (w - pad.r) : pad.l;
+		var axOut = rtl ? 8 : -8;
 		var xAt = function (i) {
-			return isBar ? pad.l + band * (i + 0.5)
-				: pad.l + (n > 1 ? (pw * i) / (n - 1) : pw / 2);
+			var k = rtl ? (n - 1 - i) : i;
+			return isBar ? pad.l + band * (k + 0.5)
+				: pad.l + (n > 1 ? (pw * k) / (n - 1) : pw / 2);
 		};
 		var yAt = function (v) { return base - (ph * v) / nice.max; };
 
@@ -4951,7 +5058,7 @@
 		var gi = '';
 		ticks.forEach(function (t) {
 			var y = Math.round(yAt(t) * 100) / 100;
-			gi += '<line class="cm-chart__grid" x1="' + pad.l + '" y1="' + y + '" x2="' + (w - pad.r) + '" y2="' + y + '"/>';
+			gi += '<line class="cm-chart__grid" x1="'+pad.l+'" y1="'+y+'" x2="'+(w - pad.r)+'" y2="'+y+'"/>';
 		});
 		if (cfg.grid === 'vertical') {
 			for (var g = 0; g < n; g++) {
@@ -4964,9 +5071,9 @@
 		s += '<g>';
 		ticks.forEach(function (t) {
 			var y = Math.round(yAt(t) * 100) / 100;
-			s += '<line class="cm-chart__tick" x1="' + (pad.l - 4) + '" y1="' + y + '" x2="' + pad.l + '" y2="' + y + '"/>' +
-				'<text class="cm-chart__tick-label" x="' + (pad.l - 8) + '" y="' + y +
-				'" text-anchor="end" dominant-baseline="middle">' + chEsc(chFmt(t)) + '</text>';
+			s += '<line class="cm-chart__tick" x1="' + (axEdge + axOut) + '" y1="' + y + '" x2="' + axEdge + '" y2="' + y + '"/>' +
+				'<text class="cm-chart__tick-label" x="' + (axEdge + axOut) + '" y="' + y +
+				'" text-anchor="' + (rtl ? 'start' : 'end') + '" dominant-baseline="middle">' + chEsc(chFmt(t)) + '</text>';
 		});
 		s += '</g>';
 
@@ -5112,9 +5219,14 @@
 		var total = 0;
 		rows.forEach(function (row) { total += chNum(row[sp.key]); });
 		if (!(total > 0)) return '';
-		var a = -Math.PI / 2, s = '';
+		/* RTL: the sweep runs the other way, so the first (largest) slice
+	   starts where the last one ended and the order reads from the
+	   mirrored start. Same arcs, same shares, mirrored direction. */
+		var pieRtl = chDir(cfg.rtl, cfg.box);
+		var a = pieRtl ? Math.PI / 2 : -Math.PI / 2, s = '';
 		rows.forEach(function (row, i) {
 			var sweep = (chNum(row[sp.key]) / total) * Math.PI * 2;
+			if (pieRtl) sweep = -sweep;
 			var active = cfg.active === i;
 			s += '<path class="cm-chart__slice' + (active ? ' cm-chart__slice--active' : '') +
 				'" data-cm-k="' + chEsc(sp.key) + '" data-cm-slice="' + i + '" d="' +
@@ -5261,6 +5373,24 @@
 			(cfg.grid === 'vertical' ? ' data-cm-chart-grid="vertical"' : '') +
 			(cfg.innerRadius ? ' data-cm-chart-inner="' + Math.round(chNum(cfg.innerRadius)) + '"' : '') +
 			(cfg.active != null ? ' data-cm-chart-active="' + cfg.active + '"' : '') +
+			/* The tooltip/legend prop surface is serialized here, at the
+			   same place every other option is, because this function IS
+			   the runtime's renderer: `chConfig()` reads these back off
+			   the element. Emitting them from the config object only
+			   would paint the server-rendered chart correctly and then
+			   lose the setting the first time anything re-rendered it -
+			   the tooltip showing a dot that the prop says to hide is
+			   exactly the kind of half-applied option that survives a
+			   test and fails in a browser.
+
+			   Each is emitted only when asked for, so an unset option
+			   adds no attribute and the markup of every existing chart
+			   is unchanged. */
+			(cfg.indicator ? ' data-cm-chart-indicator="' + chEsc(cfg.indicator) + '"' : '') +
+			(cfg.hideLabel ? ' data-cm-chart-hide-label="true"' : '') +
+			(cfg.hideIndicator ? ' data-cm-chart-hide-indicator="true"' : '') +
+			(cfg.labelKey ? ' data-cm-chart-label-key="' + chEsc(cfg.labelKey) + '"' : '') +
+			(cfg.rtl ? ' dir="' + chEsc(cfg.rtl) + '"' : '') +
 			' data-cm-chart-h="' + Math.round(chNum(cfg.h) || 240) + '"' +
 			' data-cm-chart-title="' + chEsc(cfg.title || 'chart') + '"' +
 			' data-cm-chart-desc="' + chEsc(cfg.description || cfg.title || 'chart') + '"' +
@@ -5320,6 +5450,13 @@
 			ticks: 4,
 			w: w,
 			h: Math.round(chNum(box.getAttribute('data-cm-chart-h')) || 240),
+			rtl: box.getAttribute('dir'),
+			box: box,
+			/* the tooltip/legend prop surface, all defaulted OFF */
+			indicator: box.getAttribute('data-cm-chart-indicator'),
+			hideLabel: box.getAttribute('data-cm-chart-hide-label') === 'true',
+			hideIndicator: box.getAttribute('data-cm-chart-hide-indicator') === 'true',
+			labelKey: box.getAttribute('data-cm-chart-label-key'),
 			title: box.getAttribute('data-cm-chart-title') || 'chart',
 			description: box.getAttribute('data-cm-chart-desc') || 'chart'
 		};

@@ -8587,6 +8587,42 @@ input.cm-slider:disabled {
 	height: 0.5rem;
 	background: var(--ink-dim);
 }
+/* `dot` is the default and is written onto the element so a reader of
+   the markup can see which shape is in force. The base rule above is
+   what actually styles it; this restates the shape as a named option so
+   `--dot` is a class the library both renders and styles, and so all
+   three shapes sit together where the choice is made. */
+.cm-chart__tip-dot--dot {
+	width: 0.5rem;
+	height: 0.5rem;
+}
+/* The three indicator shapes shadcn documents, as classes on the SAME
+   element rather than three elements, so the per-series colour rule
+   (`.cm-chart__tip-dot[data-cm-k=...]`) keeps matching all of them and
+   there is one indicator node per row whatever shape is asked for.
+
+   `line` is a rule, so it has no area to fill: it drops the background
+   the `dot` shape paints and draws its own line in the same token, which
+   is why it sets a background of its own rather than none - `none` would
+   make it invisible, not line-shaped. */
+.cm-chart__tip-dot--line {
+	width: 0.75rem;
+	height: 2px;
+	background: var(--ink-dim);
+}
+.cm-chart__tip-dot--dashed {
+	width: 0.75rem;
+	height: 0;
+	background: none;
+	border-block-start: 2px dashed var(--ink-dim);
+}
+/* `hideIndicator` / `hideLabel` are honoured by COLLAPSING the node
+   rather than not emitting it: the row keeps the same three children, so
+   the hover code that fills `.cm-chart__tip-val` is unchanged, and a
+   row that loses its indicator does not silently reflow its number
+   against the row edge. */
+.cm-chart__tip-row--no-indicator .cm-chart__tip-dot { display: none; }
+.cm-chart__tip-row--no-name .cm-chart__tip-name { display: none; }
 .cm-chart__tip-name {
 	flex: 1 1 auto;
 	min-width: 0;

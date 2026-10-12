@@ -211,6 +211,43 @@ const CHARTS = {
 		description: 'a donut chart: the same arcs between two radii, which is what an inner radius actually changes',
 		series: [{ key: 'share', label: 'reads', tone: 2 }], data: CHART_SHARE,
 	}),
+	/* The TOOLTIP PROPS, as three live specimens rather than a claim in
+	   prose. Each one turns a different option on and nothing else, so
+	   the reader can see what each is FOR - which is the question the
+	   shadcn table answers with a column and this answers with a chart.
+	   `indicator: line` and `dashed` differ only in the shape of the
+	   mark beside the series name; `hideLabel`/`hideIndicator` are the
+	   two ways to declutter a single-series tooltip. */
+	tipLine: chartMarkup({
+		uid: 'cmc-tip-line', type: 'line', x: 'x', h: 220, indicator: 'line',
+		title: 'tooltip indicators as lines',
+		description: 'a line chart whose tooltip marks each series with a short rule instead of a square, the line indicator shape',
+		series: CHART_SERIES, data: CHART_ROWS,
+	}),
+	tipDashed: chartMarkup({
+		uid: 'cmc-tip-dashed', type: 'line', x: 'x', h: 220, indicator: 'dashed',
+		title: 'tooltip indicators as dashed rules',
+		description: 'a line chart whose tooltip marks each series with a dashed rule, the dashed indicator shape',
+		series: CHART_SERIES, data: CHART_ROWS,
+	}),
+	tipBare: chartMarkup({
+		uid: 'cmc-tip-bare', type: 'bar', x: 'x', h: 220,
+		hideLabel: true, hideIndicator: true, labelKey: 'none',
+		title: 'a tooltip with no title, no names and no indicators',
+		description: 'a bar chart whose tooltip shows numbers alone: the title line, the series names and the indicators are all suppressed by option',
+		series: [{ key: 'reads', label: 'reads', tone: 1 }],
+		data: CHART_ROWS.map((r) => ({ x: r.x, reads: r.reads })),
+	}),
+	/* RTL, as a chart rather than a claim: `dir` on the chart alone
+	   mirrors it inside this LTR page, which is the case a document-level
+	   direction read gets wrong. The y axis moves to the right and the
+	   first month moves to the right edge. */
+	rtl: chartMarkup({
+		uid: 'cmc-rtl', type: 'line', x: 'x', h: 240, rtl: 'rtl',
+		title: 'the line chart, right to left',
+		description: 'a line chart with direction set to rtl: the value axis is on the right and the first category is at the right edge',
+		series: CHART_SERIES, data: CHART_ROWS,
+	}),
 	radial: chartMarkup({
 		uid: 'cmc-radial', type: 'radial', x: 'x', h: 260,
 		title: 'monthly reads as radial bands',
@@ -4211,6 +4248,32 @@ A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
 					polygon has no single point to hit.
 				</p>
 				<Fragment set:html={CHARTS.radar} />
+
+				<h3 class="cm-kicker">the tooltip options, side by side</h3>
+				<p class="cm-head__sub">
+					Three tooltips over the same two series, differing
+					only in what the option asks for: the mark beside
+					the name is a rule, then a dashed rule, and the last
+					carries no title line, no names and no marks at
+					all. Hover any of them - the numbers are the
+					same numbers.
+				</p>
+				<Fragment set:html={CHARTS.tipLine} />
+				<Fragment set:html={CHARTS.tipDashed} />
+				<Fragment set:html={CHARTS.tipBare} />
+
+				<h3 class="cm-kicker">direction</h3>
+				<p class="cm-head__sub">
+					<code>dir="rtl"</code> on the chart alone. The value
+					axis moves to the right and the first month moves
+					to the right edge, while the page around it stays
+					left to right - which is the case a chart that
+					asked the <em>document</em> its direction would
+					get wrong. No stylesheet changes: the mirror is
+					the scale and the label anchors, read from the
+					rendered direction.
+				</p>
+				<Fragment set:html={CHARTS.rtl} />
 
 				<h3 class="cm-kicker">the theme follows the tokens</h3>
 				<p class="cm-head__sub">
