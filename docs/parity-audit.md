@@ -169,14 +169,15 @@ Done:
 - **every spacing declaration is off the `--space-N` scale** — the 19
   raw rem literals across 15 rules are gone, plus one in the markup, and
   the suite now fails on any new one.
+- **one document per family** — `src/pages/[...family].astro` emits `/`
+  (all 52 specimens) and `/f/<family>/` (9 routes) from the same markup,
+  wrapped in `shows(family)`. Gzipped: `/` 76.2 KB, `/f/foundation/`
+  12.6 KB (-83%), `/f/content/` 11.8 KB. The 9 pages partition the 52
+  sections exactly, 5/7/6/6/3/6/7/8/4. Doing it this way (rather than
+  extracting 52 files) kept all 59 suite reads slicing one file, so no
+  fixture had to move and nothing is duplicated between routes.
 
 Not done, and known:
-
-- **one page per family.** The payload is still a single 316KB
-  `index.astro`; shadcn splits by route. This is the remaining half of
-  "the whole thing loads". It is not free: ~50 suite checks slice
-  `index.astro` by section id, so splitting the page moves the fixtures
-  those checks read.
 - **a right-hand on-this-page TOC.** shadcn's content page carries a
   sticky ~288px TOC beside the ~640px measure; oem-ui has only the rail.
   The scroll-spy is already generic (it reads whatever `[data-cm-spy]`

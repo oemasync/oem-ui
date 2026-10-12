@@ -1,3 +1,19 @@
+## Unreleased - each family is its own document
+
+The page was 52 specimens in one 436 KB document, so visiting it loaded the
+whole suite. It is now a rest route, `src/pages/[...family].astro`, that emits
+both the whole page and one page per family from the same markup:
+
+- `/` - every family, the reference document
+- `/f/<family>/` - that family alone (9 routes)
+
+Gzipped, what crosses the wire: `/` 76.2 KB unchanged, `/f/foundation/` 12.6 KB
+(-83%), `/f/content/` 11.8 KB.
+
+The 9 family pages partition the 52 sections exactly (5/7/6/6/3/6/7/8/4) and the
+whole page still renders all 52; the rail's group labels are the way into each
+family route.
+
 ## Unreleased - grouped rail, and the .cm-js regression it exposed
 
 The rail is divided into **9 labelled groups** (foundation, surfaces,
