@@ -206,12 +206,19 @@ Done:
   fixture had to move and nothing is duplicated between routes.
 
 Not done, and known:
-- **a right-hand on-this-page TOC.** shadcn's content page carries a
-  sticky ~288px TOC beside the ~640px measure; oem-ui has only the rail.
-  The scroll-spy is already generic (it reads whatever `[data-cm-spy]`
-  rows it is handed), so a TOC would get highlighting without new JS —
-  but nothing renders one yet, so no JS was added for it. Wiring a TOC
-  with no TOC in the page would be dead code that reads as live.
+- **a right-hand on-this-page TOC** — **done** on the family routes. It
+  renders at 288px (the `--doc-toc-w` token already existed), sticky, and
+  lists only the sections of the document it is in; the whole-page build
+  renders none. Verified in a browser by `tests/verify-doc-toc.py` (54
+  checks), including that every row resolves and that the spy marks the
+  row the reader is actually in.
+
+  The first version of it was wrong in a way worth keeping: the CSS keyed
+  the active state off `[aria-current]` while the runtime's spy toggles
+  `is-active`. The highlight would simply never have appeared, and nothing
+  would have failed — caught only by driving the page. shadcn's own
+  sidebar uses `data-active`, which is where the wrong assumption came
+  from.
 - **the non-component areas**: Blocks, Typeset, Directory, Create have
   no oem-ui equivalent at all.
 

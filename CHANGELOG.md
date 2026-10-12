@@ -1,3 +1,23 @@
+## Unreleased - the docs TOC, and parity pinned to shadcn's live list
+
+The docs shell is now three columns on the family routes: rail, measure,
+and a sticky 288px on-this-page TOC that lists only that document's
+sections. The whole-page build renders none. `tests/verify-doc-toc.py`
+drives it in a browser (54 checks).
+
+The first version of the TOC was broken invisibly: the CSS keyed its
+active state off `[aria-current]` while the runtime's scroll-spy toggles
+`is-active`, so the highlight would never have appeared and no test would
+have failed. Only driving the page found it.
+
+Parity is now checked rather than asserted. The suite holds shadcn's 64
+component names and fails on a rename, a drop, or a reorder, naming the
+offending entry. Re-verified live on 2026-10-12: the All Components index
+on ui.shadcn.com/docs/components lists 64 names, oem-ui's ledger matches
+all 64 in order, none missing, none extra. The audit doc now records why
+`form` (zero files, documents only) and `sonner` (wraps a third-party
+package) are excluded deliberately rather than skipped.
+
 ## Unreleased - each family is its own document
 
 The page was 52 specimens in one 436 KB document, so visiting it loaded the
