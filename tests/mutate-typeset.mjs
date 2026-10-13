@@ -10,8 +10,14 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = '/root/projects/oem-ui';
+// Resolve the repo root from THIS file's location rather than hardcoding a
+// worktree. A hardcoded absolute path made the sweep measure whichever tree
+// happened to sit at that path - so on any other worktree it swept someone
+// else's uncommitted edits and refused to run at all. It is a test of THIS
+// tree, so it must find THIS tree.
+const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '');
 const p = (f) => `${ROOT}/${f}`;
 
 function rebuild() {
