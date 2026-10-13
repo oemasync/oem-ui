@@ -16648,6 +16648,77 @@ console.log('\ncontract: typeset (the markdown styling system)');
 			`--cm-typeset-size defaults to "${m[1].trim()}", which is not relative to its container`);
 	});
 
+	check('typeset: the size is a VALUE lane and a preset FACTOR, so both compose', () => {
+		// THE defect this check exists for, MEASURED in WebKit twice.
+		//
+		// First: the phone bump is a media query at the same (0,1,0)
+		// specificity as the presets and sits later in source. While the
+		// presets wrote `--cm-typeset-size` directly the bump OVERRODE them at
+		// <=640px - `.cm-typeset--roomy` resolved 1.0625em exactly as the base
+		// did, so the reader-preference preset changed nothing on the one
+		// viewport a phone reader uses.
+		//
+		// Second, and the reason this is not a one-line fix: moving the preset
+		// ONTO the lane still measured identical. The bump then wrote 1.0625em
+		// to the lane and the preset's 1.0625em was the same number, so
+		// `--roomy` was STILL a no-op at 390. Two knobs that both mean "the
+		// size" cannot compose; a value and a FACTOR can.
+		//
+		// So the invariant is the split into an absolute lane and a
+		// dimensionless scale, and it has four halves. A check that names
+		// only one of them passes the buggy version.
+		const rule = (sel) => {
+			const i = block.indexOf(sel);
+			assert(i !== -1, `the typeset block has no ${sel} rule`);
+			const open = block.indexOf('{', i);
+			return block.slice(open, block.indexOf('}', open));
+		};
+
+		// (1) No preset writes an absolute size. This is the original defect.
+		for (const preset of ['.cm-typeset--docs', '.cm-typeset--chat', '.cm-typeset--roomy']) {
+			const body = rule(preset);
+			assert(!/--cm-typeset-size(-lane)?\s*:/.test(body),
+				`${preset} writes an absolute size, which the phone media query overrides ` +
+				'at <=640px (or duplicates the lane value) - the preset would change nothing on a phone');
+		}
+
+		// (2) The reader-preference preset must actually RAISE the size, or it
+		// is a no-op knob wearing a preset's name. Assert the FACTOR is > 1,
+		// not merely present: this is the assertion that fails for a preset
+		// whose scale is 1, or absent.
+		const roomy = rule('.cm-typeset--roomy');
+		const scale = /--cm-typeset-scale\s*:\s*([0-9.]+)/.exec(roomy);
+		assert(scale, '--cm-typeset--roomy sets no --cm-typeset-scale, so it cannot raise the reader size');
+		assert(Number(scale[1]) > 1,
+			`--cm-typeset--roomy scales by ${scale[1]}, which is not larger than the base - the reader preference is a no-op`);
+
+		// (3) The phone bump owns the LANE value, and never the scale (which is
+		// the reader's, not the viewport's).
+		const media = block.slice(block.indexOf('@media (max-width: 640px)'));
+		assert(/--cm-typeset-size-lane\s*:/.test(media),
+			'the phone bump does not set the lane, so it cannot size the column');
+		assert(!/--cm-typeset-scale\s*:/.test(media),
+			'the phone bump sets the reader scale, which is the reader\'s choice and not the viewport\'s');
+		assert(!/--cm-typeset-size\s*:/.test(media),
+			'the phone bump writes the output size directly, so it overrides every preset on a phone');
+
+		// (4) The two knobs must be WIRED to the output, or they are decorative
+		// and the size never moves. Assert the composition, not the presence:
+		// a `var(--cm-typeset-size-lane)` with the scale dropped reintroduces
+		// exactly the bug (2) guards.
+		assert(/--cm-typeset-size:\s*calc\(var\(--cm-typeset-size-lane\)\s*\*\s*var\(--cm-typeset-scale\)\)/
+			.test(rule('.cm-typeset')),
+			'--cm-typeset-size does not compose the lane and the scale, so a preset cannot tune it');
+
+		// The controls stay declared tokens: a dangling var() invalidates its
+		// declaration, and both of these are newer than the rule that reads them.
+		const tokens = read('src/styles/tokens.css');
+		for (const t of ['--cm-typeset-size-lane', '--cm-typeset-scale']) {
+			assert(new RegExp(t + '\\s*:').test(tokens),
+				`${t} is read by the typeset block but never declared in tokens.css`);
+		}
+	});
+
 	check('typeset: a subtree can opt out, and the hole covers what is nested inside it', () => {
 		// A component dropped into prose must be able to leave the system.
 		// The opt-out has to reach a NESTED `.cm-typeset` too, or the hole has

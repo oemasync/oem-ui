@@ -9874,7 +9874,14 @@ input.cm-slider:disabled {
    It is registered in the `prose` family and demonstrated there. */
 
 .cm-typeset {
-	--cm-typeset-size: 1em;
+	/* The generic controls. The SIZE is two knobs and not one, because the
+	   viewport and the reader are different questions: the lane is the value
+	   (`--cm-typeset-size-lane`), the preset is a factor over it
+	   (`--cm-typeset-scale`). See the note above the presets for what one
+	   knob measured at 390. */
+	--cm-typeset-size-lane: 1em;
+	--cm-typeset-scale: 1;
+	--cm-typeset-size: calc(var(--cm-typeset-size-lane) * var(--cm-typeset-scale));
 	--cm-typeset-leading: 1.75;
 	--cm-typeset-flow: 1.25em;
 
@@ -9889,13 +9896,28 @@ input.cm-slider:disabled {
 	   is tighter - the same markup in the two places it actually appears. */
 }
 
+/* PRESETS and the phone bump are two INDEPENDENT questions, and this is the
+   measured reason they are two properties rather than one:
+
+     - the phone bump answers "how big is this lane on this screen".
+     - a preset answers "how much larger does THIS READER want it".
+
+   When a preset wrote `--cm-typeset-size` directly, it competed with the
+   bump for one declaration. The bump is a media query at the same (0,1,0)
+   specificity and sits later in source, so it won - MEASURED in WebKit at
+   390: `.cm-typeset--roomy` resolved 1.0625em exactly as the base did, so
+   the reader-preference preset changed nothing on the one viewport a phone
+   reader uses. Moving the preset to the lane did NOT fix it either: measured
+   again, the bump then wrote 1.0625em to the lane and the preset's 1.0625em
+   was still the same value, so `--roomy` was STILL a no-op on a phone. Two
+   knobs that both mean "the size" only compose when they are a value and a
+   FACTOR. So the bump sets the lane's value and a preset sets a scale over
+   it: 1.0625 x 1.0625 = 17px, and the preference survives the viewport. */
 .cm-typeset--docs {
-	--cm-typeset-size: 1em;
 	--cm-typeset-flow: 1.5em;
 }
 
 .cm-typeset--chat {
-	--cm-typeset-size: 1em;
 	--cm-typeset-leading: 1.6;
 	--cm-typeset-flow: 1em;
 }
@@ -9905,7 +9927,7 @@ input.cm-slider:disabled {
    It is a preset and not a media query on purpose - the preference belongs
    to the reader, not to their viewport width. */
 .cm-typeset--roomy {
-	--cm-typeset-size: 1.0625em;
+	--cm-typeset-scale: 1.0625;
 	--cm-typeset-leading: 2;
 	--cm-typeset-flow: 1.75em;
 }
@@ -10034,7 +10056,7 @@ input.cm-slider:disabled {
    the viewport. */
 @media (max-width: 640px) {
 	.cm-typeset {
-		--cm-typeset-size: 1.0625em;
+		--cm-typeset-size-lane: 1.0625em;
 	}
 }
 

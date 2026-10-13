@@ -79,6 +79,31 @@ const MUTATIONS = [
 		(s) => s.replace('.cm-typeset > :where(h2) { font-size: calc(1em * 1.35); }',
 			'.cm-typeset > h2 { font-size: calc(1em * 1.35); }')],
 
+	// ---- 6b. the preset and the viewport bump COMPOSE --------------------
+	// Both halves of the split, plus the wiring. A preset that writes
+	// `--cm-typeset-size` directly is the exact defect measured at 390:
+	// the media query is later in source at the same specificity, so it
+	// silently overrides the preset on the one viewport a phone uses.
+	['the roomy preset writes an absolute size, which the phone bump overrides',
+		CSS,
+		(s) => s.replace('.cm-typeset--roomy {\n	--cm-typeset-scale: 1.0625;',
+			'.cm-typeset--roomy {\n	--cm-typeset-size: 1.0625em;')],
+	['the roomy preset scales by 1, so the reader preference is a no-op',
+		CSS,
+		(s) => s.replace('.cm-typeset--roomy {\n	--cm-typeset-scale: 1.0625;',
+			'.cm-typeset--roomy {\n	--cm-typeset-scale: 1;')],
+	['the phone bump takes the reader scale, which belongs to the reader',
+		CSS,
+		(s) => s.replace('@media (max-width: 640px) {\n	.cm-typeset {\n		--cm-typeset-size-lane: 1.0625em;',
+			'@media (max-width: 640px) {\n	.cm-typeset {\n		--cm-typeset-scale: 1.0625;')],
+	['the composition is collapsed to the lane alone, so a preset cannot tune it',
+		CSS,
+		(s) => s.replace('	--cm-typeset-size: calc(var(--cm-typeset-size-lane) * var(--cm-typeset-scale));',
+			'	--cm-typeset-size: var(--cm-typeset-size-lane);')],
+	['the scale is read but never declared, so its declaration dangles',
+		TOKENS,
+		(s) => s.replace('	--cm-typeset-scale: 1;\n', '')],
+
 	// ---- 7. demonstrated, and every preset rendered ----------------------
 	['the showcase section is renamed away, so the component is undemonstrated',
 		PAGE,
