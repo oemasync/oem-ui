@@ -236,3 +236,61 @@ measured and rejected — it skips 49 of 51 sections but breaks in-page
 anchors (jumps landed 1342–3586px past the target). Any future
 lazy-loading has to preserve `href="#…"`.
 
+## 6. Re-measured 2026-10-13, against shadcn's whole docs nav
+
+The claim in section 0 is a claim about someone else's site, so it was
+re-measured against the live pages rather than re-read from this file.
+The suite's ledger check cannot re-fetch (it runs offline), so this is
+the measurement that keeps the pinned list honest.
+
+The full route list was extracted from shadcn's own sidebar — **105
+distinct `/docs/*` routes** in 8 nav groups. The components are now
+namespaced (`/docs/components/base/*`, plus `radix/` and `aria/`
+variants of the same components), and the `base/` namespace enumerates
+exactly the same **64** names, in the same order, as the pinned ledger:
+
+- missing from the pinned list: **none**
+- extra in the pinned list: **none**
+- **order identical** (ignoring one duplicate `button` link in the page
+  context, which is a nav artifact, not a second component)
+
+Two areas the earlier gap list named were re-checked rather than
+restated, and both came back **different from the earlier note**:
+
+- **`/docs/create` is a 404.** The nav's "Create" points at
+  `/create` — a project scaffolder app, not a docs page. There is no
+  "Create" docs area to reach parity with. The earlier list named it as
+  a gap; it is not a target.
+- **`/docs/utils/*` exists and IS portable CSS**, and this library
+  already ships both of them:
+
+  | shadcn | oem-ui | variants |
+  |---|---|---|
+  | `shimmer` | `.cm-shimmer` | base, `--once`, `--reverse`, `--none`, plus `--shimmer-duration`/`-spread`/`-angle` |
+  | `scroll-fade` | `.cm-scroll-fade` | base, `-y`, `-x`, `--t`, `--b`, `--l`, `--r`, `--s`, `--e`, `--none` |
+
+  Both were built with the rest of the utilities work and carry
+  `prefers-reduced-motion` kill-switches. They were missing from the
+  earlier gap list, so the list under-reported what we had.
+
+Still genuinely out of scope, and now measured rather than asserted:
+
+- **Blocks** (`/blocks`, 2.29 MB): 36 `use client` markers, 12 React
+  imports, `app/dashboard/page.tsx` plus a component tree
+  (`app-sidebar.tsx`, `data-table.tsx`, `chart-area-interactive.tsx`,
+  …). shadcn ships it with `npx shadcn add dashboard-01`. It is a React
+  application, not CSS.
+- **Directory** (`/docs/directory`): a browser for community registries
+  built into the CLI. Tooling, not a visual surface.
+- **The docs shell** (Introduction / Installation / Theming / CLI /
+  Skills / Registry / Changelog, `components.json`, `package-imports`,
+  `monorepo`, `javascript`, `figma`, `legacy`): prose about using a
+  React CLI. `js`, `cli` and `registry` are not classes a framework-free
+  stylesheet can implement — a reader of this library copies CSS or
+  links a stylesheet, they do not run `npx shadcn add`.
+
+So the portable half of parity is closed: 64 components in order, the
+Typeset system, and both documented utilities. What is left on the
+other site is a React app, a CLI, and documentation *about* that CLI.
+
+
