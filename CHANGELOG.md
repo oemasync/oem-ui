@@ -1,3 +1,22 @@
+## Unreleased - the docs point at files that exist, and a check now reads them
+
+The showcase was renamed in the split (`src/pages/index.astro` →
+`src/pages/[...family].astro`), and `AGENTS.md` and `CONTRIBUTING.md`
+kept naming the old path. Nothing failed: the suite reads the files it
+wants by name and never asked whether the docs agree, so an agent
+following `AGENTS.md` was pointed at a file that is not there.
+`CONTRIBUTING.md` also gained the thing it was missing - a new section
+must sit inside the right `shows(...)` wrapper, or it compiles into the
+whole page and renders on no family route.
+
+The new check (`the docs point at files that exist`) sweeps every bare
+`src/...` path in `README.md`, `AGENTS.md` and `CONTRIBUTING.md`, and its
+first version was wrong in a way worth recording: it flagged
+`<your-project>/src/cm-prose.css` in the scoped-entry examples, which is
+the CONSUMER's file. A path with a placeholder in front of it is not a
+claim about this tree, so those are skipped. Mutation-proven - renaming
+`src/js/cli-mono.js` in AGENTS.md fails it by name.
+
 ## Unreleased - typeset: the markdown system the library was missing
 
 `.cm-typeset` is a styling system for rendered markdown, built on three
