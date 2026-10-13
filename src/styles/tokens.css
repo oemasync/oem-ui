@@ -167,6 +167,26 @@
 	   name in the system at --min-font. Sized once, from the tokens. */
 	--swatch-col: calc(1.4em + var(--space-2) + 15ch);
 
+	/* ---- typeset controls -----------------------------------------
+	   The three knobs the typeset system is built on, and the reason
+	   it is a system rather than a prose block: every other value in
+	   it (heading sizes, list indents, the space under a heading)
+	   DERIVES from these, so a consumer retunes a whole document by
+	   setting three properties.
+
+	   Declared here, in `:root` and theme-independent, because
+	   typographic rhythm does not differ between the dark and light
+	   themes - the same reason `--measure` lives here.
+
+	   They are tokens and not bare custom properties on the rule
+	   because `components.css` may only read declared tokens: an
+	   undeclared `var()` invalidates its declaration, and inside a
+	   shorthand it takes the whole declaration with it. That is a
+	   measured rule in this library, not a convention. */
+	--cm-typeset-size: 1em;
+	--cm-typeset-leading: 1.75;
+	--cm-typeset-flow: 1.25em;
+
 	/* ---- spacing scale -----------------------------------------
 	   The ONLY legal vertical and inline rhythm. Before this existed the
 	   two layers carried 69 distinct spacing values (0.15rem .. 6rem),

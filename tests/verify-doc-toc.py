@@ -13,7 +13,7 @@ from playwright.sync_api import sync_playwright
 URL = os.environ.get('CM_BASE', 'http://127.0.0.1:4471/')
 FAMILIES = {
     'foundation': 5, 'surfaces': 7, 'tables': 6, 'panels': 6, 'content': 4,
-    'prose': 6, 'layout': 7, 'composed': 8, 'reference': 4,
+    'prose': 7, 'layout': 7, 'composed': 8, 'reference': 4,
 }
 passed = failed = 0
 

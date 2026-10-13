@@ -9830,6 +9830,214 @@ input.cm-slider:disabled {
 	padding: 0 var(--space-1);
 }
 
+/* ---------- typeset ----------
+   A styling system for rendered markdown: headings, paragraphs, lists and
+   tables that arrive as BARE elements from a renderer, with no classes on
+   them. `.cm-prose` styles that same content, so the question "why a second
+   thing?" has an answer that is a measurement, not a preference.
+
+   MEASURED against shadcn's Typeset (ui.shadcn.com/docs/typeset, 2026-10-12).
+   Typeset is not a component: it is a documented SYSTEM, and its docs name
+   the properties it guarantees. `.cm-prose` had NONE of them:
+
+     - three controls. Typeset condenses the whole rhythm into
+       `--typeset-size` / `--typeset-leading` / `--typeset-flow`, and every
+       other value (heading sizes, list indents, space under a heading, the
+       space around a rule) DERIVES from them. `.cm-prose` has no controls at
+       all: its rhythm is written into each rule as a literal, so retuning it
+       means editing every rule and a consumer cannot retune it at all.
+     - container-relative size. `--typeset-size: 1em` follows the element it
+       is put in, so the same markup reads correctly in a chat bubble and in
+       an article. `.cm-prose` sets `font-size: var(--text)` - an absolute
+       root value - so prose in a narrow aside is as large as prose across
+       the page.
+     - streaming stability. Typeset states the contract: adding a block must
+       not restyle the blocks already on screen. That is why it uses
+       `margin-block-start` ONLY and leaves `:last-child` / `:has()` /
+       `:empty` out of layout rules. `.cm-prose` ships both `margin-top` and
+       `:last-child` rules, so a streamed paragraph moves the layout above it.
+     - an opt-out. `not-typeset` / `data-not-typeset` takes a subtree back
+       out, for a component embedded in prose. `.cm-prose` has no exit.
+
+   `flow` is the load-bearing idea and the reason this is worth its own block:
+   spacing flows in ONE direction (block-start), so each block owns the space
+   ABOVE itself and a newly appended block can never change the box of a block
+   that is already laid out. A rule that spaces a heading with `margin-bottom`
+   instead is the bug Typeset documents, and it is invisible until content
+   streams - which is exactly how it shipped in every prose block I have
+   written by hand.
+
+   Every value here DERIVES from the three controls. Nothing below restates a
+   rhythm number, so a consumer retunes the system by setting three properties
+   and the whole document follows.
+
+   It is registered in the `prose` family and demonstrated there. */
+
+.cm-typeset {
+	--cm-typeset-size: 1em;
+	--cm-typeset-leading: 1.75;
+	--cm-typeset-flow: 1.25em;
+
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: var(--cm-typeset-size);
+	line-height: var(--cm-typeset-leading);
+
+	/* The ON in `typeset` + preset: the token above is the default and these
+	   are the named presets, so a consumer picks a context rather than
+	   hand-setting numbers. `.cm-typeset--docs` is roomier, `.cm-typeset--chat`
+	   is tighter - the same markup in the two places it actually appears. */
+}
+
+.cm-typeset--docs {
+	--cm-typeset-size: 1em;
+	--cm-typeset-flow: 1.5em;
+}
+
+.cm-typeset--chat {
+	--cm-typeset-size: 1em;
+	--cm-typeset-leading: 1.6;
+	--cm-typeset-flow: 1em;
+}
+
+/* `.cm-typeset--flush` is the accessibility control the docs call out: a
+   roomier typeset offered to readers who want larger type and more space.
+   It is a preset and not a media query on purpose - the preference belongs
+   to the reader, not to their viewport width. */
+.cm-typeset--roomy {
+	--cm-typeset-size: 1.0625em;
+	--cm-typeset-leading: 2;
+	--cm-typeset-flow: 1.75em;
+}
+
+/* Every block below spaces itself on its BLOCK-START side only. That is the
+   streaming contract, and it is why there is no `margin-bottom` anywhere in
+   this block: `:where()` keeps each selector at zero specificity so a
+   consumer's own utility or a plain class still wins without `!important`,
+   which is the second property Typeset's docs guarantee. */
+.cm-typeset > :where(*) {
+	margin-block-start: 0;
+	margin-block-end: 0;
+}
+
+.cm-typeset > :where(* + *) {
+	margin-block-start: var(--cm-typeset-flow);
+}
+
+/* Headings derive their size from the flow, so there is one knob rather than
+   a heading scale that has to be kept in step with it. The step is a ratio,
+   not a printed size. */
+.cm-typeset > :where(h1, h2, h3, h4, h5, h6) {
+	font-weight: 600;
+	line-height: 1.25;
+	color: var(--ink);
+}
+
+.cm-typeset > :where(h1) { font-size: calc(1em * 1.6); }
+.cm-typeset > :where(h2) { font-size: calc(1em * 1.35); }
+.cm-typeset > :where(h3) { font-size: calc(1em * 1.15); }
+.cm-typeset > :where(h4, h5, h6) { font-size: 1em; }
+
+/* A heading sits closer to the block it introduces than to the one before it,
+   which is the classic typographic property, expressed as a derivation from
+   the flow rather than a second set of numbers. */
+.cm-typeset > :where(h1, h2, h3, h4, h5, h6) + :where(*) {
+	margin-block-start: calc(var(--cm-typeset-flow) * 0.5);
+}
+
+.cm-typeset > :where(ul, ol) {
+	padding-inline-start: 1.4em;
+}
+
+.cm-typeset > :where(li) + :where(li) {
+	margin-block-start: calc(var(--cm-typeset-flow) * 0.25);
+}
+
+.cm-typeset > :where(blockquote) {
+	margin-block-start: var(--cm-typeset-flow);
+	padding-inline-start: var(--space-4);
+	border-inline-start: 2px solid var(--line);
+	color: var(--ink-dim);
+}
+
+.cm-typeset > :where(hr) {
+	margin-block-start: var(--cm-typeset-flow);
+	border: 0;
+	border-block-start: 1px solid var(--line);
+}
+
+.cm-typeset > :where(pre) {
+	margin-block-start: var(--cm-typeset-flow);
+	padding: var(--space-3) var(--space-4);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	overflow-x: auto;
+}
+
+.cm-typeset > :where(code) {
+	font-family: var(--font-mono);
+}
+
+/* A table is the one block where Typeset's streaming contract bites hardest:
+   a separator drawn on the row BELOW (border-block-start on each cell) means
+   a newly appended row cannot restyle the row above it. The `.cm-prose-table`
+   block draws the same separation on `border-bottom`, which does exactly
+   that, so this is not a style difference - it is the contract. */
+.cm-typeset > :where(table) {
+	width: 100%;
+	border-collapse: collapse;
+	margin-block-start: var(--cm-typeset-flow);
+	font-size: max(var(--min-font), 0.94em);
+}
+
+.cm-typeset > :where(table) :where(th, td) {
+	text-align: start;
+	vertical-align: top;
+	padding: var(--space-2) var(--space-3);
+	border-block-start: 1px solid var(--line);
+	overflow-wrap: break-word;
+}
+
+.cm-typeset > :where(table) :where(th) {
+	color: var(--ink-dim);
+	font-weight: 600;
+	font-size: var(--min-font);
+	letter-spacing: 0.02em;
+}
+
+/* A wide table scrolls; wrapping it is the renderer's job (Typeset documents
+   a `typeset-scroll` wrapper for the same reason). */
+.cm-typeset-scroll {
+	overflow-x: auto;
+	max-width: 100%;
+}
+
+/* The opt-out. `not-typeset` and `data-not-typeset` both work, and both cover
+   the whole subtree - including a nested `.cm-typeset`, so a component
+   dropped into prose cannot reintroduce the system inside the hole it is
+   sitting in. `:where()` keeps this at the same zero specificity as the rest
+   of the block, so it does not take a specificity hostage to be safe. */
+.cm-typeset :where(.not-typeset, [data-not-typeset]) :where(*),
+.cm-typeset :where(.not-typeset, [data-not-typeset]) {
+	color: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}
+
+.cm-typeset :where(.not-typeset, [data-not-typeset]) > :where(*) {
+	margin-block-start: 0;
+}
+
+/* On a phone the base size gets the small bump the docs describe, because a
+   full-width 1em column reads tighter on a narrow measure than the same text
+   in a wide one. It is a media query rather than a preset: this one IS about
+   the viewport. */
+@media (max-width: 640px) {
+	.cm-typeset {
+		--cm-typeset-size: 1.0625em;
+	}
+}
+
 .cm-auth {
 	min-height: 100dvh;
 	display: grid;

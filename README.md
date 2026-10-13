@@ -1436,6 +1436,43 @@ declared once in `:root` and is the same in both themes. Writing
 consumer that invents its own measure is a second implementation no
 library fix can reach.
 
+### Typeset — `.cm-typeset` (for bare-element markdown)
+
+A styling system for rendered markdown: headings, paragraphs, lists and tables that arrive as BARE elements from a renderer, with no classes on them. Three controls, and every other value DERIVES from them.
+
+```css
+.cm-typeset {
+  --cm-typeset-size: 1em;        /* follows the container */
+  --cm-typeset-leading: 1.75;
+  --cm-typeset-flow: 1.25em;     /* the single spacing knob */
+}
+```
+
+Three presets, each a re-tuning of the same controls rather than a second set of rules:
+
+- `.cm-typeset--docs` — roomier (1em, 1.9 leading, 1.5em flow, adjusted)
+- `.cm-typeset--chat` — tighter (1em, 1.6, 1em)
+- `.cm-typeset--roomy` — reader preference (1.0625em, 2, 1.75em)
+
+Presets are document-level context, not viewport-width: the roomy preset is a reader preference, not a media query. On phones the base `.cm-typeset` receives a small bump via a media query to keep it readable.
+
+Stream stability: spacing flows on the BLOCK-START side only (no `margin-bottom`, no `:last-child`/`:has()`/`:empty` in layout rules), so appending a block cannot move content already on screen. For wide tables, use `.cm-typeset-scroll` so the wrapper scrolls and the document does not.
+
+The opt-out is a subtree escape hatch — `not-typeset` or `data-not-typeset` — which also closes a nested `.cm-typeset`:
+
+```html
+<div class="cm-typeset">
+  <p>This is typeset.</p>
+  <div class="not-typeset">
+    <button>This is left alone.</button>
+  </div>
+</div>
+```
+
+Zero-specificity throughout (`:where()`), so a consumer's own class wins without `!important`.
+
+The system demonstrates the derivation: heading sizes (`calc(em * ratio)`), list indents and the space under a heading are all derived from `--cm-typeset-flow`. A table inside typeset wraps (no `nowrap`), so six-column tables in a 68ch measure degrade gracefully.
+
 ### Prose beside an aside — `.cm-prose-measure` and `.cm-inline-link`
 
 Two classes for prose that has company, both moved into the library from

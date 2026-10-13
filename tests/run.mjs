@@ -16559,6 +16559,143 @@ check('the ledger names the 64 shadcn components, in the order shadcn lists them
 		`${wrong.length} ledger entr(y|ies) differ from shadcn's list, at: ` +
 		wrong.slice(0, 5).map((n) => `expected "${n}", got "${names[SHADCN.indexOf(n)]}"`).join('; '));
 });
+/* ================= typeset: a system, not a prose block =================
+   shadcn's Typeset is documented as a SYSTEM and names the properties it
+   guarantees. Each check below is shaped around the property, not around a
+   declaration's presence, because a check that greps for `margin-block-start`
+   passes on a rule that also ships `margin-bottom` - the exact bug Typeset
+   documents and the reason the system exists.
+*/
+console.log('\ncontract: typeset (the markdown styling system)');
+{
+	const css = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, ' ');
+	const page = read('src/pages/[...family].astro');
+	const html = read('dist/index.html');
+
+	// The block, sliced so a rule elsewhere in an 10k-line sheet cannot
+	// satisfy an assertion about THIS block.
+	const i = css.indexOf('.cm-typeset');
+	assert(i !== -1, 'the typeset block is not in components.css');
+	const end = css.indexOf('.cm-auth {', i);
+	assert(end > i, 'the typeset block does not end where .cm-auth begins');
+	const block = css.slice(i, end);
+	assert(block.includes('.cm-typeset--chat'), 'the slice is too narrow to be the whole block');
+
+	check('typeset: it is built on three controls, and the rhythm DERIVES from them', () => {
+		// The load-bearing property. A block where each rule restates its own
+		// margin is not a system: a consumer cannot retune it, and the numbers
+		// drift apart the first time one is edited.
+		for (const t of ['--cm-typeset-size', '--cm-typeset-leading', '--cm-typeset-flow']) {
+			assert(block.includes('var(' + t + ')'),
+				`the typeset block never reads ${t}, so it is not built on that control`);
+		}
+		// ...and the flow must be DERIVED FROM by MORE THAN ONE rule, not merely
+		// declared. A single `calc()` satisfies a presence test while every
+		// other rhythm in the block is a literal - which is the state the block
+		// was in before this check existed, and the state a mutation that
+		// replaces one derivation with a literal restores.
+		const derived = block.match(/calc\([^)]*var\(--cm-typeset-flow\)/g) || [];
+		assert(derived.length >= 2,
+			`only ${derived.length} value(s) derive from --cm-typeset-flow; a block where ` +
+			'the rhythms are literals is not a system, however many it declares');
+	});
+
+	check('typeset: every control is a DECLARED token, so no var() is dangling', () => {
+		// An undeclared var() invalidates its declaration - and inside a
+		// shorthand it takes the whole declaration with it. This is the
+		// library's own rule, so the controls live in tokens.css.
+		const tokens = read('src/styles/tokens.css');
+		for (const t of ['--cm-typeset-size', '--cm-typeset-leading', '--cm-typeset-flow']) {
+			assert(new RegExp('\\' + t + '\\s*:').test(tokens),
+				`${t} is read by the typeset block but never declared in tokens.css`);
+		}
+	});
+
+	check('typeset: spacing flows in ONE direction, so a streamed block cannot move the page', () => {
+		// THE invariant. Text arrives with an LLM streaming into a renderer:
+		// if a block owns space BELOW itself, appending the next block moves
+		// the box above it, and content already on screen jumps. Typeset's docs
+		// state this contract; a `margin-bottom` anywhere in the block breaks it.
+		//
+		// `margin-block-end: 0` is NOT the bug - it is part of the FIX. A bare
+		// element arrives with a UA or consumer margin below it (base.css gives
+		// `p` one), and zeroing that is exactly what stops an appended block
+		// from moving anything. So the scan reads the VALUE and flags only
+		// non-zero end-side spacing; a presence test would cry wolf on the
+		// reset and reward deleting the thing that makes the contract hold.
+		for (const m of block.matchAll(/margin(?:-block)?-end\s*:\s*([^;]+);|margin-bottom\s*:\s*([^;]+);/g)) {
+			const v = (m[1] ?? m[2]).trim();
+			const zero = /^0(px|em|rem|%)?$/.test(v) || v === 'auto';
+			assert(zero,
+				`the typeset block spaces an element ${v} on its END side, which ` +
+				'moves content already on screen when a block is appended');
+		}
+		// `:last-child` / `:has()` / `:empty` in a LAYOUT rule are the other
+		// form of the same bug: they restyle a block when a SIBLING arrives.
+		// `.cm-prose-measure > :first-child` is the precedent that makes this
+		// worth asserting rather than trusting.
+		assert(!/:last-child|:has\(|:empty/.test(block),
+			'the typeset block uses a structural selector in a layout rule, so a ' +
+			'block restyles when its neighbours change');
+	});
+
+	check('typeset: the size is container-relative, so it follows where it is put', () => {
+		// 1em, not an absolute root value: the same markup has to read
+		// correctly inside a chat bubble and across an article column.
+		const m = /--cm-typeset-size:\s*([^;]+);/.exec(read('src/styles/tokens.css'));
+		assert(m, '--cm-typeset-size is not declared in tokens.css');
+		assert(/^1(\.\d+)?em$/.test(m[1].trim()),
+			`--cm-typeset-size defaults to "${m[1].trim()}", which is not relative to its container`);
+	});
+
+	check('typeset: a subtree can opt out, and the hole covers what is nested inside it', () => {
+		// A component dropped into prose must be able to leave the system.
+		// The opt-out has to reach a NESTED `.cm-typeset` too, or the hole has
+		// a system sitting in it and the consumer has no way to close it.
+		assert(block.includes('.not-typeset'),
+			'the typeset block offers no opt-out class');
+		assert(block.includes('[data-not-typeset]'),
+			'the opt-out is class-only, so a consumer cannot use a data attribute');
+		const optOut = block.slice(block.indexOf('.cm-typeset :where(.not-typeset'));
+		assert(optOut.includes('> :where(*)'),
+			'the opt-out does not reset the spacing of its own children, so the ' +
+			'rhythm still applies inside the hole');
+	});
+
+	check('typeset: zero specificity, so a consumer can still win without !important', () => {
+		// Typeset's second documented guarantee. `:where()` contributes
+		// nothing, so an author's own class beats these rules by source order
+		// alone - and a bare `.cm-typeset h2` (0,2,0) would beat the
+		// library's own markerless component rules, which is the same trap
+		// the scoped-prose block documents.
+		const rules = block.match(/^\.cm-typeset[^{]*\{/gm) || [];
+		assert(rules.length > 5, `only ${rules.length} typeset rules parsed; the scan is broken`);
+		for (const r of rules) {
+			const sel = r.replace(/\{$/, '').trim();
+			if (sel === '.cm-typeset') continue;       // the container itself
+			if (/^\.cm-typeset--|^\.cm-typeset-scroll$|^\.cm-typeset\s*:where\(/.test(sel)) continue;
+			assert(sel.includes(':where('),
+				`"${sel}" has real specificity, so it beats a consumer's own class`);
+		}
+	});
+
+	check('typeset: it is DEMONSTRATED, and every preset it ships is rendered', () => {
+		// A class defined in CSS and never rendered is dead code the next
+		// person cannot trust - the library's own rule, and the reason this
+		// check exists rather than a README sentence.
+		assert(page.includes('id="typeset"'), 'the showcase has no typeset section');
+		const built = read('dist/f/prose/index.html');
+		assert(built.includes('cm-typeset'), 'the typeset markup is not on the prose family page');
+		for (const p of ['cm-typeset--docs', 'cm-typeset--chat', 'cm-typeset--roomy']) {
+			assert((built.match(new RegExp(p, 'g')) || []).length >= 2,
+				`${p} ships in the sheet but no specimen renders it`);
+		}
+		assert(built.includes('cm-typeset-scroll'),
+			'the scroll wrapper ships but no specimen renders it');
+		assert(built.includes('not-typeset'),
+			'the opt-out ships but no specimen demonstrates it');
+	});
+}
 /* ================= the hero: the landing composition =================
    `.cm-hero` and `.cm-grad-text` (batch 30). Each assertion below is shaped
    around a defect that has actually shipped on this fleet, not around the

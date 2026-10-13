@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -83,7 +83,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["tables", 6],
 	["panels", 6],
 	["content", 4],
-	["prose", 6],
+	["prose", 7],
 	["layout", 7],
 	["composed", 8],
 	["reference", 4],
@@ -3849,7 +3849,67 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 																		     proves the derivation rather than restating
 																		     it: shrink the window to see the labels
 																		     appear at the same moment the rows stack. -->
-																		<section id="tablelabels" class="cm-section cm-section--pad" data-cm-table-labels>
+							<section id="typeset" class="cm-section cm-section--pad">
+						<SectionHead title="typeset">
+<code>.cm-typeset</code> is the styling system for rendered markdown: headings, paragraphs, lists and tables that arrive as BARE elements from a renderer, with no classes on them. <code>.cm-prose</code> styles that same content, so the difference is not taste — it is four properties shadcn's Typeset documents and this library did not have.
+						</SectionHead>
+
+						<div class="cm-split">
+							<div>
+								<div class="cm-typeset">
+									<h3>A heading in the flow</h3>
+									<p>Every block here spaces itself on its <strong>block-start</strong> side only, so a paragraph that arrives later cannot move anything already on screen. That is the streaming contract, and it is why there is no <code>margin-bottom</code> in the block at all.</p>
+									<ul>
+										<li>list item one</li>
+										<li>list item two</li>
+									</ul>
+									<blockquote>One knob, not a scale: heading sizes, list indents and the space under a heading all derive from <code>--cm-typeset-flow</code>.</blockquote>
+									<hr />
+									<p>A wide table goes in <code>.cm-typeset-scroll</code> so the wrapper scrolls and the document does not:</p>
+									<div class="cm-typeset-scroll">
+										<table>
+											<thead>
+												<tr><th>control</th><th>default</th></tr>
+											</thead>
+											<tbody>
+												<tr><td><code>--cm-typeset-size</code></td><td><code>1em</code>, so it follows its container</td></tr>
+												<tr><td><code>--cm-typeset-leading</code></td><td><code>1.75</code></td></tr>
+												<tr><td><code>--cm-typeset-flow</code></td><td><code>1.25em</code></td></tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<aside class="cm-split__aside">
+								<div class="cm-rule"><span class="cm-rule__label">presets</span></div>
+								<p class="cm-lede">Three presets ship, each a re-tuning of the same three controls rather than a second set of rules.</p>
+							</aside>
+						</div>
+
+						<div class="cm-typeset cm-typeset--docs">
+							<p><code>.cm-typeset--docs</code> — the roomier preset for an article column.</p>
+						</div>
+
+						<div class="cm-typeset cm-typeset--chat">
+							<p><code>.cm-typeset--chat</code> — the tighter preset for a narrow message column.</p>
+						</div>
+
+						<div class="cm-typeset cm-typeset--roomy">
+							<p><code>.cm-typeset--roomy</code> — the reader-preference preset: larger type and looser leading, set on a container rather than by viewport width, because the preference belongs to the person and not to their screen.</p>
+						</div>
+
+						<!-- The opt-out, which is the other property Typeset
+						guarantees and this block has to prove: a subtree can
+						leave the system, including a nested `.cm-typeset`. -->
+						<div class="cm-typeset">
+							<p>This paragraph is inside <code>.cm-typeset</code>.</p>
+							<div class="not-typeset">
+								<p>This one opted out with <code>not-typeset</code>, so the system's rhythm does not reach it.</p>
+							</div>
+						</div>
+					</section>
+
+																<section id="tablelabels" class="cm-section cm-section--pad" data-cm-table-labels>
 																			<SectionHead title="generated table labels">
 												<code>[data-cm-table-labels]</code> copies each header's text onto the body cells as <code>data-label</code>, which is what <code>.cm-prose-table</code> reads with <code>content: attr(data-label)</code> once it stacks. Below 760px this table has <strong>no</strong> <code>data-label</code> anywhere in its markup, and the labels on the right of each value are derived. An author's own <code>data-label</code> is never overwritten, and the attribute is opt-in because rewriting cells behind someone's back is not something to do to a table a person wrote.
 																			</SectionHead>
