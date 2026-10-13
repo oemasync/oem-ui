@@ -17,7 +17,7 @@ src/styles/components.css   all .cm-* components
 src/js/cli-mono.js          runtime: theme, scroll-spy, copy, year,
                             tabs, dialogs, toasts
 src/astro/                  optional Astro components + config.ts
-src/pages/index.astro       the showcase — renders everything
+src/pages/[...family].astro  the showcase — renders everything
 tests/run.mjs               contract tests
 ```
 

@@ -28,8 +28,9 @@ the layers above it are loaded.
    `.cm-<block>__<part>`, state hooks `is-<state>`.
 2. Use only existing tokens. If you need a new value, add the token first
    and explain why in `CHANGELOG.md`.
-3. Ship it on the showcase page (`src/pages/index.astro`) so `npm run build`
-   actually compiles it.
+3. Ship it on the showcase page (`src/pages/[...family].astro`) so `npm run build`
+   actually compiles it, and put it inside the `shows(...)` wrapper for the
+   family it belongs to so it renders on that family's route too.
 4. Add a test to `tests/run.mjs` asserting the class exists.
 5. Document it in the README component list with a copy-paste snippet.
 

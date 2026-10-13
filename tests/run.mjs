@@ -17471,4 +17471,33 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 		assert(/cm:mention/.test(sec2),
 			'the README does not document the event a consumer listens for');
 	});
+
+	check('the docs point at files that exist', () => {
+		/* The showcase was renamed in the split (`src/pages/index.astro` ->
+		   `src/pages/[...family].astro`) and two agent-facing docs kept
+		   naming the old path for a while. Nothing failed: the suite reads
+		   the file it wants by name and never asked whether the docs agree,
+		   so an agent following AGENTS.md would open a file that is not
+		   there. A doc that names a path is making a claim about the tree,
+		   so the claim is checked like any other.
+		   Only src/ paths are swept - a doc may legitimately name a
+		   consumer's file, and `dist/` only exists after a build. */
+		/* A path that belongs to the CONSUMER is not a claim about this
+		   tree: the README's scoped-entry examples name
+		   `<your-project>/src/cm-prose.css`, which is a file the reader
+		   creates. Only a bare `src/...` is a claim about this repo, so
+		   a placeholder anywhere before it disqualifies the match. */
+		const docs = ['README.md', 'AGENTS.md', 'CONTRIBUTING.md'];
+		for (const doc of docs) {
+			let body;
+			try { body = read(doc); } catch { continue; }
+			const refs = [...body.matchAll(/(<?[\w-]*>?\/)?(src\/[\w./[\]-]+\.\w+)/g)]
+				.map((m) => ({ ref: m[2], placeholder: Boolean(m[1]) }));
+			for (const { ref, placeholder } of refs) {
+				if (placeholder) continue;
+				assert(exists(ref),
+					`${doc} tells the reader to look at ${ref}, which does not exist`);
+			}
+		}
+	});
 }
