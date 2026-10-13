@@ -1,3 +1,40 @@
+## Unreleased - media in an article body: the elements a renderer emits bare
+
+An article body is markup a **program** emits. A renderer writes
+`<figure><img><figcaption>` and `<video width="1200">` with not one
+attribute on them and no class, and this library styled only `img` - so
+everything else fell through to the platform. MEASURED in WebKit at 390px
+on classless markup in a `.cm-prose` column:
+
+- `<video width="1200">` computed `max-width: none`, so it rendered
+  **1200px wide inside a 390px column** and took the document's scroll.
+- `<figure>` measured **310px** against its paragraph's **390px** - the
+  UA's own 40px inline margin each side, so a framed image sat off the
+  rail its own paragraph is set to.
+- `<figcaption>` computed `font-size: 16px`, `color: rgb(232,232,232)` -
+  byte-identical to body copy, so a caption read as one more sentence.
+
+Four declarations, kept as **bare element rules** because an element
+default reaches markup that carries no class: `video` (the one rule with
+`:not([class])`, since a consumer's own player supplies its own box),
+`figure`, `figure img` (the same frame `.cm-media img` draws) and
+`figcaption` (with the `max(var(--min-font), 0.9em)` floor).
+
+- **Two places ship them, and shipping one is the silent half.**
+  `base.css` for a full install plus its `:where([data-cm-theme])` twin,
+  because a scoped adoption gets `components.css` and cannot import
+  `base.css` at all.
+- **`.cm-typeset` restates them, and that half was the bug.** Typeset's
+  rules are all zero-specificity `:where()`, so `figure img` **loses** to
+  its `:where(*)` reset: a rendered post would have lost the frame while
+  `.cm-prose` kept it. Measuring only `.cm-prose` reports the Typeset half
+  as fixed when it is not.
+- Verified by `tests/measure-prose-media-webkit.py` - 47 computed-value
+  measurements over both systems at 320/390/1280, plus a `.cm-media`
+  non-regression direction (9/21 before the fix, 47/47 after) - and
+  `tests/mutate-prose-media.mjs`, 13 mutants, one per claim, each
+  rebuilding `dist` in its window. Five contract checks in `tests/run.mjs`.
+
 ## Unreleased - the docs point at files that exist, and a check now reads them
 
 The showcase was renamed in the split (`src/pages/index.astro` →
