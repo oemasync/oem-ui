@@ -241,6 +241,69 @@ hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
 
 img { max-width: 100%; height: auto; border-radius: var(--radius); }
 
+/* Media blocks in an article body: `video`, `figure` and `figcaption`.
+
+   `img` above is the only media rule this library had, and it says nothing
+   about the two elements a markdown renderer wraps an image in, nor about
+   the video a post embeds. MEASURED in WebKit at 390px, this bare markup in
+   a `.cm-prose` column, with the rules below deleted:
+
+       <video width="1200">   max-width computed `none`
+                              -> 1200px wide inside a 390px column, i.e. the
+                                 article gains a horizontal scrollbar and the
+                                 paragraph beside it does not line up
+       <figure>               box 310px against the paragraph's 390px. The
+                              UA's own 40px inline margin each side is the
+                              whole difference, so a framed image sits 40px
+                              off the rail its own paragraph is set to
+       <figcaption>           font-size 16px, colour rgb(232,232,232) - byte
+                              identical to the body copy around it, so the
+                              caption reads as one more paragraph
+
+   All three are UA defaults, and a reset erases every one of them. That is
+   the same line the list markers and the `th` weight here already stand on:
+   a renderer emits these elements with no attributes at all, so their
+   defaults are the library's to declare.
+
+   `video` carries `:not([class])` so a consumer that classes the element -
+   `.cm-media__zoom`-style opt-in, or its own player - keeps its own box.
+   The figure, its image and the caption stay bare element rules on purpose:
+   `.cm-media` is this library's OWN opt-in media frame and it already styles
+   its own image and its own margin, and a class rule beats a bare element
+   rule, so the component keeps its box while markup with no class gets these.
+
+   That is the same shape the `hr` rule below uses, and it is why `hr` does
+   not need a `.cm-typeset` override of its own.
+
+   `video` gets `max-width`, not the `width: 100%` the framed image gets: a
+   video element carries its own intrinsic box, and stretching a small clip
+   up to the full column is nobody's default. */
+video:not([class]) { max-width: 100%; height: auto; display: block; }
+
+figure { margin: var(--space-6) 0; }
+/* The framed image. Same box as `.cm-media img`, so the same picture reads
+   the same whether a renderer emitted it bare or a consumer opted into the
+   component. `width: 100%` is what puts the frame ON the prose rail; the
+   percentage resolves against the figure's content box and the figure's own
+   inline margin is 0, so the frame and the paragraph share an edge.
+   `height: auto` is what keeps the ratio the `width`/`height` attributes
+   declare - without it the UA honours neither on a replaced element. */
+figure img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--line);
+}
+figcaption {
+	/* `max(var(--min-font), …)`, not a bare em: a bare `0.9em` under the
+	   library's own base font resolves below the 12px floor on a phone,
+	   which is the reason `.cm-prose-table` carries the same pair. */
+	font-size: max(var(--min-font), 0.9em);
+	color: var(--ink-dim);
+	margin-top: var(--space-2);
+}
+
 table {
 	width: 100%; border-collapse: collapse; margin: 0 0 1.4em; font-size: 0.9em;
 }
@@ -476,6 +539,30 @@ button:focus-visible,
 :where([data-cm-theme]) li::marker { color: var(--ink-dim); }
 :where([data-cm-theme]) hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
 :where([data-cm-theme]) img { max-width: 100%; height: auto; border-radius: var(--radius); }
+
+/* The scoped twins of the media-block defaults above. A scoped adoption
+   never sees base.css, so without these a scoped consumer renders the
+   library's video, figure and caption at the platform's defaults - the
+   exact divergence the paragraph two rules up describes, and the reason
+   hermes-articles still carries a fork beside the class it already
+   adopted.
+
+   The picture here is the one `.cm-media img` draws, so a bare figure and
+   the opt-in component agree. */
+:where([data-cm-theme]) video { max-width: 100%; height: auto; display: block; }
+:where([data-cm-theme]) figure { margin: var(--space-6) 0; }
+:where([data-cm-theme]) figure img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--line);
+}
+:where([data-cm-theme]) figcaption {
+	font-size: max(var(--min-font), 0.9em);
+	color: var(--ink-dim);
+	margin-top: var(--space-2);
+}
 :where([data-cm-theme]) table {
 	width: 100%; border-collapse: collapse; margin: 0 0 1.4em; font-size: 0.9em;
 }

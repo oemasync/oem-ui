@@ -17585,4 +17585,95 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 			}
 		}
 	});
+
+	/* ============ batch 32: media in an article body ============
+	   A markdown renderer emits `<figure><img><figcaption>` and `<video>`
+	   with NO attributes, so the library owns their defaults - the same
+	   line the list markers and the `th` weight stand on. Before this
+	   batch it owned nothing: `img` was the only media rule, and
+	   MEASURED in WebKit at 390px a bare `<video width="1200">` computed
+	   1200px wide inside a 390px column. */
+	check('batch 32: a bare video cannot widen the page, and figure stands on the rail', () => {
+		const base = read('src/styles/base.css').replace(/\/\*[\s\S]*?\*\//g, '');
+		assert(/(^|\n)video(:not\(\[class\]\))?\s*\{[^}]*max-width:\s*100%/.test(base),
+			'a bare <video> has no max-width, so a wide clip widens the whole document');
+		assert(/(^|\n)figure\s*\{[^}]*margin:\s*var\(--space-6\)\s+0/.test(base),
+			'figure does not zero its inline margin, so the frame sits off the paragraph rail it belongs to');
+		assert(/(^|\n)figure\s+img\s*\{[^}]*width:\s*100%/.test(base),
+			'figure img does not claim the column, so a framed image is narrower than its own paragraph');
+		assert(/(^|\n)figcaption\s*\{[^}]*color:\s*var\(--ink-dim\)/.test(base),
+			'figcaption has no colour step, so a caption renders as one more paragraph');
+		// The floor, not a bare em: a bare 0.9em resolves below --min-font
+		// on a phone, which is the reason .cm-prose-table carries the pair.
+		assert(/(^|\n)figcaption\s*\{[^}]*font-size:\s*max\(var\(--min-font\)/.test(base),
+			'figcaption does not carry the --min-font floor');
+	});
+
+	check('batch 32: the scoped twin exists, so a scoped adoption is not left at platform defaults', () => {
+		/* A scoped consumer gets components.css and CANNOT import base.css
+		   (unlayered CSS outranks every @layer in a Vite/Tailwind build).
+		   Without the twin it renders the article body at the platform's
+		   defaults - the exact gap the scoped prose block exists for. */
+		const base = read('src/styles/base.css');
+		const at = base.indexOf("prose typography, in the component layer's reach");
+		const end = base.indexOf('============ form controls', at);
+		assert(at > 0 && end > at, 'the scoped prose block moved; this check is pointing at nothing');
+		const block = base.slice(at, end).replace(/\/\*[\s\S]*?\*\//g, '');
+		for (const el of ['video', 'figure', 'figcaption']) {
+			assert(block.includes(`:where([data-cm-theme]) ${el}`),
+				`the scoped prose block has no :where([data-cm-theme]) ${el} twin`);
+		}
+		assert(/:where\(\[data-cm-theme\]\) figure img\s*\{[^}]*width:\s*100%/.test(block),
+			'the scoped figure img twin does not claim the column');
+	});
+
+	check('batch 32: the media rules are bare element rules, so .cm-media keeps its own box', () => {
+		/* Invariant is the PAIRING. The element default has to reach markup
+		   a renderer emits - which by definition carries no class - while
+		   `.cm-media` is the library's OWN opt-in frame with its own image
+		   rule at (0,1,1). Scoping the default to `:not([class])` is the
+		   wrong direction here: it would also exclude a consumer's own
+		   classed figure. A bare element rule loses to a class rule, which
+		   is exactly the split wanted, and this asserts the SHAPE rather
+		   than the value - the same lesson the `:not([class])` list rule
+		   teaches in the other direction. */
+		const base = read('src/styles/base.css').replace(/\/\*[\s\S]*?\*\//g, '');
+		assert(/figure\s+img\s*\{/.test(base) && !/figure:not\(\[class\]\)\s+img/.test(base),
+			'figure img must stay a bare element rule; a :not([class]) here drops a consumer\'s own classed figure');
+		const comp = read('src/styles/components.css');
+		assert(/\.cm-media img\s*\{[^}]*width:\s*100%/.test(comp),
+			'.cm-media lost the image rule the element default is supposed to lose to');
+		assert(/\.cm-media\s*\{[^}]*margin:/.test(comp),
+			'.cm-media lost its own margin rule');
+	});
+
+	check('batch 32: typeset states the media rules, because its :where(*) reset outranks base', () => {
+		/* The trap this batch nearly shipped: `.cm-typeset > :where(*)`
+		   resets margin/font/... at (0,0,0), and a bare `figure img` is a
+		   descendant rule at (0,0,2) - but the `*` reset lands on the IMG
+		   itself, and the `.cm-typeset > :where(figure) img` selector only
+		   exists if it is written. MEASURED before the block below: a
+		   `<video width="1200">` inside `.cm-typeset` computed 1200px in a
+		   390px column, identical to the untyped case.
+		   Assert the :where() form: a non-`:where()` selector here would
+		   outrank the consumer's own override, which is the property the
+		   whole typeset block is built on. */
+		const comp = read('src/styles/components.css');
+		for (const el of ['video', 'figure', 'figcaption']) {
+			assert(comp.includes(`.cm-typeset > :where(${el})`),
+				`.cm-typeset states no rule for ${el}, so a rendered post loses the base default to the :where(*) reset`);
+		}
+		assert(/\.cm-typeset > :where\(figure\) img\s*\{[^}]*width:\s*100%/.test(comp),
+			'.cm-typeset states no figure img rule, so the frame is gone inside a rendered post');
+	});
+
+	check('batch 32: the README documents the media defaults, and the probe exists', () => {
+		const rm = read('README.md');
+		assert(/figcaption/.test(rm) && /<figure>/.test(rm),
+			'the README never documents the figure/figcaption defaults');
+		assert(/measure-prose-media-webkit/.test(rm),
+			'the README does not name the probe that measures it');
+		assert(exists('tests/measure-prose-media-webkit.py'),
+			'tests/measure-prose-media-webkit.py is missing');
+	});
 }

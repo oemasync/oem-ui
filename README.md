@@ -1279,6 +1279,60 @@ Verified three ways, each answering a different question:
 - `tests/verify-prose-list-webkit.py` — the same two halves on the **served
   page** at 375/390/402/1024, with `localStorage` cleared before each load.
 
+### Media in a post — the elements a renderer emits bare
+
+An article body is markup a **program** emits, so a screenshot arrives as
+`<figure><img><figcaption>` and an embedded clip as `<video>` with not one
+attribute on them. `img` was the only media rule this library had, so
+everything else fell through to the platform. MEASURED in WebKit at 390px
+on classless markup in a `.cm-prose` column, before this batch:
+
+- `<video width="1200">` — `max-width` computed `none`, so it rendered **1200px wide in a 390px column** and took the document's scroll with it
+- `<figure>` — box **310px** against the paragraph's **390px**, i.e. the UA's own 40px inline margin each side, so a framed image sat 40px off the rail its own paragraph is set to
+- `<figcaption>` — `font-size: 16px`, `color: rgb(232,232,232)`: **byte-identical to body copy**, so a caption read as one more sentence
+
+Three declarations, in the same place the list markers and the `th` weight
+live:
+
+```css
+video { max-width: 100%; }
+figure { margin: var(--space-6) 0; }
+figure img { display: block; width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--line); }
+figcaption { font-size: max(var(--min-font), 0.9em); color: var(--ink-dim); }
+```
+
+`figure img` is the same box `.cm-media img` draws, so one picture reads the
+same whether a renderer emitted it bare or the consumer opted into the
+component. They are **bare element rules on purpose**: an element default
+reaches markup that carries no class, and a class rule reaches markup that
+carries one. `.cm-media` keeps its own box, and a consumer's own classed
+figure is untouched. (The list-marker rule is scoped with `:not([class])`
+for the opposite reason — a *markerless* list component would otherwise
+grow a bullet; nothing in this library styles a classed `figure` as
+markerless, so the discriminator is not wanted here.)
+
+`video` is the one rule that carries `:not([class])`, because a consumer's
+own player supplies its own box.
+
+**Two places ship these, and shipping one is the silent half:**
+
+- `base.css` for a full install.
+- The **scoped twin** in the same file's prose block, because a scoped
+  adoption gets `components.css` and cannot import `base.css` at all
+  (unlayered CSS outranks every `@layer` in a Vite/Tailwind build). Without
+  it a scoped consumer renders the library's media at the platform's
+  defaults — the same divergence the block exists to close.
+- `.cm-typeset` states them again inside its own block. Its rules are all
+  zero-specificity `:where()`, and `figure img` **loses** to the
+  `:where(*)` reset, so a rendered post would have lost the frame while
+  `.cm-prose` kept it. Measuring only `.cm-prose` reported that half as
+  fixed when it was not.
+
+Verified by `tests/measure-prose-media-webkit.py` — 47 measurements over
+`cm-prose` and `cm-typeset` at 320/390/1280, plus the `.cm-media`
+non-regression direction, all reading **computed** values rather than the
+source text. Suite coverage: five contract checks in `tests/run.mjs`.
+
 ### Prose tables — `.cm-prose-table` vs `.cm-table`
 
 Two different tables, and picking the wrong one is a real defect in each
