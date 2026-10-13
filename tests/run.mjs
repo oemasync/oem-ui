@@ -16725,9 +16725,22 @@ console.log('\ncontract: typeset (the markdown styling system)');
 		// a system sitting in it and the consumer has no way to close it.
 		assert(block.includes('.not-typeset'),
 			'the typeset block offers no opt-out class');
-		assert(block.includes('[data-not-typeset]'),
-			'the opt-out is class-only, so a consumer cannot use a data attribute');
-		const optOut = block.slice(block.indexOf('.cm-typeset :where(.not-typeset'));
+		// The class and the data attribute are two spellings of ONE opt-out, so
+		// every rule that offers the opt-out must offer both. Asserting the
+		// presence of the string alone is blind here: the opt-out is written
+		// across two rules (the subtree and its children), so dropping the
+		// attribute from either one still leaves the string in the file and the
+		// check passes while a `data-not-typeset` consumer keeps the rhythm.
+		const optStart = block.indexOf('.cm-typeset :where(.not-typeset');
+		const optOut = block.slice(optStart, block.indexOf('@media', optStart));
+		const optRules = optOut.split('}').map((r) => r.trim()).filter((r) => r.includes('not-typeset'));
+		assert(optRules.length >= 2,
+			`only ${optRules.length} opt-out rule(s) parsed; the scan is broken`);
+		for (const r of optRules) {
+			assert(r.includes('[data-not-typeset]'),
+				'an opt-out rule offers the class but not the data attribute, so a ' +
+				'consumer using data-not-typeset keeps the system\'s rhythm');
+		}
 		assert(optOut.includes('> :where(*)'),
 			'the opt-out does not reset the spacing of its own children, so the ' +
 			'rhythm still applies inside the hole');
@@ -16763,7 +16776,7 @@ console.log('\ncontract: typeset (the markdown styling system)');
 		}
 		assert(built.includes('cm-typeset-scroll'),
 			'the scroll wrapper ships but no specimen renders it');
-		assert(built.includes('not-typeset'),
+		assert(/<div[^>]+class="not-typeset"/.test(built),
 			'the opt-out ships but no specimen demonstrates it');
 	});
 }

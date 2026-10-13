@@ -62,11 +62,13 @@ const MUTATIONS = [
 		(s) => s.replace('\t--cm-typeset-size: 1em;\n', '\t--cm-typeset-size: 16px;\n')],
 
 	// ---- 5. the opt-out --------------------------------------------------
+	// replaceAll, not replace: the opt-out is TWO rules and a single-shot
+	// replace only rewrites the first, so the check's string test still found
+	// the attribute in the second and the mutant "survived" - a bad mutant
+	// reported as a hole in the test.
 	['the opt-out loses its data-attribute form',
 		CSS,
-		(s) => s.replace(
-			'.cm-typeset :where(.not-typeset, [data-not-typeset]) :where(*),\n.cm-typeset :where(.not-typeset, [data-not-typeset]) {',
-			'.cm-typeset :where(.not-typeset) :where(*),\n.cm-typeset :where(.not-typeset) {')],
+		(s) => s.replaceAll('[data-not-typeset]', '')],
 	['the hole stops resetting its own children, so the rhythm applies inside it',
 		CSS,
 		(s) => s.replace(
