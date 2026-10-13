@@ -729,7 +729,15 @@
 	.cm-spec__chip--tap { width: var(--tap); }
 }
 
-/* ---------- byline ---------- */
+/* ---------- byline ----------
+   The byline is a wrapping flex row of metadata fragments. The separator
+   between fragments is generated with `::before` on the item it PRECEDES,
+   so a wrapped line cannot END with a separator - the same invariant as
+   `.cm-footer__meta`. An element-based separator (`.cm-byline__sep`) was
+   a flex item and stranded at line ends on phone widths (MEASURED in
+   WebKit at 320/360/390/402/430). The generated separator hangs into the
+   gap to avoid pushing fragments onto the next line.
+*/
 .cm-byline {
 	display: flex;
 	align-items: center;
@@ -739,7 +747,32 @@
 	font-size: var(--text-xs);
 	color: var(--ink-faint);
 }
-.cm-byline__sep { opacity: 0.6; }
+/* The separator is GENERATED, on the item it precedes.
+   `.cm-footer__meta > *:not(:first-child)::before` is the same rule for the
+   same reason, and this one carried the bug for longer because the byline
+   only wraps once `updatedDate` is present - a byline of author + date fits
+   every phone width and hides it. MEASURED in WebKit on the showcase at
+   320/360/390/402/430: with `updatedDate` set, the shipped element made line
+   one end `@omiinaya · Sep 25, 2025 ·` at ALL FIVE widths, with
+   `updated Sep 26, 2025` alone on line two.
+
+   `::before` on `:not(:first-child)` and not `::after` on
+   `:not(:last-child)`: the ::after shape also stops the mark being a flex
+   item, but it keeps the dot ATTACHED TO THE PRECEDING fragment, so a dot
+   still ends every wrapped line. Only ::before puts the mark on the item it
+   belongs to. The cost, stated because it is a real one: a wrapped line can
+   now START with a separator. That is the trade, not a new bug.
+
+   The negative margin hangs the dot INTO the flex gap rather than adding to
+   it, so the separator does not widen the row and push a fragment onto the
+   next line one item earlier. */
+.cm-byline > *:not(:first-child)::before {
+	content: '·';
+	color: var(--ink-faint);
+	opacity: 0.6;
+	margin-inline-start: calc(-1 * var(--space-2));
+	margin-inline-end: var(--space-2);
+}
 
 /* ---------- buttons ----------
    Sharp corners: radius 0 is the house rule for action

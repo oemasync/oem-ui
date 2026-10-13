@@ -11964,6 +11964,91 @@ console.log('\ngenerated table labels');
 	});
 }
 
+/* ================= byline separator =================
+   The SAME defect as the footer's, in the article head, and it hid
+   longer because it only appears when there is something to separate.
+
+   `.cm-byline` is `flex-wrap: wrap` and `<PostHead>` emitted a
+   `<span class="cm-byline__sep">·</span>` between fragments. Each is a
+   flex item, so it can be the LAST thing on a wrapped line. MEASURED in
+   WebKit on the showcase at /f/prose/ BEFORE the fix: with `updatedDate`
+   set, line one ended `@omiinaya · Sep 25, 2025 ·` at 320, 360, 390, 402
+   AND 430 - every phone width tried - with `updated Sep 26, 2025` alone
+   on line two. A byline of author + date fits every phone width and
+   never wraps, which is why the two-fragment case looked fine and the
+   three-fragment case did not.
+
+   The fix is the same pairing the footer uses: the separator is a
+   `::before` on the item it PRECEDES, so it cannot be the last thing on
+   a line. tests/verify-byline-sep.py measures the rendered geometry at
+   six viewports and in a 190px host; the checks below pin the CAUSE.
+   Each is mutation-checked. */
+{
+	const byCss = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+	const bySrc = read('src/astro/PostHead.astro');
+
+	check('the byline is a wrapping row, or the separator case cannot occur', () => {
+		// The precondition, not the fix. A one-line byline cannot strand a
+		// separator, so if this stops wrapping the suite stopped measuring
+		// anything - and a future reader removing `flex-wrap` should be
+		// told that by a failing check rather than by silence.
+		const m = /\.cm-byline\s*\{([^}]*)\}/.exec(byCss);
+		assert(m, '.cm-byline is not defined in components.css');
+		assert(/display:\s*flex/.test(m[1]),
+			'.cm-byline is not display:flex, so its fragments are not flex items and the separator pairing means nothing');
+		assert(/flex-wrap:\s*wrap/.test(m[1]),
+			'.cm-byline no longer wraps - a single-line byline cannot strand a separator, so these checks are no longer measuring anything');
+	});
+
+	check('the byline separator is generated, not an element', () => {
+		// The defect: a `<span class="cm-byline__sep">·</span>` between
+		// fragments. A probe that only asked "is there a separator?" would
+		// report the element version clean; only the ELEMENT-ness is the bug.
+		assert(!/cm-byline__sep/.test(bySrc),
+			'PostHead.astro still emits a cm-byline__sep element; a separator that is its own flex item strands at the end of a wrapped line');
+		assert(!/\.cm-byline__sep\b/.test(byCss),
+			'.cm-byline__sep is still defined in components.css but nothing emits it - dead CSS the next reader cannot trust');
+	});
+
+	check('the byline separator hangs off the item it PRECEDES', () => {
+		// ::before, not ::after. An `::after` on `:not(:last-child)` also
+		// stops the mark being a flex item, but it keeps the dot ATTACHED
+		// to the PRECEDING fragment - so a dot still ends every wrapped
+		// line. That is the same bug wearing the fix's clothes, and it is
+		// the shape this library deleted from the footer.
+		const m = /\.cm-byline\s*>\s*\*:not\(:first-child\)[^{]*::before\s*\{([^}]*)\}/.exec(byCss);
+		assert(m,
+			'no .cm-byline > *:not(:first-child)::before rule - the byline separator is an element (or an ::after) again, so it strands on a wrapped line');
+		assert(/content:\s*['"]?·['"]?/.test(m[1]),
+			`the byline separator declares no glyph, so the row renders bare gaps: ${m[1].trim()}`);
+		// A DECLARED but invisible separator: `content: none` matches a
+		// bare /content/ search, so assert the value and not the property.
+		assert(!/content:\s*none/.test(m[1]),
+			'the byline separator is content:none - the dots vanish entirely');
+		assert(!/::after/.test(m),
+			'the byline separator is an ::after, which rides the PRECEDING item and still ends a wrapped line');
+		// The mark must hang INTO the flex gap rather than widen the row:
+		// without the negative margin the separator adds ~var(--space-2)
+		// and pushes the fragment onto the next line one item earlier,
+		// which is the defect this whole file is about, differently spelled.
+		assert(/margin-inline-start:\s*calc\(-1\s*\*\s*var\(--space-2\)\)/.test(m[1]),
+			`the byline separator does not hang into the gap, so it widens the row and pushes a fragment onto the next line: ${m[1].trim()}`);
+	});
+
+	check('the byline is DEMONSTRATED with a fragment count that can wrap', () => {
+		// A two-fragment byline (author + date) fits every phone width, so
+		// a specimen with no `updatedDate` proves nothing at all. The
+		// showcase has to render the three-fragment case for the geometry
+		// harness to have anything to measure.
+		const shown = read('src/pages/[...family].astro').match(
+			/<PostHead[\s\S]*?\/>/g) || [];
+		assert(shown.length > 0, 'the showcase never renders <PostHead>, so its markup is never compiled');
+		const withUpdated = shown.filter((s) => /updatedDate=/.test(s));
+		assert(withUpdated.length > 0,
+			'every <PostHead> specimen omits updatedDate, so the byline never wraps and the stranded-separator case is never rendered');
+	});
+}
+
 /* ================= footer separator =================
    `.cm-footer__meta` is `flex-wrap: wrap`, so a separator that is its own
    flex item can be the LAST thing on a wrapped line with nothing after it -

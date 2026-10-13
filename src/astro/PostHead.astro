@@ -21,15 +21,9 @@ const fmt = (d: Date) =>
 	<h1>··· {title} ···.md</h1>
 	<div class="cm-byline">
 		<span>{SITE.author}</span>
-		<span class="cm-byline__sep" aria-hidden="true">·</span>
 		<time datetime={date.toISOString()}>{fmt(date)}</time>
 		{
-			updatedDate && (
-				<>
-					<span class="cm-byline__sep" aria-hidden="true">·</span>
-					<span>updated {fmt(updatedDate)}</span>
-				</>
-			)
+			updatedDate && <span>updated {fmt(updatedDate)}</span>
 		}
 	</div>
 </header>
