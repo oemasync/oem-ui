@@ -17669,10 +17669,29 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 
 	check('batch 32: the README documents the media defaults, and the probe exists', () => {
 		const rm = read('README.md');
-		assert(/figcaption/.test(rm) && /<figure>/.test(rm),
-			'the README never documents the figure/figcaption defaults');
-		assert(/measure-prose-media-webkit/.test(rm),
-			'the README does not name the probe that measures it');
+		/* Assert the DECLARED DEFAULT, not the tag. `/&lt;figcaption&gt;/` was
+		   satisfied by the section's own intro paragraph ("a screenshot
+		   arrives as <figure><img><figcaption>"), so deleting the caption
+		   line from the documented CSS left the check green - the same
+		   token-appears-somewhere trap as before, one level deeper. Read the
+		   fence, and require the rule per element. */
+		const at = rm.indexOf('### Media in a post');
+		assert(at > 0, 'the README has no section for the media element defaults');
+		const end = rm.indexOf('\n### ', at + 4);
+		const sec = rm.slice(at, end > 0 ? end : undefined);
+		const f0 = sec.indexOf('```css');
+		assert(f0 > 0, 'the media section documents no CSS for the defaults');
+		const fence = sec.slice(f0, sec.indexOf('```', f0 + 6));
+		assert(/figure\s*\{[^}]*margin: var\(--space-6\)/.test(fence),
+			'the media section does not document the figure default, with its token');
+		assert(/figure img\s*\{[^}]*width: 100%[^}]*border-radius: var\(--radius-sm\)/.test(fence),
+			'the media section does not document the figure img default, with its frame tokens');
+		assert(/figcaption\s*\{[^}]*font-size: max\(var\(--min-font\)/.test(fence),
+			'the media section does not document the figcaption default, with its floor');
+		assert(/video(?::not\(\[class\]\))?\s*\{[^}]*max-width/.test(fence),
+			'the media section does not document the video default');
+		assert(/measure-prose-media-webkit/.test(sec),
+			'the media section does not name the probe that measures it');
 		assert(exists('tests/measure-prose-media-webkit.py'),
 			'tests/measure-prose-media-webkit.py is missing');
 	});

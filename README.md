@@ -1295,7 +1295,7 @@ Three declarations, in the same place the list markers and the `th` weight
 live:
 
 ```css
-video { max-width: 100%; }
+video:not([class]) { max-width: 100%; }
 figure { margin: var(--space-6) 0; }
 figure img { display: block; width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--line); }
 figcaption { font-size: max(var(--min-font), 0.9em); color: var(--ink-dim); }
