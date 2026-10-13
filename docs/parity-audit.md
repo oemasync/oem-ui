@@ -219,8 +219,16 @@ Not done, and known:
   would have failed — caught only by driving the page. shadcn's own
   sidebar uses `data-active`, which is where the wrong assumption came
   from.
-- **the non-component areas**: Blocks, Typeset, Directory, Create have
-  no oem-ui equivalent at all.
+- **the non-component areas**: Blocks, Typeset, Directory, Create.
+  **Typeset is now done** — `docs/typeset` is not a component but a styling
+  system (three controls, container-relative size, streaming stability, an
+  opt-out), and `.cm-prose` had none of those four properties. `.cm-typeset`
+  implements all four; see *Typeset* in the README and the seven contract
+  checks in the suite (three mutation-proven). Blocks, Directory and Create
+  remain out of scope and are named as such: Blocks are React app pages
+  (`app/dashboard/page.tsx` wiring a sidebar, charts and a data table
+  together), Directory is a registry browser, and Create is a project
+  scaffolder — none of the three is CSS a framework-free library can ship.
 
 A note on ordering, since it is the honest part: `content-visibility:
 auto` was the cheap way to make one page behave like many, and it was

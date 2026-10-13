@@ -1,3 +1,36 @@
+## Unreleased - typeset: the markdown system the library was missing
+
+`.cm-typeset` is a styling system for rendered markdown, built on three
+controls (`--cm-typeset-size`, `--cm-typeset-leading`, `--cm-typeset-flow`)
+that every other value derives from. It closes the last portable gap
+against shadcn's Typeset, which is documented as a system and not a
+component: `.cm-prose` had none of its four properties.
+
+- **three controls, and the rhythm derives.** `.cm-prose` wrote its rhythm
+  into each rule as a literal, so retuning it meant editing every rule and
+  a consumer could not retune it at all. Heading sizes, list indents and
+  the space under a heading are now `calc()` over the flow.
+- **container-relative size.** `--cm-typeset-size: 1em` follows the
+  element it is put in, so the same markup reads correctly in a chat
+  bubble and across an article column. `.cm-prose` sets an absolute root
+  value, so prose in a narrow aside was as large as prose across a page.
+- **streaming stability.** Spacing flows on the BLOCK-START side only, so
+  appending a block cannot restyle a block that is already on screen -
+  the property that matters when an LLM streams into a renderer. There is
+  no `margin-bottom` and no structural selector in any layout rule.
+- **an opt-out.** `not-typeset` / `data-not-typeset` takes a subtree back
+  out of the system, including a nested `.cm-typeset`.
+
+Zero-specificity rules (`:where()`) throughout, so a consumer's own class
+still wins without `!important`. Three presets ship (`--docs`, `--chat`,
+`--roomy`), each a re-tuning of the same three controls.
+
+Seven contract checks, three of them mutation-proven: end-side spacing,
+a derivation replaced by a literal, and a structural selector each fail
+the suite and name the defect. The first version of the derivation check
+was too weak to kill its mutation - a single `calc()` satisfied it - so it
+now requires more than one derivation rather than presence.
+
 ## Unreleased - the docs TOC, and parity pinned to shadcn's live list
 
 The docs shell is now three columns on the family routes: rail, measure,
