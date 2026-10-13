@@ -182,7 +182,16 @@
 	   because `components.css` may only read declared tokens: an
 	   undeclared `var()` invalidates its declaration, and inside a
 	   shorthand it takes the whole declaration with it. That is a
-	   measured rule in this library, not a convention. */
+	   measured rule in this library, not a convention.
+
+	   The SIZE is two knobs because the viewport and the reader are
+	   different questions: the phone media query sets the LANE (how big
+	   this column is on this screen) and a preset sets the SCALE (how
+	   much larger this reader wants it). One knob made them compete for
+	   one declaration at equal specificity, where source order decides -
+	   see the note above the presets for what that measured. */
+	--cm-typeset-size-lane: 1em;
+	--cm-typeset-scale: 1;
 	--cm-typeset-size: 1em;
 	--cm-typeset-leading: 1.75;
 	--cm-typeset-flow: 1.25em;
