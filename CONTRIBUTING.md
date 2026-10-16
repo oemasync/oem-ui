@@ -57,6 +57,27 @@ npm run build   # compiles every component in the showcase
 
 Both must pass. A component that does not compile is not a component.
 
+## Parity with shadcn is a claim, so it gets re-measured
+
+`npm test` pins shadcn's component list, deliberately: a pin means an
+update is an act with a diff instead of a target that redefines itself
+while nobody looks. The cost of that design is that a pin cannot *tell
+you* when the other side moves — shadcn shipped `code-block` and `trace`
+while our pin still read 64, and nothing here could say so.
+
+```bash
+npm run parity:live   # re-fetch shadcn's list and diff it against the pin
+```
+
+Run it when you touch the ledger, and occasionally when you do not. It
+refuses to report "no drift" from an empty measurement, because a bot wall
+that parses to zero names would otherwise read as a clean bill of health.
+When it reports drift, update in this order: the pinned list in
+`tests/run.mjs`, the README ledger and its "catalog is N" prose, the
+section index and `NAV_GROUP_SIZES` in `src/pages/[...family].astro`, and
+the expected counts in `tests/verify-doc-toc.py` — then build the
+components, because a name in the list is a claim that the thing exists.
+
 ## Runtime integration
 
 - No frameworks, no bundler assumptions, no `import` statements in the

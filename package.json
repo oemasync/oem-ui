@@ -13,7 +13,8 @@
     "build": "astro build",
     "preview": "astro preview --host 0.0.0.0",
     "astro": "astro",
-    "test": "node tests/run.mjs"
+    "test": "node tests/run.mjs",
+    "parity:live": "node scripts/check-parity-live.mjs"
   },
   "keywords": [
     "design-system",

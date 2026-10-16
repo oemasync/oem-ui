@@ -30,3 +30,16 @@ jobs:
 
       - name: Contract tests
         run: npm test
+
+      # Has shadcn's live list moved away from the one we pin? The suite
+      # pins it so an update is a deliberate act with a diff — but a pin
+      # cannot ANNOUNCE drift, and that silence shipped two missing
+      # components (code-block, trace) before anyone noticed by hand.
+      #
+      # Non-blocking on purpose: a third party's uptime or their decision
+      # to add a component must not turn OUR build red or hold a deploy —
+      # nothing here is broken when they move. It surfaces as a warning in
+      # this run's summary, which is exactly loud enough to be seen.
+      - name: Parity drift check (informational)
+        run: node scripts/check-parity-live.mjs
+        continue-on-error: true

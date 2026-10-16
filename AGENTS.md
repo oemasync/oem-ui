@@ -61,6 +61,12 @@ default, the row layout, or contrast, it fails.
 For visual work, also load the showcase in a browser and check **both
 themes** — a contrast or truncation bug is invisible in a passing build.
 
+Parity with shadcn is pinned, not fetched — the suite is offline on
+purpose. `npm run parity:live` is the other half: it re-fetches shadcn's
+list and diffs it against the pin. A pin cannot announce that the other
+side moved (shadcn added `code-block` and `trace` while the pin read 64),
+so run it when you touch the ledger and occasionally when you do not.
+
 ## Verifying a change in a *consumer* project
 
 Do not stop at "the library builds". Prove the integration:
