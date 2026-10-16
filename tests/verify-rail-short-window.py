@@ -18,6 +18,10 @@ stopped being a column and ran to 493px. So the checks are:
   3. the nav and the list never overflow horizontally
   4. every link is REACHABLE, by scrolling the list if not already visible
 
+The rail renders its links inside labelled groups (`cm-header__group`), so
+the probe collects them at any depth; the geometry claim is unchanged - all
+56 of them share one left edge, and the list scrolls to reach the rest.
+
 Run from the repo root. Exits non-zero on the first failure.
 """
 
@@ -41,7 +45,13 @@ PROBE = """() => {
   if (!rail || !nav || !list) return { error: 'the rail is not on the page' };
 
   const rr = rail.getBoundingClientRect();
-  const links = [...list.querySelectorAll(':scope > .cm-header__link')];
+  // ANY depth. The rail is divided into labelled groups, so its links sit
+  // inside `.cm-header__group` wrappers instead of directly in the list; a
+  // `:scope >` selection counted ZERO links on the grouped rail (measured
+  // 2026-10-16: 56 links, every one at x=8) and reported the geometry
+  // checks as failures - an instrument reading a structure that had been
+  // replaced, which sends the reader after a layout bug that is not there.
+  const links = [...list.querySelectorAll('.cm-header__link')];
   const boxes = links.map((a) => {
     const r = a.getBoundingClientRect();
     return { text: a.textContent.trim(), left: Math.round(r.left), right: Math.round(r.right) };

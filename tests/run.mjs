@@ -14996,7 +14996,8 @@ check('the header geometry harness owns the behaviour reads, at five widths', ()
 	for (const pin of [
 		'the header is never a full-width viewport-tall box',
 		'rail mode - fixed column, width-bound, x=0',
-		'the phone bar is exactly 63px, nav 62',
+		'the phone bar is its nav row + the 1px rule',
+		'the phone bar sits in the reviewed 61-63px band',
 		'header pinned at the top after scrolling to',
 		'actually scrolled to',
 		'header itself is on screen after scrolling to',

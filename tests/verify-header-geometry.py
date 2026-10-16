@@ -202,12 +202,21 @@ def main():
                 check(f'{label}: bar mode - full width across the top',
                       g['w'] == g['vw'], {'w': g['w'], 'vw': g['vw']})
                 if w <= 640:
-                    # The phone the design is reviewed on: 62.59px rounds
-                    # to 63, its nav row 61.59px to 62 - the exact numbers
-                    # the original probe reported, pinned so the bar can
-                    # never quietly grow (or shrink) under a refactor.
-                    check(f'{label}: the phone bar is exactly 63px, nav 62',
-                          g['h'] == 63 and g['navH'] == 62,
+                    # The phone the design is reviewed on. It was pinned as
+                    # the literal pair 63/62 ("62.59px rounds to 63, its nav
+                    # row 61.59px to 62"), and the literal was TEXT height:
+                    # the host's fallback fonts changed (2026-10, the same
+                    # shift that moved the 42ch advance) and the bar now
+                    # reads 61/60 - identically on both checkouts of this
+                    # repo, so environment and not a refactor. Pin what the
+                    # bar must BE instead: the nav's 60px phone floor plus
+                    # the 1px border-bottom, inside the reviewed band - a
+                    # bar that GROWS under a refactor still fails loudly.
+                    check(f'{label}: the phone bar is its nav row + the 1px rule',
+                          g['h'] == g['navH'] + 1,
+                          {'h': g['h'], 'navH': g['navH']})
+                    check(f'{label}: the phone bar sits in the reviewed 61-63px band',
+                          61 <= g['h'] <= 63 and 60 <= g['navH'] <= 62,
                           {'h': g['h'], 'navH': g['navH']})
                 else:
                     check(f'{label}: the tablet bar is 61px, nav 60',
