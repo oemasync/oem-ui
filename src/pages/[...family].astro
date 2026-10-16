@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -82,7 +82,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["surfaces", 7],
 	["tables", 6],
 	["panels", 6],
-	["content", 4],
+	["content", 5],
 	["prose", 7],
 	["layout", 7],
 	["composed", 8],
@@ -2508,6 +2508,60 @@ import themeGuard from '../js/cli-mono-theme-guard.js?raw';
 </head>`}
 				/>
 
+				<h3 class="cm-kicker">line numbers, start line, highlight</h3>
+				<p class="cm-head__sub">
+					Numbers are emitted by the component, not drawn by a CSS counter:
+					a snippet quoted from the middle of a file has to be able to say
+					which line it started at, and the counter form of that is
+					<code>attr()</code> in <code>counter-reset</code>, which WebKit does
+					not implement. Copy one: the gutter is a reading aid, so it is kept
+					out of the clipboard.
+				</p>
+				<CodeBlock
+					id="demo-numbered"
+					lang="js"
+					lineNumbers
+					startAt={240}
+					highlight={[242, 243]}
+					code={`export function boot(root) {
+  const io = new IntersectionObserver(heal, { rootMargin: '200px' });
+  // the rows that leave the viewport are the ones worth releasing
+  for (const row of root.querySelectorAll('.cm-row')) io.observe(row);
+  return () => io.disconnect();
+}`}
+				/>
+
+				<h3 class="cm-kicker">wrap</h3>
+				<p class="cm-head__sub">
+					Code scrolls by default, because a wrapped line breaks the vertical
+					alignment that makes indentation legible as structure. Wrapping is
+					what you ask for when one long line has to be seen whole.
+				</p>
+				<CodeBlock
+					id="demo-wrap"
+					lang="bash"
+					wrap
+					code={`curl -fsSL https://example.com/install.sh | sh -s -- --prefix=/usr/local --themes=dark,light --no-color --no-prompt`}
+				/>
+
+				<h3 class="cm-kicker">floating action</h3>
+				<p class="cm-head__sub">
+					A block with no bar can pin its copy control to the corner. It stays
+					out of the way until hover or focus &mdash; except where there is no
+					hover to give, which is why it is simply always visible on a touch
+					viewport rather than hidden behind an event the device cannot emit.
+				</p>
+				<CodeBlock
+					id="demo-floating"
+					lang="sql"
+					floating
+					code={`select tool, count(*) as calls
+from trace_steps
+where run_at > now() - interval '1 day'
+group by tool
+order by calls desc;`}
+				/>
+
 				<h3 class="cm-kicker">states</h3>
 				<div class="cm-spec">
 					<div class="cm-spec__row">
@@ -3258,7 +3312,122 @@ Stat tiles and a dated timeline. The tile count is data, so <code>.cm-stats</cod
 			</section>
 			)}
 
-			<!-- ==================================================== cards
+						<!-- ==================================================== trace
+			     A record of what an agent DID, one step per line. Not the
+			     timeline above (a CV: period, role, org) and not the
+			     stepper (a wizard: numbered, linear, one current). A trace
+			     is a log you read downwards. -->
+			{shows('content') && (
+			<section id="trace" class="cm-section cm-section--pad">
+				<SectionHead title="Trace">
+A record of what a run did, one step per line: an icon, a title, an optional status, and detail that expands in place. It is not the timeline above &mdash; that one is a CV, with a period and an org &mdash; and not the stepper, which is a wizard you move through. A trace is a log you read downwards, and the rail is drawn on the <em>item</em> so it stops at the last step on its own.
+				</SectionHead>
+
+				<h3 class="cm-kicker">steps and state</h3>
+				<p class="cm-head__sub">
+					There is no chroma in this system, so a state is a <em>shape</em>
+					and a weight: an outline dot is idle, a filled dot is working, a
+					filled dot with a glyph is finished. Every one of those reads the
+					same in greyscale, and the state is also in the markup rather than
+					only in the paint.
+				</p>
+				<ol class="cm-trace">
+					<li>
+						<div class="cm-trace__item is-done">
+							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
+							<p class="cm-trace__title">read the failing test</p>
+							<p class="cm-trace__desc">
+								<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
+								names all 66 entries and their order.
+							</p>
+						</div>
+					</li>
+					<li>
+						<div class="cm-trace__item is-done">
+							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
+							<p class="cm-trace__title">measure the live list</p>
+							<p class="cm-trace__desc">
+								Fetched with a real Safari user agent: a plain
+								<code>curl</code> returns the bot wall, not the page.
+							</p>
+						</div>
+					</li>
+					<li>
+						<div class="cm-trace__item is-running">
+							<span class="cm-trace__icon" aria-hidden="true">&#9679;</span>
+							<p class="cm-trace__title">diff against the pinned ledger</p>
+							<p class="cm-trace__desc">two names are in the live list and not in ours.</p>
+						</div>
+					</li>
+					<li>
+						<div class="cm-trace__item">
+							<span class="cm-trace__icon" aria-hidden="true">&#9675;</span>
+							<p class="cm-trace__title">author the two components</p>
+						</div>
+					</li>
+					<li>
+						<div class="cm-trace__item is-error">
+							<span class="cm-trace__icon" aria-hidden="true">&#10007;</span>
+							<p class="cm-trace__title">mutation sweep, first attempt</p>
+							<p class="cm-trace__desc">
+								The sweep refused: it was pointed at a sibling worktree, so
+								another lane's uncommitted edits read as failures here.
+							</p>
+						</div>
+					</li>
+				</ol>
+
+				<h3 class="cm-kicker">collapsible step</h3>
+				<p class="cm-head__sub">
+					A step that needs its detail only sometimes expands in place, so
+					the rail above and below it moves by exactly the height of what was
+					revealed. The trigger is a real button with
+					<code>aria-expanded</code>, not a styled <code>div</code>: a
+					disclosure that a keyboard cannot open is not a disclosure.
+				</p>
+				<ol class="cm-trace">
+					<li>
+						<div class="cm-trace__item is-done">
+							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
+							<button class="cm-trace__trigger" type="button" aria-expanded="false"
+								aria-controls="trace-detail-1">
+								<span class="cm-trace__title">shadcn added code-block and trace</span>
+							</button>
+							<div class="cm-trace__body" id="trace-detail-1" hidden>
+								<p>
+									The pinned ledger cannot see this: it compares our README
+									against a list written down once, and never re-fetches.
+									That is the point of pinning &mdash; an update is a
+									deliberate act with a diff &mdash; but it means the only
+									thing that can notice an addition is a tool that reads the
+									live site.
+								</p>
+							</div>
+						</div>
+					</li>
+					<li>
+						<div class="cm-trace__item is-done">
+							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
+							<button class="cm-trace__trigger" type="button" aria-expanded="true"
+								aria-controls="trace-detail-2">
+								<span class="cm-trace__title">both were measured before being claimed</span>
+							</button>
+							<div class="cm-trace__body" id="trace-detail-2">
+								<p>
+									<code>code-block</code> depends on <code>button</code> and
+									<code>use-highlighted-code</code>; <code>trace</code> depends
+									on <code>collapsible</code>. Both are registry
+									<code>registry:ui</code> entries with a docs page, which is
+									what separates a component from a code sample.
+								</p>
+							</div>
+						</div>
+					</li>
+				</ol>
+			</section>
+			)}
+
+<!-- ==================================================== cards
 			     One subject that needs more room than a row, and a
 			     number that is a proportion rather than a count. -->
 			{shows('content') && (

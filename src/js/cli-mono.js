@@ -519,7 +519,14 @@
 			} else {
 				src = btn.previousElementSibling;
 			}
-			var text = direct ? val : (src ? (src.innerText || src.textContent) : '');
+			/* Line numbers are a READING aid and must not be COPIED: a
+			   gutter is `user-select:none`, but innerText reflects what is
+			   rendered, not what is selectable, so a numbered CodeBlock
+			   would have put "1	240	const x" in the clipboard — code
+			   pasted into an editor with stray gutters pasted into it.
+			   Clone, strip, extract: the one consumer that needs the raw
+			   text pays a clone, every other source takes the fast path. */
+			var text = direct ? val : extractCopyText(src);
 			if (!text) return;
 			var original = btn.getAttribute('data-cm-label') || btn.textContent;
 			copyText(String(text).trim())
@@ -550,6 +557,30 @@
 		var slot = btn.querySelector('[data-cm-copy-label]');
 		if (slot) slot.textContent = text;
 		else btn.textContent = text;
+	}
+
+	/* ---------- copy extraction ----------
+	   A CodeBlock's line numbers live INSIDE the <pre> as spans, so the
+	   default extraction would put them in the clipboard: `innerText`
+	   reflects rendered text, not selectable text, and `user-select:none`
+	   does not exclude it. The gutter also has no whitespace of its own, so
+	   naive stripping would yield "240const x". The clone takes them out by
+	   element and the explicit newline text nodes between lines carry the
+	   structure; a source with no gutter takes the untouched fast path. */
+	function extractCopyText(src) {
+		if (!src) return '';
+		if (!src.querySelector || !src.querySelector('.cm-code__ln')) {
+			return src.innerText || src.textContent || '';
+		}
+		var clone = src.cloneNode(true);
+		var gutters = clone.querySelectorAll('.cm-code__ln');
+		for (var i = 0; i < gutters.length; i++) {
+			var g = gutters[i];
+			if (g.parentNode) g.parentNode.removeChild(g);
+		}
+		/* Detached clone: innerText would be textContent anyway, and the
+		   line structure is in the text nodes, not in the layout. */
+		return clone.textContent || '';
 	}
 
 	/* ---------- generated table labels ----------
@@ -4477,6 +4508,7 @@
 		cmInitCommand(root);
 		cmInitNavmenu(root);
 		cmInitCharts(root);
+		initTrace(root);
 		if (!root || root === document) initExternalLinks();
 	}
 
@@ -4735,6 +4767,39 @@
 		}
 		sidebarSyncTriggers(scope);
 	}
+	/* ---------- trace: a step's detail ---------------------------------
+	   A trace step that expands in place. The markup ships the honest
+	   initial state (aria-expanded + hidden already agree), so this only
+	   has to move them together - the same one-mechanism rule the sidebar
+	   disclosures follow, and for the same reason: CSS owning visibility
+	   as well would be a second source of truth for "is it open".
+
+	   DELEGATED from the document, like the copy listener above and for
+	   the identical reason: in a component framework the trigger node is
+	   replaced on re-render, and a per-node listener dies with it. The
+	   button then looks live and does nothing. */
+	var traceDelegated = false;
+	function initTrace(root) {
+		if (traceDelegated) return;
+		traceDelegated = true;
+		(root || document).addEventListener('click', function (e) {
+			var t = e.target;
+			var btn = t && t.closest ? t.closest('.cm-trace__trigger') : null;
+			if (!btn) return;
+			var id = btn.getAttribute('aria-controls');
+			if (!id) return;
+			var panel = document.getElementById(id);
+			/* A trigger pointing at nothing is a dead control; leave the
+			   state alone rather than flipping to an "open" that shows
+			   nothing and cannot be closed by a second press. */
+			if (!panel) return;
+			var open = btn.getAttribute('aria-expanded') === 'true';
+			btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+			if (open) panel.setAttribute('hidden', '');
+			else panel.removeAttribute('hidden');
+		});
+	}
+
 	/* Groups and submenus are disclosures: aria-expanded and hidden move
 	   together, and CSS owns nothing about visibility - one mechanism,
 	   and the markup's own initial state is honest with no JS. */

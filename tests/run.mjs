@@ -8125,7 +8125,14 @@ check('the copy button is a real button a keyboard can reach', () => {
 	assert(/class="cm-copy__state" aria-hidden="true"/.test(cbTags),
 		'the glyph slot is not aria-hidden, so a screen reader reads the tick');
 	// The <pre> scrolls, so it must be focusable for a keyboard user.
-	assert(/<pre id=\{id\} tabindex="0">/.test(cbTags),
+	// This used to match ONE exact spelling of the opening tag; giving the
+	// block body attributes (wrap, line numbers) broke that literal while
+	// the contract was untouched. Read the tag's ATTRIBUTES instead: what
+	// matters is that the pre reaches the keyboard, however many other
+	// attributes it carries.
+	const preTag = /<pre[^>]*>/.exec(cbTags);
+	assert(preTag, 'the CodeBlock renders no <pre> at all');
+	assert(/\bid=\{id\}/.test(preTag[0]) && /\btabindex="0"/.test(preTag[0]),
 		'the scrollable <pre> is not focusable, so a keyboard cannot scroll it');
 });
 
@@ -16602,7 +16609,7 @@ check('the docs TOC carries exactly the sections of the document it is in', () =
 	}
 });
 
-check('the ledger names the 64 shadcn components, in the order shadcn lists them', () => {
+check('the ledger names the 66 shadcn components, in the order shadcn lists them', () => {
 	/* Parity is a claim about a list that lives on someone else's site, so the
 	   list is pinned HERE, as measured from the "All Components" index on
 	   ui.shadcn.com/docs/components. The check is name-and-ORDER: a rename, a
@@ -16613,13 +16620,13 @@ check('the ledger names the 64 shadcn components, in the order shadcn lists them
 	const SHADCN = [
 		'Accordion', 'Alert', 'Alert Dialog', 'Aspect Ratio', 'Attachment', 'Avatar', 'Badge',
 		'Breadcrumb', 'Bubble', 'Button', 'Button Group', 'Calendar', 'Card', 'Carousel', 'Chart',
-		'Checkbox', 'Collapsible', 'Combobox', 'Command', 'Context Menu', 'Data Table', 'Date Picker',
+		'Checkbox', 'Code Block', 'Collapsible', 'Combobox', 'Command', 'Context Menu', 'Data Table', 'Date Picker',
 		'Dialog', 'Direction', 'Drawer', 'Dropdown Menu', 'Empty', 'Field', 'Hover Card', 'Input',
 		'Input Group', 'Input OTP', 'Item', 'Kbd', 'Label', 'Marker', 'Menubar', 'Message',
 		'Message Scroller', 'Native Select', 'Navigation Menu', 'Pagination', 'Popover', 'Progress',
 		'Questionnaire', 'Radio Group', 'Resizable', 'Scroll Area', 'Select', 'Separator', 'Sheet',
 		'Sidebar', 'Skeleton', 'Slider', 'Spinner', 'Switch', 'Table', 'Tabs', 'Textarea', 'Toast',
-		'Toggle', 'Toggle Group', 'Tooltip', 'Typography',
+		'Toggle', 'Toggle Group', 'Tooltip', 'Trace', 'Typography',
 	];
 	const readme = read('README.md');
 	const ledger = readme.slice(readme.indexOf('**Implemented ('));

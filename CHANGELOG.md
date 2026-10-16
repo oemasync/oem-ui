@@ -1,3 +1,39 @@
+## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
+
+Parity was 64 of 64 against a list that was measured once, and the check
+that pins it cannot re-fetch - by design, so that an update is a deliberate
+act with a diff. What that design cannot do is TELL you, and shadcn had
+moved: the live `base/` namespace is **66**, not 64, and the registry is 65
+entries, not 63.
+
+Both additions were measured before being built: `code-block` (registry
+`registry:ui`, deps `button` + `use-highlighted-code`) and `trace` (deps
+`collapsible`), each with a real docs page and a full anatomy.
+
+**Code Block - the body.** The shell (bar, language, copy) already
+shipped as `.cm-codebar`. What was missing was everything inside the body:
+line numbers, a start line, wrap, highlighted lines, and a floating action
+for a block with no bar. The gutter is emitted as MARKUP rather than drawn
+by a counter, because `counter-reset: attr(...)` needs the typed `attr()`
+form, which WebKit does not implement - a counter would have pinned every
+block to line 1. The gutter is also kept OUT of the clipboard: it sits
+inside the `<pre>`, and `innerText` reflects what is rendered rather than
+what is selectable, so `user-select: none` alone would have copied
+numerals into people's editors.
+
+**Trace - a new component.** A record of what a run did, one step per
+line: icon, title, optional status, detail that expands in place. State is
+fill and glyph, never hue, and the disclosure ships its honest initial
+state (`aria-expanded` and `hidden` agreeing) with one delegated listener
+moving both - a per-node listener dies the moment a framework re-renders
+the trigger, leaving a button that looks live and does nothing.
+
+Verified: suite **678 passed / 0 failed**; new WebKit harness
+`tests/verify-codeblock-trace.py` **20/20** (computed `white-space`, the
+actual clipboard payload, the disclosure toggling in both directions, and
+that a revealed panel has real height); mutation sweep
+`tests/mutate-codeblock-trace.mjs` kills every seeded defect.
+
 ## Unreleased - the docs point at files that exist, and a check now reads them
 
 The showcase was renamed in the split (`src/pages/index.astro` →

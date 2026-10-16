@@ -1129,6 +1129,44 @@ The success state is a **non-hue cue on purpose**: this system has no
 chroma, so `--ink` on `--bg-3` has to carry it, and it has to read in
 greyscale.
 
+#### The body of a code block
+
+The bar was the shell. The body carries what shadcn's Code Block calls
+Line Numbers, Start Line, Wrap and Highlighted Lines, plus a Floating
+Action for a block with no bar at all.
+
+```astro
+<CodeBlock id="boot" lang="js" lineNumbers startAt={240}
+           highlight={[242, 243]} code={src} />
+```
+
+| prop | for |
+|---|---|
+| `lineNumbers` | a gutter down the leading edge |
+| `startAt` | the first line's number, for a snippet quoted mid-file |
+| `highlight` | 1-based line numbers to mark as the lines under discussion |
+| `wrap` | wrap long lines instead of scrolling |
+| `floating` | pin the copy control over the code instead of putting it in the bar |
+
+Three things that are not obvious from the CSS:
+
+- **The gutter is MARKUP, not a CSS counter.** The elegant form is
+  `counter-reset: cm-code-line attr(data-start-line)`, and it does not
+  exist: untyped `attr()` is valid only in `content`, and the typed
+  `attr(... type(<number>))` form is not implemented in WebKit. A counter
+  would therefore have pinned every block to a start line of 1. The
+  component emits the numerals instead, which is exact and costs one span
+  per line.
+- **The gutter is kept out of the clipboard.** It lives inside the `<pre>`,
+  and `innerText` reflects what is RENDERED, not what is selectable - so
+  `user-select: none` does not keep it out. The copy path clones the node,
+  removes `.cm-code__ln`, and takes `textContent`, which is why each line
+  emits an explicit newline: the structure has to survive without layout.
+- **A floating action is always visible where there is no hover.** A
+  control that can only be revealed by an event the device cannot emit is a
+  control that does not exist, so `@media (hover: none)` pins it on rather
+  than leaving it hidden behind a hover a phone will never produce.
+
 ### Auth surfaces
 
 A sign-in screen is not its own design language. It is the card, the
@@ -1667,6 +1705,55 @@ line-scrolled by the UA, not slide-scrolled, and one slide per press is the
 promise. The stepper's connector hangs off the `<li>`, because each
 `.cm-step` is the only child of its own `<li>` and `:not(:last-child)` on
 the button can never match.
+
+### Trace — `.cm-trace`
+
+A record of what a run DID, one step per line. Not `.cm-timeline` (a CV:
+period, role, org) and not `.cm-stepper` (a wizard: numbered, linear, one
+current) - a trace is a log you read downwards.
+
+```html
+<ol class="cm-trace">
+  <li>
+    <div class="cm-trace__item is-done">
+      <span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
+      <button class="cm-trace__trigger" type="button" aria-expanded="false"
+              aria-controls="step-1">
+        <span class="cm-trace__title">measured the live list</span>
+      </button>
+      <div class="cm-trace__body" id="step-1" hidden>
+        <p>fetched with a real Safari user agent...</p>
+      </div>
+    </div>
+  </li>
+</ol>
+```
+
+| piece | for |
+|---|---|
+| `.cm-trace__item` | one step. Carries `is-running`, `is-done`, `is-error`, or none for idle |
+| `.cm-trace__icon` | the marker, which is the state: outline is idle, filled is working, glyph is finished |
+| `.cm-trace__trigger` | the title, as a real `<button>` when the step can expand |
+| `.cm-trace__body` | the detail. Shipped `hidden` until it is opened |
+
+Three decisions:
+
+- **The rail is drawn on the ITEM, not on the list.** It then stops at the
+  last step on its own, with no `:last-child` counter-rule on a wrapper -
+  the same reason `.cm-timeline` does it this way.
+- **The state is a shape and a weight, not a hue.** This system has no
+  chroma, so idle/working/done/failed are carried by fill and glyph, which
+  survive greyscale. The first draft reached for `border-radius: 50%` and
+  the house corner check stopped it: a status dot is not geometry carrying
+  meaning the way a spinner's rotation does, so it does not earn a circle.
+- **The disclosure is DELEGATED from the document, once**, exactly like the
+  copy listener: a component framework replaces the trigger node on every
+  re-render, and a per-node listener dies with it - the button then looks
+  live and does nothing. A trigger whose `aria-controls` points at nothing
+  is left alone rather than flipping to an "open" that reveals nothing.
+
+Proof lives in `tests/verify-codeblock-trace.py` (WebKit, 20 assertions)
+and `tests/mutate-codeblock-trace.mjs`.
 
 ### Popover and combobox
 
@@ -3127,16 +3214,16 @@ commit messages.
 
 The standing goal is component parity with
 [shadcn/ui](https://ui.shadcn.com/docs/components) in the established
-theme. The catalog is 64 components as of this writing, and this library
+theme. The catalog is 66 components as of this writing, and this library
 implements **all 64**.
 
-**Implemented (64):** Accordion, Alert, Alert Dialog (a Dialog carrying
+**Implemented (66):** Accordion, Alert, Alert Dialog (a Dialog carrying
 `role="alertdialog"` and `closedby="closerequest"`, so an outside click
 is a no-op while Escape still closes - both declarative, and measured on
 real WebKit), Aspect Ratio, Attachment, Avatar, Badge, Breadcrumb, Bubble, Button (including
 destructive, outline and joined), Button Group, Calendar (single, range and
 multiple in one component), Card, Carousel, Chart (six hand-rolled SVG types - see *Charts* above; no
-Recharts, no runtime dependency), Checkbox, Collapsible, Combobox, Command (palette), Context
+Recharts, no runtime dependency), Checkbox, Code Block (line numbers with a start line, highlighted lines, wrap, and a floating action - the gutter is markup rather than a CSS counter, because the typed attr() form is not implemented in WebKit), Collapsible, Combobox, Command (palette), Context
 Menu, Data Table (filter, pagination, column visibility, row selection), Date Picker, Dialog, Direction (the `dir`-aware half only - see *Direction* below; there is no
 provider, because a framework-free library has no context to provide
 through), Drawer, Dropdown
@@ -3144,7 +3231,7 @@ Menu, Empty, Field (label/help/error wiring), Hover Card, Input, Input
 Group, Input OTP, Item, Kbd, Label, Marker, Menubar (roving single tab stop, disabled-word refusal, submenus, checkbox/radio rows, group labels + icons + shortcut hints), Message, Message Scroller, Native Select (a styled
 `<select>`), Navigation Menu (a real one - see *Navigation menu* below; the
 rail + sticky header remain the house pattern for this site's own pages), Pagination, Popover, Progress, Questionnaire, Radio Group, Resizable, Scroll Area, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Spinner, Switch, Table, Tabs, Textarea, Toast, Toggle, Toggle
-Group, Tooltip, Typography.
+Group, Tooltip, Trace (a run's steps, each with a state, an optional description, and detail that expands in place), Typography.
 
 Three of those were once listed as missing or substituted, and the
 reasons they are not any more are worth keeping:

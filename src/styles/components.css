@@ -10491,6 +10491,236 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	margin: var(--space-2) var(--space-3);
 }
 
+/* ============ code block: the body, and what a line can say ============
+   `.cm-codebar` already carried the wrapper, the label row and the copy
+   button. What it did NOT carry is the part of shadcn's Code Block that
+   lives inside the BODY: line numbers, a start-line offset, a wrap
+   toggle, highlighted lines, and a floating action that sits over the
+   code instead of taking a row of a bar.
+
+   Every rule here is inert until its attribute or element is present: a
+   plain `.cm-codebar > pre` renders exactly as it did before.
+
+   WHY THE NUMBERS ARE ELEMENTS AND NOT A CSS COUNTER. The elegant form is
+   `counter-reset: cm-code-line attr(data-start-line)`, and it does not
+   exist: untyped `attr()` is only valid in `content`, and the typed
+   `type(<number>)` form is not implemented in the engine this library is
+   verified in (WebKit). A counter would therefore have pinned every block
+   to a start line of 1. The component emits the gutter instead, which is
+   exact, needs no unsupported feature, and makes a start line other than 1
+   a plain arithmetic fact rather than a CSS trick. */
+
+.cm-codebar > pre code { display: block; }
+.cm-code__line { display: block; }
+
+/* A numbered block reserves a gutter. The gutter is generated, `aria-hidden`
+   and unselectable: a reader who copies a numbered snippet should get the
+   code, not the numbers, and a screen reader listing every integer between
+   the lines is noise. */
+.cm-code__ln {
+	display: inline-block;
+	width: 3ch;
+	margin-inline-end: var(--space-3);
+	color: var(--ink-faint);
+	text-align: end;
+	/* Tabular figures, or the gutter jitters visibly as the number of
+	   digits changes and the whole block shifts column at line 10. */
+	font-variant-numeric: tabular-nums;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+/* Wrap is OPT-IN, not the default. Code scrolls because a wrapped line
+   breaks the vertical alignment that makes indentation readable as
+   structure; wrapping is what you reach for when a long line must be seen
+   whole. */
+.cm-codebar > pre[data-wrap='true'] {
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+.cm-codebar > pre[data-wrap='true'] code { white-space: inherit; }
+
+/* A highlighted line is the one the prose is talking about. This system has
+   no chroma, so it cannot be a colour wash: it is a change of ground plus a
+   heavier gutter numeral, both of which survive greyscale. The bleed is
+   negative so the band runs to the panel edges rather than floating inside
+   the code as a stripe of a different length than its neighbours. */
+.cm-codebar > pre .cm-code__line[data-highlight] {
+	background: var(--bg-3);
+	margin-inline: calc(-1 * var(--space-3));
+	padding-inline: var(--space-3);
+}
+.cm-codebar > pre[data-wrap='true'] .cm-code__line[data-highlight] {
+	/* A wrapped line is taller than one row, so the band has to grow with
+	   it; without this the margin only covers the first visual row. */
+	display: block;
+}
+.cm-code__line[data-highlight] .cm-code__ln { color: var(--ink); }
+
+/* A floating action is pinned to the code's corner for a block that has no
+   bar. It stays hidden until hover or focus - EXCEPT where there is no
+   hover to produce. A control that can only be revealed by an event the
+   device cannot emit is a control that does not exist, so on a touch
+   viewport it is simply always visible. */
+.cm-codebar__float {
+	position: absolute;
+	inset-block-start: var(--space-2);
+	inset-inline-end: var(--space-2);
+	z-index: 1;
+	opacity: 0;
+	transition: opacity 120ms linear;
+}
+.cm-codebar:hover .cm-codebar__float,
+.cm-codebar:focus-within .cm-codebar__float,
+.cm-codebar__float:focus-visible { opacity: 1; }
+@media (hover: none) {
+	.cm-codebar__float { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.cm-codebar__float { transition: none; }
+}
+
+/* More than one control on the bar's trailing edge. `margin-inline-start:
+   auto` is what pushes it away from the language label; without it the
+   actions sit next to the label instead of at the opposite end. */
+.cm-codebar__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin-inline-start: auto;
+}
+
+/* ============ trace: what an agent did, one step per line ============
+   shadcn's Trace is a timeline of AGENT steps: an icon, a title, an
+   optional status, an optional description, and steps that can expand.
+   It is not `.cm-timeline` (a CV: period, role, org) and not `.cm-stepper`
+   (a wizard: numbered, linear, one of them current) - a trace is a RECORD
+   of what happened, not a navigation of what will.
+
+   The rail is a border on each item rather than one rule on the list, so
+   the last item ends at its own dot instead of running past it - the same
+   reason `.cm-timeline` does it this way. Items are `position: relative`
+   so the dot can hang in the gutter without a wrapper element.
+
+   No chroma: a state is a shape and a weight, not a hue, so the whole
+   thing reads in greyscale and in forced-colours. */
+
+.cm-trace {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.cm-trace > li { margin: 0; }
+
+.cm-trace__item {
+	position: relative;
+	/* The rail is drawn inset from the item's inline start so it sits under
+	   the icon, not beside it. */
+	padding-inline-start: var(--space-7);
+	padding-block: var(--space-2);
+	/* The connector between this item's dot and the next. It stops short
+	   of the dot below so two stacked rails do not double through the
+	   circle. */
+}
+.cm-trace__item::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: calc(var(--space-4) + 0.5rem);
+	inset-block: 0;
+	width: 1px;
+	background: var(--line);
+}
+/* The last item's rail would run past its dot into empty space. */
+.cm-trace__item:last-child::before { content: none; }
+
+/* The step's marker sits ON the rail. It is the icon slot, but it also
+   carries state without colour: an outline dot is idle, a filled dot is
+   running, a filled dot with a check is done, a filled dot with a bar is
+   failed. */
+.cm-trace__icon {
+	position: absolute;
+	inset-inline-start: calc(var(--space-4) - var(--space-1));
+	inset-block-start: var(--space-2);
+	display: grid;
+	place-items: center;
+	width: var(--space-7);
+	height: var(--space-7);
+	border: 1px solid var(--line);
+	background: var(--bg);
+	/* Sharp, like everything else in this system: the state is carried by
+	   FILL and GLYPH (outline/idle, filled/working, glyph/done), which
+	   survives greyscale without borrowing a radius the house does not
+	   have. A round status dot would need an entry in the corner check's
+	   circular allowlist, and "it looks like a dot" is not geometry
+	   carrying meaning the way a spinner's rotation does. */
+	color: var(--ink-faint);
+}
+/* The dot must interrupt its own rail, or the line runs straight through
+   the marker and the marker reads as a bead on a string. */
+.cm-trace__icon > * { position: relative; background: var(--bg); }
+
+.cm-trace__item.is-running .cm-trace__icon { border-color: var(--ink); color: var(--ink); }
+.cm-trace__item.is-done .cm-trace__icon { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.cm-trace__item.is-error .cm-trace__icon { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+.cm-trace__title {
+	margin: 0;
+	font-size: var(--text-sm);
+	color: var(--ink);
+	/* A step title is one line of a log, not prose: it truncates so a long
+	   tool call cannot push the line to two rows and break the rail's
+	   rhythm. */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cm-trace__desc {
+	margin: var(--space-1) 0 0;
+	font-size: var(--text-xs);
+	color: var(--ink-dim);
+}
+.cm-trace__desc > :first-child { margin-top: 0; }
+.cm-trace__desc > :last-child { margin-bottom: 0; }
+
+/* A step's detail is collapsed by default and expands in place: the rail
+   of steps above and below it must not shift more than the height of what
+   was revealed, which is why the trigger is a button over the title row
+   rather than a separate control beneath it. */
+.cm-trace__trigger {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	text-align: start;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.cm-trace__trigger:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
+}
+.cm-trace__body {
+	margin-top: var(--space-2);
+	font-size: var(--text-xs);
+	color: var(--ink-dim);
+}
+/* The expand/collapse affordance. `content` inherits `currentColor`, so
+   the chevron tracks the title's colour with no second rule. */
+.cm-trace__trigger::after {
+	content: "+";
+	font-family: var(--font-mono);
+	color: var(--ink-faint);
+}
+.cm-trace__trigger[aria-expanded='true']::after { content: "−"; }
+/* NO reduced-motion rule here: the chevron swap is not animated — hiding
+   it under reduce would REMOVE an affordance rather than remove a motion. */
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number

@@ -1,24 +1,26 @@
 ---
 /**
- * oem-ui <CodeBlock> — a <pre> with a language label and a copy button.
+ * oem-ui <CodeBlock> — a <pre> with a language label, a copy button, and
+ * the body features shadcn's Code Block documents.
  *
- * The runtime has bound [data-cm-copy] since it shipped and every consumer
- * has it vendored, but not one page in the fleet had a button using it:
- * a capability with no surface is a capability nobody can reach. This is
- * the surface, and the markup that reaches it.
+ * shadcn names: Header, Actions, Floating Actions, Line Numbers, Start
+ * Line, Wrap, Highlighted Lines. The shell (bar + label + copy) was
+ * already here; this adds the five that live inside the BODY, because a
+ * numbered snippet quoting line 240 of a file is the difference between
+ * showing code and showing the part of it that matters.
  *
- * The button's visible text lives in a [data-cm-copy-label] slot rather
- * than being the button's own text, because the runtime rewrites the
- * label on copy and writing btn.textContent would destroy the slot (and
- * the glyph in it) on the first press.
+ * THE GUTTER IS MARKUP, NOT A CSS COUNTER. `counter-reset: attr(...)` does
+ * not exist in the engine this library is verified in (the typed
+ * `attr(... type(<number>))` form is unimplemented in WebKit), so a counter
+ * would have pinned every block to a start line of 1. Emitting the
+ * numerals makes `startAt` exact and leaves highlight and wrap as plain
+ * attributes rather than extra wrappers.
  *
- * The id is what data-cm-copy points at. It is derived from `id`, and a
- * block without one throws rather than shipping a button that copies
- * nothing - the same build-time contract <Meter> has for an out-of-range
- * percentage.
+ * The id is what data-cm-copy points at, and a block without one throws
+ * rather than shipping a button that copies nothing.
  */
 interface Props {
-	/** The code itself. Rendered as text, never as HTML. */
+	/** The code. Rendered as text, never as HTML. */
 	code: string;
 	/** Language shown in the bar, e.g. 'bash'. */
 	lang?: string;
@@ -26,28 +28,89 @@ interface Props {
 	id: string;
 	/** Button label before the first copy. */
 	label?: string;
+	/** Show a line-number gutter. */
+	lineNumbers?: boolean;
+	/** First line's number, for a snippet quoted from the middle of a file. */
+	startAt?: number;
+	/** 1-based line numbers to mark as the lines under discussion. */
+	highlight?: number[];
+	/** Wrap long lines instead of scrolling. */
+	wrap?: boolean;
+	/** Pin the copy control over the code instead of putting it in the bar. */
+	floating?: boolean;
 }
 
-const { code, lang, id, label = 'copy' } = Astro.props;
+const {
+	code,
+	lang,
+	id,
+	label = 'copy',
+	lineNumbers = false,
+	startAt = 1,
+	highlight = [],
+	wrap = false,
+	floating = false,
+} = Astro.props;
 
 if (!id) {
 	throw new Error('<CodeBlock> needs an id: the copy button targets it by id');
 }
+
+const marked = new Set(highlight.filter((n) => Number.isInteger(n) && n > 0));
+// `code` arrives with its own newlines; a trailing one would emit a final
+// empty line, which the gutter would then number. Stripping it makes the
+// last numbered row the last line of code.
+const lines = code.replace(/\n$/, '').split('\n');
 ---
 
 <div class="cm-codebar">
-	<div class="cm-codebar__bar">
-		<span class="cm-codebar__lang"><span>{lang ?? 'text'}</span></span>
-		<button
-			class="cm-btn cm-btn--sm cm-copy"
-			type="button"
-			data-cm-copy={`#${id}`}
-			data-cm-label={label}
-			data-cm-copy-label
-		>
-			<span class="cm-copy__state" aria-hidden="true"></span>
-			<span data-cm-copy-label>{label}</span>
-		</button>
-	</div>
-	<pre id={id} tabindex="0"><code>{code}</code></pre>
+	{
+		!floating && (
+			<div class="cm-codebar__bar">
+				<span class="cm-codebar__lang">
+					<span>{lang ?? 'text'}</span>
+				</span>
+				<div class="cm-codebar__actions">
+					<button
+						class="cm-btn cm-btn--sm cm-copy"
+						type="button"
+						data-cm-copy={`#${id}`}
+						data-cm-label={label}
+						data-cm-copy-label
+					>
+						<span class="cm-copy__state" aria-hidden="true" />
+						<span data-cm-copy-label>{label}</span>
+					</button>
+				</div>
+			</div>
+		)
+	}
+	<pre
+		id={id}
+		tabindex="0"
+		data-wrap={wrap ? 'true' : undefined}
+		data-line-numbers={lineNumbers ? '' : undefined}
+	><code>{lines.map((line, i) => {
+			const n = startAt + i;
+			return (
+				<span
+					class="cm-code__line"
+					data-highlight={marked.has(n) ? '' : undefined}
+					>{lineNumbers && <span class="cm-code__ln" aria-hidden="true">{n}</span>}{line}{'\n'}</span>
+			);
+		})}</code></pre>
+	{
+		floating && (
+			<button
+				class="cm-btn cm-btn--sm cm-copy cm-codebar__float"
+				type="button"
+				data-cm-copy={`#${id}`}
+				data-cm-label={label}
+				data-cm-copy-label
+			>
+				<span class="cm-copy__state" aria-hidden="true" />
+				<span data-cm-copy-label>{label}</span>
+			</button>
+		)
+	}
 </div>
