@@ -49,6 +49,143 @@ with sync_playwright() as pw:
     kb = panel_state()
     check('focus-within reveals it for the keyboard', kb['visibility'] == 'visible', str(kb))
 
+    # ---- the composed card (.cm-card ON the panel) ----
+    # The showcase composes the panel AS a card, and `.cm-card` declares
+    # `height: 100%` for grid cells where stretching is the point. Against
+    # a trigger-height wrapper that same rule MEASURED clipping the panel
+    # to the wrapper's 25px against 78px of content (scrollHeight 78,
+    # clientHeight 25) - the profile half of every hovercard was cut off.
+    clip = page.evaluate("""() => {
+        const p = document.querySelector('.cm-card.cm-hovercard__panel');
+        if (!p) return null;
+        return {client: p.clientHeight, scroll: p.scrollHeight,
+                h: Math.round(p.getBoundingClientRect().height)};
+    }""")
+    check('the composed card is not clipped to its trigger',
+          bool(clip) and clip['scroll'] <= clip['client'] and clip['h'] > 20, str(clip))
+
+    # `.cm-card__sub` carries unbroken tokens - MXIDs, user IDs, pasted
+    # timestamps. Without wrapping they run past the card's edge and
+    # `.cm-card`'s overflow:hidden cuts them with no ellipsis to say so.
+    sub = page.evaluate("""() => {
+        const d = document.createElement('div');
+        d.style.cssText = 'position:absolute;left:-9999px;top:0;width:220px';
+        d.innerHTML = '<div class="cm-card" style="height:auto">' +
+          '<p class="cm-card__sub">' + 'x'.repeat(60) + '</p></div>';
+        document.body.appendChild(d);
+        const s = d.querySelector('.cm-card__sub');
+        const out = {client: s.clientWidth, scroll: s.scrollWidth,
+                     wrapped: s.getBoundingClientRect().height > 20};
+        d.remove();
+        return out;
+    }""")
+    check('a card sub wraps an unbroken token inside its card',
+          bool(sub) and sub['scroll'] <= sub['client'] and sub['wrapped'], str(sub))
+
+    # ---- a ROW that is itself the hovercard (the roster's shape) ----
+    # `.cm-row` declares display:flex, `.cm-hovercard` declares
+    # display:inline-block - one element with both classes loses the row
+    # layout to source order. The composition restates flex at (0,2,0).
+    comp = page.evaluate("""() => {
+        const d = document.createElement('div');
+        d.innerHTML = '<div class="cm-rows"><div class="cm-row cm-hovercard" ' +
+          'tabindex="0"><span class="cm-row__title">n</span>' +
+          '<div class="cm-card cm-hovercard__panel" role="tooltip">p</div>' +
+          '</div></div>';
+        document.body.appendChild(d);
+        const row = d.querySelector('.cm-row');
+        const panel = row.querySelector('.cm-hovercard__panel');
+        const out = {display: getComputedStyle(row).display,
+                     w: Math.round(row.getBoundingClientRect().width),
+                     panelHidden: getComputedStyle(panel).visibility};
+        d.remove();
+        return out;
+    }""")
+    check('a hovercard row keeps the row layout (display flex)',
+          bool(comp) and comp['display'] == 'flex' and comp['w'] > 100, str(comp))
+    check("the row's own panel is hidden at rest",
+          bool(comp) and comp['panelHidden'] == 'hidden', str(comp))
+
+    # ---- late rows: clamp with no init, no resize, no hover, no focus ----
+    # A roster renders AFTER cli.init() (measured: every row the matrix
+    # client ships is a late row). A late panel sits at CSS left:0 and
+    # hangs its 18rem over the viewport edge - the phantom sideways
+    # scroll the clamp's own comment warns about - until the runtime's
+    # observer re-runs the clamp over it.
+    page.evaluate("""() => {
+        const d = document.createElement('div');
+        d.id = 'hc-late';
+        d.innerHTML = '<div class="cm-hovercard" style="position:fixed;top:24px;right:2px">' +
+          '<a class="cm-inline-link" id="hc-late-t" href="#late">late</a>' +
+          '<span class="cm-card cm-hovercard__panel" role="tooltip">late panel</span>' +
+          '</div>';
+        document.body.appendChild(d);
+    }""")
+    page.wait_for_timeout(250)  # the observer schedules a rAF; give it frames
+    latebox = page.evaluate("""() => {
+        const p = document.querySelector('#hc-late .cm-hovercard__panel');
+        if (!p) return null;
+        const r = p.getBoundingClientRect();
+        return {right: Math.round(r.right), inner: window.innerWidth,
+                st: p.style.left};
+    }""")
+    check('a late-appearing panel is clamped before it can show',
+          bool(latebox) and latebox['right'] <= latebox['inner'] - 6,
+          str(latebox))
+
+    # The wrapper is then MOVED further past the edge. A style change is
+    # an attribute mutation, not a childList one, so the observer above
+    # does not fire again - this isolates the REVEAL clamp: focus is the
+    # same event that reveals the card, and its handler runs before the
+    # frame paints.
+    page.evaluate("""() => {
+        const w = document.querySelector('#hc-late .cm-hovercard');
+        if (w) w.style.right = '-40px';
+    }""")
+    page.wait_for_timeout(120)
+    page.evaluate("""() => {
+        const t = document.querySelector('#hc-late-t');
+        if (t) t.focus();
+    }""")
+    page.wait_for_timeout(250)
+    moved = page.evaluate("""() => {
+        const p = document.querySelector('#hc-late .cm-hovercard__panel');
+        if (!p) return null;
+        const t = document.querySelector('#hc-late-t');
+        return {right: Math.round(p.getBoundingClientRect().right),
+                inner: window.innerWidth,
+                focused: document.activeElement === t,
+                vis: getComputedStyle(p).visibility};
+    }""")
+    check('revealing a moved card re-clamps it inside the viewport',
+          bool(moved) and moved['focused'] and moved['vis'] == 'visible'
+          and moved['right'] <= moved['inner'] - 6, str(moved))
+
+    # Escape: for a keyboard or tap reader focus IS the card's pin -
+    # without this the card stays up forever, because only the pointer
+    # has a "leaving".
+    esc = page.evaluate("""() => {
+        const t = document.querySelector('#hc-late-t');
+        return {inside: document.activeElement === t};
+    }""")
+    if esc and esc.get('inside'):
+        page.keyboard.press('Escape')
+        page.wait_for_timeout(250)
+        after = page.evaluate("""() => {
+            const t = document.querySelector('#hc-late-t');
+            const p = document.querySelector('#hc-late .cm-hovercard__panel');
+            if (!t || !p) return null;
+            return {blurred: document.activeElement !== t,
+                    vis: getComputedStyle(p).visibility};
+        }""")
+        check('Escape blurs a focused trigger and closes the card',
+              bool(after) and after['blurred'] and after['vis'] == 'hidden',
+              str(after))
+    else:
+        check('Escape blurs a focused trigger and closes the card',
+              False, 'focus never landed: ' + str(esc))
+    page.evaluate("() => { const d = document.querySelector('#hc-late'); if (d) d.remove(); }")
+
     grp = page.evaluate("""() => {
         const g = document.querySelector('.cm-input-group');
         const addon = g.querySelector('.cm-input-group__addon');

@@ -4692,6 +4692,13 @@ dialog.cm-dialog--spec:not([open]) {
 	line-height: 1.5;
 	color: var(--ink-faint);
 	min-width: 0;
+	/* A sub line carries MXIDs, user IDs, timestamps pasted whole -
+	   tokens with no spaces to break at. Without this they run past the
+	   card's edge, and `.cm-card`'s `overflow: hidden` cuts them off
+	   with no ellipsis to say so. `.cm-card__title` already wraps this
+	   way; the sub is the line that most often holds the unbroken
+	   token. */
+	overflow-wrap: break-word;
 }
 .cm-card__body {
 	padding: var(--space-4);
@@ -6405,6 +6412,16 @@ input.cm-slider:disabled {
 	position: relative;
 	display: inline-block;
 }
+/* A ROW that is itself the hovercard. Two single-class rules collide on
+   one element: `.cm-row` declares `display: flex` and `.cm-hovercard`
+   declares `display: inline-block`; same specificity, so source order
+   wins and the row that carries both classes collapses to an inline
+   shrink-to-fit box - the roster's dot/avatar/name stop aligning on one
+   line. The composition must keep the row's own layout, so it is
+   restated at (0,2,0) rather than trusting either rule's position. */
+.cm-row.cm-hovercard {
+	display: flex;
+}
 /* The panel's `left` is PHYSICAL on purpose - the Direction baseline
    (logical properties) does not touch it. The runtime owns the final
    offset: cmClampHovercards() clears `style.left`, re-measures in
@@ -6420,6 +6437,15 @@ input.cm-slider:disabled {
 	top: calc(100% + var(--space-2));
 	left: 0;
 	min-width: 18rem;
+	/* A floating panel sizes to its CONTENT, never to its wrapper. The
+	   composed surface is `.cm-card` (showcase: `<span class="cm-card
+	   cm-hovercard__panel">`), and `.cm-card` declares `height: 100%` for
+	   grid cells where stretching is the point. In a hovercard that same
+	   declaration resolves against the WRAPPER's height - measured on the
+	   showcase: a 25px trigger gave the panel `height: 25px` against 78px
+	   of content, and `.cm-card`'s `overflow: hidden` cut the profile
+	   off. MEASURED scrollHeight 78 / clientHeight 25 before this rule. */
+	height: auto;
 	opacity: 0;
 	visibility: hidden;
 	transform: translateY(-4px);

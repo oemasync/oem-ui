@@ -2668,33 +2668,95 @@
 	   an 18rem panel over the edge: measured on the showcase at 320px,
 	   document.scrollWidth 328 with the panel's right edge at 328. Menus
 	   already clamp in anchorPopover; this is that same rule for a panel
-	   that never opens through JS. The clamp runs at init and on resize
-	   (scroll is irrelevant - the panel moves WITH its wrapper), and a
-	   consumer with no JS keeps the CSS-only behaviour it always had. */
+	   that never opens through JS. Init and resize re-clamp every panel;
+	   the delegated reveal path below re-clamps the ONE card about to
+	   show (rows arrive late and sheets move their rows without a
+	   resize). A consumer with no JS keeps the CSS-only SHOW, but a JS
+	   consumer that renders rows after init should let the runtime
+	   bind (init + the listeners below) or clamp late rows itself. */
+	function cmClampPanel(panel) {
+		var wrap = panel.parentElement;
+		if (!wrap) return;
+		panel.style.left = '';        // back to the CSS position
+		panel.style.maxWidth = '';    // ...and to the CSS width
+		var gutter = 8;
+		var avail = window.innerWidth - gutter * 2;
+		if (avail > 0 && panel.offsetWidth > avail) panel.style.maxWidth = avail + 'px';
+		var pr = panel.getBoundingClientRect();
+		var wr = wrap.getBoundingClientRect();
+		var left = pr.left;
+		if (pr.right > window.innerWidth - gutter) left -= pr.right - (window.innerWidth - gutter);
+		if (left < gutter) left = gutter;
+		panel.style.left = (left - wr.left) + 'px';
+	}
 	function cmClampHovercards(root) {
 		if (typeof window === 'undefined') return;
 		var run = function () {
-			Array.prototype.forEach.call(root.querySelectorAll('.cm-hovercard__panel'), function (panel) {
-				var wrap = panel.parentElement;
-				if (!wrap) return;
-				panel.style.left = '';        // back to the CSS position
-				panel.style.maxWidth = '';    // ...and to the CSS width
-				var gutter = 8;
-				var avail = window.innerWidth - gutter * 2;
-				if (avail > 0 && panel.offsetWidth > avail) panel.style.maxWidth = avail + 'px';
-				var pr = panel.getBoundingClientRect();
-				var wr = wrap.getBoundingClientRect();
-				var left = pr.left;
-				if (pr.right > window.innerWidth - gutter) left -= pr.right - (window.innerWidth - gutter);
-				if (left < gutter) left = gutter;
-				panel.style.left = (left - wr.left) + 'px';
-			});
+			Array.prototype.forEach.call(root.querySelectorAll('.cm-hovercard__panel'), cmClampPanel);
 		};
 		run();
 		if (!window.__cmHoverResize) {
 			window.__cmHoverResize = true;
 			window.addEventListener('resize', run);
 		}
+		/* The clamp above is an init/resize fact, but rows are not: a
+		   roster fills in from /sync AFTER init (measured - every row
+		   the matrix client renders is a late row), and a sheet's rows
+		   change position when the sheet opens, with no resize event in
+		   sight. Two delegated listeners fix both cases, once per
+		   document no matter how many roots re-init. */
+		if (window.__cmHoverBound) return;
+		window.__cmHoverBound = true;
+		var reveal = function (e) {
+			var wrap = e.target && e.target.closest ? e.target.closest('.cm-hovercard') : null;
+			var panel = wrap && wrap.querySelector ? wrap.querySelector('.cm-hovercard__panel') : null;
+			if (panel) cmClampPanel(panel);
+		};
+		/* The reveal clamp rides the SAME events that reveal the card
+		   (the CSS gate is :hover / :focus-within). Handlers run before
+		   paint, so the corrected offset lands in the frame the panel
+		   becomes visible in - no flash of an edge-hanging card. */
+		document.addEventListener('pointerover', reveal, { passive: true });
+		document.addEventListener('focusin', reveal);
+		/* Panels that APPEAR after init: until the pointer or focus
+		   touches them they sit at CSS `left: 0` and hang past the
+		   viewport's edge - the phantom sideways scroll the CSS comment
+		   warns about. The observer callback is a microtask, i.e.
+		   before the frame paints, so no scrolled-out frame shows. */
+		var scheduled = false;
+		var schedule = function () {
+			if (scheduled) return;
+			scheduled = true;
+			window.requestAnimationFrame(function () { scheduled = false; run(); });
+		};
+		if (document.body && window.MutationObserver) {
+			new MutationObserver(function (muts) {
+				for (var i = 0; i < muts.length; i++) {
+					var added = muts[i].addedNodes;
+					for (var j = 0; j < added.length; j++) {
+						var n = added[j];
+						if (n.nodeType !== 1) continue;
+						if ((n.matches && n.matches('.cm-hovercard__panel')) ||
+							(n.querySelector && n.querySelector('.cm-hovercard__panel'))) {
+							schedule();
+							return;
+						}
+					}
+				}
+			}).observe(document.body, { childList: true, subtree: true });
+		}
+		/* Escape dismisses a FOCUSED card. Hover needs nothing - the
+		   pointer leaving is the dismissal - but a keyboard or tap
+		   reader has no "pointer leaving": focus stays on the trigger
+		   and the card stays up forever. Blur hands focus back and the
+		   CSS gate closes the card. Scoped to the active element being
+		   INSIDE a wrapper, so Escape keeps every other job it has (the
+		   palette, dialogs, the find bar) untouched. */
+		document.addEventListener('keydown', function (e) {
+			if (e.key !== 'Escape' && e.key !== 'Esc') return;
+			var act = document.activeElement;
+			if (act && act.blur && act.closest && act.closest('.cm-hovercard')) act.blur();
+		});
 	}
 
 	/* ---------- calendar ----------
