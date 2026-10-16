@@ -17,15 +17,18 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-URL = "http://192.168.1.68:4321/"
+URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4321/"
 
-# `--measure-title` is 42ch; getComputedStyle resolves `ch` against the
-# monospace font's advance width, which is 9.633px here, so 42ch lands on
-# 404.578125px. Asserting the RESOLVED value is the point: it is what
-# proves the specimen is painted from the token rather than typed beside
-# it. If the root font size changes, this fails loudly instead of the
-# specimen quietly drifting from the token it documents.
-TOKEN_TITLE_PX = 404.578125
+# `--measure-title` is 42ch, and getComputedStyle resolves `ch` to px. The
+# RESOLVED value is what proves the specimen is painted from the token
+# rather than typed beside it - but the px it resolves to is a property of
+# the FONT, not of this repo. It was written down here as a constant
+# (404.578125px, the then-current fallback monospace's advance) and went
+# stale when the box's system fonts changed under it: a red check that
+# read as a code regression while the specimen itself was correct
+# (403.265625px, matching the 42ch the page resolves to the hundredth).
+# The probe now resolves `42ch` in the sample's own font context, on the
+# page, and swaps the custom property to prove the cap tracks it.
 
 # (width, expect_live)
 CASES = [
@@ -45,6 +48,30 @@ PROBE = r"""
   const sample = spec.querySelector('.cm-spec__sample .cm-lede');
   const desc = document.querySelector('.cm-rows--inline .cm-row__desc');
   const rows = document.querySelectorAll('.cm-rows--inline .cm-row');
+  // Resolve the token's `ch` IN THE SAMPLE'S OWN FONT CONTEXT, so the
+  // expectation is measured on the page instead of typed into this file.
+  // It shipped for months as a hardcoded 404.578125px; when the box's
+  // fallback monospace changed under it (a system font this repo does
+  // not ship), the check went red and read like a code regression. The
+  // specimen was fine - the same 42ch resolved in-page matched it to
+  // the hundredth: 403.265625px.
+  const cs0 = getComputedStyle(sample);
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;'
+    + 'width:42ch;font-family:' + cs0.fontFamily + ';font-size:' + cs0.fontSize;
+  document.body.appendChild(probe);
+  const tokenCh = probe.getBoundingClientRect().width;
+  probe.remove();
+  // ...and prove the cap TRACKS the custom property: a typed `404px`
+  // would neither follow the font nor move when the token is swapped.
+  const swap = {};
+  try {
+    swap.before = parseFloat(getComputedStyle(sample).maxWidth);
+    spec.style.setProperty('--measure-title', '30ch');
+    swap.during = parseFloat(getComputedStyle(sample).maxWidth);
+    spec.style.removeProperty('--measure-title');
+    swap.after = parseFloat(getComputedStyle(sample).maxWidth);
+  } catch (e) { swap.error = String(e); }
   return {
     hasReadout: !!readout,
     readoutText: readout ? readout.textContent.trim() : null,
@@ -55,6 +82,8 @@ PROBE = r"""
     // numeric: `ch` is resolved by getComputedStyle, so the value comes
     // back in px and is compared as a number, not as the string '42ch'
     sampleMaxWidth: sample ? parseFloat(getComputedStyle(sample).maxWidth) : null,
+    tokenCh: Math.round(tokenCh*1000)/1000,
+    swap: swap,
     descDisplay: desc ? getComputedStyle(desc).display : null,
     descWidth: desc ? Math.round(desc.getBoundingClientRect().width*100)/100 : null,
     rowCount: rows.length,
@@ -74,7 +103,12 @@ def main() -> int:
                     is_mobile=w < 700, has_touch=w < 700,
                 )
                 pg = ctx.new_page()
-                pg.goto(URL, wait_until="load")
+                # A starved box (a spec campaign runs alongside) takes ~27s
+                # to reach `load` on this page: the default 30s timeout is a
+                # race, not a margin. Same lesson as the showcase probe.
+                pg.set_default_timeout(180000)
+                pg.goto(URL, wait_until="load", timeout=180000)
+                pg.wait_for_function("() => !!window.cliMono", timeout=180000)
                 title = pg.title()
                 if w == CASES[0][0]:
                     print(f"page title: {title!r}")
@@ -132,18 +166,36 @@ def main() -> int:
                         f"init() is stacking them"
                     )
                 # The specimen is rendered FROM the token, not typed beside
-                # it. getComputedStyle RESOLVES the ch unit to px, so the
-                # assertion is on the resolved value: 42ch at the root
-                # font size is 404.578125px. Comparing the string to '42ch'
-                # is what made the first version of this check report a
-                # correct specimen as a literal.
-                if abs(r["sampleMaxWidth"] - TOKEN_TITLE_PX) > 0.5:
-                    fails.append(
-                        f"w={w}: specimen resolves max-width to "
-                        f"{r['sampleMaxWidth']}px, expected {TOKEN_TITLE_PX}px "
-                        f"(--measure-title resolved) - it is not rendered "
-                        f"from the token"
-                    )
+                # it. Two claims, both measured on the page: the cap equals
+                # the `42ch` the PAGE resolves in this sample's font
+                # context, and it MOVES when the custom property is swapped
+                # (a typed px value does neither). The expectation is no
+                # longer a constant in this file - see the probe's note.
+                if r["sampleMaxWidth"] is None or r["tokenCh"] is None:
+                    fails.append(f"w={w}: the specimen or the token probe is missing")
+                else:
+                    if abs(r["sampleMaxWidth"] - r["tokenCh"]) > 0.5:
+                        fails.append(
+                            f"w={w}: specimen resolves max-width to "
+                            f"{r['sampleMaxWidth']}px but 42ch resolves to "
+                            f"{r['tokenCh']}px in the same font context - it "
+                            f"is not rendered from the token"
+                        )
+                    sw = r.get("swap") or {}
+                    if "error" in sw:
+                        fails.append(f"w={w}: the token swap probe threw: {sw['error']}")
+                    elif not (sw["during"] < sw["before"] - 40):
+                        fails.append(
+                            f"w={w}: swapping --measure-title to 30ch did not "
+                            f"move the specimen ({sw['before']} -> "
+                            f"{sw['during']}) - the cap is not read from the "
+                            f"custom property"
+                        )
+                    elif abs(sw["after"] - sw["before"]) > 0.5:
+                        fails.append(
+                            f"w={w}: the token swap did not restore "
+                            f"({sw['before']} -> {sw['after']})"
+                        )
                 print(f"w={w:<5} descDisp={r['descDisplay']:<7} "
                       f"descW={r['descWidth']:<9} readout={r['readoutText']!r}")
                 ctx.close()
@@ -152,7 +204,8 @@ def main() -> int:
             ctx = b.new_context(viewport={"width": 1280, "height": 900},
                                 java_script_enabled=False)
             pg = ctx.new_page()
-            pg.goto(URL, wait_until="load")
+            pg.set_default_timeout(180000)
+            pg.goto(URL, wait_until="load", timeout=180000)
             sample = pg.locator(
                 '[data-spec="measure-title"] .cm-spec__sample .cm-lede')
             box = sample.bounding_box()
@@ -167,15 +220,29 @@ def main() -> int:
                 "() => getComputedStyle(document.querySelector("
                 "'[data-spec=\"measure-title\"] .cm-spec__sample .cm-lede'"
                 ")).maxWidth")
+            # ...and the expectation is resolved on THIS page too, in the
+            # same font context (see the note at the top of the file).
+            token_ch = pg.evaluate(
+                "() => { const s = document.querySelector("
+                "'[data-spec=\"measure-title\"] .cm-spec__sample .cm-lede');"
+                " const cs = getComputedStyle(s);"
+                " const p = document.createElement('span');"
+                " p.style.cssText = 'position:absolute;visibility:hidden;"
+                "white-space:nowrap;width:42ch;font-family:' + cs.fontFamily"
+                " + ';font-size:' + cs.fontSize;"
+                " document.body.appendChild(p);"
+                " const w = p.getBoundingClientRect().width; p.remove();"
+                " return Math.round(w*1000)/1000; }")
             print(f"\nno-JS: specimen visible={sample.is_visible()} "
                   f"renderedW={box['width'] if box else None} "
-                  f"maxW={maxw} val={val.inner_text()!r}")
+                  f"maxW={maxw} 42ch={token_ch} val={val.inner_text()!r}")
             if not sample.is_visible():
                 fails.append("no-JS: the --measure-title specimen vanished")
-            if abs(float(maxw.replace('px', '')) - TOKEN_TITLE_PX) > 0.5:
+            if abs(float(maxw.replace('px', '')) - token_ch) > 0.5:
                 fails.append(
-                    f"no-JS: specimen max-width resolves to {maxw}, expected "
-                    f"{TOKEN_TITLE_PX}px - it is not rendered from the token")
+                    f"no-JS: specimen max-width resolves to {maxw} but 42ch "
+                    f"resolves to {token_ch}px in the same context - it is "
+                    f"not rendered from the token")
             if "42ch" not in val.inner_text():
                 fails.append(
                     f"no-JS: the value cell lost its token: "

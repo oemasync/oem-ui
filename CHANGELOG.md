@@ -1,3 +1,80 @@
+## Unreleased - the phone held its measure: rows, captions and the two bands that scrolled
+
+The layout audit drives every demo control in WebKit at 1280px and 390px
+(touch) and reports what escapes its box or its floor. It opened this cycle
+with **40** triaged findings, and the ones that survived triage were all one
+shape - a child that named its measure in a way its container could not
+afford. Every fix below is a measured number, not a hunch.
+
+**Rows.** Twelve inline-row items in `#proselists-order` forced their bodies
+297/351px wide inside a 270px row and pushed the page **87px sideways**. The
+floor was `.cm-row__body { min-width: min-content }` counting the excerpt's
+whole `nowrap` text. The excerpt now carries `contain: inline-size`, so its
+text never contributes to an ancestor's intrinsic width, with `contain: none`
+opt-outs in the two variants that SIZE from content - each with its own
+measurement: `--column` collapsed to **0px** with containment, and `--inline`
+rendered **67px against 169px**, a silently shortened excerpt.
+
+**Captions.** 13 prose captions were marked up as `<p class="cm-row__meta">`,
+whose `nowrap` + `overflow: hidden` is a value SLOT's contract, not a
+sentence's: every one lost its tail on the live site, the worst by **513px**
+on a phone. They are `.cm-caption` now - meta type, caption box, one margin
+step off the scale - and the six stray inline `margin-bottom` styles went
+with them.
+
+**On a phone, the title wraps.** With the excerpt and the date hidden below
+680px the title IS the row, and its `nowrap` made the row floor **339px**
+against a 295px row at 375 and 240px at 320: the page scrolled **4px and
+59px** sideways (`SPAN.cm-row__sym` sat at right=379 for every viewport
+below 379 - the floor itself). The title wraps in that query now: the label
+is never cut, it takes a second line.
+
+**The rail band.** `.cm-shell--rail > *` capped at `var(--maxw)` alone, and
+`margin-inline: auto` sizes a flex child to fit-content BEFORE the cap - so
+the 860px prose body rendered full width inside a 440px content box at
+1000px (right=1112) and the page scrolled sideways across **1000-1111**.
+The cap is `min(var(--maxw), 100%)`: the room that actually exists. The TOC
+also became a SIBLING of the body - a sticky column that sat at document
+y=9056 of 9577 was "on this page" only after the last section - and the
+shell's column gap was retuned to the gutter so the measure is identical on
+both sides of the 1180px breakpoint.
+
+**Tiles and the rail grip.** The `.cm-attach--sm/--xs` override re-froze the
+media box at `calc(var(--tap)/2)` - a 20px content box for 21.6px of mono
+ink - so four tiles had their last glyph shaved at both audit widths; the
+override is gone. And `.cm-sidebar__rail` straddled the panel edge by 6px,
+which the panel's own `overflow: hidden` clipped: effective grab 6px, and
+the panel reported scrollWidth 261 in a 255px box on every audit. It sits
+flush inside the edge now (`inset-inline-end: 0`).
+
+**The instrument was part of the batch.** Findings split into failing vs
+INFORMATIONAL (the AA-clearing small buttons do not fail a run); the
+sr-only-by-media-query clip is excluded from overflow; a dead browser ends
+the run as ONE instrument failure instead of 171 findable-defect rows; and
+every pass settles on the runtime before measuring - `networkidle` fires in
+the gap while a starved main thread is still parsing, and geometry read
+there is placeholder-grade (measured: the same `--end` tip in #overlays read
+[210..433] in one run and [101..325] the next, with the page unable to
+scroll either time). The measure-title harness stopped comparing the
+specimen against a hardcoded 404.578125px - a property of the box's system
+fonts, not of this repo - and resolves the token's `42ch` on the page
+instead, swapping the custom property to prove the cap tracks it.
+
+Verified: the audit reports **0 overflow, 0 sideways, 0 click-failed at 1280
+and 390** (30 informational below-touch notes; it opened this cycle at 40
+triaged findings and one sideways escape); the width sweep **300-1200px at
+10px steps plus 1024/1280/1440, and three iPhone device passes (SE 320, Pro
+393, Pro Max 430): 0 escaping elements at every width**; `npm test` **687
+passed / 0 failed**
+(four new pins, each proven by mutation - the mutant drops exactly its own
+check and nothing else); `verify-no-sideways-scroll.py` 0 sideways at
+390/375/320/1440; `verify-showcase-nowrap-webkit.py` clean at 375/402/430/1440;
+`verify-sidebar.py` 34/34; `verify-attach-quiz.py` 14/14;
+`verify-doc-toc.py` 81/81; `verify-section-rhythm.py` 6/6;
+`verify-prose-list-webkit.py` and `verify-table-labels-webkit.py` green;
+`verify-measure-title-webkit.py` passes with its expectation resolved on the
+page.
+
 ## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
 
 Parity was 64 of 64 against a list that was measured once, and the check

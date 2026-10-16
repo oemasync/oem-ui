@@ -70,19 +70,54 @@ with sync_playwright() as p:
             .filter(id => !document.getElementById(id))""")
         check(f'{fam}: every TOC row resolves', not dead, str(dead))
 
-        # it is a real right-hand column, sticky and 288px at desktop
+        # it is a real right-hand column, sticky and 288px at desktop.
+        # The first version of this check asked only for `display: block`,
+        # `position: sticky` and `left > main.left + 100`. All three held
+        # while the TOC was a flex-column SIBLING of the content, stacked
+        # after every section at document y=9056 of 9577 - the "on this
+        # page" column existed only below the last section. `main` spans
+        # the full width (x=0), so `left > main.left + 100` is satisfied
+        # by anything not hugging the rail. The check now asks the question
+        # that was actually meant: is the TOC beside the FIRST section, in
+        # the first viewport?
         box = pg.evaluate("""() => {
             const t = document.querySelector('.cm-doc__toc');
             const c = getComputedStyle(t);
             const r = t.getBoundingClientRect();
             const main = document.querySelector('main').getBoundingClientRect();
+            const first = document.querySelector('main section[id]');
+            const f = first ? first.getBoundingClientRect() : null;
             return {display: c.display, width: c.width, position: c.position,
-                    left_of_content: r.left > main.left + 100};
+                    left_of_content: r.left > main.left + 100,
+                    // the defect this now catches: stacked after the content
+                    beside_first_section: !!f && r.left >= f.right - 4
+                                           && r.left < main.right,
+                    in_first_viewport: r.top >= 0 && r.top < window.innerHeight,
+                    // and it must not merely be level with the content, it
+                    // must have run down the page with it (sticky holds)
+                    top: Math.round(r.top), docTop: Math.round(r.top + window.scrollY)};
         }""")
         check(f'{fam}: TOC is a visible sticky column', box['display'] == 'block'
               and box['position'] == 'sticky', str(box))
         check(f'{fam}: TOC sits beside the measure, not on top of it',
               box['left_of_content'], str(box))
+        check(f'{fam}: TOC is beside the FIRST section, not stacked after the last one',
+              box['beside_first_section'], str(box))
+        check(f'{fam}: TOC is in the first viewport (sticky, visible from the top)',
+              box['in_first_viewport'], str(box))
+
+        # the sticky must actually HOLD when the reader scrolls, or the
+        # column walks off the top with the content
+        pg.evaluate('window.scrollTo(0, 1500)')
+        pg.wait_for_timeout(250)
+        held = pg.evaluate("""() => {
+            const r = document.querySelector('.cm-doc__toc').getBoundingClientRect();
+            return {top: Math.round(r.top), held: r.top > 0 && r.top < window.innerHeight};
+        }""")
+        check(f'{fam}: TOC stays on screen while scrolling',
+              held['held'], str(held))
+        pg.evaluate('window.scrollTo(0, 0)')
+        pg.wait_for_timeout(120)
 
         # phone width: the column must not exist (it would eat the measure)
         pg.set_viewport_size({'width': 390, 'height': 844})

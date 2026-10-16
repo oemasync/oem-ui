@@ -670,7 +670,7 @@
 .cm-spec__row:last-child { border-bottom: 0; }
 .cm-spec__label { flex: 0 0 6.5rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .cm-spec__sample { flex: 1; min-width: 0; line-height: 1.1; }
-.cm-spec__val { flex: 0 0 auto; text-align: end; }
+.cm-spec__val { flex: 0 1 auto; min-width: 0; text-align: end; }
 /* A specimen that reports its own live state. The inline row's title
    column is only in play inside a width band, and a static `42ch` beside
    it is decoration -- it cannot tell you that at 700px the excerpt has
@@ -1104,8 +1104,16 @@ html {
 	flex: 0 0 auto;
 }
 .cm-row__body {
+	/* `flex: 1 1 0` + `min-width: 0` lets the body shrink to NOTHING when a
+	   greedy sibling wants the line. MEASURED on the trailing-meta row: two
+	   `.cm-row__meta--wrap` slots (flex: 1 1 auto, auto basis) took the whole
+	   row and the body rendered 0px wide with `overflow: hidden` - the label
+	   was clipped away entirely, clientWidth 0 / scrollWidth 77.
+	   min-width:0 is still needed so the TITLE inside can ellipsize, but the
+	   BODY must never be narrower than its own longest word: min-content is
+	   that floor, and it is intrinsic rather than a typed-in number. */
 	flex: 1;
-	min-width: 0;
+	min-width: min-content;
 	overflow: hidden;
 	/* title and desc share a baseline row. Without this they run
 	   together as inline text and the desc overruns the date column. */
@@ -1222,6 +1230,16 @@ button.cm-row:hover { background: var(--bg-2); }
 	flex: 0 1 var(--measure-narrow);
 	min-width: 0;
 	max-width: var(--measure-narrow);
+	/* The desc contributes NOTHING to its ancestors' intrinsic width.
+	   `.cm-row__body` carries `min-width: min-content`, and without
+	   this the floor counted the desc's whole nowrap text: MEASURED at
+	   390px, two rows in #proselists-order forced their bodies 297/351px
+	   wide inside a 270px row and pushed the page 87px sideways.
+	   The desc is the child that TRUNCATES, so its text is the one
+	   thing the floor must not count; the title still supplies the
+	   floor. `contain` hides content from sizing, so the variants that
+	   size the desc from its content (column, inline) opt back out. */
+	contain: inline-size;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1276,7 +1294,30 @@ button.cm-row:hover { background: var(--bg-2); }
 
 }
 .cm-row__meta--wrap > * { min-width: 0; }
-.cm-row__meta--wrap > * { min-width: 0; }
+/* A standalone CAPTION that labels a specimen, a list or a group of rows.
+   It is NOT a row part: nothing here is a flex slot inside `.cm-row`. It
+   deliberately borrows the meta TYPE (mono, micro, faint) because that is
+   the house voice for a quiet label, but it must NOT borrow the meta BOX.
+   MEASURED: 13 prose captions were marked up as `<p class="cm-row__meta">`,
+   which carries `white-space: nowrap` + `overflow: hidden` because a meta
+   SLOT is a fixed-width value column that must never reflow. On the live
+   site every one of them lost its tail - the worst by 513px on a phone -
+   because a sentence was being clipped by a value slot's contract. The
+   class is separate so the two jobs cannot be confused again: a slot keeps
+   its nowrap, a caption wraps. */
+.cm-caption {
+	color: var(--ink-faint);
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	white-space: normal;
+	overflow-wrap: break-word;
+	/* The 6 sites that hand-rolled this margin used --space-3; the other 11
+	   fell through to the base `p { margin: 0 0 1.1em }` and rendered
+	   13.1875px - two different gaps for one visual role. The class owns
+	   the step so the value comes off the scale. */
+	margin: 0 0 var(--space-3);
+}
+
 /* The other direction: a meta slot whose contents are ONE string that
    must not break across lines. MEASURED on rpm in WebKit at 390px:
    the `→ ip : port` slot was left wrappable and broke into two rows -
@@ -1364,6 +1405,11 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-rows--column .cm-row__desc {
 	flex: 0 0 auto;
 	max-width: 100%;
+	/* This body is a column flex with flex-start alignment, so the desc
+	   is sized from its CONTENT - and content is exactly what
+	   `contain: inline-size` hides from sizing. MEASURED with the base
+	   containment applied here: the desc collapsed to width 0. */
+	contain: none;
 }
 
 .cm-rows--stacked .cm-row { align-items: flex-start; padding: var(--space-4) var(--space-2); }
@@ -1374,6 +1420,14 @@ button.cm-row:hover { background: var(--bg-2); }
 	line-height: 1.5; margin-top: var(--space-1);
 }
 .cm-rows--stacked .cm-row__meta { display: block; font-size: var(--text-micro); margin-top: var(--space-1); }
+
+/* The inline variant is a fixed-column design: the title holds its
+   measure and the excerpt "holds its own" - the desc is sized from its
+   content on purpose (MEASURED at 1280: 169px excerpt against 67px with
+   containment applied, which would have silently shortened it). It opts
+   out of the base `contain: inline-size` for the same reason as the
+   column variant: content-sizing is the point here. */
+.cm-rows--inline .cm-row__desc { contain: none; }
 
 /* list footer link, right-aligned */
 .cm-list-more { margin-top: var(--space-6); text-align: end; }
@@ -1708,6 +1762,18 @@ button.cm-row:hover { background: var(--bg-2); }
 @media (max-width: 680px) {
 	.cm-rows--inline .cm-row__desc,
 	.cm-rows--inline .cm-row__meta { display: none; }
+	/* With the excerpt and the date gone the title is the whole row, and
+	   its `nowrap` made the row's floor the full label: measured 339px
+	   (idx 42 + gap 16 + title 250 + gap 16 + sym 8 + padding 16) against
+	   a 295px row at 375 and a 240px row at 320 - so the row's own
+	   children pushed the page 4px and 59px sideways (SPAN.cm-row__sym
+	   sat at right=379 for every viewport below 379, i.e. exactly the
+	   floor). Wrapping is the handoff this file already uses elsewhere:
+	   the label is never cut, it takes a second line instead. Above
+	   680px the measured floor of the longest inline title on the page
+	   (514px at 681) is narrower than the row, so the single-line form
+	   is untouched. */
+	.cm-rows--inline .cm-row__title { white-space: normal; }
 	.cm-prose h2 { font-size: 1.15rem; line-height: 1.3; }
 	.cm-prose h3 { font-size: 1.05rem; }
 	.cm-prose { line-height: 1.8; }
@@ -4128,7 +4194,21 @@ dialog.cm-dialog--spec:not([open]) {
 		max-width: none;
 	}
 	.cm-shell--rail > * {
-		max-width: var(--maxw);
+		/* `min(var(--maxw), 100%)`, not `var(--maxw)` alone: this is a
+		   flex column's child, and `margin-inline: auto` sizes it to
+		   fit-content BEFORE the max-width clamps it. A prose body's
+		   fit-content is its whole 860px measure, so at 1000px - the
+		   width where the rail appears - the body rendered 860px wide
+		   inside a 440px content box: measured right=1112 across
+		   1000-1024, i.e. the page scrolled sideways over 1000-1111.
+		   `100%` resolves against the space beside the rail (440 at
+		   1000), so the clamp is the room that actually exists; at
+		   wide widths it exceeds the token and changes nothing (1440:
+		   100% is 880, the token wins). Same defect the >=1180 grid
+		   fixes with `margin-inline: 0` for its items - same measured
+		   1112 - and the same `min(token, 100%)` valve the inline
+		   title carries. */
+		max-width: min(var(--maxw), 100%);
 		margin-inline: auto;
 	}
 	/* ...and that is a PROSE measure, which is right for a content page
@@ -4165,6 +4245,54 @@ dialog.cm-dialog--spec:not([open]) {
 	   which is the shape measured on shadcn's docs shell. */
 	.cm-shell--toc {
 		padding-inline-end: calc(var(--doc-toc-w) + var(--gutter));
+	}
+	/* ...but reserving the band is only half of it. As flex-COLUMN children
+	   of the shell, the body and the TOC stacked: the TOC's own rules were
+	   right (sticky, 288px, hidden under 1180) while the element itself sat
+	   at document y=9056 of a 9577px page - an "on this page" column that
+	   existed only after the last section. shadcn's shell makes them SIBLINGS
+	   in a row (measured at 1280: TOC x=984 w=288, sticky from y=65), and so
+	   must this one.
+
+	   At the TOC's own breakpoint the reservation becomes the grid itself:
+	   padding-inline-end drops to 0 and the two columns take the same space
+	   the padding was holding - content = vw - rail - gutter - 288 on BOTH
+	   sides of 1180, so the measure does not shift when the column appears
+	   (the invariant the reservation above exists for). The gutter rides the
+	   gap, and the TOC keeps its own inline-end padding so the visible links
+	   end short of the viewport edge even though the 288px box does not:
+	   `width: var(--doc-toc-w)` is border-box, so that padding is inside the
+	   column and the content width stays exact. */
+	@media (min-width: 1180px) {
+		.cm-shell--toc {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) var(--doc-toc-w);
+			padding-inline-end: 0;
+		}
+		/* `.cm-shell--rail > *` centres every child with `margin-inline:
+		   auto`, and an auto margin on a grid item REPLACES stretch: the
+		   item is sized to max-content and then centred, so on /f/prose
+		   (max-content 860) the body overflowed its 720px track by 140px
+		   and ran under the TOC - measured body right=1112 against a TOC
+		   at x=992. `/f/panels` has narrower content and hid the defect,
+		   which is why this is keyed to the column and not noticed until
+		   a prose-heavy page is opened. In the grid the track IS the
+		   measure, so the centring is dropped and stretch does the work;
+		   the prose CAP still comes from `.cm-shell--rail > *`'s
+		   max-width, which the wider 1440 track re-imposes (860 measured). */
+		.cm-shell--toc > .cm-doc__body {
+			margin-inline: 0;
+		}
+		/* The column is exactly --doc-toc-w wide, so the links' own inline
+		   padding takes them to the viewport edge - measured: link right
+		   edge 1280 at a 1280 viewport, flush against it. The air lives
+		   INSIDE the column (width is border-box), so the measure stays
+		   vw - rail - gutter - 288 and only the text pulls in. shadcn
+		   keeps 8px there (measured x=984 w=288 right=1272); the gutter
+		   is ours. */
+		.cm-doc__toc {
+			padding-inline-end: var(--gutter);
+		}
 	}
 	/* `width: auto` matters as much as `max-width: none`. base.css
 	   gives `main` `width: var(--maxw)`, so a rule that only relaxes
@@ -8133,16 +8261,31 @@ input.cm-slider:disabled {
 	flex: none;
 	display: grid;
 	place-items: center;
-	width: calc(var(--tap) / 2);
+	/* MEASURED: the half-tap square is 22px OUTER, so the 1px border each
+	   side leaves a 20px content box - and three mono glyphs at
+	   --text-micro measure 21.6px ink, so "PDF"/"CSV"/"MP4" had ~0.8px of
+	   their last glyph shaved by `overflow: hidden` on 22 of 22 tiles.
+	   The BOX was wrong, not the text: a format badge must hold its own
+	   label. It keeps the half-tap floor and the square HEIGHT (so tiles
+	   on a list still align), and grows horizontally by --space-1 a side
+	   to hold the label's real ink. Shrinking the type to fit was the
+	   other option and is the anti-pattern. */
+	width: auto;
+	min-width: calc(var(--tap) / 2);
 	height: calc(var(--tap) / 2);
+	padding-inline: var(--space-1);
 	border: 1px solid var(--line-soft);
 	background: var(--panel-nested);
 	color: var(--ink-dim);
 	font-size: var(--text-micro);
 	overflow: hidden;
 }
-.cm-attach--sm .cm-attach__media,
-.cm-attach--xs .cm-attach__media { width: calc(var(--tap) / 2); }
+/* MEASURED, and the reason the sm/xs cards carry no media width of
+   their own: a `width: calc(var(--tap) / 2)` override here re-froze the
+   sm/xs tile at the same 22px box the rule above was rewritten to fix
+   (content 10px wider than its box, on desktop AND phone - four tiles
+   in the audit). The base rule above is the single sizing answer: it
+   already floors at the half-tap square and grows for the ink. */
 .cm-attach--image .cm-attach__media { width: calc(var(--tap) * 1.6); height: calc(var(--tap) * 1.2); }
 .cm-attach__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cm-attach__content {
@@ -8760,14 +8903,23 @@ input.cm-slider:disabled {
 	font-weight: 700;
 }
 
-/* the rail: a handle you can CLICK (toggle) or DRAG (resize). It
-   straddles the panel edge so the hit area is real, and it disappears
-   when there is no collapse to toggle and on phones, where the sheet
-   owns the interaction. */
+/* the rail: a handle you can CLICK (toggle) or DRAG (resize). A 12px
+   strip flush inside the panel's own right edge, so the whole hit area
+   is reachable; it disappears when there is no collapse to toggle and on
+   phones, where the sheet owns the interaction.
+   MEASURED, two earlier forms that look plausible and are not:
+   `inset-inline-end: -6px` (straddling the edge) loses to the panel's own
+   `overflow: hidden` - the outside half is clipped away (effective grab
+   6px, outermost 6px unreachable) and the panel reports scrollWidth 261
+   in a 255px box on every audit. And the strip must stay a direct child
+   of the clipping panel: promoted outside it, the panel's scrollWidth
+   counts it as content and the box never stops overflowing.
+   It stays `aria-hidden` with no text: nothing is hidden from a reader.
+   If this ever needs a wider grab, widen the rail; never unclip the panel. */
 .cm-sidebar__rail {
 	position: absolute;
 	inset-block: 0;
-	inset-inline-end: -6px;
+	inset-inline-end: 0;
 	width: 12px;
 	cursor: col-resize;
 	touch-action: none;
@@ -9671,6 +9823,16 @@ input.cm-slider:disabled {
    The list is rendered by the page, not injected by script: the spy
    only ever ADDS `aria-current` to rows it is handed, so the markup is
    readable and navigable with scripting off. */
+/* The body column of the docs shell: the sections' stack, and at the TOC's
+   breakpoint a grid ITEM beside it. A grid item's automatic minimum size is
+   its content's min-content size, so a wide table would push the TOC column
+   rather than scroll inside this one - the same guard `.cm-stack` carries
+   for its flex children, restated because the element is in both layouts.
+   It is also what `.cm-shell--rail > *` centres at the prose measure, so the
+   sections keep their cap inside a column wider than it at 1440. */
+.cm-doc__body {
+	min-width: 0;
+}
 .cm-doc__toc {
 	display: none;
 }
@@ -10775,6 +10937,16 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 /* `--section` must win over the base `.cm-stack` gap, so it is scoped
    higher rather than relying on order alone. */
 .cm-stack.cm-stack--section { gap: var(--stack-section); }
+/* The docs shell is that same element AND a two-column grid at >=1180, so
+   the shorthand above would space its columns by the SECTION RHYTHM (24px)
+   rather than the gutter (20px) - measured: `column-gap: var(--gutter)`
+   elsewhere on the element computed 24px, because this rule is specificity
+   0-2-0 and later in the file. The row gap is untouched (there is one row,
+   and the sections are stacked by `.cm-doc__body`), so this retunes
+   nothing but the column the TOC sits in - and it puts the measure back
+   to vw - rail - gutter - 288, byte-identical on both sides of the 1180
+   breakpoint, which is the invariant the reservation exists for. */
+.cm-stack.cm-shell--toc { column-gap: var(--gutter); }
 /* A section's own children, same trap, same fix, same reason it is here.
 
    `.cm-section--pad` is a flex column with `gap: var(--stack-gap)`, and
@@ -10790,3 +10962,4 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    20, 56, 28) and `lists` four (32, 20, 26, 44). Moved here, every
    section reports a single gap. */
 .cm-section--pad > * { margin-block: 0; }
+

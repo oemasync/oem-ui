@@ -446,6 +446,15 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 			rail
 		/>
 		<main class={`cm-shell cm-shell--rail cm-stack cm-stack--section${TOC_IDS.length > 0 ? ' cm-shell--toc' : ''}`}>
+			{/* The body/TOC split mirrors shadcn's own docs shell: a content
+			    column and the TOC are SIBLINGS in a row, which is the only way a
+			    sticky right-hand column can exist. As flex-column children of the
+			    shell they instead stacked - the TOC's own rules (sticky, 288px)
+			    were correct while the element itself sat at document y=9056 of
+			    9577, so the "on this page" column appeared only after the last
+			    section. The wrapper keeps `main`'s children at exactly two, and
+			    carries the stack so the page's rhythm is unchanged. */}
+			<div class="cm-doc__body cm-stack cm-stack--section">
 			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." />
 			<StatusStrip label="status" status="ok">
 				css, js and astro components verified. build-testable.
@@ -1686,7 +1695,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 				</SectionHead>
 				<div style="display:grid;gap:var(--space-5);grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))">
 					<div>
-						<p class="cm-row__meta" style="margin-bottom:var(--space-3)">stacked</p>
+						<p class="cm-caption">stacked</p>
 						<ul class="cm-rows cm-stack">
 							<li class="cm-row cm-section cm-section--pad">
 								<span class="cm-row__body">
@@ -1703,7 +1712,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 						</ul>
 					</div>
 					<div>
-						<p class="cm-row__meta" style="margin-bottom:var(--space-3)">flush</p>
+						<p class="cm-caption">flush</p>
 						<ul class="cm-rows">
 							<li class="cm-row">
 								<span class="cm-row__body">
@@ -1716,7 +1725,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 				</div>
 
 				<div>
-					<p class="cm-row__meta">flush, when the rows carry their own dividers</p>
+					<p class="cm-caption">flush, when the rows carry their own dividers</p>
 					<ul class="cm-rows cm-stack cm-stack--flush">
 						<li class="cm-row">
 							<span class="cm-row__body">one</span>
@@ -1734,7 +1743,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 				</div>
 
 				<div>
-					<p class="cm-row__meta">tight, the ledger case</p>
+					<p class="cm-caption">tight, the ledger case</p>
 					<ul class="cm-rows cm-stack cm-stack--tight">
 						<li class="cm-row">
 							<span class="cm-row__body">app.example.com</span>
@@ -1770,7 +1779,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 						</SectionHead>
 						<div class="cm-stack">
 							<div>
-								<p class="cm-row__meta" style="margin-bottom:var(--space-3)">the four stack steps, tight to loose</p>
+								<p class="cm-caption">the four stack steps, tight to loose</p>
 								<ul class="cm-rows cm-stack cm-stack--tight">
 									<li class="cm-row"><span class="cm-row__body">--tight</span></li>
 								</ul>
@@ -1785,7 +1794,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 								</ul>
 							</div>
 							<div>
-								<p class="cm-row__meta" style="margin-bottom:var(--space-3)">a row that wraps, and a control group that stacks</p>
+								<p class="cm-caption">a row that wraps, and a control group that stacks</p>
 								<div class="cm-card__body cm-row cm-row--wrap">
 									<span class="cm-chip">one</span>
 									<span class="cm-chip">two</span>
@@ -1802,7 +1811,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 								</div>
 							</div>
 							<div>
-								<p class="cm-row__meta" style="margin-bottom:var(--space-3)">a bounded code block, a taller field, a grid seg, a hint</p>
+								<p class="cm-caption">a bounded code block, a taller field, a grid seg, a hint</p>
 								<pre class="cm-code cm-code--scroll">{'{\n  "listen": "443",\n  "target": "10.0.0.8:8443"\n}'}</pre>
 								<div class="cm-field" style="margin-top:var(--space-3)">
 									<label class="cm-field__label">metadata</label>
@@ -1817,7 +1826,7 @@ A vertical run of records. The stack is opt-in rather than baked into the list, 
 								</p>
 							</div>
 							<div>
-								<p class="cm-row__meta" style="margin-bottom:var(--space-3)">a tight card head, a spaced kicker, a padded block, a filling child</p>
+								<p class="cm-caption">a tight card head, a spaced kicker, a padded block, a filling child</p>
 								<div class="cm-card">
 									<div class="cm-card__head cm-card__head--tight cm-row">
 										<span class="cm-row__title">tight head</span>
@@ -2262,7 +2271,7 @@ The monospace surface for structured text, in the two forms it is always used: a
 									<div class="cm-row" style="justify-content:space-between">
 										<div class="cm-row__title">
 											WebSocket upgrade
-											<div class="cm-row__meta">rewrite the Host header</div>
+											<div class="cm-caption">rewrite the Host header</div>
 										</div>
 										<label class="cm-switch">
 											<input type="checkbox" checked />
@@ -2274,7 +2283,7 @@ The monospace surface for structured text, in the two forms it is always used: a
 									<div class="cm-row" style="justify-content:space-between">
 										<div class="cm-row__title">
 											Force a trailing slash
-											<div class="cm-row__meta">off by default</div>
+											<div class="cm-caption">off by default</div>
 										</div>
 										<label class="cm-switch">
 											<input type="checkbox" />
@@ -2390,7 +2399,7 @@ A compact set of exclusive choices, and a summary row that reveals a panel. Both
 								aria-label="Delete rule">&#215;</button>
 						</summary>
 						<div class="cm-disclosure__body">
-							<p class="cm-row__meta">The body is hidden until the summary is activated.</p>
+							<p class="cm-caption">The body is hidden until the summary is activated.</p>
 						</div>
 					</details>
 				</div>
@@ -2402,7 +2411,7 @@ A compact set of exclusive choices, and a summary row that reveals a panel. Both
 Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key, <code>.cm-pager</code> is real links with <code>aria-current</code>, <code>.cm-avatar</code> is a square tile that falls back to initials, and <code>.cm-accordion</code> is disclosures that close each other through the platform's own <code>name</code> attribute &mdash; drop <code>name</code> and several may stand open together. Script touches it in exactly one direction: <code>aria-disabled</code> on a summary vetoes the toggle, which <code>&lt;details&gt;</code> has no attribute for.
 				</SectionHead>
 				<div style="display:grid;gap:var(--space-6);max-width:34rem">
-					<p class="cm-row__meta">
+					<p class="cm-caption">
 						Open the palette with
 						<span class="cm-kbd-group"><kbd class="cm-kbd">Ctrl</kbd>+<kbd class="cm-kbd">K</kbd></span>,
 						then <kbd class="cm-kbd">Esc</kbd> to leave.
@@ -2437,28 +2446,28 @@ Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key,
 								<span class="cm-disclosure__mark" aria-hidden="true">&#9656;</span>
 								<span class="cm-disclosure__title">Is it accessible?</span>
 							</summary>
-							<div class="cm-disclosure__body"><p class="cm-row__meta">Native details: keyboard and find-in-page for free.</p></div>
+							<div class="cm-disclosure__body"><p class="cm-caption">Native details: keyboard and find-in-page for free.</p></div>
 						</details>
 						<details class="cm-disclosure" name="faq">
 							<summary class="cm-disclosure__summary">
 								<span class="cm-disclosure__mark" aria-hidden="true">&#9656;</span>
 								<span class="cm-disclosure__title">Does it need a script?</span>
 							</summary>
-							<div class="cm-disclosure__body"><p class="cm-row__meta">No. A shared <code>name</code> makes the browser close the others.</p></div>
+							<div class="cm-disclosure__body"><p class="cm-caption">No. A shared <code>name</code> makes the browser close the others.</p></div>
 						</details>
 						<details class="cm-disclosure" name="faq">
 							<summary class="cm-disclosure__summary">
 								<span class="cm-disclosure__mark" aria-hidden="true">&#9656;</span>
 								<span class="cm-disclosure__title">Why square?</span>
 							</summary>
-							<div class="cm-disclosure__body"><p class="cm-row__meta">Because the house has no curves.</p></div>
+							<div class="cm-disclosure__body"><p class="cm-caption">Because the house has no curves.</p></div>
 						</details>
 						<details class="cm-disclosure" name="faq">
 							<summary class="cm-disclosure__summary" aria-disabled="true">
 								<span class="cm-disclosure__mark" aria-hidden="true">&#9656;</span>
 								<span class="cm-disclosure__title">Can one be frozen?</span>
 							</summary>
-							<div class="cm-disclosure__body"><p class="cm-row__meta"><code>aria-disabled</code> on the summary vetoes the platform's own toggle &mdash; the one place script touches this component.</p></div>
+							<div class="cm-disclosure__body"><p class="cm-caption"><code>aria-disabled</code> on the summary vetoes the platform's own toggle &mdash; the one place script touches this component.</p></div>
 						</details>
 					</div>
 
@@ -3869,7 +3878,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 								<tbody>
 									<tr><td>dev-blog</td><td>yes</td><td>yes</td></tr>
 									<tr><td>links</td><td>yes</td><td>yes</td></tr>
-									<tr><td>hermes-articles</td><td class="cm-row__meta">pending</td><td class="cm-row__meta">pending</td></tr>
+									<tr><td>hermes-articles</td><td class="cm-caption">pending</td><td class="cm-caption">pending</td></tr>
 								</tbody>
 							</table>
 							<p>The <code>th</code> above is bold because <code>base.css</code> says so. Behind a Tailwind v3 preflight it measured 400 - the same weight as every <code>td</code> beside it, so the header row became a row.</p>
@@ -5104,7 +5113,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<span class="cm-bubble__reaction">👍</span>
 					</div>
 				</div>
-				<p class="cm-row__meta">
+				<p class="cm-caption">
 					an interactive bubble is a REAL link or button - focusable, correct
 					role, the text is the accessible name:
 				</p>
@@ -5752,7 +5761,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						<span class="cm-spec__val">consumer groups; CSS only tightens the row</span>
 					</div>
 				</div>
-				<p class="cm-row__meta">
+				<p class="cm-caption">
 					hover a row for its toolbar - or tab into it: the button stays in
 					the tab order even while it is invisible
 				</p>
@@ -6060,7 +6069,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 						</span>
 					</div>
 				</div>
-				<p class="cm-row__meta">
+				<p class="cm-caption">
 					the group: a keyboard-scrollable snapping row (tabindex + role +
 					label for presentational rows) with an edge fade:
 				</p>
@@ -6391,6 +6400,7 @@ Astro: import Header/Footer/Head/PageHead/PostHead from 'oem-ui/astro'.</pre>
 				</div>
 			</section>
 			)}
+			</div>
 			{/* The doc TOC's rows are server-rendered, and the spy only adds
 			    aria-current to rows it is handed - so with scripting off the
 			    list is still readable and still navigates. */}

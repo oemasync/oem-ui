@@ -226,7 +226,7 @@ const REQUIRED = [
 	'cm-btn--ghost', 'cm-btn-group', 'cm-status', 'cm-list-head', 'cm-rows', 'cm-row',
 	'cm-row__idx', 'cm-row__body', 'cm-row__title', 'cm-row__desc', 'cm-row__meta',
 	'cm-row__sym', 'cm-list-more', 'cm-prose', 'cm-media', 'cm-cursor', 'cm-rule',
-	'cm-term', 'cm-kv', 'cm-tag', 'cm-footer',
+	'cm-term', 'cm-kv', 'cm-tag', 'cm-footer', 'cm-caption',
 ];
 for (const sel of REQUIRED) {
 	check(`defines .${sel}`, () => assert(comp.includes('.' + sel), `missing .${sel}`));
@@ -240,6 +240,24 @@ check('row title never ellipsizes before the description does', () => {
 check('row body is a flex baseline row (prevents title/desc collision)', () => {
 	const b = comp.match(/\.cm-row__body\s*\{[^}]*\}/)[0];
 	assert(/display:\s*flex/.test(b) && /align-items:\s*baseline/.test(b), 'row body must flex+baseline');
+});
+check('the truncating desc cannot widen the row floor it sits in', () => {
+	// `.cm-row__body` floors at `min-width: min-content`, and that floor
+	// used to count the desc's whole nowrap text: measured at 390px, two
+	// rows in #proselists-order forced 297/351px bodies inside a 270px
+	// row and pushed the page 87px sideways. Inline-size containment
+	// keeps the desc out of every ancestor's intrinsic width; the title
+	// still supplies the floor.
+	const d = comp.match(/\.cm-row__desc\s*\{[^}]*\}/)[0];
+	assert(/contain:\s*inline-size/.test(d),
+		'the desc must not contribute its text to the row floor');
+	// ...and the variants that SIZE the desc from its content opt back
+	// out: with the containment applied they measured 0px (column) and
+	// 67px against 169px (inline) - a silently short column.
+	assert(/\.cm-rows--column \.cm-row__desc\s*\{[^}]*contain:\s*none/.test(comp),
+		'the column desc is content-sized; containment would collapse it');
+	assert(/\.cm-rows--inline \.cm-row__desc\s*\{[^}]*contain:\s*none/.test(comp),
+		'the inline excerpt is content-sized; containment would shorten it');
 });
 
 check('pre can never widen the page (narrow-viewport overflow guard)', () => {
@@ -3220,6 +3238,23 @@ check('the rail clears the content, and the measure stays centred beside it', ()
 		'the measure is not re-imposed inside the space beside the rail');
 });
 
+// The rail band's other edge. `margin-inline: auto` sizes a flex child to
+// fit-content BEFORE the max-width clamps it, so with the prose measure as
+// the cap the body rendered its whole 860px inside a 440px content box at
+// 1000px: measured right=1112 at 1000 and 1024, i.e. a page that scrolled
+// sideways across 1000-1111 - the same defect the >=1180 grid fixes for
+// its items with `margin-inline: 0`. `100%` resolves against the space
+// beside the rail, so the clamp is the room that actually exists; it
+// exceeds the token on wide screens and changes nothing there (1440: 880).
+check('the rail measure is capped by the room that actually exists', () => {
+	const rule = comp.match(/\.cm-shell--rail > \*\s*\{[^}]*\}/);
+	assert(rule, 'no `.cm-shell--rail > *` rule found');
+	assert(/max-width:\s*min\(var\(--maxw\),\s*100%\)/.test(rule[0]),
+		`the measure is not clamped to the room beside the rail, got: ${rule[0]}`);
+	assert(/margin-inline:\s*auto/.test(rule[0]),
+		'the centring inside the space beside the rail was dropped');
+});
+
 check('the header opts in through a documented rail prop', () => {
 	assert(/^\trail\?: boolean;$/m.test(RAIL_HDR),
 		'Header.astro does not declare a rail prop');
@@ -3567,6 +3602,25 @@ check('the inline row hands the excerpt off instead of starving it', () => {
 		`no lower handoff near the measured 844px edge: ${JSON.stringify(conds)}`);
 	assert(conds.some((c) => /min-width:\s*1000px/.test(c) && /max-width:\s*10\d\d/.test(c)),
 		`the rail band needs BOTH edges -- it recovers at 1060px: ${JSON.stringify(conds)}`);
+});
+
+// The third state of the inline row: on a phone the excerpt and the date
+// are gone, the title IS the row, and a `nowrap` label made the row's
+// floor the whole string. Measured in WebKit: 339px of row content
+// (padding 16 + idx 42 + gap 16 + title 250 + gap 16 + sym 8) against a
+// 295px row at 375 and a 240px row at 320, so the row's own children
+// pushed the page 4px and 59px sideways -- SPAN.cm-row__sym read
+// right=379 at every viewport below 379, the floor itself. The label is
+// never cut; it wraps, the handoff this file already uses elsewhere.
+check('the inline row wraps its title when the row cannot afford it', () => {
+	const rule = '.cm-rows--inline .cm-row__title { white-space: normal; }';
+	const i = comp.indexOf(rule);
+	assert(i > -1, 'no wrap rule: a narrow inline row is widened by its own label again');
+	const mqAt = comp.lastIndexOf('@media', i);
+	assert(mqAt > -1 && /^@media\s*\(max-width:\s*680px\)/.test(comp.slice(mqAt)),
+		'the wrap rule is not inside a max-width: 680px query');
+	assert(!/\n\}/.test(comp.slice(mqAt, i)),
+		'the query closed before the wrap rule, so the rule is not inside it');
 });
 
 // The --measure-title specimen is the showcase's half of the increment.
@@ -8548,6 +8602,14 @@ check('a variant is only called demonstrated if it differs from its base', () =>
 		// the media slot is a sub-frame of the card (their Media styling)
 		assert(/\.cm-attach__media \{[^}]*border: 1px solid var\(--line-soft\)/.test(css),
 			'the media slot lost its frame');
+		// the tile is sized ONCE, by the base rule - a sm/xs width pin
+		// re-froze it at the 22px box and shaved the label again
+		// (measured in the layout audit: content 10px wider than its
+		// box, four tiles across desktop and phone)
+		assert(/\.cm-attach__media \{[^}]*min-width: calc\(var\(--tap\) \/ 2\)/.test(css),
+			'the media tile must keep its half-tap floor');
+		assert(!/\.cm-attach--(?:sm|xs) \.cm-attach__media\s*\{[^}]*width:/.test(css),
+			'the sm/xs tile is re-pinned to a width that shaves its label');
 		// the group is scrollable, snapping and composed with the batch-15 fade
 		assert(/\.cm-attach-group \{[^}]*overflow-x: auto/.test(css)
 			&& /scroll-snap-align: start/.test(css),

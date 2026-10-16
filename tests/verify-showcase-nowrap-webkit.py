@@ -21,11 +21,26 @@ load the theme guard at all, so there is no attribute to find; asserting it
 invented a defect. And `.cm-nav__links` does not exist -- the drawer's links
 live under a different class -- so that selector asserted on nothing. Each of
 those three was a NO-OP probe that reported the page as broken.
+
+MEASURE A SETTLED PAGE, NOT THE BOOT WINDOW
+The runtime boots AFTER `networkidle`, and until it does, WebKit returns
+placeholder geometry for subtrees it has not laid out. MEASURED on this
+build: the same `--end` tip in #overlays read [210..433] in one run and
+[101..325] the next -- left edge on the trigger's left, width at its cap,
+a box no settled layout produces -- and the document scrollWidth read 433
+against a 430 viewport before boot, 430 after. The page never actually
+scrolls (pageScrollsX is False at both moments) and the tip is
+`visibility: hidden`, so this is an unlaid-out-subtree artifact, not
+something a reader can hit. The probe waits for the runtime before it
+measures, the way every other harness in tests/ does -- and waits on the
+LOAD event, because on a CPU-starved box the network goes quiet in
+milliseconds while parsing takes ~30s, so `networkidle` fires in that gap
+and hands you the same unlaid-out page.
 """
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = "http://192.168.1.68:4321/"
+URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4321/"
 VIEWPORTS = [
     ("iPhone SE", 375, 667),
     ("iPhone 15 Pro", 402, 874),
@@ -153,7 +168,17 @@ with sync_playwright() as p:
             ),
         )
         page = ctx.new_page()
-        page.goto(URL, wait_until="networkidle")
+        # Wait for the LOAD event, not `networkidle`: with the main thread
+        # starved (this box runs a spec campaign alongside), resources
+        # finish in ~50ms while parsing + the module script take ~30s, so
+        # network goes quiet LONG before load and `networkidle` fires in
+        # that gap. Measure after that and you are reading a page that has
+        # not laid out yet (see the docstring). `load` waits for the real
+        # milestone, and the length guards below cover a starved box.
+        page.set_default_timeout(180000)
+        page.goto(URL, wait_until="load", timeout=180000)
+        page.wait_for_function("() => !!window.cliMono", timeout=180000)
+        page.wait_for_timeout(150)
         r = probe(page)
 
         if not r["title"] or "not found" in r["title"].lower():
