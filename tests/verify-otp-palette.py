@@ -255,6 +255,88 @@ with sync_playwright() as p:
     check('a query does not survive a reopen',
           st['q'] == '' and st['shown'] == 5, st)
 
+    # ---------------- rows that arrive AFTER init() ----------------
+    # A static page binds a finished list. An SPA does not: the rows are
+    # rendered on a later tick, so the palette can be bound against an empty
+    # list and opened over the real one. Two failures follow, and BOTH are
+    # silent -- the reader is told "no matches" while looking at every row,
+    # and a row the filter never saw ignores the query. Each check below is
+    # satisfied by the broken binder unless it measures arrival itself.
+    st = page.evaluate("""() => {
+      const d = document.getElementById('cmd-demo');
+      d.close();
+      const list = d.querySelector('.cm-command__list');
+      const g = list.querySelector('.cm-command__group');
+      // wipe every row the specimen shipped: this is the bind-against-
+      // nothing state a client is in before its first sync
+      list.querySelectorAll('.cm-command__item').forEach(i => i.remove());
+      return { items: d.querySelectorAll('.cm-command__item').length };
+    }""")
+    check('the palette can be emptied (the SPA bind state)', st['items'] == 0, st)
+
+    page.click('button[data-cm-open="cmd-demo"]')
+    st = page.evaluate("""() => {
+      const d = document.getElementById('cmd-demo');
+      const e = d.querySelector('.cm-command__empty');
+      return { open: d.open, emptyHidden: e ? e.hidden : null };
+    }""")
+    check('an empty palette says so instead of hiding the empty state',
+          st['open'] is True and st['emptyHidden'] is False, st)
+    page.keyboard.press('Escape')
+
+    # rows arrive while the palette is CLOSED
+    st = page.evaluate("""() => {
+      const d = document.getElementById('cmd-demo');
+      const g = d.querySelector('.cm-command__group');
+      const mk = (id, label) => {
+        const el = document.createElement('div');
+        el.className = 'cm-command__item';
+        el.setAttribute('role', 'option');
+        el.id = id;
+        el.setAttribute('aria-selected', 'false');
+        el.innerHTML = '<span>' + label + '</span>';
+        g.appendChild(el);
+        return el;
+      };
+      mk('cmd-late-a', 'late alpha');
+      mk('cmd-late-b', 'late beta');
+      return { items: d.querySelectorAll('.cm-command__item').length };
+    }""")
+    check('late rows landed in the closed palette', st['items'] == 2, st)
+
+    page.click('button[data-cm-open="cmd-demo"]')
+    st = page.evaluate("""() => {
+      const d = document.getElementById('cmd-demo');
+      const items = [...d.querySelectorAll('.cm-command__item')];
+      const e = d.querySelector('.cm-command__empty');
+      return { shown: items.filter(i => !i.hidden).length,
+               emptyHidden: e ? e.hidden : null,
+               active: (d.querySelector('.cm-command__item.is-active') || {}).id };
+    }""")
+    check('reopening a palette whose rows arrived while closed shows them',
+          st['shown'] == 2 and st['emptyHidden'] is True, st)
+    check('...and the first late row is the one Enter would run',
+          st['active'] == 'cmd-late-a', st)
+
+    # a query typed NOW must govern rows the binder never saw
+    page.fill('.cm-command__input', 'beta')
+    st = page.evaluate("""() => {
+      const d = document.getElementById('cmd-demo');
+      const items = [...d.querySelectorAll('.cm-command__item')];
+      return { shown: items.filter(i => !i.hidden).map(i => i.id) };
+    }""")
+    check('a query filters rows the binder never bound',
+          st['shown'] == ['cmd-late-b'], st)
+
+    # a row the binder never bound must still dismiss the palette on click
+    st = page.evaluate("""() => {
+      const d = document.getElementById('cmd-demo');
+      d.querySelector('#cmd-late-b').click();
+      return { open: d.open };
+    }""")
+    check('a row added after init still closes the palette on click',
+          st['open'] is False, st)
+
     check('no sideways scroll at 402px',
           page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth"))
     check('no page JS errors', not errors, errors)

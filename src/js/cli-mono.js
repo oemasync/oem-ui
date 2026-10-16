@@ -3470,10 +3470,19 @@
 			// Selecting a row runs it and dismisses the palette; that is
 			// the whole point of the component, and the dialog's own
 			// close() is what restores focus to the trigger.
-			items().forEach(function (it) {
-				it.addEventListener('click', function () {
-					if (dlg.open && typeof dlg.close === 'function') dlg.close();
-				});
+			//
+			// DELEGATED to the dialog, not bound per row. An SPA re-renders
+			// its list, so a listener attached to a row that does not exist
+			// yet -- or that the framework replaces tomorrow -- never fires:
+			// the row still RUNS (the app's own handler lives in React) but
+			// the palette stays open, parked on top of the view it just
+			// navigated to. MEASURED in the client: every room rendered
+			// after init() could not close the palette.
+			dlg.addEventListener('click', function (e) {
+				var t = e.target;
+				if (!t || !t.closest) return;
+				if (!t.closest('.cm-command__item')) return;
+				if (dlg.open && typeof dlg.close === 'function') dlg.close();
 			});
 
 			// Reopening starts clean: a palette that remembers last
@@ -3484,6 +3493,28 @@
 			});
 
 			filter();
+
+			// The list is not necessarily FINISHED when this runs. An SPA
+			// renders its rows on a later tick, so a palette can be bound
+			// against an empty list and then opened over the real one --
+			// where `filter()` at bind time left the empty state SHOWN, and
+			// a row the filter never saw stays visible under a query that
+			// should have hidden it. Both are worse than no palette: the
+			// reader is told there is nothing while looking at everything.
+			//
+			// childList on the subtree catches rows arriving or leaving;
+			// `open` catches the palette being shown over whatever changed
+			// while it was closed. `hidden` writes are NOT in the attribute
+			// filter, so filter()'s own output cannot re-trigger it -- the
+			// observer converges after one pass instead of spinning.
+			if (typeof MutationObserver === 'function') {
+				new MutationObserver(function () { filter(); }).observe(dlg, {
+					attributes: true,
+					attributeFilter: ['open'],
+					childList: true,
+					subtree: true
+				});
+			}
 		});
 	}
 
