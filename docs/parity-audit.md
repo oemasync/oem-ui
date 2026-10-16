@@ -340,3 +340,60 @@ disclosure toggling both ways, a revealed panel with real height);
 The pinned list, the README prose ("the catalog is 66"), the section index
 and the TOC harness expectations all moved together — 66 names, in
 shadcn's order, checked name-by-name.
+
+## 8. Re-measured 2026-10-16 — layout at every width, and three instruments that had stopped measuring
+
+The catalogue re-checked against the live site at this commit: **66 pinned,
+66 live on ui.shadcn.com, identical membership AND order** — no drift since
+section 7. What follows is the rest of the design: the page shape.
+
+A new instrument drives it — `tests/audit-demos.py` walks every demo control
+in WebKit at 1280px and 390px (touch) and reports what escapes its box, what
+a click cannot reach, and what sits under the touch floor. It opened at **40
+triaged findings**; it now reports **0 failing findings** (30 informational
+below-touch notes: small buttons that clear the AA floor for their named
+size). The defects that survived triage were all one shape — a child naming
+its measure in a way its container could not afford:
+
+- **`.cm-row__desc` contributes nothing to its ancestors' intrinsic width
+  now** (`contain: inline-size`), with `contain: none` opt-outs in the two
+  variants that SIZE from it (`--column` measured 0px, `--inline` 67px
+  against 169px with containment on). Twelve items in `#proselists-order`
+  forced 297/351px bodies inside a 270px row: **87px of sideways scroll**.
+- **Thirteen captions were `<p class="cm-row__meta">`** — a value slot's
+  `nowrap` + `overflow: hidden` on a sentence; every one lost its tail, the
+  worst **513px on a phone**. They are `.cm-caption` now, and their stray
+  inline margins went with them.
+- **`.cm-shell--rail > *` caps at `min(var(--maxw), 100%)`**: auto margins
+  size a flex child to fit-content BEFORE the cap, so the 860px prose body
+  overflowed a 440px box at 1000px (right=1112) across **1000-1111**.
+- **The sidebar rail sits flush** (`inset-inline-end: 0`; the panel measured
+  sw=261 in a cw=255 box), the attach `--sm/--xs` width re-freeze is gone (a
+  20px box for 21.6px of ink), and below 680px the inline title wraps — its
+  nowrap floor (339px: pad, a 42px index, the 250px label) escaped viewports
+  under 379px.
+
+Sweeps, not samples: **300-1200px at 10px steps plus 1024/1280/1440, and
+three iPhone device passes (SE 320, Pro 393, Pro Max 430) — 0 escaping
+elements at every width**; 0 sideways scroll at 390/375/320/1440.
+
+Three instruments had stopped measuring, and were repaired rather than
+trusted: a harness with a hardcoded URL was reading a DIFFERENT checkout's
+build; a `42ch` expectation typed as 404.578125px was really tracking the
+box's fonts (it resolves 403.265625px after a host font change — measured
+identically on both checkouts, and the specimen matched the page's own 42ch
+to the digit); and a `:scope >` selector counted zero rail links after the
+rail was divided into labelled groups (56 links, every one at x=8, so the
+harness reported a rail that "wrapped" and an index that "lost one"). The
+mutation machinery had the same rot at scale: **49 harnesses read the page
+path the rename retired** and had stopped proving anything before mutating.
+45 are repointed; `mutate-inline-rows.mjs` is re-proved end to end —
+**17/17 caught, 0 NO-OP, restore byte-identical (sha256)** — and the rest are
+swept serially, since each mutates shared source.
+
+Evidence: `npm run parity:live` 66/66 identical; audit **0 failing
+findings**; suite **687/0** (four new pins, each mutation-proven);
+`verify-no-sideways-scroll.py` 0 sideways at 390/375/320/1440;
+`verify-showcase-nowrap-webkit.py` clean at 375/402/430/1440;
+`verify-sidebar.py` 34/34; `verify-attach-quiz.py` 14/14;
+`verify-doc-toc.py` 81/81; `verify-section-rhythm.py` 6/6.
