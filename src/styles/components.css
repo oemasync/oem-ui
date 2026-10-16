@@ -10060,6 +10060,40 @@ input.cm-slider:disabled {
 	letter-spacing: 0.02em;
 }
 
+/* Media in the flow. Typeset's rules are all zero-specificity `:where()`,
+   so the bare element defaults in base.css that would give a rendered post
+   its framed image and its captioned figure LOSE inside a `.cm-typeset` -
+   `figure img` is a descendant selector at (0,0,2) against `:where(*)` at
+   (0,0,0), so the `*` reset wins and the frame is gone. A system whose
+   whole contract is "styling for a subtree a renderer emits" has to own the
+   media a renderer emits, so the four rules are stated here too.
+
+   MEASURED in WebKit at 390px on a `.cm-typeset` fixture, before this
+   block: `<video width="1200">` computed 1200px wide in a 390px column,
+   identical to the untyped case - the base defaults were losing exactly as
+   the specificity says. */
+.cm-typeset > :where(video) {
+	max-width: 100%;
+	height: auto;
+	display: block;
+	margin-block-start: var(--cm-typeset-flow);
+}
+.cm-typeset > :where(figure) {
+	margin-block-start: var(--cm-typeset-flow);
+}
+.cm-typeset > :where(figure) img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--line);
+}
+.cm-typeset > :where(figcaption) {
+	font-size: max(var(--min-font), 0.9em);
+	color: var(--ink-dim);
+	margin-top: var(--space-2);
+}
+
 /* A wide table scrolls; wrapping it is the renderer's job (Typeset documents
    a `typeset-scroll` wrapper for the same reason). */
 .cm-typeset-scroll {

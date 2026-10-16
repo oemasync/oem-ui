@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'trace', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -83,7 +83,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["tables", 6],
 	["panels", 6],
 	["content", 5],
-	["prose", 7],
+	["prose", 8],
 	["layout", 7],
 	["composed", 8],
 	["reference", 4],
@@ -4076,6 +4076,42 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 								<p>This one opted out with <code>not-typeset</code>, so the system's rhythm does not reach it.</p>
 							</div>
 						</div>
+					</section>
+
+					<!-- ===================================================
+					     Media in an article body. A renderer emits these
+					     BARE - no class on the figure, the image, the
+					     caption or the video - so their defaults are the
+					     library's to declare, exactly like the list
+					     markers and the `th` weight the `article body`
+					     section above covers.
+
+					     The specimen is deliberately classless. A
+					     `.cm-media` here would prove nothing: that is
+					     the opt-in frame, and it styles its own image.
+					     The case with no class is the one that was
+					     broken.
+					     =================================================== -->
+					<section id="mediablocks" class="cm-section cm-section--pad">
+						<SectionHead title="media in a post">
+A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;</code> and <code>&lt;video&gt;</code> with no class on them, so the library declares their defaults the way it declares the list markers. <code>.cm-media</code> is the opt-in frame for markup a person writes; this is the same picture for markup a renderer emits.
+						</SectionHead>
+
+						<div class="cm-prose">
+							<p>A screenshot in a post arrives 1200px wide and has to fit the column, sit on the same rail as this paragraph, and keep its caption legible as a caption rather than as one more sentence.</p>
+							<figure>
+								<img
+									src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='420'%3E%3Crect width='1200' height='420' fill='%23262626'/%3E%3Crect x='40' y='40' width='520' height='16' fill='%238b8b8b'/%3E%3Crect x='40' y='80' width='900' height='10' fill='%234a4a4a'/%3E%3Crect x='40' y='104' width='820' height='10' fill='%234a4a4a'/%3E%3Crect x='40' y='160' width='1120' height='200' fill='%231c1c1c'/%3E%3C/svg%3E"
+									alt="A wide screenshot placeholder, 1200 by 420 pixels."
+									width="1200" height="420" loading="lazy" />
+								<figcaption>fig 1. a 1200px screenshot in an article column. The frame is the element default, and the caption steps down to --ink-dim.</figcaption>
+							</figure>
+							<p>An embedded clip is the other half: a <code>&lt;video&gt;</code> carries its own intrinsic width, so without a default it overflows the column and takes the whole document's scroll with it.</p>
+							<video width="1200" height="400" controls
+								poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='400'%3E%3Crect width='1200' height='400' fill='%231c1c1c'/%3E%3Cpath d='M570 170l60 30-60 30z' fill='%238b8b8b'/%3E%3C/svg%3E"></video>
+						</div>
+
+						<p class="cm-head__sub">The figure, its image and the caption are <strong>bare element rules</strong>, so <code>.cm-media img</code> still wins its own box — the element default reaches markup that carries no class, and a class rule reaches markup that carries one. The video is the one rule scoped with <code>:not([class])</code>, because a consumer's own player supplies its own box.</p>
 					</section>
 
 																<section id="tablelabels" class="cm-section cm-section--pad" data-cm-table-labels>
