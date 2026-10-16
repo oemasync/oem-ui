@@ -174,6 +174,91 @@ with sync_playwright() as pw:
           pinned['grew'] and pinned['atEnd'] and pinned['follow1'] == 'true'
           and not pinned['stillAtEnd'] and pinned['follow2'] == 'false', pinned)
 
+    # ---- the JUMP to the end survives growth that arrives mid-flight ------
+    # The leg above grows content while the reader is SITTING at the edge, so
+    # the resize observer does the re-pinning. This one is the other path --
+    # the reader is far away and ASKS to come to the end, and the log grows
+    # while that jump is in flight. MEASURED, twice, in the client this
+    # library serves:
+    #   * the jump's own scroll event can land BEFORE the pin's first frame,
+    #     so with `asked` still holding the old position the listener read the
+    #     pin's own jump as a reader scroll and stood down on frame one --
+    #     the reader was left stranded at the pre-growth target;
+    #   * the controls' mirrors are published by paint(), and a pin that only
+    #     painted when its frame window EXPIRED kept the pill and the end
+    #     control claiming there was more to scroll seconds after the reader
+    #     had arrived.
+    # Both are invisible to a reader who never scrolls mid-flight, which is
+    # why the shipped client went green while stranding a phone reader ~160px
+    # short of the newest message.
+    jumped = page.evaluate("""() => {
+        const frame = document.querySelector('.cm-scroller');
+        const vp = frame.querySelector('.cm-scroller__viewport');
+        const content = frame.querySelector('.cm-scroller__content');
+        const pill = frame.querySelector('[data-scroller-pill]');
+        const end = frame.querySelector('[data-scroller-end]');
+        // Park at the top first, so the jump has real distance to cover.
+        vp.scrollTop = 0;
+        vp.dispatchEvent(new Event('scroll'));
+        const startState = { top: vp.scrollTop,
+            pillHidden: pill ? pill.hidden : null,
+            endActive: end ? end.getAttribute('data-active') : null };
+        // Jump AND grow in one task: the growth lands mid-flight, which is
+        // what a room receiving a message actually does.
+        frame.__scroller.scrollToEnd();
+        const clone = content.querySelector('.cm-scroller__item').cloneNode(true);
+        clone.setAttribute('data-message-id', 'm-jump-1');
+        content.appendChild(clone);
+        // Bounded settle. A jump that stops at the stale target never reaches
+        // the edge, so every sample stays short and this resolves false.
+        // The poll waits for the pin to FINISH, not merely for the position to
+        // reach the end: the mirrors (`data-following`, the pill, the end
+        // control) are published by paint() when the pin stands down, and
+        // resolving on the first frame that reads at-end can catch the page
+        // one frame earlier -- measured, and it made this leg report stale
+        // mirrors for a library that had in fact arrived.
+        return new Promise((resolve) => {
+            let n = 0;
+            const poll = () => {
+                const atEnd = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 2;
+                const done = atEnd && frame.getAttribute('data-following') === 'true';
+                if (done || ++n >= 40) {
+                    resolve({ startState,
+                        atEnd,
+                        grew: vp.scrollHeight,
+                        scrollTop: vp.scrollTop,
+                        pillHidden: pill ? pill.hidden : null,
+                        endActive: end ? end.getAttribute('data-active') : null,
+                        endInert: end ? end.inert : null,
+                        following: frame.getAttribute('data-following') });
+                    return;
+                }
+                setTimeout(poll, 25);
+            };
+            poll();
+        });
+    }""")
+    check('the jump to the end lands even when a row arrives mid-flight',
+          jumped['startState']['top'] <= 1 and jumped['atEnd'], jumped)
+    check('the mirrors settle with the reader, not when the pin window expires',
+          jumped['atEnd'] and jumped['pillHidden'] is True
+          and jumped['endActive'] == 'false' and jumped['endInert'] is True
+          and jumped['following'] == 'true', jumped)
+    # Leave the page settled for what follows. This leg resolves the moment
+    # the position reaches the edge, which can be the same frame the scroll
+    # happened in -- and the outline's IntersectionObserver marks rows on a
+    # callback that has not fired yet by then. MEASURED: the next leg read
+    # zero marked rows and went red on a page that was merely mid-callback.
+    # The row this leg appended goes too: its height is real for the
+    # measurements above, but it is not part of the specimen and later legs
+    # measure the log as the page shipped it.
+    page.evaluate("""() => {
+        const d = document.querySelector('.cm-scroller__content'
+            + ' [data-message-id="m-jump-1"]');
+        if (d) d.remove();
+    }""")
+    page.wait_for_timeout(250)
+
     # ---- visible-row tracking marks only what is on screen ----------------
     vis = page.evaluate("""() => {
         const frame = document.querySelector('.cm-scroller');

@@ -4117,14 +4117,32 @@
 				// frame for a bounded window instead; any scroll we did not ask
 				// for is the reader, and the loop stands down for them.
 				var edgePin = { frames: 0, asked: 0, moved: false, on: false };
+				/* Only SCROLLING AWAY from the edge is the reader saying "stop
+				   following". Anything else that moves the position while the pin
+				   is running is the pin itself or the browser re-laying-out
+				   around it: a clamp after a `content-visibility` row resolves
+				   its real height moves the reader DOWN, and an exact-delta
+				   comparison read that as the reader and stood the pin down on
+				   its own write -- leaving a reader stranded mid-log with
+				   `following` false and the resize observer stood down too. */
 				vp.addEventListener('scroll', function () {
-					if (edgePin.on && Math.abs(vp.scrollTop - edgePin.asked) > 2) {
+					if (edgePin.on && vp.scrollTop < edgePin.asked - 2) {
 						edgePin.moved = true;
 					}
 				}, { passive: true });
 				function pinToEdge() {
 					edgePin.moved = false;
+					edgePin.height = -1;
 					edgePin.frames = 120;
+					/* The scroll this jump is ABOUT to cause is not the reader
+					   moving, and the event for it can land BEFORE the first
+					   frame runs -- `asked` still held whatever the previous
+					   position was, so the listener read the pin's own jump as
+					   a reader scroll and stood the pin down on frame one. A
+					   reader arriving mid-animation then stayed stranded at the
+					   pre-growth target. Seed the baseline here, where the jump
+					   has already set the position. */
+					edgePin.asked = vp.scrollTop;
 					if (edgePin.on) return;
 					edgePin.on = true;
 					function step() {
@@ -4135,6 +4153,28 @@
 						}
 						vp.scrollTop = vp.scrollHeight;
 						edgePin.asked = vp.scrollTop;
+						/* Stop the moment the reader is actually AT the edge,
+						   rather than holding the pin for its whole window.
+						   MEASURED: the controls' state is published by paint(),
+						   and a pin that only painted when its window expired left
+						   the pill and the end control claiming there was more to
+						   scroll for seconds after the reader had arrived. Painting
+						   here also sets `data-following`, which is what lets the
+						   resize observer re-pin the NEXT arrival. */
+						/* Stop only on a STABLE end. `content-visibility` rows
+						   resolve their real height a frame after they enter the
+						   viewport, so one frame can read "at the end" while the
+						   log is still about to grow -- and a pin that stopped
+						   there published following=false, which stood down the
+						   resize observer too, stranding the reader with nothing
+						   left to re-pin them. Require the end AND an unchanged
+						   height across two frames. */
+						if (atEnd() && vp.scrollHeight === edgePin.height) {
+							edgePin.on = false;
+							paint();
+							return;
+						}
+						edgePin.height = vp.scrollHeight;
 						edgePin.frames--;
 						requestAnimationFrame(step);
 					}
