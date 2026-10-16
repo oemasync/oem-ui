@@ -30,7 +30,7 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 const JS = join(ROOT, 'src/js/cli-mono.js');
-const PAGE = join(ROOT, 'src/pages/index.astro');
+const PAGE = join(ROOT, 'src/pages/[...family].astro');
 
 const MUTATIONS = [
 	{

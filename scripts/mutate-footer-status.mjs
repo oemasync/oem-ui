@@ -34,7 +34,7 @@ const SNAP = join(ROOT, '.mutate-snapshots');
 mkdirSync(SNAP, { recursive: true });
 const CSS = join(ROOT, 'src/styles/components.css');
 const ASTRO = join(ROOT, 'src/astro/Footer.astro');
-const PAGE = join(ROOT, 'src/pages/index.astro');
+const PAGE = join(ROOT, 'src/pages/[...family].astro');
 
 let killed = 0;
 let survived = 0;

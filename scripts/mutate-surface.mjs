@@ -26,7 +26,7 @@ import { join } from 'node:path';
 
 const ROOT = '/root/projects/oem-ui';
 const CSS = join(ROOT, 'src/styles/components.css');
-const ASTRO = join(ROOT, 'src/pages/index.astro');
+const ASTRO = join(ROOT, 'src/pages/[...family].astro');
 const SNAP = join(tmpdir(), 'cm-surface-snap.css');
 const SNAP_A = join(tmpdir(), 'cm-surface-snap.astro');
 

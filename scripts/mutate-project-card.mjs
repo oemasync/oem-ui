@@ -34,7 +34,7 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 const CSS = join(ROOT, 'src/styles/components.css');
-const PAGE = join(ROOT, 'src/pages/index.astro');
+const PAGE = join(ROOT, 'src/pages/[...family].astro');
 
 const MUTATIONS = [
 	{

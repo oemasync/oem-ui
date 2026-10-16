@@ -9,7 +9,7 @@ TAB = chr(9)
 
 COMP = 'src/styles/components.css'
 TOK = 'src/styles/tokens.css'
-PAGE = 'src/pages/index.astro'
+PAGE = 'src/pages/[...family].astro'
 BASE = 'src/styles/base.css'
 
 FOCUS_RULE = ('.cm-search__input:focus-visible { outline: 2px solid var(--focus); '
