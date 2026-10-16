@@ -23,7 +23,7 @@ HARNESS = ['/root/.venvs/mau/bin/python', 'tests/verify-data-table.py']
 
 JS = 'src/js/cli-mono.js'
 CSS = 'src/styles/components.css'
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 
 PATTERNS = [
     # ---- the actual bug: selectors that must not match the table ----

@@ -65,14 +65,14 @@ const MUTATIONS = [
 		(s) => s.replace('flex: 0 0 100%;\n\theight: 1px;\n\tbackground: var(--line);\n\tmargin-block-end: var(--space-4);',
 			'width: 1px;\n\theight: 1.5em;\n\tbackground: var(--line);\n\talign-self: center;')],
 	['the showcase stops rendering the hero',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		(s) => s.replace('<section id="hero" class="cm-section cm-section--pad">',
 			'<section id="heroX" class="cm-section cm-section--pad">')],
 	['the showcase stops demonstrating the stop sign',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		(s) => s.replace('cm-grad-text cm-grad-text--none', 'cm-grad-text')],
 	['the showcase stops declaring the stops on the element',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		(s) => s.replace('--cm-grad-from:#7a4bd0;--cm-grad-to:#2ea3c7', '--x:1')],
 ];
 
@@ -91,7 +91,7 @@ console.log('baseline (unmutated):');
 	// The tree must be PRISTINE before a sweep starts, and this is not
 	// fussiness. The first run of this sweep was killed by a foreground
 	// timeout halfway through, which left its mutation applied to
-	// src/pages/index.astro. The next sweep read that damaged file as its
+	// src/pages/[...family].astro. The next sweep read that damaged file as its
 	// `orig`, so its showcase pattern matched nothing and it reported the
 	// mutation BROKEN - while every later mutant was still being killed
 	// by the damage the dead run left behind. Twelve kills, one cause,

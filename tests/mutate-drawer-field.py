@@ -77,7 +77,7 @@ MUTANTS = [
     ('spec preview goes full-bleed again', 'src/styles/components.css',
      "dialog.cm-dialog--spec:not([open]) {\n\twidth: min(24rem, 100%);",
      "dialog.cm-dialog--spec:not([open]) {", 1, 'harness'),
-    ('a fixed height crops the preview again', 'src/pages/index.astro',
+    ('a fixed height crops the preview again', 'src/pages/[...family].astro',
      'class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer" style="position:static;margin-top:var(--space-4)"',
      'class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer" style="position:static;margin-top:var(--space-4);max-height:96px"', 1, 'harness'),
     ('spec dialogs hidden again by the UA', 'src/styles/components.css',

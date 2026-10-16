@@ -103,7 +103,7 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the showcase drops the current-page demo',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		// replaceAll: `aria-current="page"` appears three times, and a
 		// single replace would only kill the first, leaving the test green.
 		all: true,
@@ -113,7 +113,7 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the showcase drops the spy demo',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		all: true,
 		from: 'class="cm-header__link is-active"',
 		to: 'class="cm-header__link"',
@@ -121,7 +121,7 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the showcase stops using HeaderLink',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		all: true,
 		from: '<HeaderLink',
 		to: '<span',
@@ -129,7 +129,7 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the showcase stops importing HeaderLink',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: "import HeaderLink from '../astro/HeaderLink.astro';",
 		to: '// mutated: not imported',
 		expectFail: 'the showcase demonstrates both nav states',

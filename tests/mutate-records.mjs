@@ -155,7 +155,7 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the records showcase section is unlinked from the nav',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: "{ href: '#records', label: 'records' },",
 		to: "{ href: '#nothing', label: 'records' },",
 		expectFail: 'the records section is not in the nav',

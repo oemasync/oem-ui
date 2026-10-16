@@ -29,7 +29,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSS = os.path.join(REPO, 'src/styles/components.css')
 HDR = os.path.join(REPO, 'src/astro/Header.astro')
 TOK = os.path.join(REPO, 'src/styles/tokens.css')
-PAGE = os.path.join(REPO, 'src/pages/index.astro')
+PAGE = os.path.join(REPO, 'src/pages/[...family].astro')
 JS = os.path.join(REPO, 'src/js/cli-mono.js')
 SUITE = os.path.join(REPO, 'tests/run.mjs')
 

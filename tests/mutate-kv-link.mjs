@@ -22,7 +22,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 // reporting anything. The first version did exactly that.
 const p = (f) => (isAbsolute(f) ? f : join(root, f));
 const COMP = 'src/styles/components.css';
-const SHOW = 'src/pages/index.astro';
+const SHOW = 'src/pages/[...family].astro';
 const PORT = '/root/projects/oem-portfolio/src/styles/global.css';
 
 const MUTATIONS = [

@@ -70,7 +70,7 @@ const MUTANTS = [
 	],
 	[
 		'hardcode a measure in the showcase specimen',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		/style="margin:0;max-width:var\(--measure-narrow\)"/,
 		'style="margin:0;max-width:34ch"',
 	],

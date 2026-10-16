@@ -83,7 +83,7 @@ HARNESS = ['/root/.venvs/mau/bin/python', 'tests/verify-navmenu.py']
 
 JS = 'src/js/cli-mono.js'
 CSS = 'src/styles/components.css'
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 
 PATTERNS = [
     # ---- own-bar scoping: the batch's load-bearing filter ----

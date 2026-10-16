@@ -12,7 +12,7 @@ ROOT = Path('/root/projects/oem-ui')
 HARNESS = [str(ROOT / 'tests/verify-shortcuts-toast.py')]
 JS = ROOT / 'src/js/cli-mono.js'
 CSS = ROOT / 'src/styles/components.css'
-AST = ROOT / 'src/pages/index.astro'
+AST = ROOT / 'src/pages/[...family].astro'
 SUITE = ['node', 'tests/run.mjs']
 
 NL = "\n"
@@ -89,7 +89,7 @@ MUTANTS = [
      "paints. */" + NL + TAB + "position: sticky;" + NL + TAB + "bottom: 0;",
      "paints. */" + NL + TAB + "bottom: 0;", 1, 'harness'),
     # ---- the showcase binding (suite contract) ---------------------------
-    ('a hand-written toast loses its binding attribute', 'src/pages/index.astro',
+    ('a hand-written toast loses its binding attribute', 'src/pages/[...family].astro',
      'class="cm-toast cm-toast--info" data-cm-toast',
      'class="cm-toast cm-toast--info"', 1, 'suite'),
 ]

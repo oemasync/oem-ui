@@ -38,7 +38,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const VERBOSE = process.argv.includes('--verbose');
 const CSS = 'src/styles/components.css';
-const PAGE = 'src/pages/index.astro';
+const PAGE = 'src/pages/[...family].astro';
 const SUMMARY = /^\d+ passed, \d+ failed$/m;
 
 const MEASURE_RULE = '.cm-prose-measure { max-width: var(--measure); }';

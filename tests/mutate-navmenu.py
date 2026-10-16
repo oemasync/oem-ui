@@ -108,7 +108,7 @@ PATTERNS = [
      '@media (pointer: coarse) {\n\t.cm-navmenu__trigger { min-height: 0; }\n}', 'harness'),
 
     ('the bar stops rendering the navmenu anatomy at all',
-     'src/pages/index.astro',
+     'src/pages/[...family].astro',
      '<div class="cm-navmenu" data-cm-navmenu role="navigation" aria-label="demo navigation menu">',
      '<div class="cm-navmenu" role="navigation" aria-label="demo navigation menu">',
      'suite+harness'),
@@ -130,18 +130,18 @@ PATTERNS = [
      '\t\t\t\tfalse);', 'suite'),
 
     ('a nav word stops being a link',
-     'src/pages/index.astro',
+     'src/pages/[...family].astro',
      '<a class="cm-navmenu__trigger" href="#layout">',
      '<button type="button" class="cm-navmenu__trigger">', 'suite'),
 
     ('the panel stops being a popover',
-     'src/pages/index.astro',
+     'src/pages/[...family].astro',
      'class="cm-dropdown__menu cm-navmenu__panel" id="nav-product" popover role="menu"',
      'class="cm-dropdown__menu cm-navmenu__panel" id="nav-product" role="menu"',
      'suite+harness'),
 
     ('the indicator stops being decorative',
-     'src/pages/index.astro',
+     'src/pages/[...family].astro',
      '<span class="cm-navmenu__indicator" aria-hidden="true"></span>',
      '<span class="cm-navmenu__indicator"></span>', 'suite'),
 

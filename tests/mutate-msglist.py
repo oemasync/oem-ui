@@ -74,7 +74,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TAB = '\t'
 CSS = 'src/styles/components.css'
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 TOKENS = 'src/styles/tokens.css'
 
 ADD_REACTION = ('<button type="button" class="cm-icon-btn" '

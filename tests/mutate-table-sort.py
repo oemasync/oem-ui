@@ -10,7 +10,7 @@ import pathlib, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 JS = ROOT / 'src/js/cli-mono.js'
 CSS = ROOT / 'src/styles/components.css'
-PAGE = ROOT / 'src/pages/index.astro'
+PAGE = ROOT / 'src/pages/[...family].astro'
 PY = '/root/.venvs/mau/bin/python'
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4460/'
 

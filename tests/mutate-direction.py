@@ -41,7 +41,7 @@ BUILD = ['npm', 'run', 'build']
 HARNESS = ['/root/.venvs/mau/bin/python', 'tests/verify-direction-rtl.py']
 
 JS = 'src/js/cli-mono.js'
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 
 PATTERNS = [
     # ---- the direction read is dropped, reintroducing the shipped bug ----

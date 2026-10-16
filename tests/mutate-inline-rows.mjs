@@ -23,7 +23,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const CSS = 'src/styles/components.css';
 const TOK = 'src/styles/tokens.css';
 const JS = 'src/js/cli-mono.js';
-const SHOW = 'src/pages/index.astro';
+const SHOW = 'src/pages/[...family].astro';
 const original = {
 	css: readFileSync(CSS, 'utf8'),
 	tok: readFileSync(TOK, 'utf8'),
@@ -152,14 +152,18 @@ const MUTATIONS = [
 	},
 	{
 		name: 'inline title basis stops naming the token',
-		find: 'flex: 0 0 var(--measure-title);',
+		// The basis grew a `min()` guard (holds the measure when there is
+		// room, never claims more than the row can afford): the bare
+		// `flex: 0 0 var(--measure-title);` this used to anchor on went
+		// away with it, and the mutation silently became a no-op.
+		find: 'flex: 0 0 min(var(--measure-title), 100%);',
 		replace: 'flex: 0 0 42ch;',
 		expectFail: 'a page-shape width comes from a measure token',
 	},
 	{
 		name: 'inline title is allowed to shrink (clips the primary label)',
-		find: 'flex: 0 0 var(--measure-title);',
-		replace: 'flex: 0 1 var(--measure-title);',
+		find: 'flex: 0 0 min(var(--measure-title), 100%);',
+		replace: 'flex: 0 1 min(var(--measure-title), 100%);',
 		expectFail: 'the inline title must not shrink',
 	},
 	{
@@ -198,8 +202,14 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the excerpt stops naming its measure token',
-		find: 'max-width: var(--measure-narrow);\n	white-space: nowrap;',
-		replace: 'max-width: 34ch;\n	white-space: nowrap;',
+		// The old anchor was `max-width: var(--measure-narrow);` directly
+		// followed by `white-space: nowrap;`. The excerpt now carries
+		// `contain: inline-size` (a comment block sits between them), so
+		// that adjacency is gone - and the bare declaration appears in
+		// three rules, so a bare string would mutate all three. Anchor on
+		// the RULE and replace just its max-width.
+		find: /(^\.cm-row__desc \{[\s\S]*?)max-width: var\(--measure-narrow\);/m,
+		replace: '$1max-width: 34ch;',
 		expectFail: 'a page-shape width comes from a measure token',
 	},
 	{

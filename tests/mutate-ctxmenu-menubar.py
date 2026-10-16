@@ -8,7 +8,7 @@ import pathlib, subprocess, sys, time
 ROOT = pathlib.Path('/root/projects/oem-ui')
 CSS = ROOT / 'src/styles/components.css'
 JS = ROOT / 'src/js/cli-mono.js'
-PAGE = ROOT / 'src/pages/index.astro'
+PAGE = ROOT / 'src/pages/[...family].astro'
 CLI = ROOT / 'tests/verify-ctxmenu-menubar.py'
 LOG = pathlib.Path('/root/.hermes/cache/scratch/mut9.txt')
 

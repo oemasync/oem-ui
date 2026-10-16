@@ -35,7 +35,7 @@ const write = (p, s) => writeFileSync(join(root, p), s);
 
 const BASE = 'src/styles/base.css';
 const COMP = 'src/styles/components.css';
-const PAGE = 'src/pages/index.astro';
+const PAGE = 'src/pages/[...family].astro';
 
 /* [label, relpath, pattern-that-must-exist (string, replaced verbatim), replacement] */
 const MUTANTS = [

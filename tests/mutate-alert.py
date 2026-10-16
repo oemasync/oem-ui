@@ -48,7 +48,7 @@ SCRATCH = Path('/root/.hermes/cache/scratch')
 BUILD = ['npm', 'run', 'build']
 HARNESS = ['/root/.venvs/mau/bin/python', 'tests/verify-alert-dialog.py']
 
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 
 PATTERNS = [
     ('drop the urgent role: the confirm stops announcing itself as an alert dialog',

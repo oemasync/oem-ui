@@ -30,7 +30,7 @@ const MUTATIONS = [
 		// The reachability check's whole point. Removing a rendered tag
 		// specimen must name the class as dead.
 		name: 'the long-tag specimen is removed from the showcase',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: /<span class="cm-tag">infrastructureascodeverylong<\/span>/,
 		to: '<span class="cm-tag">linux</span>',
 		expectFail: '.cm-tag survives a word too long for its column',
@@ -40,7 +40,7 @@ const MUTATIONS = [
 		// source. `cm-media` appears in both; deleting the markup from the
 		// source and rebuilding must un-render it.
 		name: 'the media specimen is removed from the showcase',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: /<figure class="cm-media"[\s\S]*?<\/figure>/,
 		to: '',
 		expectFail: 'every class the library defines is rendered somewhere on the page',
@@ -50,7 +50,7 @@ const MUTATIONS = [
 		// live site; the showcase never did, so the rule was unreachable
 		// here. Drop the prop and it goes dark again.
 		name: 'the header loses its extra link (cm-header__icon-link)',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: /\t\textraLinks=\{\[\{ href: 'https:\/\/github\.com\/omiinaya\/oem-ui', label: 'github' \}\]\}\n/,
 		to: '',
 		expectFail: 'every class the library defines is rendered somewhere on the page',
@@ -59,7 +59,7 @@ const MUTATIONS = [
 		// A toast variant rendered only by the runtime never appears in
 		// the served HTML, so a static specimen is the only way to see it.
 		name: 'the static toast --warn specimen is removed',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: /<div class="cm-toast cm-toast--warn">[\s\S]*?<\/div>\n\t\t\t\t\t\t<\/span>/,
 		to: '</span>',
 		expectFail: 'every class the library defines is rendered somewhere on the page',

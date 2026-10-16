@@ -80,7 +80,7 @@ const MUTANTS = [
 		// correctly reported it as a NO-OP rather than a pass. A pattern
 		// that no longer matches is a broken mutation, not a green one.
 		'remove the <strong> specimen from the prose section',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		/<p class="cm-lede">[\s\S]*?so this\s*\n\s*<strong>[\s\S]*?<\/strong>/,
 		'<p class="cm-lede">\nEmphasis is an element default, not a class, so this\n<em>bold word</em>',
 	],
@@ -90,13 +90,13 @@ const MUTANTS = [
 		// same colour as its paragraph. The test was green, the page built,
 		// and the specimen was invisible - a no-op that looked like a pass.
 		'move the specimen into .cm-prose, where it renders invisible',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		/<p class="cm-lede">[\s\S]*?<\/p>/,
 		'<div class="cm-prose"><p>Emphasis is an element default, not a class, so this <strong>bold word</strong> needs nothing on it.</p></div>',
 	],
 	[
 		'put a class on the specimen, so it no longer proves the bare element works',
-		'src/pages/index.astro',
+		'src/pages/[...family].astro',
 		/<strong>/,
 		'<strong class="cm-em">',
 	],

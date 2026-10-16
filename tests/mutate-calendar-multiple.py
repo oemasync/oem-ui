@@ -19,7 +19,7 @@ import pathlib, re, subprocess, sys
 ROOT = pathlib.Path('/root/projects/oem-ui')
 VENV = '/root/.venvs/mau/bin/python'
 JS = 'src/js/cli-mono.js'
-PAGE = 'src/pages/index.astro'
+PAGE = 'src/pages/[...family].astro'
 FILES = [JS, PAGE]
 
 MUTANTS = [

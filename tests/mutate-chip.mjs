@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const p = (f) => join(root, f);
 const COMP = 'src/styles/components.css';
-const SHOW = 'src/pages/index.astro';
+const SHOW = 'src/pages/[...family].astro';
 const BASE = 'src/styles/base.css';
 
 const MUTATIONS = [

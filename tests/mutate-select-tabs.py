@@ -35,7 +35,7 @@ HARNESS = ['/root/.venvs/mau/bin/python', 'tests/verify-select-tabs.py']
 
 JS = 'src/js/cli-mono.js'
 CSS = 'src/styles/components.css'
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 
 PATTERNS = [
     # ---- SelectValue: the mirror inside setRadio ----

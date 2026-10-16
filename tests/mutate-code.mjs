@@ -127,7 +127,7 @@ const MUTATIONS = [
 	},
 	{
 		name: 'the showcase ships only one copy button',
-		file: 'src/pages/index.astro',
+		file: 'src/pages/[...family].astro',
 		from: /\t\t\t\t<CodeBlock\n\t\t\t\t\tid="demo-config"[\s\S]*?`\}\n\t\t\t\t\/>/,
 		to: '',
 		expectFail: 'the showcase demonstrates copy with more than one block',

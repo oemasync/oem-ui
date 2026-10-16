@@ -54,7 +54,7 @@ SUITE = ['node', 'tests/run.mjs']
 HARNESS = ['/root/.venvs/mau/bin/python', 'tests/verify-chart.py']
 
 JS = 'src/js/cli-mono.js'
-ASTRO = 'src/pages/index.astro'
+ASTRO = 'src/pages/[...family].astro'
 
 PATTERNS = [
     # ---- the type can vanish from the dispatcher or from the page ----

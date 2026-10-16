@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.." || exit 1
 
 CSS=src/styles/components.css
 TOK=src/styles/tokens.css
-ASTRO=src/pages/index.astro
+ASTRO=src/pages/[...family].astro
 TEST=tests/run.mjs
 
 KILLS=0
@@ -118,13 +118,13 @@ mutate "showcase: nowrap modifier unrendered EVERYWHERE" "$ASTRO" '
 # and the reachability test legitimately stays green. That is a BROKEN
 # MUTATION, not a weak test - recorded here because "SURVIVED" would
 # otherwise have been filed as a test defect and the test left alone.
-p="src/pages/index.astro"; s=open(p).read()
+p="src/pages/[...family].astro"; s=open(p).read()
 assert s.count("cm-row__meta cm-row__meta--nowrap") >= 2, "pattern drifted"
 s=s.replace("cm-row__meta cm-row__meta--nowrap","cm-row__meta")
 open(p,"w").write(s)'
 
 mutate "showcase: tight modifier unrendered" "$ASTRO" '
-p="src/pages/index.astro"; s=open(p).read()
+p="src/pages/[...family].astro"; s=open(p).read()
 s=s.replace("cm-row__meta--nowrap cm-row__meta--tight","cm-row__meta--nowrap")
 open(p,"w").write(s)'
 

@@ -173,12 +173,12 @@ PATTERNS = [
      '.cm-dropdown__icon {\n\tflex: 1 1 auto;', 'suite'),
 
     ('the shortcut hint stops hiding from the name',
-     'src/pages/index.astro',
+     'src/pages/[...family].astro',
      '<span class="cm-dropdown__shortcut" aria-hidden="true">ctrl i</span>',
      '<span class="cm-dropdown__shortcut">ctrl i</span>', 'suite'),
 
     ('a submenu owner stops advertising its panel',
-     'src/pages/index.astro',
+     'src/pages/[...family].astro',
      'role="menuitem" aria-haspopup="menu" aria-controls="sub-depth-1"',
      'role="menuitem" aria-haspopup="menu"', 'suite'),
 ]

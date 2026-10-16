@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path('/root/projects/oem-ui')
 
 MUTANTS = [
-    ('the frame stops opening at the live edge (attr)', 'src/pages/index.astro',
+    ('the frame stops opening at the live edge (attr)', 'src/pages/[...family].astro',
      'class="cm-scroller" data-cm-scroller data-track-visible data-start-at-end',
      'class="cm-scroller" data-cm-scroller data-track-visible', 'harness'),
     ('the frame stops opening at the live edge (impl)', 'src/js/cli-mono.js',
@@ -42,10 +42,10 @@ MUTANTS = [
     ('the status line stops reading the edges', 'src/js/cli-mono.js',
      "status.textContent = s && e ? 'both ways scrollable'",
      "status.textContent = 'static text'", 'harness'),
-    ('the content stops being a log', 'src/pages/index.astro',
+    ('the content stops being a log', 'src/pages/[...family].astro',
      'class="cm-scroller__content" role="log" aria-relevant="additions"',
      'class="cm-scroller__content"', 'suite'),
-    ('the viewport loses its name', 'src/pages/index.astro',
+    ('the viewport loses its name', 'src/pages/[...family].astro',
      'aria-label="Messages" tabindex="0"', 'tabindex="0"', 'suite'),
     ('rows stop skipping off-screen paint', 'src/styles/components.css',
      '\tcontent-visibility: auto;\n\tcontain-intrinsic-size: auto 76px;',
