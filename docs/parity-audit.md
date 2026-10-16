@@ -7,6 +7,10 @@ from class names.
 
 ## 0. The verdict, checked live and exactly
 
+> **Superseded by section 7 (2026-10-13):** shadcn added `code-block` and
+> `trace`; the live list is now 66 and parity had to be rebuilt, not just
+> re-counted. The numbers below were true on the date they were taken.
+
 The "All Components" list on `ui.shadcn.com/docs/components` enumerates
 **64** names. oem-ui's README ledger enumerates **64**. Compared
 name-by-name and in order, on 2026-10-12:
@@ -294,3 +298,45 @@ Typeset system, and both documented utilities. What is left on the
 other site is a React app, a CLI, and documentation *about* that CLI.
 
 
+
+## 7. Re-measured — parity had DRIFTED, and the pin could not see it (2026-10-13)
+
+Section 6's "64 = 64" was true when measured and became false without
+anything here changing. That is not a flaw in the pinned check — the pin
+is a deliberate design so that an update is an act with a diff — it is the
+known cost of that design: **a pin cannot announce that the other side
+moved.**
+
+Re-fetched from the live site (Safari UA; plain `curl` returns the bot
+wall), parsed out of shadcn's own RSC payload (`$id` entries, ordered and
+de-duped):
+
+- the live `base/` namespace now enumerates **66** components, not 64
+- the registry (`r/index.json`) now carries **65** items, not 63
+- both new names have real docs pages (HTTP 200 with proper titles):
+  - **`code-block`** — after `chart`, in shadcn's alphabetical order
+  - **`trace`** — after `tooltip`, in shadcn's alphabetical order
+- registry types: both `registry:ui`;
+  `code-block` deps: `button` + `use-highlighted-code`;
+  `trace` deps: `collapsible`
+
+**Both were then BUILT, not just counted:**
+
+- `.cm-codebar` gained the Code Block **body** — line numbers, start line,
+  wrap, highlighted lines, floating action — via five new `CodeBlock`
+  props. The gutter is markup, not a CSS counter, because typed `attr()`
+  is unimplemented in WebKit; and the copy path strips it, because
+  `innerText` reflects rendered text rather than selectable text.
+- `.cm-trace` is a new component: a run's steps, state by fill and glyph
+  (never hue), detail expanded by one delegated listener that moves
+  `aria-expanded` and `hidden` together.
+
+Evidence: suite **678/0**; `tests/verify-codeblock-trace.py` **20/20** in
+WebKit (computed `white-space`, the actual clipboard payload, the
+disclosure toggling both ways, a revealed panel with real height);
+`tests/mutate-codeblock-trace.mjs` **7/7 killed, 0 survived**;
+`verify-doc-toc` **54/54** at 55 sections.
+
+The pinned list, the README prose ("the catalog is 66"), the section index
+and the TOC harness expectations all moved together — 66 names, in
+shadcn's order, checked name-by-name.
