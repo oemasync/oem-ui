@@ -594,6 +594,30 @@ the inline title keeps `flex-shrink: 0`: it carries `overflow: hidden`,
 which zeroes its automatic minimum, so any shrink factor lets it
 ellipsize.
 
+**What the row contributes to its container's width:** the body carries
+`min-width: min-content`, so without help the floor counts the excerpt's
+whole `nowrap` text. The excerpt is the child that TRUNCATES, so it carries
+`contain: inline-size` and its text stops contributing to any ancestor's
+intrinsic width — measured at 390px, twelve rows in the prose list forced
+297/351px bodies inside a 270px row and pushed the page 87px sideways. The
+two variants that SIZE the excerpt from its content opt back out
+(`contain: none` under `--column` and `--inline`): with containment on, the
+column's excerpt measured 0px and the inline one 67px against 169px — a
+silently shortened excerpt is worse than the overflow it prevents.
+
+**Under 680px the inline title wraps.** With the excerpt and the date
+hidden, the title IS the row; its `nowrap` made the row's floor 339px
+(pad, a 42px index, the 250px label) against a 295px row at 375px and
+240px at 320px — the page scrolled 4px and 59px sideways. The label is
+never cut; it takes a second line.
+
+**A caption is not a row slot.** A prose caption under a list is a
+sentence, not a value: `<p class="cm-caption">` gives it meta type in a box
+that can wrap and breathe. Thirteen captions had been marked up as
+`<p class="cm-row__meta">` — a value slot's `nowrap` + `overflow: hidden` —
+so every one lost its tail, the worst by 513px on a phone. The row's own
+`<span class="cm-row__meta">` is unchanged.
+
 ### Page head
 
 ```html
