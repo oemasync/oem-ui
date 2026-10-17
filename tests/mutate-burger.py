@@ -188,6 +188,11 @@ RELATED = [
     ('bound once',           'bound once'),
     ('adds .cm-js',          '.cm-js only when'),
     ('starts closed',        'starts closed'),
+    # The panel-collapse mutant's kill, measured: the suite names the rule
+    # it removed ('the panel collapse is scoped to .cm-js, not
+    # unconditional'). Without this pair the sweep called its own correct
+    # kill a wrong-test.
+    ('collapse the panel',   'panel collapse is scoped'),
 ]
 
 def hits_related(name, hits):
