@@ -75,7 +75,12 @@ MUTANTS = [
     [
         'first invalid is never focused',
         'src/js/cli-mono.js',
-        'var first = controls(item)[0];\n\t\t\t\t\t\tif (first) first.focus();',
+        # Re-anchored 2026-10-16: the singular `controls(item)` site is the
+        # ADVANCE path, which the harness's submit check never reaches, so
+        # the mutant measured ORACLE BLIND - no observable change at all.
+        # The submit loop's own focus line is the one the check exercises
+        # ('empty submit: first offender focused').
+        '\t\t\t\t\t\t\tvar first = controls(items[i])[0];\n\t\t\t\t\t\t\tif (first) first.focus();',
         'if (false) first.focus();',
         1,
         'harness',
