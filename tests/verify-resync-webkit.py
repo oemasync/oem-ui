@@ -125,6 +125,9 @@ with sync_playwright() as p:
             continue
 
         page = browser.new_page(viewport=IPHONE)
+
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         console = []
         page.on("console", lambda m: console.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: console.append(str(e)))

@@ -64,6 +64,8 @@ def page(browser, width=390, height=844):
         has_touch=True,
     )
     p = ctx.new_page()
+    p.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errors = []
     p.on("pageerror", lambda e: errors.append(str(e)))
     p.goto(URL, wait_until="networkidle")

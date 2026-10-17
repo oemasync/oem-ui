@@ -183,6 +183,8 @@ def run(pw):
     # ---------------- 1. it fits, at every width ----------------
     for w in WIDTHS:
         page = browser.new_page(viewport={'width': w, 'height': 874})
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         errs = []
         page.on('pageerror', lambda e: errs.append(str(e)))
         page.goto(URL, wait_until='load', timeout=NAV_TIMEOUT)

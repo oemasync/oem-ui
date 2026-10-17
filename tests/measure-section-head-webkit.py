@@ -112,6 +112,8 @@ def main() -> int:
                     is_mobile=w < 700, has_touch=w < 700,
                 )
                 pg = ctx.new_page()
+                pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
                 pg.goto(URL, wait_until="load")
                 r = pg.evaluate(PROBE)
                 results.append(r)

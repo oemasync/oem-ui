@@ -88,6 +88,8 @@ with sync_playwright() as p:
         # the library's tap-floor media query to apply at all.
         ctx = browser.new_context(**p.devices["iPhone 13"])
         page = ctx.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         console = []
         page.on("console", lambda m: console.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: console.append(str(e)))

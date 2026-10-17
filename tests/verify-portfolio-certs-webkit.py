@@ -64,6 +64,8 @@ def main() -> int:
         # --- desktop: the ONLY width that can see a collapsed grid -----
         ctx = b.new_context(viewport={"width": 1280, "height": 900})
         pg = ctx.new_page()
+        pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         pg.goto(URL, wait_until="networkidle")
         print("page title:", pg.title())
         # A server answering on the right port is NOT proof of the right

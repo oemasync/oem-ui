@@ -37,6 +37,8 @@ def main():
         browser = pw.webkit.launch()
         ctx = browser.new_context(viewport={"width": 393, "height": 852}, has_touch=True, is_mobile=True)
         page = ctx.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         page.goto(URL, wait_until="networkidle")
         page.evaluate("() => localStorage.clear()")
         page.reload(wait_until="networkidle")

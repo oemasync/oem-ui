@@ -93,6 +93,8 @@ def run(playwright, width, height, label):
         has_touch=True,
     )
     page = ctx.new_page()
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     # Clear storage BEFORE measuring - a saved light theme otherwise makes

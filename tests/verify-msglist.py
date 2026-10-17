@@ -245,6 +245,8 @@ def main():
         browser = pw.webkit.launch()
         for label, w, h in VIEWPORTS:
             page = browser.new_page(viewport={'width': w, 'height': h})
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             errors = []
             page.on('pageerror', lambda e: errors.append(str(e)))
             page.goto(URL, wait_until='networkidle')

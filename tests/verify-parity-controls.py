@@ -18,6 +18,8 @@ with sync_playwright() as p:
     for width in (320, 402, 1280):
         context = browser.new_context(viewport={'width': width, 'height': 874}, has_touch=width < 800)
         page = context.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         page.goto(URL, wait_until='load')
         page.locator('#buttons').scroll_into_view_if_needed()
         button = page.locator('#buttons .cm-btn--danger')

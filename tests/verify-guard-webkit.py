@@ -50,6 +50,8 @@ def probe(ctx, url, store, expected, note):
         % (json.dumps(list(store)), json.dumps(store), json.dumps(store))
     )
     page = ctx.new_page()
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     try:
         # wait_until="commit" resolves before <body> exists, so reading the
         # painted background there returned rgba(0,0,0,0) and reported a

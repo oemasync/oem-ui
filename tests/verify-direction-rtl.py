@@ -95,6 +95,8 @@ def cap_for(m, grow_right):
 with sync_playwright() as p:
     browser = p.webkit.launch()
     page = browser.new_page(viewport={'width': 390, 'height': 844})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     try:

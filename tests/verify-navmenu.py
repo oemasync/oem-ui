@@ -57,6 +57,8 @@ def click_at(page, selector):
 with sync_playwright() as pw:
     browser = pw.webkit.launch()
     page = browser.new_page(viewport={"width": 402, "height": 874})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(URL, wait_until='load')

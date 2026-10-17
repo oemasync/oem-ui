@@ -16,6 +16,8 @@ def check(name, ok, detail=''):
 with sync_playwright() as pw:
     browser = pw.webkit.launch()
     page = browser.new_page(viewport={'width': 402, 'height': 667})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     # smooth scrolling would make every assertion wait on a timeline it does
     # not control; reduced motion makes the write instant and testable.
     page.emulate_media(reduced_motion='reduce')

@@ -66,6 +66,8 @@ def main():
                 device_scale_factor=3 if coarse else 2,
             )
             page = ctx.new_page()
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             # Clear storage BEFORE every measurement, or a saved light
             # theme leaks into the next page and a themed token reads
             # from the wrong theme.

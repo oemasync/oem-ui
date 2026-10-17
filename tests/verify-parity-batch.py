@@ -27,6 +27,8 @@ with sync_playwright() as p:
     for W in (320, 402, 1280):
         ctx = b.new_context(viewport={'width': W, 'height': 874}, has_touch=(W < 800))
         pg = ctx.new_page()
+        pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         pg.goto(URL, wait_until='load')
         pg.wait_for_timeout(300)
         sec = '#keys-pages-people'

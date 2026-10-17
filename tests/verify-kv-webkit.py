@@ -73,6 +73,8 @@ def main():
             ctx = b.new_context(viewport={'width': w, 'height': h},
                                 device_scale_factor=3, is_mobile=mob, has_touch=mob)
             pg = ctx.new_page()
+            pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             r = probe(pg, url, w, h, mob)
             print(f"##### {label}")
             print(json.dumps(r, indent=1))

@@ -48,6 +48,8 @@ def snap(page):
 with sync_playwright() as pw:
     browser = pw.webkit.launch()
     page = browser.new_page(viewport={'width': 402, 'height': 667})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)

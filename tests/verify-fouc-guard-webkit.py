@@ -49,6 +49,8 @@ with sync_playwright() as pw:
     # the module never executed, all of them would "pass" or fail for the
     # wrong reason, so its absence is its own failure.
     boot = ctx.new_page()
+    boot.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     boot.goto(URL, wait_until="load")
     runtime_ok = boot.evaluate("() => typeof window.cliMono === 'object'")
     record(

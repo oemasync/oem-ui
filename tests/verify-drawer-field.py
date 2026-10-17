@@ -25,6 +25,8 @@ def wait_runtime(page):
 with sync_playwright() as pw:
     browser = pw.webkit.launch()
     page = browser.new_page(viewport={'width': 1280, 'height': 900})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     page.goto('http://192.168.1.68:4461/', wait_until='networkidle')
     wait_runtime(page)
     # smooth scrolling makes Playwright's measured click land elsewhere:

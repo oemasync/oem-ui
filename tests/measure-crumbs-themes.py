@@ -65,6 +65,8 @@ with sync_playwright() as pw:
     ]:
         ctx = b.new_context(viewport={"width": w, "height": h}, has_touch=(w < 500))
         p = ctx.new_page()
+        p.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         p.goto(URL, wait_until="networkidle")
         # Clear storage BEFORE measuring: a theme saved by an earlier
         # context otherwise leaks in and you read the other theme.

@@ -91,6 +91,8 @@ def run(engine, width, mobile):
         has_touch=mobile,
     )
     pg = ctx.new_page()
+    pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until="networkidle")

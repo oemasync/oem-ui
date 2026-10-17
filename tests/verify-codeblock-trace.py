@@ -52,6 +52,8 @@ def main():
             """
         )
         page = ctx.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         page.goto(BASE + "/", wait_until="networkidle", timeout=BOOT)
 
         # ---- start line: the first gutter numeral is 240, not 1 ----------

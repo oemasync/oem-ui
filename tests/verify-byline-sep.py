@@ -81,6 +81,8 @@ with sync_playwright() as p:
     browser = p.webkit.launch()
     for w, h in WIDTHS:
         pg = browser.new_page(viewport={"width": w, "height": h}, device_scale_factor=2)
+        pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         pg.emulate_media(reduced_motion="reduce")
         pg.goto(URL, wait_until="networkidle")
         pg.wait_for_function(

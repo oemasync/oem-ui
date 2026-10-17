@@ -107,6 +107,8 @@ def main():
                 ),
             )
             page = ctx.new_page()
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             label, w, h, box = probe(page, label, w, h)
             rows.append((label, w, h, box))
             ctx.close()

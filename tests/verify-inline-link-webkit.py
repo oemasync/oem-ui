@@ -74,6 +74,8 @@ def main():
                                  ('desktop-1440', {'width': 1440, 'height': 900}, False)):
             ctx = b.new_context(viewport=vp, is_mobile=touch, has_touch=touch)
             page = ctx.new_page()
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             page.goto(URL, wait_until='networkidle')
             page.evaluate('() => localStorage.clear()')
             page.goto(URL, wait_until='networkidle')

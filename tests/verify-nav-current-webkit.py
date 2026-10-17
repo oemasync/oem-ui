@@ -55,6 +55,8 @@ def main():
         for label, vp in (('iphone-390', IPHONE),
                           ('desktop-1440', {'width': 1440, 'height': 900})):
             page = browser.new_page(viewport=vp)
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             page.goto(URL, wait_until='networkidle')
             # Clear storage BEFORE measuring: a saved light theme changes the
             # tokens we read and has silently corrupted a probe in this repo.

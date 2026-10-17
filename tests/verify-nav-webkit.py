@@ -44,6 +44,8 @@ def main():
             has_touch=True,
         )
         page = ctx.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         errors = []
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.goto(URL, wait_until="networkidle")

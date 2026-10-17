@@ -220,6 +220,8 @@ def run(width, port):
         # rect captured mid-transition is a lie.
         ctx.route("**/*", lambda route: route.continue_())
         page = ctx.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         page.emulate_media(reduced_motion="reduce")
         for name in ("full", "scoped"):
             page.goto(f"http://127.0.0.1:{port}/{name}.html", wait_until="load")

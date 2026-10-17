@@ -50,6 +50,8 @@ with sync_playwright() as p:
     b = p.webkit.launch()
     ctx = b.new_context(viewport={'width': 1280, 'height': 900})
     pg = ctx.new_page()
+    pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     pg.goto(URL, wait_until='load')
     pg.wait_for_timeout(300)
 

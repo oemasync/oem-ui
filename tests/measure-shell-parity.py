@@ -90,6 +90,8 @@ def main():
         ctx = browser.new_context(viewport={"width": 1280, "height": 900}, user_agent=UA)
         page = ctx.new_page()
 
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         data = {}
         for label, url in (("shadcn", THEIRS), ("oem-ui", OURS)):
             try:

@@ -102,6 +102,8 @@ def main() -> int:
         ctx = b.new_context(viewport={"width": 390, "height": 844},
                             device_scale_factor=3, is_mobile=True, has_touch=True)
         pg = ctx.new_page()
+        pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         pg.goto(URL, wait_until="networkidle")
         print("page title:", pg.title())
 

@@ -70,6 +70,8 @@ def main():
         b = pw.chromium.launch()
         ctx = b.new_context()
         page = ctx.new_page()
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         page.goto("file://" + path)
         cdp = ctx.new_cdp_session(page)
         cdp.send("Accessibility.enable")
