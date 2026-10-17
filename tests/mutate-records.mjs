@@ -33,7 +33,7 @@ const MUTATIONS = [
 	{
 		name: 'the stat value out-shouts the section heading',
 		file: 'src/styles/components.css',
-		from: /^\.cm-stat__val\s*\{([\s\S]*?)font-size:\s*1\.35rem;/m,
+		from: /^\.cm-stat__val\s*\{([\s\S]*?)font-size:\s*var\(--text\);/m,
 		to: '.cm-stat__val {$1font-size: 1.9rem;',
 		expectFail: 'must not exceed the section h2',
 	},
@@ -70,8 +70,8 @@ const MUTATIONS = [
 	{
 		name: 'the dot is no longer centred on the rail',
 		file: 'src/styles/components.css',
-		from: /^\.cm-timeline__item::after\s*\{([\s\S]*?)left:\s*-0\.25rem;/m,
-		to: '.cm-timeline__item::after {$1left: 0;',
+		from: /^\.cm-timeline__item::after\s*\{([\s\S]*?)inset-inline-start:\s*-0\.25rem;/m,
+		to: '.cm-timeline__item::after {$1inset-inline-start: 0;',
 		expectFail: 'must be exactly -half its width',
 	},
 	{
@@ -95,8 +95,8 @@ const MUTATIONS = [
 	{
 		name: 'the record components grow a colour of their own',
 		file: 'src/styles/components.css',
-		from: '.cm-stat__label {\n\tfont-size: max(var(--min-font), 0.72rem);\n\tline-height: 1.5;\n\tcolor: var(--ink-dim);',
-		to: '.cm-stat__label {\n\tfont-size: max(var(--min-font), 0.72rem);\n\tline-height: 1.5;\n\tcolor: #3a3a3a;',
+		from: '.cm-stat__label {\n\tfont-size: max(var(--min-font), var(--text-micro));\n\tline-height: 1.5;\n\tcolor: var(--ink-dim);',
+		to: '.cm-stat__label {\n\tfont-size: max(var(--min-font), var(--text-micro));\n\tline-height: 1.5;\n\tcolor: #3a3a3a;',
 		expectFail: 'the record components must use tokens',
 	},
 	{
@@ -156,8 +156,8 @@ const MUTATIONS = [
 	{
 		name: 'the records showcase section is unlinked from the nav',
 		file: 'src/pages/[...family].astro',
-		from: "{ href: '#records', label: 'records' },",
-		to: "{ href: '#nothing', label: 'records' },",
+		from: "'code', 'overlays', 'records', 'trace',",
+		to: "'code', 'overlays', 'trace',",
 		expectFail: 'the records section is not in the nav',
 	},
 	{
