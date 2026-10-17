@@ -39,6 +39,22 @@ def deny(what):
         raise Blocked(what)
     return _f
 
+def noop(what, ret=None):
+    """For file MUTATIONS: do nothing and return a plausible value, so a
+    harness that sets up a scratch copy at import time still reaches its
+    table. Nothing reaches the disk - the write is simply discarded."""
+    def _f(*a, **kw):
+        return ret
+    return _f
+
+def noop_open(what):
+    """A writable handle nobody keeps: the harness can write, the bytes go
+    to a string in memory and are dropped."""
+    def _f(*a, **kw):
+        import io
+        return io.StringIO()
+    return _f
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args:
@@ -71,7 +87,9 @@ def main():
 
     def ro_open(file, mode="r", *a, **kw):
         if any(c in str(mode) for c in "wax+"):
-            raise Blocked("open(write)")
+            # Discarded, not refused: see noop_open.
+            import io
+            return io.StringIO()
         return real_open(file, mode, *a, **kw)
 
     builtins.open = ro_open
@@ -82,13 +100,22 @@ def main():
               "removedirs", "makedirs", "mkdir", "chmod", "chown", "truncate",
               "chdir")),
         (pathlib.Path, ("write_text", "write_bytes", "unlink", "rename",
-                        "replace", "mkdir", "touch", "chmod", "open")),
+                        "replace", "mkdir", "touch", "chmod")),
     ):
         for name in names:
             try:
-                setattr(module, name, deny(module.__name__ + "." + name))
+                if module is subprocess:
+                    # NEVER no-op these: a harness that starts a subprocess at
+                    # import time IS the sweep. Raising is the only safe answer.
+                    setattr(module, name, deny(module.__name__ + "." + name))
+                else:
+                    setattr(module, name, noop(module.__name__ + "." + name, "" if name in ("copy", "copy2", "copyfile", "move") else None))
             except Exception:
                 pass
+    try:
+        pathlib.Path.open = noop_open("Path.open")
+    except Exception:
+        pass
     time.sleep = lambda *a, **kw: None
 
     ns = {"__name__": "__census_probe__", "__file__": path, "__builtins__": builtins,
@@ -131,7 +158,8 @@ def main():
         except OSError as e:
             rows.append([str(label), "unreadable %s" % e])
             continue
-        if old not in body:
+        n = body.count(old)
+        if n == 0:
             rows.append([str(label), "NO-OP"])
             detail: dict = {"label": str(label), "why": "NO-OP", "path": cand, "old": old}
             if len(entry) > 3 and isinstance(entry[3], str):
@@ -140,6 +168,14 @@ def main():
             # when the table composes it from module constants.
             detail["entry"] = [v if isinstance(v, str) else "«%r»" % (v,) for v in entry]
             bad_detail.append(detail)
+        elif n > 1:
+            # The harnesses replace the FIRST match and (usually) assert
+            # exactly one: an ambiguous pattern silently mutates the wrong
+            # site. Measured: mutate-sidebar.py aborted a whole sweep on a
+            # pattern that had grown a second occurrence.
+            rows.append([str(label), f"AMBIGUOUS ({n} matches)"])
+            bad_detail.append({"label": str(label), "why": f"AMBIGUOUS ({n} matches)",
+                               "path": cand, "old": old})
     out = {"rows": rows, "blocked_at": blocked_at}
     if "--dump" in sys.argv:
         out["bad"] = bad_detail

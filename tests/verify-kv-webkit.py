@@ -8,7 +8,7 @@ occurs in is DESKTOP, and that is where the proof has to be taken.
 import http.server, socketserver, threading, functools, os, sys, json
 from playwright.sync_api import sync_playwright
 
-ROOT = str(Path(__file__).resolve().parents[1]) + '/dist'
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/dist'
 # Port 0 asks the kernel for a free one. A fixed port read as "address
 # already in use" on a machine where something else already held it, and
 # a squatter on a known port is also how a probe ends up measuring a

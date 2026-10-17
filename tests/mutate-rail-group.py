@@ -5,13 +5,14 @@ Four guards were just added to oem-ui's suite. Each must FAIL when the thing
 it watches is broken, and a pattern that no longer matches must report NO-OP
 rather than a pass - a mutation harness that cannot fail is decoration.
 """
+import os
 import re, shutil, subprocess, sys
 
-CSS = str(Path(__file__).resolve().parents[1]) + '/src/styles/components.css'
+CSS = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/src/styles/components.css'
 BAK = '/tmp/oemui-components.bak'
 
 def suite():
-    r = subprocess.run(['node', 'tests/run.mjs'], cwd=str(Path(__file__).resolve().parents[1]),
+    r = subprocess.run(['node', 'tests/run.mjs'], cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                        capture_output=True, text=True)
     return r.stdout + r.stderr
 

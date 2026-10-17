@@ -17,6 +17,7 @@ Chromium lies about the nav geometry and this repo's oem-ui skill records
 that. WebKit is the engine Omar's iPhone Safari uses, so it is the one that
 decides.
 """
+import os
 import hashlib
 import json
 import subprocess
@@ -24,7 +25,7 @@ import sys
 import urllib.request
 
 URL = "http://192.168.1.68:4322/"
-LIB = str(Path(__file__).resolve().parents[1]) + "/src/js/cli-mono.js"
+LIB = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/src/js/cli-mono.js"
 SERVED = "http://192.168.1.68:4322/cli-mono.js"
 
 results = []

@@ -113,9 +113,15 @@ PATTERNS = [
      JS, "document.addEventListener('click', onSidebarClick);",
      "void onSidebarClick;", 'harness'),
 
+    # The pattern carries its own indentation on purpose: `if (open)
+    # panel.setAttribute('hidden', '')` appears TWICE in cli-mono.js (the
+    # sidebar disclosure and the trace trigger, different indents), and an
+    # un-anchored pattern is ambiguous - the old form counted 2 and the
+    # pre-check below aborted the whole sweep on it.
     ('the disclosure flips aria but never hides the content',
-     JS, "if (open) panel.setAttribute('hidden', '');",
-     "if (false) panel.setAttribute('hidden', '');", 'harness'),
+     JS, "\t\tif (open) panel.setAttribute('hidden', '');\n"
+         "\t\telse panel.removeAttribute('hidden');",
+     "\t\tpanel.removeAttribute('hidden');", 'harness'),
 
     ('the disclosure hides but stops telling assistive tech',
      JS, "btn.setAttribute('aria-expanded', open ? 'false' : 'true');",
@@ -268,11 +274,19 @@ def main():
     assert rc == 0, f'baseline harness not green:\n{out[-2000:]}'
     print('baseline suite green | baseline harness green', flush=True)
 
-    killed = survived = 0
+    killed = survived = stale = 0
     for name, rel, pat, mut, who in PATTERNS:
         target = ROOT / rel
         original = target.read_text()
-        assert original.count(pat) == 1, f'PATTERN ABSENT for {name}'
+        n = original.count(pat)
+        if n != 1:
+            # A stale or ambiguous pattern is a FINDING, not a crash: report
+            # it, never count it as a kill, and keep the sweep going so one
+            # drifted anchor cannot hide the rest of the batch.
+            print(f'  STALE (pattern appears {n}x, wanted exactly 1) - {name}',
+                  flush=True)
+            stale += 1
+            continue
         target.write_text(original.replace(pat, mut, 1))
         try:
             rc_build, _ = run(BUILD)
@@ -302,9 +316,9 @@ def main():
         target.write_text(original)
         assert target.read_text() == original, f'RESTORE FAILED for {name}'
 
-    print(f'killed={killed} survived={survived} of {len(PATTERNS)}', flush=True)
+    print(f'killed={killed} survived={survived} stale={stale} of {len(PATTERNS)}', flush=True)
     run(BUILD)
-    return 1 if survived else 0
+    return 1 if (survived or stale) else 0
 
 
 if __name__ == '__main__':

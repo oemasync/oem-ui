@@ -76,7 +76,7 @@ def load_png(path):
         return (out[o], out[o + 1], out[o + 2])
     return w, h, get
 
-ROOT = pathlib.Path(str(Path(__file__).resolve().parents[1]))
+ROOT = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]))
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
 SHOT = pathlib.Path('/root/.hermes/cache/scratch/_slider.png')
 results, problems = [], []
