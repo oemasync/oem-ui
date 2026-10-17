@@ -441,3 +441,37 @@ So the proof surface was repaired before the proofs were trusted again:
   this tree. `verify-drawer-field.py` 21/21 killed, 0 survived is the first
   clean post-fix full catch.
 
+## 10. The re-proof campaign, and the machinery that carries it (2026-10-16)
+
+42 sweeps — every browser-driving mutation sweep in `tests/` — re-earn
+their verdicts serially against this tree. Verified by enumeration, not
+memory: a python pass over `tests/mutate-*.py` (HARNESS_CMD referencing a
+verify harness) plus the three `.mjs`/`.sh` sweeps that spawn a browser
+found none outside the 42.
+
+The carriers, and why each exists:
+
+- **A strict pid chain.** Each queue's waiter holds a pid, the next waits
+  on it, and `setsid` detaches the chain from any shell that might reap
+  it. Nothing starts on a dirty `src/` — that guard refused three queues
+  in a row tonight when a killed sweep stranded its mutant, and was right
+  to: the restore, not the launch, was the missing piece.
+- **A timeout-kill watcher.** `timeout` sends SIGTERM, which skips a
+  sweep's finally-restore, so the mutant stays and the next dirt guard
+  aborts. The watcher restores when the shape is "pipeline alive, no
+  sweep running, tree dirty, on two consecutive checks" — and its sweep
+  detection reads `/proc` for every runner type, because the version that
+  matched only `python tests/...` restored a live `node` sweep's mutant
+  out from under it and voided that run.
+- **A quiet-window battery.** Census, `npm test`, `parity:live` and the
+  demos audit, chained off the last waiter: the end-to-end proof runs on
+  the drained tree, never between mutants.
+- **Verdict digest, then per-sweep triage.** `q10-digest.sh` collapses 42
+  verdicts to one page; a survivor is traced statically against the
+  harness's own checks before any check is written — the attach-quiz
+  "nine survivors" traced to the wrong tree and to checks that already
+  name those exact behaviours, not to gaps.
+
+The machinery lives in the campaign scratch dir, not the repo: it is how
+this re-proof was driven, not how the suite is delivered.
+
