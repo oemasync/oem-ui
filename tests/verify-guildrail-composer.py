@@ -38,7 +38,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, 'dist')
-PORT = int(os.environ.get('GUILDRAIL_PORT', '4481'))
+PORT = int(os.environ.get('GUILDRAIL_PORT', '4471'))
 # Classes and ids that only this batch's tree can serve: the contract's
 # own names, plus the two specimens. A build without batch 29 fails here
 # by name instead of measuring a page that has no rail on it.

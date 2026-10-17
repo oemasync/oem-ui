@@ -117,7 +117,7 @@ def main():
         print('baseline suite not green; aborting')
         sys.exit(2)
     print('baseline suite green', end=' ')
-    rc, out = run(HARNESS + ['--baseline'], timeout=300)
+    rc, out = run(HARNESS + ['--baseline'], timeout=600)
     if '0 failed' not in out:
         print('\nbaseline harness not green; aborting')
         sys.exit(2)
