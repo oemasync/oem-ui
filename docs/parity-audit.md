@@ -475,3 +475,11 @@ The carriers, and why each exists:
 The machinery lives in the campaign scratch dir, not the repo: it is how
 this re-proof was driven, not how the suite is delivered.
 
+Expect-name drift, audited statically across every remaining sweep: the
+class is closed. Only rail, burger and sidebar key expectations against
+oracle output, and all three were re-anchored. The other "the ..." strings
+living in sweep tables were each traced to their consuming unpack and are
+non-matchers: `why` notes (tree-resize, calendar), `name` descriptions
+(otp-palette), and `_claim` prose (msglist). Alert, chart and direction
+predict which oracle kills a pattern and measure it by running both, so a
+wrong guess is recorded, not broken.
