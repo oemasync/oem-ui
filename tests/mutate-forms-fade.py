@@ -59,7 +59,7 @@ MUTANTS = [
      'data-cm-validate data-cm-validate-toast="handle saved"',
      'data-cm-validate-toast="handle saved"', 1, 'suite'),
     ('utilities not registered in the nav', 'src/pages/[...family].astro',
-     "'scrollarea', 'utilities', 'search'", "'scrollarea', 'search'", 1, 'suite'),
+     "'utilities', 'chat'", "'chat'", 1, 'suite'),
     ('the utilities section is renamed away', 'src/pages/[...family].astro',
      '<section id="utilities" class=', '<section id="utilities-demo" class=', 1, 'suite'),
     # ---- harness: the behaviours ---------------------------------------

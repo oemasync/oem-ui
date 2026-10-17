@@ -70,7 +70,7 @@ MUTANTS = [
      "el.__cmAction();" + NL + TAB + TAB + TAB + TAB + "dismiss(el);",
      "el.__cmAction();" + NL + TAB + TAB + TAB + TAB + "void 0;", 1, 'harness'),
     ('the action floats to the wrong edge', 'src/styles/components.css',
-     ".cm-toast__action {" + NL + TAB + "margin-left: auto;",
+     ".cm-toast__action {" + NL + TAB + "margin-inline-start: auto;",
      ".cm-toast__action {", 1, 'harness'),
     # ---- promise --------------------------------------------------------
     ('promise exports nothing', 'src/js/cli-mono.js',

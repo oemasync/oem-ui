@@ -253,8 +253,8 @@ MUTANTS = [
      "aria-current='true'] {\n\tbackground: var(--surface-raised);\n}",
      'live', True),
     ('l14 the bleed bleeds the document', 'src/styles/tokens.css',
-     '\t--guildrail-bleed: 18rem;',
-     '\t--guildrail-bleed: 40rem;',
+     '\t--guildrail-bleed: min(18rem, 52vw);',
+     '\t--guildrail-bleed: min(30rem, 52vw);',
      'live', True),
 ]
 
