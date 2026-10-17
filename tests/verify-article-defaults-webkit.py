@@ -118,6 +118,7 @@ async def measure(path: Path, reset: bool, w: int, h: int) -> dict:
     async with async_playwright() as p:
         b = await p.webkit.launch()
         pg = await b.new_page(viewport={"width": w, "height": h})
+        pg.set_default_timeout(180000)  # starved box: 27s+ to boot
         await pg.goto(path.as_uri())
         # Set the theme, then WAIT, then read. A probe that reads in the same
         # tick as the change measures a mid-transition value, which is how a

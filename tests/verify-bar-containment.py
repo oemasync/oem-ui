@@ -100,6 +100,7 @@ async def main():
         try:
             for w in WIDTHS:
                 pg = await br.new_page(viewport={"width": w, "height": 800})
+                pg.set_default_timeout(180000)  # starved box: 27s+ to boot
                 try:
                     await pg.goto(BASE, wait_until="networkidle")
                     d = await pg.evaluate(PROBE)

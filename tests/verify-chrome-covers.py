@@ -138,6 +138,7 @@ async def main() -> int:
         for w, h in VIEWPORTS:
             ctx = await browser.new_context(viewport={"width": w, "height": h})
             page = await ctx.new_page()
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
             try:
                 await page.goto(BASE, wait_until="networkidle", timeout=60000)
                 # The runtime binds on DOMContentLoaded plus a

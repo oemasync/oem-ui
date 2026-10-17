@@ -26,6 +26,7 @@ async def main():
         ctx = await b.new_context(viewport={'width': 390, 'height': 844},
                                   has_touch=True, is_mobile=True)
         pg = await ctx.new_page()
+        pg.set_default_timeout(180000)  # starved box: 27s+ to boot
         await pg.goto(URL, wait_until='load')
         await pg.wait_for_timeout(700)
 

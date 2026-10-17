@@ -97,6 +97,7 @@ async def main() -> int:
         browser = await pw.webkit.launch()
         for h in HEIGHTS:
             page = await browser.new_page(viewport={'width': 1280, 'height': h})
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
             await page.goto(URL, wait_until='networkidle')
             d = await page.evaluate(PROBE)
             await page.close()

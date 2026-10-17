@@ -80,6 +80,7 @@ async def check(browser, width):
     ctx = await browser.new_context(viewport={"width": width, "height": HEIGHT},
                                     device_scale_factor=3)
     page = await ctx.new_page()
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
     fails = []
     try:
         await page.goto(BASE_URL, wait_until="networkidle", timeout=60000)

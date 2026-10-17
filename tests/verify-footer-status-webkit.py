@@ -62,6 +62,7 @@ async def main():
         browser = await p.webkit.launch()
         for w, h in widths:
             page = await browser.new_page(viewport={"width": w, "height": h})
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
             await page.goto(TARGET, wait_until="load", timeout=30000)
             d = await page.evaluate(PROBE)
             await page.close()

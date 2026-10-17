@@ -102,6 +102,7 @@ async def main() -> int:
         bad = 0
         for w in WIDTHS:
             page = await browser.new_page(viewport={"width": w, "height": 844})
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
             await page.goto(BASE, wait_until="load")
             await page.wait_for_timeout(250)
             res = await page.evaluate(PROBE)

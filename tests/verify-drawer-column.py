@@ -90,6 +90,7 @@ async def main() -> int:
                     has_touch=True,
                 )
                 page = await ctx.new_page()
+                page.set_default_timeout(180000)  # starved box: 27s+ to boot
                 try:
                     await page.goto(BASE, wait_until="networkidle", timeout=60000)
                     await page.click(".cm-nav-toggle", timeout=8000)

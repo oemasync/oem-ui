@@ -94,6 +94,7 @@ def main():
         b = ph.webkit.launch()
         page = b.new_page(viewport={'width': 390, 'height': 844},
                           device_scale_factor=2)
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
         page.on('pageerror', lambda e: errors.append(str(e)))
         try:
             page.goto(URL, wait_until='load', timeout=30000)

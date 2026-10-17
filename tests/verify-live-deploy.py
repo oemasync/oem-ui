@@ -60,6 +60,7 @@ async def main() -> int:
     async with async_playwright() as pw:
         browser = await pw.webkit.launch()
         page = await browser.new_page(viewport={"width": 1280, "height": 900})
+        page.set_default_timeout(180000)  # starved box: 27s+ to boot
         resp = await page.goto(BASE, wait_until="domcontentloaded", timeout=60000)
         d = await page.evaluate(PROBE)
         await browser.close()
