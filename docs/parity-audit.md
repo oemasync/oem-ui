@@ -408,3 +408,36 @@ findings**; suite **687/0** (four new pins, each mutation-proven);
 `verify-showcase-nowrap-webkit.py` clean at 375/402/430/1440;
 `verify-sidebar.py` 34/34; `verify-attach-quiz.py` 14/14;
 `verify-doc-toc.py` 81/81; `verify-section-rhythm.py` 6/6.
+
+## 9. The sweep that measured the other checkout (2026-10-16)
+
+The attach-quiz sweep came back `killed=13 survived=9`, and the nine were not
+a weak-harness story: they were the mutants only a *browser* can see. Sixty
+harnesses in this worktree defaulted to `:4321` - the framework's default
+port - and `/proc/<pid>/cwd` on the server answering there read
+`/root/projects/oem-ui`, the sibling checkout. Every browser verdict in
+every sweep was a measurement of another tree's dist. The local suite still
+caught what it could, which is why the number looked plausible.
+
+So the proof surface was repaired before the proofs were trusted again:
+
+- **One tree per URL.** Every `:4321` in `tests/` and `scripts/` now reads
+  `:4471`, the port this lane's preview serves (`CLI_MONO_URL`, `BASE_URL`,
+  `OEM_UI_URL`, `GUILDRAIL_URL` still override). 64 files, 33 further URLs.
+- **A boot wait that cannot fire on a healthy run.** This page needs 27s+ to
+  reach `window.cliMono` when a spec campaign shares the box; the 30s default
+  made slow loads look like detections. 67 harnesses now set 180s right after
+  opening their page, so a timeout can never be booked as a catch.
+- **Two more census verdicts.** `AMBIGUOUS`: a pattern matching several sites
+  where the sweep replaces the first and asserts exactly one - measured when
+  the sidebar sweep aborted a whole batch on an unindented pattern that had
+  quietly grown a second occurrence. `TOO-NARROW`: a `count='all'` sweep
+  narrowed to one site, measured when an over-anchored avatar sweep stopped
+  sweeping six. Eight ambiguities re-anchored; the census reads
+  **100 harnesses, 0 stale, exit 0**.
+- **Every affected sweep re-earned.** A kill measured against another
+  checkout's build was never a kill: the sweeps that decided on a browser
+  verdict are re-queued in a strict pid chain and re-run serially against
+  this tree. `verify-drawer-field.py` 21/21 killed, 0 survived is the first
+  clean post-fix full catch.
+
