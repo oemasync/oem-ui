@@ -2877,7 +2877,15 @@ check('the showcase declares one section index, and the nav is built from it', (
 	// is a second list of section NAMES, because that is the drift this
 	// check exists to catch. So the assertion is on the derivation, not on
 	// one spelling of it.
-	assert(/links=\{SECTION_ORDER\.map/.test(page) || /SECTION_ORDER\.slice/.test(page),
+	//
+	// The first version of this assert tested for `SECTION_ORDER.slice`
+	// ANYWHERE on the page. A mutant that replaced the nav's own slice with
+	// `['foundation'].map(` still left the index and the group-coverage
+	// loop mentioning SECTION_ORDER, so the check passed while the nav no
+	// longer derived from anything: a presence test wearing a derivation
+	// check's name. Bind the derivation to the binding that feeds the nav.
+	assert(/const links = SECTION_ORDER\.(map|slice)/.test(page)
+		|| /links=\{SECTION_ORDER\.(map|slice)/.test(page),
 		'the nav is not built from SECTION_ORDER, so the two can drift again');
 	assert(/extraLinks/.test(page), 'the external links were dropped from the nav');
 
