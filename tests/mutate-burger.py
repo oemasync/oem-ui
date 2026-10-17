@@ -196,9 +196,16 @@ RELATED = [
 ]
 
 def hits_related(name, hits):
+    # Every pair whose fragment matches the name gets a vote: a broad
+    # earlier fragment ('unconditionally') must not shadow a precise later
+    # one ('collapse the panel'), or a correct kill is reported as a
+    # wrong-test and the signal trains you to ignore it.
+    matched = False
     for a, b in RELATED:
         if a in name:
-            return any(b in h for h in hits)
-    return True
+            matched = True
+            if any(b in h for h in hits):
+                return True
+    return not matched
 
 sys.exit(main())
