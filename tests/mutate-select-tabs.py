@@ -173,16 +173,21 @@ PATTERNS = [
          "\tflex-direction: row;\n}",
      'suite+harness'),
 
-    ('the shared 2px marker edge disappears',
-     CSS, "\t   and the colour declaration still passes through a token. */\n"
-         "\tborder-left: 2px solid transparent;",
-     "\t   and the colour declaration still passes through a token. */\n"
-         "\tborder-left: 0;",
-     'suite+harness'),
+    [
+        'the shared 2px marker edge disappears',
+        'src/styles/components.css',
+        '\t   and the colour declaration still passes through a token. */\n\tborder-inline-start: 2px solid transparent;',
+        '\t   and the colour declaration still passes through a token. */\n\tborder-inline-start: 0;',
+        'suite+harness',
+    ],
 
-    ('the selected vertical row stops lighting its marker from ink',
-     CSS, "\tborder-left-color: var(--ink);",
-     "\tborder-left-color: transparent;", 'harness'),
+    [
+        'the selected vertical row stops lighting its marker from ink',
+        'src/styles/components.css',
+        '\tborder-inline-start-color: var(--ink);',
+        '\tborder-inline-start-color: transparent;',
+        'harness',
+    ],
 
     # ---- tabs: disabled reads as disabled ----
     ('a disabled tab invites the click under the finger',
