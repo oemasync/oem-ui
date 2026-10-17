@@ -510,3 +510,49 @@ root:
 - **Cleanup and contract bugs.** A sweep that fails to restore must not
   stall a queue (runners now restore leftovers and continue); harnesses
   invoked with `--baseline` must consume it rather than navigate to it.
+
+## 12. The parallel plague: a bounded wait is not a serialisation
+
+The chained queues each parked a waiter on the previous queue with a *bounded*
+wait - `for i in $(seq 1 48); sleep 45` - which expires after 36 minutes. When
+q12's tail items ran longer than that, q15, q16 and q17 fired anyway, and by
+12:04 two more queues started within the same minute. Five queues, one tree.
+The contamination reads like five unrelated bugs: ENOENT for `dist/index.html`
+mid-suite (a peer's rebuild wiped dist under another sweep), `RESTORE FAILED:
+src/styles/components.css - crash, not a result` (one sweep's final snapshot
+disagreed because a peer owned the file), a self-spawn sweep aborting with
+"port 4471 is already in use", and one lone survivor in an otherwise clean
+sweep. The rule now: a waiter waits on its pid UNBOUNDED; a cap, if any, ABORTS
+instead of proceeding. Every verdict from the overlap window was voided and the
+19 affected sweeps re-ran through one strictly serial queue; wall-clock
+end-times across queue logs (`ls --time-style=+%H:%M`) are the cheap overlap
+detector.
+
+Two further findings from the same stretch. First, the sweeps split into two
+port families that need **opposite windows**: the composer/guildrail/toast trio
+refuses to run while anything else serves :4471 and spawns its own server,
+while every other sweep probes the standing preview. Same port, mutually
+exclusive requirements - so the trio runs in a wrapper that stops the standing
+preview, runs the three serially, and restores the preview for the audits.
+
+Second, two rig defects of the "plausible message" class. forms-fade's focus
+mutant needed a **third** anchor: both `controls(item(s))` sites live in the
+stepper's own state machine (`skip`/`step`/`render`), which the forms page
+never walks; the call its harness check exercises is `validate(show)`'s own
+line, tagged by the `return bad === 0;` that closes that function. And
+dropdown-depth's "Space stops flipping a checkbox row" is an **equivalent
+mutant**: the rows are `<button>`s, so WebKit's Space fires a native click and
+the click handler flips the row whatever the keydown branch says. Two routes,
+one behaviour - cut, with the load-bearing click-guard record mutated instead,
+the same standard the navmenu-sub code note already set. Relatedly,
+mutate-burger's kill classifier returned on the *first* RELATED pair whose
+fragment matched the mutation name, so the broad fragment `unconditionally`
+shadowed the precise `collapse the panel` pair and mislabelled a correct kill;
+every matching pair now gets a vote.
+
+And the msglist claims are now assertions: the suite reads the page source
+(no rebuild needed) for avatar composition, the day divider's words, and the
+unread divider's words. Its re-run under the plague showed all 36 mutants
+killed - including the three former survivors - but the run's cleanup crashed
+under the parallel window, so its clean verdict is the one queued after this
+entry.
