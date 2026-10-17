@@ -873,13 +873,34 @@ def main():
                   f"(clientWidth {sideways['clientW']}); the rail paints "
                   f"{sideways['painted']}px ending at {sideways['railRight']:.1f}")
 
+            # `elementFromPoint` answers in VIEWPORT coordinates, so the
+            # composer has to actually be on screen or it returns null and
+            # every hit test below is vacuous.
+            p.evaluate("""() => {
+                const sec = document.querySelector('#composer');
+                const de = document.documentElement;
+                de.style.scrollBehavior = 'auto';
+                de.scrollTop = sec.offsetTop - Math.max(0, (de.clientHeight - sec.offsetHeight) / 2);
+            }""")
+            p.wait_for_timeout(250)
+
             # The composer's field keeps its own floor on the phone, and
             # rows="1" is the reservation the consumer grows from.
             field = p.evaluate("""() => {
                 const f = document.querySelector('#composer .cm-composer__input');
-                const cs = getComputedStyle(f);
-                return { h: f.getBoundingClientRect().height, rows: f.rows,
-                         lh: parseFloat(cs.lineHeight), minHeight: cs.minHeight,
+                const box = document.querySelector('#composer .cm-composer__bar');
+                const anchor = document.querySelector('#composer .cm-mention__anchor');
+                const tools = document.querySelector('#composer .cm-composer__tools');
+                const attach = document.querySelector('#composer .cm-composer__attach');
+                const cs = getComputedStyle(f), bs = getComputedStyle(box), asv = anchor ? getComputedStyle(anchor) : null;
+                return { h: f.getBoundingClientRect().height, w: f.getBoundingClientRect().width,
+                         rows: f.rows, lh: parseFloat(cs.lineHeight), minHeight: cs.minHeight,
+                         inlineSize: cs.inlineSize, display: cs.display, flex: cs.flex,
+                         taPos: cs.position, taZ: cs.zIndex, taPe: cs.pointerEvents,
+                         anchorDisp: asv ? asv.display : null, anchorFlex: asv ? asv.flex : null,
+                         boxW: box.getBoundingClientRect().width,
+                         toolsR: tools.getBoundingClientRect().right, attachR: attach.getBoundingClientRect().right,
+                         anchorW: anchor ? anchor.getBoundingClientRect().width : null,
                          tap: parseFloat(getComputedStyle(document.documentElement)
                                  .getPropertyValue('--tap')) };
             }""")
@@ -889,6 +910,30 @@ def main():
                   and field["h"] < field["lh"] + field["tap"],
                   f"rows={field['rows']} height={field['h']:.0f} line-height={field['lh']:.1f} "
                   f"min-height={field['minHeight']} --tap={field['tap']}")
+            # The width bug this suite missed: the field must not spill
+            # under the tools strip. Asserted by HIT TEST rather than by
+            # comparing widths, because what breaks is not a number - it is
+            # that `elementFromPoint` at a control's centre resolves to the
+            # textarea, which is what makes the button unclickable to a
+            # real finger and to Playwright alike.
+            hit = p.evaluate("""() => {
+                const out = [];
+                for (const sel of ['#composer .cm-composer__tools .cm-icon-btn',
+                                   '#composer .cm-composer__send']) {
+                    const el = document.querySelector(sel);
+                    const r = el.getBoundingClientRect();
+                    const at = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+                    out.push({ sel, probe: sel.indexOf('send') > -1 ? 'send' : 'emoji',
+                               inside: !!at && (el === at || el.contains(at)),
+                               at: at ? at.tagName + '.' + String(at.className).slice(0, 40) : null });
+                }
+                return out;
+            }""")
+            print("phone hit test:", hit)
+            for h in hit:
+                check(f"phone: {h['probe']} is on top at its own centre, not the field",
+                      h["inside"],
+                      f"elementFromPoint returned {h['at']}")
 
             # The rail is still a scrollport at 402, with the same bleed.
             rail_phone = p.evaluate("""() => {

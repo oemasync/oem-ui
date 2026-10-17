@@ -13155,7 +13155,14 @@ process.on('exit', () => {
 check("the hover card is visibility-gated, not merely faded", () => {
 	const css = read("src/styles/components.css");
 	const page = read("src/pages/[...family].astro");
-	assert(/\.cm-hovercard__panel \{[\s\S]{0,300}?visibility: hidden/.test(css),
+	// MEASURED in WebKit: this rule is 700+ characters of comment away from
+	// its own `{`, so a fixed-width window over the SOURCE is a check that
+	// grows red as the comment grows and green again when a later edit
+	// shortens it - the window measured the prose, not the rule. Assert the
+	// RULE BODY (`{` to its closing brace) instead: the comment can say
+	// anything, and the declaration is what is being pinned.
+	const panel = ruleBodies(css, '.cm-hovercard__panel').join('\n');
+	assert(/visibility:\s*hidden/.test(panel),
 		"the panel must be visibility: hidden at rest - opacity alone still catches touches");
 	assert(/\.cm-hovercard:focus-within \.cm-hovercard__panel/.test(css),
 		"the keyboard needs focus-within, which a hover-only rule drops");
@@ -16153,6 +16160,33 @@ console.log('\nshadcn-parity: guildrail + composer');
 		// field claims the whole row.
 		assert(/^\.cm-composer__bar > textarea\.cm-composer__input \{/m.test(rawCss),
 			'the field selector does not tie base.css specificity - the width rule loses');
+	});
+
+	check('batch 29: the anchor-wrapped field fills its anchor instead of its cols', () => {
+		// The mention typeahead wraps the field in `.cm-mention__anchor`,
+		// which is a DIRECT-CHILD selector miss for the rule above, so the
+		// library re-declares the field for that wrapper. The second copy is
+		// what makes this checkable: the ONE declaration that may differ is
+		// the one that decides whether the field fills the anchor or falls
+		// back to its `cols` intrinsic.
+		//
+		// MEASURED in WebKit at an iPhone viewport: an inline-block field
+		// with `inline-size: auto` shrink-fits to its `cols` (200px) inside a
+		// 120px anchor, runs under the tools strip, and `elementFromPoint`
+		// at the emoji button's centre returns the TEXTAREA - the button is
+		// unclickable to a finger. `inline-size: 100%` is the fill.
+		const anchored = ruleBodies(block, '.cm-mention__anchor > textarea.cm-composer__input').join('\n');
+		assert(/inline-size:\s*100%/.test(anchored),
+			'the anchor-wrapped field does not fill its anchor; `auto` gives it its cols intrinsic and it runs under the tools');
+		assert(/min-inline-size:\s*0/.test(anchored),
+			'the anchor-wrapped field cannot shrink beside attach and send');
+		// The two blocks are one component's box written twice; if they drift
+		// the copy nobody looks at is the one the anchor case uses. Assert
+		// that the ONLY difference is the width line.
+		const strip = (b) => b.replace(/inline-size:\s*[^;]+;/, 'inline-size: W;').replace(/\s+/g, ' ').trim();
+		const direct = ruleBodies(block, '.cm-composer__bar > textarea.cm-composer__input').join('\n');
+		assert(strip(direct) === strip(anchored),
+			'the two declarations of the composer field have drifted apart beyond the width line');
 	});
 
 	check('batch 29: the reply strip is hidden by attribute, above the bar', () => {

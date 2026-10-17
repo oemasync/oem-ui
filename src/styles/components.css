@@ -9540,22 +9540,37 @@ input.cm-slider:disabled {
 	line-height: 1.5;
 }
 /* The SAME declarations again, because the mention typeahead wraps the
-   field in `.cm-composer__anchor` and the rule above is a DIRECT CHILD
+   field in `.cm-mention__anchor` and the rule above is a DIRECT CHILD
    selector - so the moment a consumer adds the anchor the field silently
    loses its width, its `padding: 0` and its transparency, and the bar stops
-   being the visible box. MEASURED in WebKit the day the mention demo was
-   added: with the anchor in place and no rule here, the field computed its
-   base.css `inline-size: 100%` (the whole row, pushing send off the end)
-   and `padding: 0.55rem 0.7rem` inside a bar that is already the padding.
+   being the visible box.
 
    Written as its own rule rather than a second selector arm on the one
    above: the contract test anchors on that rule's EXACT text
    (`...input {`), so widening its selector list would break a check that is
    right about the specificity it describes. This rule is (0,2,1) - the same
-   tie base.css's own field block holds - so neither order can lose it. */
+   tie base.css's own field block holds - so neither order can lose it.
+
+   `inline-size: 100%`, NOT `auto`. The field is an inline-block whose
+   shrink-to-fit width is its `cols` intrinsic (200px, measured in WebKit
+   at an iPhone viewport); the anchor is a plain block, so `auto` gave the
+   field that intrinsic width and it ran UNDER the tools strip - the emoji
+   button stopped being clickable at phone width, because
+   `elementFromPoint` at the button's centre returned the textarea. The
+   anchor is the field's positioning context and its width owner, so the
+   field fills IT; `min-inline-size: 0` is what still lets the anchor
+   shrink beside attach and send.
+
+   This declaration was once silently REGRESSED back to `auto` by a later
+   commit that rewrote this file: an `auto` here still builds, still lets
+   every box-shaped check pass, and quietly puts the tools strip back
+   under the field. It is pinned three ways now - the suite check above,
+   the hit test in `tests/verify-guildrail-composer.py` and mutant `l08`
+   in `tests/mutate-composer.py` - because the only symptom is a finger
+   landing on the wrong element. */
 .cm-mention__anchor > textarea.cm-composer__input {
 	flex: 1 1 auto;
-	inline-size: auto;
+	inline-size: 100%;
 	min-inline-size: 0;
 	/* NOT a cap. The contract's six-line limit is the consumer's
 	   auto-grow; a `max-block-size` here would clip line seven and make
