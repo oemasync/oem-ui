@@ -42,13 +42,19 @@ with sync_playwright() as pw:
         msgEnd: !!document.querySelector('.cm-msg--end'),
         msgGroup: !!document.querySelector('.cm-msg-group'),
         markers: document.querySelectorAll('.cm-marker--border, .cm-marker--separator').length,
+        markersBorder: document.querySelectorAll('.cm-marker--border').length,
+        markersSep: document.querySelectorAll('.cm-marker--separator').length,
         iconHidden: document.querySelector('.cm-marker__icon').getAttribute('aria-hidden'),
     })""")
     check('every chat specimen is on the page',
           presence['section'] and presence['variants'] >= 7 and presence['ghost']
           and presence['interactive'] is not None and presence['reactions'] >= 2
           and presence['msgEnd'] and presence['msgGroup']
-          and presence['markers'] == 2 and presence['iconHidden'] == 'true',
+          # A count of DEMO specimens is a pin on content, not on behaviour:
+          # the chat section grew a third marker and this check called the
+          # page broken. Assert that both KINDS are present instead.
+          and presence['markers'] >= 2 and presence['markersBorder'] >= 1
+          and presence['markersSep'] >= 1 and presence['iconHidden'] == 'true',
           presence)
 
     # ---- the 80% cap clamps; ghost does not ------------------------------
