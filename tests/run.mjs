@@ -3147,7 +3147,11 @@ check('the rail ships as a block scoped above the rail breakpoint', () => {
 	assert(RAIL !== '', 'the rail block is missing from components.css');
 	// Below the breakpoint the header must still be a bar. A rail rule
 	// outside the query would take the phone layout with it.
-	assert(/@media \(min-width: 1000px\)/.test(RAIL),
+	// `{` matters: the rail block's own comment discusses the query, and a
+	// bare presence test is satisfied by that comment - measured: a mutant
+	// that rewrote the REAL query to `min-width: 1px` SURVIVED, because the
+	// mention in the comment still matched.
+	assert(/@media \(min-width: 1000px\) \{/.test(RAIL),
 		'the rail rules are not inside a min-width query, so they apply on a phone');
 });
 
@@ -3161,7 +3165,11 @@ check('the rail is opt-in, so a consumer that did not ask for it is unaffected',
 });
 
 check('the rail width is a token, not a literal', () => {
-	assert(/--rail-w:/.test(TOK), '--rail-w is not declared in tokens.css');
+	// The declaration, not a mention: tokens.css discusses `--rail-w` in a
+	// comment right beside it, and `/--rail-w:/` was satisfied by that
+	// comment - measured: deleting the actual declaration SURVIVED.
+	assert(/^	--rail-w:\s*\d+px;\s*$/m.test(TOK),
+		'--rail-w is not DECLARED in tokens.css (a comment naming it is not a declaration)');
 	assert(/width: var\(--rail-w\)/.test(RAIL),
 		'the rail hardcodes a width instead of reading --rail-w');
 	assert(!/width: 2\d\dpx/.test(RAIL), 'a raw px width crept into the rail');

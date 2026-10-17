@@ -104,7 +104,12 @@ MUTATIONS = [
      'every id in the section index is a real section in the markup'),
 
     ('the nav stops deriving from the index',
-     PAGE, 'links={SECTION_ORDER.map', "links={[{'href': '#foundation', label: 'foundation'}]}",
+     # The nav is built per GROUP now - the rail is divided into labelled
+     # groups, each a SLICE of SECTION_ORDER - so the old flat
+     # `links={SECTION_ORDER.map` no longer exists and this mutant had
+     # become a no-op. Anchor on the derived slice.
+     PAGE, 'SECTION_ORDER.slice(at, at + n).map(',
+     "['foundation'].map(",
      'the showcase declares one section index, and the nav is built from it'),
 
     ('the section index is inlined back into the nav',
@@ -125,23 +130,24 @@ MUTATIONS = [
      'the rail clears the content, and the measure stays centred beside it'),
 
     ('the content is not offset clear of the rail at all',
-     CSS, 'padding-left: calc(var(--rail-w) + var(--gutter));', 'padding-left: 0;',
+     CSS, 'padding-inline-start: calc(var(--rail-w) + var(--gutter));',
+     'padding-inline-start: 0;',
      'the rail clears the content, and the measure stays centred beside it'),
 
     ('the rail offset stops being derived from the token',
-     CSS, 'padding-left: calc(var(--rail-w) + var(--gutter));',
-     'padding-left: calc(232px + var(--gutter));',
+     CSS, 'padding-inline-start: calc(var(--rail-w) + var(--gutter));',
+     'padding-inline-start: calc(232px + var(--gutter));',
      'the rail clears the content, and the measure stays centred beside it'),
 
     # --- the specimen bug: a descendant selector -----------------------
     ('the rail link rule goes back to styling the demo specimens',
-     CSS, '.cm-header--rail .cm-header__links > .cm-header__link {',
+     CSS, '\t.cm-header--rail .cm-header__links > .cm-header__link,\n\t.cm-header--rail .cm-header__group .cm-header__link {',
      '.cm-header--rail .cm-header__link {',
      'the rail link rules are scoped to direct children of the list'),
 
     # --- the tap floor --------------------------------------------------
     ('a rail link keeps the tap floor',
-     CSS, '.cm-header--rail .cm-header__links > .cm-header__link {\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tmin-height: var(--tap);', '.cm-header--rail .cm-header__links > .cm-header__link {\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tmin-height: 20px;',
+     CSS, '\t.cm-header--rail .cm-header__links > .cm-header__link,\n\t.cm-header--rail .cm-header__group .cm-header__link {\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tmin-height: var(--tap);', '\t.cm-header--rail .cm-header__links > .cm-header__link,\n\t.cm-header--rail .cm-header__group .cm-header__link {\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tmin-height: 20px;',
      'a rail link keeps the tap floor'),
 
     # --- the unbounded column ------------------------------------------
@@ -183,7 +189,7 @@ MUTATIONS = [
      'the showcase opts in, and a mobile reader still gets the burger'),
 
     ('the showcase stops offsetting its own content',
-     PAGE, 'class="cm-shell cm-shell--rail"', 'class="cm-shell"',
+     PAGE, 'cm-shell cm-shell--rail cm-stack', 'cm-shell cm-stack',
      'the showcase opts in, and a mobile reader still gets the burger'),
     # --- the fill shell -------------------------------------------------
     # `width: auto` is the load-bearing half. base.css gives `main`
