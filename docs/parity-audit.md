@@ -391,6 +391,17 @@ path the rename retired** and had stopped proving anything before mutating.
 **17/17 caught, 0 NO-OP, restore byte-identical (sha256)** — and the rest are
 swept serially, since each mutates shared source.
 
+**The mutation fleet now has a census, and the census now has teeth.**
+`tests/preflight-mutations.py` reads every Python harness's pattern table in
+a sandboxed subprocess and reports what no longer matches; it speaks in
+shapes - `NO-OP` (absent), `AMBIGUOUS` (several sites when the sweep asserts
+one), `TOO-NARROW` (a `count='all'` sweep down to one site). Eight
+ambiguous patterns were re-anchored to the site each mutant names, and one
+too-narrow avatar sweep restored to the six it was written for. The fleet
+reads **100 harnesses, 0 stale patterns, exit 0**. Every anchor the census
+cannot read (`.mjs`, `.sh`) pre-checks its own patterns when it runs, and
+the sweeps are serialized in a queue that stops on dirt.
+
 Evidence: `npm run parity:live` 66/66 identical; audit **0 failing
 findings**; suite **687/0** (four new pins, each mutation-proven);
 `verify-no-sideways-scroll.py` 0 sideways at 390/375/320/1440;

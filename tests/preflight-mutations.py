@@ -56,7 +56,10 @@ def main():
             continue
         rows = data.get("rows", [])
         not_a_finding = ("unclassified", "under-mutation (skipped)")
-        bad = [r for r in rows if r[1] not in not_a_finding]
+        # A verdict that begins with "ok" is a pass even when it carries a
+        # note ("ok (2 matches, count-all sweep)"): counting it as a problem
+        # made the fleet summary lie about two healthy sweeps.
+        bad = [r for r in rows if not (str(r[1]).startswith("ok") or r[1] in not_a_finding)]
         unclassified = sum(1 for r in rows if r[1] not in ("under-mutation (skipped)",) and r[1] == "unclassified")
         mid = sum(1 for r in rows if r[1] == "under-mutation (skipped)")
         total += len(bad)

@@ -94,6 +94,41 @@ runs done the wrong way started unguarded sweeps in parallel with a queued
 one, and the interleaved writes left four mutants behind - the queue's own
 dirt check stopped, and both sweeps were re-run.
 
+**The census learned two shapes it could not see.** A pattern that is
+*absent* was only one way a mutation stops meaning anything. Eight patterns
+matched *several* sites while their sweeps replace the first match and
+assert exactly one - the mutation landed somewhere the mutant never named,
+so the proof was of the wrong line. Those eight are re-anchored to their
+real site: the burger's header comment, dropdown-depth's step-back gather,
+forms-fade's own focus line, the navmenu-depth **subpanel** viewport (not
+the shared one), a *rendered* navmenu indicator (the old anchor pointed
+into a `<template>`, which renders nothing), the scroller demo's own
+content div, sidebarDisclosure's aria flip, and the shimmer's `@supports`
+gate - whose replacement now carries its selector along, because the wider
+anchor would otherwise have deleted `.cm-shimmer {` and the mutant would
+have died as invalid CSS rather than as a behaviour.
+
+The mirror case is `TOO-NARROW`: a sweep that asserts a claim *any*
+occurrence satisfies, narrowed to a single site. `tests/mutate-msglist.py`
+carried one - a timeline-avatar sweep anchored down to one row's span by an
+earlier repair - and its own `--scan` had been reporting it. It sweeps the
+timeline's six avatars again and reads 36/36, exit 0.
+
+Both shapes are now verdicts the census speaks, checked in both directions
+and by asking each harness what it declares rather than assuming. The fleet
+is **100 harnesses, 0 stale patterns, exit 0**.
+
+**Two tool bugs, both caught by the tools disagreeing.** The census probe
+rendered non-string entry fields as display text (`"«None»"`) and the
+repairer spliced that text back as data - thirteen msglist entries ended up
+with a row marker of the *string* `None`, which the harness's own scan
+flagged thirteen times. Non-strings now travel as `{"py": repr(v)}` and
+return as source. And a batch must not die on one drifted anchor:
+`mutate-sidebar.py`'s pre-check asserted exactly one match and aborted a
+whole sweep when a second occurrence appeared, so an absent or ambiguous
+pattern is now reported and skipped (`stale=N`, non-zero exit) - the
+convention `mutate-tree-resize.py` already documents.
+
 ## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
 
 Parity was 64 of 64 against a list that was measured once, and the check

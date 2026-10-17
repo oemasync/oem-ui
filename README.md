@@ -3852,6 +3852,24 @@ applied, which reads as proof and is not one. Read-only: it writes nothing
 and runs no suite. (`.mjs`/`.sh` harnesses are reported as not probeable;
 their sweeps pre-check each pattern themselves.)
 
+It speaks in shapes, because a signature that is absent is only one way a
+mutation stops meaning anything. `NO-OP` is the absent pattern. `AMBIGUOUS`
+is a pattern that matches several sites when the sweep replaces the first
+one and asserts exactly one - the mutation then lands somewhere the mutant
+never named. `TOO-NARROW` is the mirror image: a `count='all'` sweep whose
+pattern matches a single site, so it barely sweeps at all. Each name comes
+from a real escape: the sidebar sweep aborted a whole batch on an
+unindented pattern that had quietly grown a second occurrence, and an
+over-anchored avatar sweep had narrowed to one row. A pattern that is both
+clean and multiple is reported as `ok (N matches, count-all sweep)`, which
+is not a problem - those sweeps want company.
+
+A census that finds a shape can repair it mechanically:
+`tests/repair-mutations.py <harness> <corrections.json>` re-anchors one
+entry's `old` (and `new` when the anchor carries context the replacement
+must keep) inside the harness's own table, refusing unless the new pattern
+matches the count the entry declares.
+
 This is a static showcase with no write routes and no credentials, so it is
 fine unauthenticated inside your own network. It is bound to the LAN only: no
 DNS record points at it and no port is forwarded on the router.
