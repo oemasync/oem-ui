@@ -138,10 +138,23 @@ def main():
 
     rows = []
     bad_detail = []
-    for entry in table:
-        if not isinstance(entry, (list, tuple)) or len(entry) < 3:
+    def as_fields(e):
+        # Two table shapes in the fleet: positional tuples
+        # (name, path, old, new, who...) and dicts with the same names
+        # (mutate-sync-prefix.py built its nine that way via a helper).
+        if isinstance(e, dict):
+            return (e.get("name"), e.get("path") or e.get("file"),
+                    e.get("old"), e.get("new"))
+        if isinstance(e, (list, tuple)) and len(e) >= 3:
+            return (e[0], e[1], e[2], e[3] if len(e) > 3 else None)
+        return None
+
+    for _raw in table:
+        fields = as_fields(_raw)
+        if fields is None:
             continue
-        label, cand, old = entry[0], entry[1], entry[2]
+        label, cand, old, _new_field = fields
+        entry = tuple(v for v in (label, cand, old, _new_field) if v is not None)
         if not isinstance(cand, str) or not isinstance(old, str) or not os.path.isfile(cand):
             rows.append([str(label), "unclassified"])
             continue
