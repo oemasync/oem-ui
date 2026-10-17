@@ -55,6 +55,11 @@ def main():
             skipped.append((f, data["skip"]))
             continue
         rows = data.get("rows", [])
+        if not rows:
+            # A probe that read the table but produced no rows is broken, not
+            # clean. The healthy case has its own row now, so this only fires
+            # when the read itself failed.
+            rows = [["(no rows read)", "BROKEN READ - the probe saw a table but reported nothing"]]
         not_a_finding = ("unclassified", "under-mutation (skipped)")
         # A verdict that begins with "ok" is a pass even when it carries a
         # note ("ok (2 matches, count-all sweep)"): counting it as a problem

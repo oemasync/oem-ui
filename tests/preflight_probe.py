@@ -203,6 +203,23 @@ def main():
             bad_detail.append({"label": str(label), "why": f"TOO-NARROW ({n} match, count-all wants 2+)",
                                "path": cand, "old": old,
                                "entry": [v if isinstance(v, str) else {"py": repr(v)} for v in entry]})
+        else:
+            # THE HEALTHY CASE NEEDS A ROW TOO. Without it a clean script read
+            # as "0 patterns, all match" - a census line that means nothing,
+            # measured on three scripts whose patterns were all fine.
+            rows.append([str(label), f"ok ({n} match)"])
+    if not rows:
+        # An empty read is a broken instrument, not a clean fleet. Say WHAT
+        # was read, or the census reports "0 patterns, all match" and means
+        # nothing. Measured: three scripts reported 0 rows for a while.
+        sample = table[0] if isinstance(table, list) and table else None
+        out0 = {"skip": "table read but no rows (%d entries, first=%s:%s)" % (
+            len(table) if isinstance(table, list) else -1,
+            type(sample).__name__, len(sample) if isinstance(sample, (list, tuple)) else "?"),
+            "entry_types": [(type(e).__name__, len(e) if isinstance(e, (list, tuple)) else -1)
+                            for e in (table or [])[:6]]}
+        print(json.dumps(out0))
+        return 0
     out = {"rows": rows, "blocked_at": blocked_at}
     if "--dump" in sys.argv:
         out["bad"] = bad_detail

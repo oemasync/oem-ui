@@ -48,9 +48,13 @@ MUTANTS = [
     ('the scrollarea stops being a scrollport', 'src/styles/components.css',
      '\tmax-height: var(--scroll-h, 18rem);\n\toverflow-y: auto;',
      '\tmax-height: var(--scroll-h, 18rem);', 1),
-    ('the scrollarea lets its gesture escape', 'src/styles/components.css',
-     '\toverflow-y: auto;\n\toverscroll-behavior: contain;',
-     '\toverflow-y: auto;', 1),
+    [
+        'the scrollarea lets its gesture escape',
+        'src/styles/components.css',
+        '.cm-scrollarea {\n\tmax-height: var(--scroll-h, 18rem);\n\toverflow-y: auto;\n\toverscroll-behavior: contain;',
+        '.cm-scrollarea {\n\tmax-height: var(--scroll-h, 18rem);\n\toverflow-y: auto;',
+        1,
+    ],
 ]
 
 

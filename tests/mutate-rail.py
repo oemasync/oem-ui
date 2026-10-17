@@ -125,8 +125,14 @@ MUTATIONS = [
      'the rail ships as a block scoped above the rail breakpoint'),
 
     # --- geometry: the two bugs that actually shipped -------------------
-    ('main re-centres on the viewport and slides under the rail',
-     CSS, '\t\tmargin-inline: 0;\n', '\t\tmargin-inline: auto;\n',
+    # Re-anchored 2026-10-16: the rule this named (`margin-inline: 0` pinned
+    # beside the rail) no longer exists - the shell centres with `auto` now
+    # and clamps with `min(token, 100%)`. The same shipped defect is
+    # reachable through that clamp, and the mutant goes for it directly:
+    # `var(--maxw)` alone measures 1112px of prose inside a 440px box at
+    # 1000px - the sideways scroll this batch fixed.
+    ('the body keeps its whole measure and runs under the rail',
+     CSS, '\t\tmax-width: min(var(--maxw), 100%);\n', '\t\tmax-width: var(--maxw);\n',
      'the rail clears the content, and the measure stays centred beside it'),
 
     ('the content is not offset clear of the rail at all',
