@@ -177,14 +177,14 @@ def main():
             # showcase is a large document WebKit measured at ~7s to fire
             # `load`, so it gets its own.
             p.set_default_navigation_timeout(30000)
-            p.set_default_timeout(8000)
+            p.set_default_timeout(180000)  # starved box: 27s+ to boot
             p.goto(url, wait_until="load")
             # Gate on the runtime's own marker rather than a sleep: a
             # bundle that never executes must fail LOUDLY here instead of
             # timing out somewhere in the middle of a check.
             p.wait_for_function(
                 "() => document.documentElement.classList.contains('cm-js')"
-                " && typeof window.cliMono === 'object'", timeout=20000)
+                " && typeof window.cliMono === 'object'", timeout=180000)
             # The showcase sets `scroll-behavior: smooth` on html, so an
             # `scrollIntoView` here is an animation and the probe below
             # would read a rect from a page still travelling.
@@ -765,11 +765,11 @@ def main():
             p = b.new_page(viewport={"width": 402, "height": 667},
                            has_touch=True, is_mobile=True)
             p.set_default_navigation_timeout(30000)
-            p.set_default_timeout(8000)
+            p.set_default_timeout(180000)  # starved box: 27s+ to boot
             p.goto(url, wait_until="load")
             p.wait_for_function(
                 "() => document.documentElement.classList.contains('cm-js')"
-                " && typeof window.cliMono === 'object'", timeout=20000)
+                " && typeof window.cliMono === 'object'", timeout=180000)
 
             coarse = p.evaluate("() => matchMedia('(pointer: coarse)').matches")
             check("phone: the emulation really is a coarse pointer", coarse is True,

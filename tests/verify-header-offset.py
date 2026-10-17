@@ -75,7 +75,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={'width': 1280, 'height': 900})
     pg.set_default_timeout(180000)  # starved box: 27s+ to boot
 
-    pg.goto(URL, wait_until='domcontentloaded', timeout=120000)
+    pg.goto(URL, wait_until='domcontentloaded', timeout=180000)
     pg.wait_for_timeout(2500)
 
     is_rail = pg.evaluate("() => document.querySelector('[data-cm-header]').classList.contains('cm-header--rail')")
@@ -101,7 +101,7 @@ with sync_playwright() as p:
 
     # ---- the BAR layout: padding must reserve the REAL bar height ----
     pg = b.new_page(viewport={'width': 390, 'height': 844})
-    pg.goto(URL, wait_until='domcontentloaded', timeout=120000)
+    pg.goto(URL, wait_until='domcontentloaded', timeout=180000)
     pg.wait_for_timeout(2500)
 
     hdr = pg.evaluate("() => { const r = document.querySelector('[data-cm-header]').getBoundingClientRect();"

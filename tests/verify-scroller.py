@@ -42,7 +42,7 @@ with sync_playwright() as pw:
         ".scrollIntoView({block: 'center'})")
     page.wait_for_function(
         """() => { const r = document.querySelector('.cm-scroller__viewport').getBoundingClientRect();
-             return r.top > 40 && r.top < window.innerHeight / 2; }""", timeout=10000)
+             return r.top > 40 && r.top < window.innerHeight / 2; }""", timeout=180000)
     page.wait_for_timeout(250)
 
     # ---- a11y contract of the frame --------------------------------------

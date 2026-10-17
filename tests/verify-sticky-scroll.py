@@ -93,7 +93,7 @@ async def check_width(browser, width):
     )
     page = await ctx.new_page()
     try:
-        await page.goto(BASE_URL, wait_until="networkidle", timeout=60000)
+        await page.goto(BASE_URL, wait_until="networkidle", timeout=180000)
         await page.evaluate(FREEZE)
 
         start = await page.evaluate(MEASURE)

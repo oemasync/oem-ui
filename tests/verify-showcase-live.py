@@ -50,7 +50,7 @@ async def main():
         # has executed (readyState 'interactive', window.cliMono undefined).
         await pg.wait_for_function(
             "() => document.documentElement.classList.contains('cm-js')",
-            timeout=15000)
+            timeout=180000)
         got = await pg.evaluate(READ)
         await pg.screenshot(path="/root/.hermes/cache/scratch/showcase-390.png",
                             full_page=False)

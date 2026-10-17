@@ -92,7 +92,7 @@ def main():
             pg.goto(URL, wait_until="load")
             # Wait for the RUNTIME, never for milliseconds: networkidle can
             # fire before the bundle has executed.
-            pg.wait_for_function("() => document.documentElement.classList.contains('cm-js')", timeout=15000)
+            pg.wait_for_function("() => document.documentElement.classList.contains('cm-js')", timeout=180000)
             pg.evaluate("document.fonts && document.fonts.ready")
             pg.wait_for_timeout(150)
             d = pg.evaluate(PROBE)

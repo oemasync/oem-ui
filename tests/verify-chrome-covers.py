@@ -140,7 +140,7 @@ async def main() -> int:
             page = await ctx.new_page()
             page.set_default_timeout(180000)  # starved box: 27s+ to boot
             try:
-                await page.goto(BASE, wait_until="networkidle", timeout=60000)
+                await page.goto(BASE, wait_until="networkidle", timeout=180000)
                 # The runtime binds on DOMContentLoaded plus a
                 # MutationObserver pass; a probe that runs before the
                 # library has bound measures the pre-runtime page.

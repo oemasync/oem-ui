@@ -103,7 +103,7 @@ def run(width, height):
         pg.goto(URL, wait_until="networkidle")
         pg.wait_for_function(
             "() => document.documentElement.classList.contains('cm-js') || !!window.cliMono",
-            timeout=15000)
+            timeout=180000)
         pg.evaluate("() => document.fonts.ready")
         pg.wait_for_timeout(250)
         native = pg.evaluate(PROBE)

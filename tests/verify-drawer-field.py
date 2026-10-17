@@ -19,7 +19,7 @@ def wait_runtime(page):
     can fire while the module is still evaluating, and every check below
     (clamps, wiring, drag binding) is a check on that module having run."""
     page.wait_for_function(
-        "() => document.documentElement.classList.contains('cm-js')", timeout=15000)
+        "() => document.documentElement.classList.contains('cm-js')", timeout=180000)
 
 
 with sync_playwright() as pw:

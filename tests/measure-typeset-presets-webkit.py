@@ -36,7 +36,7 @@ with sync_playwright() as p:
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until='networkidle')
-    pg.wait_for_function("() => document.documentElement.classList.contains('cm-js')", timeout=15000)
+    pg.wait_for_function("() => document.documentElement.classList.contains('cm-js')", timeout=180000)
     check('no page errors', not errs, errs[:2])
 
     # ---- the presets must DIFFER from the base, on their own box ----------

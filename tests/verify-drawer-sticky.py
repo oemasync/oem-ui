@@ -83,7 +83,7 @@ async def check(browser, width):
     page.set_default_timeout(180000)  # starved box: 27s+ to boot
     fails = []
     try:
-        await page.goto(BASE_URL, wait_until="networkidle", timeout=60000)
+        await page.goto(BASE_URL, wait_until="networkidle", timeout=180000)
         await page.evaluate(FREEZE)
 
         toggle = await page.query_selector(".cm-nav-toggle")

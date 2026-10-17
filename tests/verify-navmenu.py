@@ -221,7 +221,7 @@ with sync_playwright() as pw:
     page.evaluate("() => window.scrollTo(0, %d)" % (target + 250))
     page.wait_for_function(
         "() => Math.abs(window.scrollY - %d) < 40" % (target + 250),
-        timeout=15000)
+        timeout=180000)
     page.evaluate("""() => {
         const t = document.querySelector('.cm-navmenu__trigger[popovertarget="nav-product"]');
         t.focus();
@@ -370,7 +370,7 @@ with sync_playwright() as pw:
     want = target + 250
     page.evaluate("() => window.scrollTo(0, %d)" % want)
     page.wait_for_function(
-        "() => Math.abs(window.scrollY - %d) < 40" % want, timeout=15000)
+        "() => Math.abs(window.scrollY - %d) < 40" % want, timeout=180000)
     page.wait_for_timeout(400)
     # `block: 'start'` puts the section's top AT the viewport top, which is
     # still BELOW the spy's line - the line is `scrollTop + header height`,

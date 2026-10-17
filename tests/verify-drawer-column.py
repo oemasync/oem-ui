@@ -92,8 +92,8 @@ async def main() -> int:
                 page = await ctx.new_page()
                 page.set_default_timeout(180000)  # starved box: 27s+ to boot
                 try:
-                    await page.goto(BASE, wait_until="networkidle", timeout=60000)
-                    await page.click(".cm-nav-toggle", timeout=8000)
+                    await page.goto(BASE, wait_until="networkidle", timeout=180000)
+                    await page.click(".cm-nav-toggle", timeout=180000)
                     # The drawer slides in; measuring mid-animation gives
                     # positions that are still moving, which is how an
                     # earlier probe of mine read nonsense.

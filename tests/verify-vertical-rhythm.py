@@ -114,7 +114,7 @@ async def run(p, url, width):
         has_touch=width < 700,
     )
     pg = await ctx.new_page()
-    await pg.goto(url, wait_until="networkidle", timeout=60000)
+    await pg.goto(url, wait_until="networkidle", timeout=180000)
     d = await pg.evaluate(PROBE)
     await ctx.close()
     return d

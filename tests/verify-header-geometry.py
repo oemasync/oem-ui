@@ -121,7 +121,7 @@ GEO = r"""() => {
 # animates long past any sane timeout - the probe then reports "never
 # settled" for a page that settles fine. Instant makes the target the
 # target; the wait below still proves it actually landed.
-def settled(page, target, timeout=8000):
+def settled(page, target, timeout=180000):
     page.evaluate('t => window.scrollTo({ top: t, behavior: "instant" })', target)
     try:
         page.wait_for_function(
@@ -142,7 +142,7 @@ def settle(page):
     try:
         page.wait_for_function(
             "() => getComputedStyle(document.documentElement)"
-            ".getPropertyValue('--header-h').trim() !== ''", timeout=5000)
+            ".getPropertyValue('--header-h').trim() !== ''", timeout=180000)
     except Exception:
         pass  # absence is reported by the height check below, not here
     page.wait_for_timeout(150)

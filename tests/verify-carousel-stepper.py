@@ -59,7 +59,7 @@ with sync_playwright() as pw:
     page.click('[data-cm-carousel-next]')
     page.wait_for_function(
         "() => document.querySelectorAll('.cm-carousel__page')[1].getAttribute('aria-current') === 'true'",
-        timeout=3000)
+        timeout=180000)
     st = page.evaluate("""() => {
       const car = document.querySelector('.cm-carousel');
       const track = car.querySelector('.cm-carousel__track');
@@ -75,7 +75,7 @@ with sync_playwright() as pw:
     page.click('[data-cm-carousel-next]')
     page.wait_for_function(
         "() => document.querySelectorAll('.cm-carousel__page')[2].getAttribute('aria-current') === 'true'",
-        timeout=3000)
+        timeout=180000)
     st = page.evaluate("""() => document.querySelector('[data-cm-carousel-next]').disabled""")
     check('next disables on the last slide (an end button that scrolls nowhere)',
           st is True, st)
@@ -84,7 +84,7 @@ with sync_playwright() as pw:
     page.click(".cm-carousel__page[aria-label='slide 2']")
     page.wait_for_function(
         "() => document.querySelectorAll('.cm-carousel__page')[1].getAttribute('aria-current') === 'true'",
-        timeout=3000)
+        timeout=180000)
     check('clicking a mark lands on that slide',
           page.evaluate("""() => [...document.querySelectorAll('.cm-carousel__page')]
               .findIndex(p => p.getAttribute('aria-current') === 'true')""") == 1)
@@ -122,7 +122,7 @@ with sync_playwright() as pw:
     page.keyboard.press('ArrowLeft')
     page.wait_for_function(
         "() => document.querySelector('.cm-carousel__track').scrollLeft < " + str(before) + " - 10",
-        timeout=3000)
+        timeout=180000)
     after = page.evaluate("() => document.querySelector('.cm-carousel__track').scrollLeft")
     check('the arrow key lands exactly one slide away (snap offset, not a UA line-scroll)',
           abs(after - expect) <= 2, {'after': after, 'expect': expect})
@@ -157,7 +157,7 @@ with sync_playwright() as pw:
     page.wait_for_function("""() => {
       const m = document.querySelectorAll('[data-cm-stepper] .cm-step')[3].querySelector('.cm-step__marker');
       return getComputedStyle(m).backgroundColor === 'rgb(232, 232, 232)';
-    }""", timeout=3000)
+    }""", timeout=180000)
     st = page.evaluate("""() => {
       const steps = [...document.querySelectorAll('[data-cm-stepper] .cm-step')];
       return { current: steps.map(s => s.classList.contains('is-current')),

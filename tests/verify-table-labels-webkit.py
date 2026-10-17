@@ -102,7 +102,7 @@ def run(playwright, width, height, label):
     page.goto(URL, wait_until="domcontentloaded")
     page.evaluate("() => { try { localStorage.clear(); } catch (e) {} }")
     page.reload(wait_until="load")
-    page.wait_for_selector("#tablelabels .cm-prose-table", timeout=15000)
+    page.wait_for_selector("#tablelabels .cm-prose-table", timeout=180000)
     page.wait_for_timeout(300)
     data = probe(page)
     data["pageErrors"] = errors

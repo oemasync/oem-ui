@@ -126,7 +126,7 @@ def main():
             page.wait_for_function(
                 "() => document.documentElement.classList.contains('cm-js')"
                 " && typeof window.cliMono === 'object'",
-                timeout=15000)
+                timeout=180000)
 
             BAR = '[data-cm-menubar]'
             TRG = f'{BAR} .cm-menubar__trigger'
@@ -292,7 +292,7 @@ def main():
                 assert not panel_open('#mb-file'), 'Left did not step out of the panel'
                 page.wait_for_function(
                     "document.querySelector('#mb-view').matches(':popover-open')",
-                    timeout=3000)
+                    timeout=180000)
                 assert panel_open('#mb-view'), \
                     'Left did not walk to the neighbouring menu while a menu was open'
 

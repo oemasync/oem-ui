@@ -97,7 +97,7 @@ def main():
         page.set_default_timeout(180000)  # starved box: 27s+ to boot
         page.on('pageerror', lambda e: errors.append(str(e)))
         try:
-            page.goto(URL, wait_until='load', timeout=30000)
+            page.goto(URL, wait_until='load', timeout=180000)
         except Exception as e:
             print('ERROR: server down / unreachable at %s :: %r' % (URL, e))
             b.close()

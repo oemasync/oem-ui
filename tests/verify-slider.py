@@ -165,7 +165,7 @@ with sync_playwright() as pw:
         page.wait_for_function(
             "!!document.querySelector('#f-vol') && "
             "!!document.querySelector('#f-vol').style.getPropertyValue('--cm-slider')",
-            timeout=15000)
+            timeout=180000)
         check('init paints the fill at boot', True)
     except Exception as e:
         check('init paints the fill at boot', False, str(e).splitlines()[0][:140])
@@ -242,7 +242,7 @@ with sync_playwright() as pw:
     try:
         page.wait_for_function(
             "() => document.querySelector('.cm-btn--outline').matches(':hover')",
-            timeout=5000)
+            timeout=180000)
     except Exception:
         # Say WHY before failing: an element covering the button and a
         # pointer that never moved are different product bugs.

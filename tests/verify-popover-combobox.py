@@ -106,7 +106,7 @@ with sync_playwright() as pw:
       return [Math.round(innerWidth / 2), Math.round(y)];
     }""")
     page.mouse.click(px, py)
-    page.wait_for_function("() => !document.getElementById('pop-demo').matches(':popover-open')", timeout=3000)
+    page.wait_for_function("() => !document.getElementById('pop-demo').matches(':popover-open')", timeout=180000)
     check('a click outside dismisses it (light dismiss)', True, {'x': px, 'y': py})
 
     # Re-pinning: while open, scrolling the page must carry the card with
@@ -118,7 +118,7 @@ with sync_playwright() as pw:
     # after a fixed 120ms measured the viewport half way down a 26,000px
     # jump - the card was correct for that frame and wrong for the test.
     # Wait for the scroll to finish, then for the re-anchor's next frame.
-    page.wait_for_function("() => Math.abs(scrollY - 240) < 2", timeout=8000)
+    page.wait_for_function("() => Math.abs(scrollY - 240) < 2", timeout=180000)
     page.wait_for_timeout(150)
     st = snap(page)
     adjacent = abs(st['dy'] - 4) <= 6 or abs(st['above'] - 4) <= 6

@@ -46,7 +46,7 @@ with sync_playwright() as pw:
         const card = document.querySelector('.cm-attach__trigger').closest('.cm-attach');
         const r = card.getBoundingClientRect();
         return r.top > 60 && r.bottom < window.innerHeight - 10;
-    }""", timeout=10000)
+    }""", timeout=180000)
     page.wait_for_timeout(150)
     stack = page.evaluate("""() => {
         const card = document.querySelector('.cm-attach__trigger').closest('.cm-attach');

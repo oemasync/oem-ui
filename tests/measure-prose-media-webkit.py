@@ -130,7 +130,7 @@ with sync_playwright() as p:
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto(URL, wait_until='networkidle')
         pg.wait_for_function("() => document.documentElement.classList.contains('cm-js')",
-                             timeout=15000)
+                             timeout=180000)
         check('[%spx] no page errors' % width, not errs, str(errs[:2]))
         for system in ('cm-prose', 'cm-typeset'):
             measure(pg, system, width)
@@ -148,7 +148,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={'width': 390, 'height': 844})
     pg.goto(BASE, wait_until='networkidle')
     pg.wait_for_function("() => document.documentElement.classList.contains('cm-js')",
-                         timeout=15000)
+                         timeout=180000)
     m = pg.evaluate("""() => {
         const f = document.querySelector('figure.cm-media');
         if (!f) return {missing: true};
