@@ -172,7 +172,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__main">\n\t\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__text">the empty avatar slot',
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__main">\n\t\t\t\t\t\t\t\t\t\t\t<header class="cm-msglist__meta"><span class="cm-msglist__author">alex</span></header>\n\t\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__text">the empty avatar slot',
 'a grouped row still stamps itself in a meta line - that is the double stamp this rule exists to stop',
-'«None»',
+None,
 'one',
     ],
     [
@@ -181,7 +181,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:13">11:13</time></div>\n',
 '',
 'a grouped row has no stamp at all: the header is gone and the gutter is its only one',
-'«None»',
+None,
 'one',
     ],
     [
@@ -190,7 +190,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t\t\t\t<header class="cm-msglist__meta">\n\t\t\t\t\t\t\t\t\t\t\t\t<span class="cm-msglist__author">sam</span>\n\t\t\t\t\t\t\t\t\t\t\t\t<time class="cm-msglist__stamp" datetime="2026-10-10T11:31">Today at 11:31 AM</time>\n\t\t\t\t\t\t\t\t\t\t\t</header>\n',
 '',
 'an ungrouped row must carry exactly one meta line, with its own stamp',
-'«None»',
+None,
 'one',
     ],
 
@@ -201,7 +201,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:13">11:13</time></div>\n\t\t\t\t\t\t\t\t\t\t<span class="cm-msglist__avatar" aria-hidden="true"></span>\n',
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:13">11:13</time></div>\n',
 'N empty avatar slots for M grouped rows - the slot is what keeps the text aligned',
-'«None»',
+None,
 'one',
     ],
     [
@@ -210,7 +210,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:14">11:14</time></div>\n\t\t\t\t\t\t\t\t\t\t<span class="cm-msglist__avatar" aria-hidden="true"></span>\n',
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:14">11:14</time></div>\n\t\t\t\t\t\t\t\t\t\t<span class="cm-avatar cm-avatar--sm cm-msglist__avatar" aria-hidden="true">AB</span>\n',
 'N empty avatar slots for M grouped rows - the slot is what keeps the text aligned',
-'«None»',
+None,
 'one',
     ],
     ['the empty slot opens a different width than a real avatar', TOKENS,
@@ -224,7 +224,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:12">11:12</time></div>\n\t\t\t\t\t\t\t\t\t\t<span class="cm-avatar cm-avatar--sm cm-msglist__avatar" aria-hidden="true">AB</span>\n',
 '\t\t\t\t\t\t\t\t\t\t<div class="cm-msglist__gutter"><time class="cm-msglist__hoverstamp" datetime="2026-10-10T11:12">11:12</time></div>\n\t\t\t\t\t\t\t\t\t\t<span class="cm-msglist__avatar" aria-hidden="true">AB</span>\n',
 'the timeline invents its own avatar instead of composing .cm-avatar',
-'«None»',
+None,
 'all',
     ],
 
@@ -276,7 +276,7 @@ MUTANTS = [
 '<span aria-hidden="true">👍</span><span class="cm-msglist__count">2</span>',
 '<span aria-hidden="true">👍</span>',
 'a reaction button renders without a numeric count beside its glyph',
-'«None»',
+None,
 'one',
     ],
     ["the reader's own reaction loses its heavier edge", CSS,
@@ -287,10 +287,15 @@ MUTANTS = [
      'class="cm-msglist__reaction cm-msglist__reaction--mine" aria-pressed="true"',
      'class="cm-msglist__reaction cm-msglist__reaction--mine"',
      'the --mine reaction does not announce aria-pressed="true"', None, 'one'],
-    ["no other reaction announces it is not the reader's", ASTRO,
-     'class="cm-msglist__reaction" aria-pressed="false"',
-     'class="cm-msglist__reaction"',
-     'a reaction that is not the reader\'s must still carry aria-pressed="false"', None, 'all'],
+    [
+        "no other reaction announces it is not the reader's",
+        'src/pages/[...family].astro',
+        'class="cm-msglist__reaction" aria-pressed="false"',
+        'class="cm-msglist__reaction"',
+        'a reaction that is not the reader\'s must still carry aria-pressed="false"',
+        None,
+        'all',
+    ],
 
     # --- F: the frame, the system note and the labelled dividers ---
     [
@@ -299,7 +304,7 @@ MUTANTS = [
 '<article class="cm-scroller__item cm-msglist__msg" data-message-id="ml4" data-scroll-anchor>',
 '<article class="cm-msglist__msg" data-message-id="ml4" data-scroll-anchor>',
 'a row outside cm-scroller__item skips the scroller content-visibility contract',
-'«None»',
+None,
 'one',
     ],
     [
@@ -308,7 +313,7 @@ MUTANTS = [
 '\t\t\t\t\t\t\t\t<div class="cm-scroller__item cm-msglist__msg cm-msglist__msg--system" data-message-id="ml6" data-scroll-anchor>\n\t\t\t\t\t\t\t\t\t<span class="cm-marker cm-marker--border">olivia joined #build</span>\n',
 '\t\t\t\t\t\t\t\t<div class="cm-scroller__item cm-msglist__msg cm-msglist__msg--system" data-message-id="ml6" data-scroll-anchor>\n\t\t\t\t\t\t\t\t\t<span class="cm-msglist__system-note">olivia joined #build</span>\n',
 'the system row does not compose .cm-marker - it would be a second system-note implementation',
-'«None»',
+None,
 'one',
     ],
     [
@@ -317,7 +322,7 @@ MUTANTS = [
 '<div class="cm-msglist__day" role="separator"><span class="cm-msglist__daylabel">Today</span></div>',
 '<div class="cm-msglist__day" role="separator"><span class="cm-msglist__daylabel"></span></div>',
 "the day divider is not the contract's <p role=separator> with a real label",
-'«None»',
+None,
 'one',
     ],
     [
@@ -326,7 +331,7 @@ MUTANTS = [
 '<span class="cm-msglist__unreadlabel">2 new messages</span>',
 '<span class="cm-msglist__unreadlabel"></span>',
 'the unread divider must carry its label as words, not as a rule alone',
-'«None»',
+None,
 'one',
     ],
     ['the nav index drops the section', ASTRO,

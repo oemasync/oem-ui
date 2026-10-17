@@ -108,10 +108,13 @@ PATTERNS = [
      "if (typeof document !== 'undefined') document.addEventListener('pointerover', onMenuHover);",
      "document.addEventListener('pointerover', onMenuHover);", 'suite'),
 
-    ('the child-first step back can no longer see the open panel',
-     'src/js/cli-mono.js',
-     "querySelectorAll('[popover]:popover-open')",
-     "querySelectorAll('[popover].never-opened')", 'harness'),
+    [
+        'the child-first step back can no longer see the open panel',
+        'src/js/cli-mono.js',
+        "\t\tvar opens = menu.querySelectorAll('[popover]:popover-open');",
+        "querySelectorAll('[popover].never-opened')",
+        'harness',
+    ],
 
     ('stepping out can no longer fall back to popovertarget',
      'src/js/cli-mono.js',

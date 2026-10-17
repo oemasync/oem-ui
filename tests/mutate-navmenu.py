@@ -143,10 +143,13 @@ PATTERNS = [
      'class="cm-dropdown__menu cm-navmenu__panel" id="nav-product" role="menu"',
      'suite+harness'),
 
-    ('the indicator stops being decorative',
-     'src/pages/[...family].astro',
-     '<span class="cm-navmenu__indicator" aria-hidden="true"></span>',
-     '<span class="cm-navmenu__indicator"></span>', 'suite'),
+    [
+        'the indicator stops being decorative',
+        'src/pages/[...family].astro',
+        'readme</a>\n\t\t\t\t\t\t<span class="cm-navmenu__indicator" aria-hidden="true"></span>',
+        '<span class="cm-navmenu__indicator"></span>',
+        'suite',
+    ],
 
     ('the bar stops being registered for late markup',
      'src/js/cli-mono.js',

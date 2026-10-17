@@ -77,8 +77,12 @@ MUTATIONS = [
     ('re-add the header blur that traps the fixed drawer', CSS,
      '/* NO backdrop-filter on .cm-header, and none on .cm-header__nav either.',
      '.cm-header__nav {\n\tbackdrop-filter: blur(8px);\n\t-webkit-backdrop-filter: blur(8px);\n}\n/* NO backdrop-filter on .cm-header, and none on .cm-header__nav either.'),
-    ('make the header background translucent again', TOK,
-     '--header-bg: #0a0a0a;', '--header-bg: rgba(10, 10, 10, 0.92);'),
+    [
+        'make the header background translucent again',
+        '/mnt/pve/mrx-thunder/projects/b26-chart/src/styles/tokens.css',
+        '/* header / footer surfaces */\n\t--header-bg: #0a0a0a;',
+        '--header-bg: rgba(10, 10, 10, 0.92);',
+    ],
     # ('stop locking page scroll behind the drawer', JS,
     #  "body.style.overflow = 'hidden';", '/* no lock */'),
     # RETIRED 2026-10-16: the lock this mutant removed is gone from the

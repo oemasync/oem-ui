@@ -190,9 +190,13 @@ PATTERNS = [
      ASTRO, 'data-cm-navmenu-content="#nav-tpl-reference"',
      'data-cm-navmenu-content="#nav-tpl-none"', 'suite+harness'),
 
-    ('the panel stops declaring itself the viewport',
-     ASTRO, 'popover data-cm-viewport data-state="closed"',
-     'popover data-state="closed"', 'suite+harness'),
+    [
+        'the panel stops declaring itself the viewport',
+        'src/pages/[...family].astro',
+        'id="nav-sub-viewport" popover data-cm-viewport data-state="closed"',
+        'popover data-state="closed"',
+        'suite+harness',
+    ],
 
     ('the vertical bar stops declaring itself vertical',
      ASTRO, 'data-cm-navmenu data-orientation="vertical"',

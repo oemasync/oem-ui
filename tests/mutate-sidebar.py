@@ -123,9 +123,13 @@ PATTERNS = [
          "\t\telse panel.removeAttribute('hidden');",
      "\t\tpanel.removeAttribute('hidden');", 'harness'),
 
-    ('the disclosure hides but stops telling assistive tech',
-     JS, "btn.setAttribute('aria-expanded', open ? 'false' : 'true');",
-     "void open;", 'harness'),
+    [
+        'the disclosure hides but stops telling assistive tech',
+        'src/js/cli-mono.js',
+        "\n\t\tbtn.setAttribute('aria-expanded', open ? 'false' : 'true');",
+        'void open;',
+        'harness',
+    ],
 
     ('the scrim stops closing the sheet',
      JS, "\t\t\t\tscope.setAttribute('data-mobile-open', 'false');\n"

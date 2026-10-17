@@ -71,8 +71,11 @@ def main():
         target = bad[label]["path"]
         old = fix["old"]
         n = open(target, encoding="utf8").read().count(old)
-        if n != 1:
-            print("REFUSE %-52s pattern matches %d times in %s" % (label, n, target))
+        count_all = any(str(v) == "all" for v in (bad[label].get("entry") or []))
+        if n < 2 if count_all else n != 1:
+            print("REFUSE %-52s pattern matches %d times in %s (count-all wants 2+)"
+                  % (label, n, target) if count_all else
+                  "REFUSE %-52s pattern matches %d times in %s" % (label, n, target))
             continue
         entry[2] = old
         if "new" in fix:
@@ -83,7 +86,17 @@ def main():
             continue
         start = sum(len(l) + 1 for l in lines[:span[0] - 1]) + span[1]
         end = sum(len(l) + 1 for l in lines[:span[2] - 1]) + span[3]
-        pretty = "[\n" + "".join(" " * 8 + repr(v) + ",\n" for v in entry) + " " * 4 + "]"
+
+        def as_source(v):
+            # The probe hands non-string values back as {"py": repr(v)}, so a
+            # None/1/True field keeps its TYPE instead of becoming the string
+            # "«None»" - measured: thirteen msglist entries were spliced that
+            # way and the harness's own --scan called every one malformed.
+            if isinstance(v, dict) and "py" in v:
+                return v["py"]
+            return repr(v)
+
+        pretty = "[\n" + "".join(" " * 8 + as_source(v) + ",\n" for v in entry) + " " * 4 + "]"
         src = src[:start] + pretty + src[end:]
         print("ok     %-52s anchored" % label)
         # offsets shifted with the splice; recompute for the next label

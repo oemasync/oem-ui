@@ -82,7 +82,7 @@ MUTANTS = [
         'src/pages/[...family].astro',
         'class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer" style="position:static"',
         'class="cm-dialog--spec cm-dialog cm-dialog--sheet cm-dialog--sheet-bottom cm-drawer" style="position:static;max-height:96px"',
-        '«1»',
+        1,
         'harness',
     ],
     ('spec dialogs hidden again by the UA', 'src/styles/components.css',

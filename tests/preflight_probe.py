@@ -166,16 +166,43 @@ def main():
                 detail["new"] = entry[3]
             # The resolved entry, so a repairer knows the whole tuple even
             # when the table composes it from module constants.
-            detail["entry"] = [v if isinstance(v, str) else "«%r»" % (v,) for v in entry]
+            detail["entry"] = [v if isinstance(v, str) else {"py": repr(v)} for v in entry]
             bad_detail.append(detail)
         elif n > 1:
             # The harnesses replace the FIRST match and (usually) assert
             # exactly one: an ambiguous pattern silently mutates the wrong
             # site. Measured: mutate-sidebar.py aborted a whole sweep on a
             # pattern that had grown a second occurrence.
-            rows.append([str(label), f"AMBIGUOUS ({n} matches)"])
-            bad_detail.append({"label": str(label), "why": f"AMBIGUOUS ({n} matches)",
-                               "path": cand, "old": old})
+            if any(str(v) == "all" for v in entry):
+                # a `count='all'` entry asserts a claim satisfied by ANY
+                # occurrence: several matches are the point, not a smell -
+                # but ONE match means the sweep changes almost nothing, which
+                # the harness's own preflight calls malformed too.
+                if n < 2:
+                    rows.append([str(label), f"TOO-NARROW ({n} match, count-all wants 2+)"])
+                    bad_detail.append({"label": str(label), "why": f"TOO-NARROW ({n} match, count-all wants 2+)",
+                                       "path": cand, "old": old,
+                                       "entry": [v if isinstance(v, str) else {"py": repr(v)} for v in entry]})
+                else:
+                    rows.append([str(label), f"ok ({n} matches, count-all sweep)"])
+            else:
+                rows.append([str(label), f"AMBIGUOUS ({n} matches)"])
+            if any(str(v) == "all" for v in entry):
+                continue
+            detail: dict = {"label": str(label), "why": f"AMBIGUOUS ({n} matches)",
+                            "path": cand, "old": old}
+            if len(entry) > 3 and isinstance(entry[3], str):
+                detail["new"] = entry[3]
+            detail["entry"] = [v if isinstance(v, str) else {"py": repr(v)} for v in entry]
+            bad_detail.append(detail)
+        elif any(str(v) == "all" for v in entry):
+            # count-all with exactly ONE match: the sweep asserts a claim any
+            # occurrence satisfies, so a single site means it barely sweeps -
+            # the harness's own preflight calls this malformed ("needs 2+").
+            rows.append([str(label), f"TOO-NARROW ({n} match, count-all wants 2+)"])
+            bad_detail.append({"label": str(label), "why": f"TOO-NARROW ({n} match, count-all wants 2+)",
+                               "path": cand, "old": old,
+                               "entry": [v if isinstance(v, str) else {"py": repr(v)} for v in entry]})
     out = {"rows": rows, "blocked_at": blocked_at}
     if "--dump" in sys.argv:
         out["bad"] = bad_detail
