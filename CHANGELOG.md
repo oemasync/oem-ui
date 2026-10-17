@@ -1,3 +1,46 @@
+## Unreleased - composer: a fix a shipped commit silently reverted, and a test that measured prose
+
+Two guarantees this library thought it had were not being kept, and both
+failures were invisible to a green suite.
+
+**A measured fix was reverted by a later commit, and the suite still said
+green.** The mention typeahead's field is an inline-block, so
+`inline-size: auto` gives it its `cols` intrinsic rather than its anchor's
+width. MEASURED in WebKit on the served build at an iPhone viewport: the
+field computes `200px` inside a `144px` anchor, runs `48px` under
+`.cm-composer__tools`, and `elementFromPoint` at the emoji button's centre
+returns `TEXTAREA.cm-composer__input` - the button is unclickable to a
+finger. With `inline-size: 100%` the field is `144px`, its right edge clears
+the tools strip by the flex gap, and both controls are on top at their own
+centres. The declaration had shipped in batch 29 and was silently dropped
+later; `dist/` from the earlier build was the only remaining proof it had
+ever been live. It is now pinned three ways: a suite check on the rule body,
+two live hit tests in `tests/verify-guildrail-composer.py`, and mutant `l08`
+in `tests/mutate-composer.py`, which kills with `KILL(new)`.
+
+**A check that measured the prose around a rule instead of the rule.** The
+hover-card visibility check read `components.css` through a 300-character
+window anchored on the selector's `{`. The rule grew 700 characters of
+comment, the window no longer reached its own declaration, and the check
+went red on a stylesheet that was correct. It now reads the rule BODY via
+`ruleBodies`, so a comment can say anything. Proven by mutation: deleting
+`visibility: hidden` from that rule fails it, and the restore is byte-for-byte.
+
+Also fixed: `tests/mutate-composer.py` did not list the two new live hit
+tests in `NEW_LIVE`, so the mutant that `l08` is supposed to kill was
+attributed to an OLD check and the run reported `killed only by OLD checks:
+1` - a real kill reported as a void proof.
+
+**Two suspicions measured and REFUTED, recorded so nobody re-opens them.**
+`tests/measure-slot-floor.py` was written to prove that the coarse-pointer
+`--min-font` floor does not reach inside component slots; at 390x844 with a
+coarse pointer every fixture reads at or above `--min-font` (12px) - the
+floor holds. And the 641-999px header band in `src/astro/Header.astro`
+claims that five links strand on a second row; the showcase's own five-link
+header is ONE row of 60px at both 768 and 960 with and without that band, so
+the band's premise did not reproduce and it was NOT promoted into
+`components.css`.
+
 ## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
 
 Parity was 64 of 64 against a list that was measured once, and the check
