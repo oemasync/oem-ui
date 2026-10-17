@@ -94,6 +94,28 @@ runs done the wrong way started unguarded sweeps in parallel with a queued
 one, and the interleaved writes left four mutants behind - the queue's own
 dirt check stopped, and both sweeps were re-run.
 
+Round two, the same day, was the machinery's own audit coming back around:
+
+- **Sixty harnesses were probing the wrong checkout.** Their default URL
+  was `:4321`, and that port belonged to the sibling worktree's preview
+  server - confirmed through `/proc/<pid>/cwd`. Browser verdicts in every
+  sweep were read off another tree's build, so browser-only mutants
+  survived by construction (one sweep: 13 killed, 9 survived, all nine
+  harness-only). Every URL in `tests/` and `scripts/` now resolves the
+  environment override first and this tree's server as the fallback.
+- **A 30s default turned slow boots into "kills".** Sixty-seven harnesses
+  now set a 180s default timeout, so a starved box cannot be booked as
+  detection.
+- **The census learned two more shapes**: `AMBIGUOUS` (a pattern matching
+  several sites where the sweep replaces one) and `TOO-NARROW` (a
+  count-all sweep down to a single site). Twelve were re-anchored across
+  composer, rail, datepicker, msglist, navmenu and sidebar - the rail one
+  retargeted to the clamp that recreates the shipped 1112px defect.
+- **The census now reports a row for every pattern**, healthy included; an
+  empty read is a finding, not a clean bill. That correction is what
+  surfaced the twelve above - the previous shape could print "0 patterns,
+  all match" for a fleet it had not actually read.
+
 **The census learned two shapes it could not see.** A pattern that is
 *absent* was only one way a mutation stops meaning anything. Eight patterns
 matched *several* sites while their sweeps replace the first match and
