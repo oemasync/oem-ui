@@ -3833,6 +3833,22 @@ hostname -I | awk '{print $1}'                    # your LAN IP
 curl -s -o /dev/null -w '%{http_code}\n' http://$(hostname -I | awk '{print $1}'):4321/
 ```
 
+The mutation harnesses (`tests/mutate-*`) are the other half of that
+guarantee: each one edits the source, runs the suite, and must be **caught**.
+They mutate the tree the script itself lives in - every path derives from
+`__file__`, so a sweep run from a worktree can never touch a sibling
+checkout. Preflight them before spending a sweep:
+
+```bash
+/root/.venvs/mau/bin/python tests/preflight-mutations.py            # the fleet
+/root/.venvs/mau/bin/python tests/preflight-mutations.py tests/mutate-rail.py
+```
+
+It loads each harness's pattern table in its own subprocess and reports any
+pattern that no longer matches the tree - a stale pattern "passes" without
+ever being applied, which reads as proof and is not one. Read-only: it
+writes nothing and runs no suite.
+
 This is a static showcase with no write routes and no credentials, so it is
 fine unauthenticated inside your own network. It is bound to the LAN only: no
 DNS record points at it and no port is forwarded on the router.

@@ -75,6 +75,22 @@ check and nothing else); `verify-no-sideways-scroll.py` 0 sideways at
 `verify-measure-title-webkit.py` passes with its expectation resolved on the
 page.
 
+**Harness fleet.** Forty scripts still pointed at a sibling checkout - the
+main lane - so a sweep launched from this worktree would have mutated and
+`npm`-built *that* tree and then reported verdicts about this one;
+`mutate-tree-resize.py` ran the production build with `cwd=REPO`. Every
+constant now derives from the script's own location, and no live reference
+to the sibling path remains. Two suite pins turned out to be satisfied by a
+**comment**: `/@media \(min-width: 1000px\)/` matched the rail block's own
+prose after the real query was rewritten to `1px`, and `/--rail-w:/` matched
+a tokens comment after the declaration was deleted - both mutants SURVIVED
+until the pins demanded the declaration itself (the query's `{`, and
+`^\t--rail-w:\s*\d+px;`). `tests/preflight-mutations.py` is new: it loads
+each harness's pattern table in its own subprocess and reports every pattern
+that no longer matches the tree, so drift is found in seconds instead of
+after a twenty-minute sweep - it refuses to import any script without a
+`__main__` guard, since importing one would RUN it.
+
 ## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
 
 Parity was 64 of 64 against a list that was measured once, and the check
