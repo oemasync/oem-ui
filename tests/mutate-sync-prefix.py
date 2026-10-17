@@ -29,48 +29,48 @@ def mutation(name, path, old, new, expect_named=None):
 mutation(
     "discovery: only ever look for the canonical src/ prefix",
     SCRIPT,
-    '[ -f "$t/src/styles/cli-mono/components.css" ] && { printf \'src\'; return 0; }',
-    'if [ -f "$t/src/styles/cli-mono/components.css" ]; then printf \'src\'; return 0; fi; return 1',
+    '\tif [ -f "$t/src/styles/cli-mono/components.css" ]; then\n\t\tprintf \'src/styles/cli-mono\'; return 0\n\tfi',
+    '\tif [ -f "$t/src/styles/cli-mono/components.css" ]; then\n\t\tprintf \'src\'; return 0\n\tfi',
     expect_named="bare scan must FIND",
 )
 
 mutation(
     "discovery: bare scan only tests src/styles/cli-mono",
     SCRIPT,
-    'prefix_for "$(strip_slash "$d")" >/dev/null 2>&1 && targets+=("$(strip_slash "$d")")',
-    '[ -d "$d/src/styles/cli-mono" ] && targets+=("$(strip_slash "$d")")',
+    '\tfor d in "$CONSUMER_ROOT"/*/; do\n\t\tprefix_for "$(strip_slash "$d")" >/dev/null 2>&1 && targets+=("$(strip_slash "$d")")',
+    '\tfor d in "$CONSUMER_ROOT"/*/; do\n\t\t[ -d "$d/src/styles/cli-mono" ] && targets+=("$(strip_slash "$d")")',
     expect_named="bare scan must FIND",
 )
 
 mutation(
     "discovery: prefix_for always fails",
     SCRIPT,
-    "\t\t\tprintf '%s' \"${d%/cli-mono}\" | sed \"s|^$t/*||; s|/*\\$||; s|/styles\\$||\"\n\t\t\treturn 0",
-    "\t\t\treturn 1",
+    '\tcss_dir_for "$1" >/dev/null 2>&1',
+    '\treturn 1',
     expect_named="bare scan must FIND",
 )
 
 mutation(
     "discovery: return the path INCLUDING /styles",
     SCRIPT,
-    r"s|^$t/*||; s|/*\$||; s|/styles\$||",
-    r"s|^$t/*||; s|/*\$||",
+    '\t\t\trel_to_t "$d"\n\t\t\treturn 0',
+    '\t\t\trel_to_t "$d/styles"\n\t\t\treturn 0',
     expect_named="nested (web/src): a byte-identical consumer",
 )
 
 mutation(
     "discovery: js half hardcoded to repo-root src/js",
     SCRIPT,
-    'JP="$CP/js"',
-    'JP="src/js"',
+    '\tJD="$(js_dir_for "$t" || true)"',
+    '\tJD="src/js"',
     expect_named="nested (web/src): a byte-identical consumer",
 )
 
 mutation(
     "discovery: comparison hardcodes the src/ prefix",
     SCRIPT,
-    "\t\tcase \"$dest\" in\n\t\t\tsrc/styles/*) d=\"$t/${CP:-src}/styles/${dest#src/styles/}\" ;;",
-    "\t\tcase \"$dest\" in\n\t\t\tsrc/styles/*) d=\"$t/src/styles/${dest#src/styles/}\" ;;",
+    '\t\t\tsrc/styles/*) d="$t/${CD:-src/styles/cli-mono}/$(css_leaf "${dest#src/styles/}")" ;;',
+    '\t\t\tsrc/styles/*) d="$t/src/styles/${dest#src/styles/}" ;;',
     expect_named="nested (web/src): a byte-identical consumer",
 )
 
