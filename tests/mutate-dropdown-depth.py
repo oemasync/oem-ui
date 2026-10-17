@@ -63,10 +63,18 @@ PATTERNS = [
      "var id = item && item.getAttribute && item.getAttribute('aria-controls');",
      'var id = null;', 'harness'),
 
-    ('Space stops flipping a checkbox row',
+    # Was 'Space stops flipping a checkbox row': cut as an EQUIVALENT mutant.
+    # The rows are <button>s, so WebKit's Space fires a native click and
+    # onMenuCheckClick's toggleCheckable() flips the row whatever this
+    # keydown branch says - two routes over-determine one behaviour, and
+    # that class gets cut rather than claimed (the navmenu-sub note in
+    # cli-mono.js set the precedent). What IS load-bearing is the record
+    # the click guard reads: drop it and the native click flips the row
+    # straight back, which reads as "keyboard does nothing".
+    ('a keyboard flip is not recorded, so its native click flips it back',
      'src/js/cli-mono.js',
-     "if ((e.key === ' ' || e.key === 'Enter') && toggleCheckable(t)) {",
-     "if (false) {", 'harness'),
+     "cmKeyFlipItem = t;\n\t\t\tcmKeyFlipAt = Date.now();",
+     "cmKeyFlipAt = Date.now();", 'harness'),
 
     ('a checkbox row stops moving its glyph with it',
      'src/js/cli-mono.js',
