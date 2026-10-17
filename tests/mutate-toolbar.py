@@ -7,7 +7,7 @@ mutation removes one piece and must die on the check written for it.
 """
 import subprocess, pathlib, re, sys, os
 
-C = pathlib.Path('/root/projects/oem-ui/src/styles/components.css')
+C = pathlib.Path(str(Path(__file__).resolve().parents[1]) + '/src/styles/components.css')
 CLAIM = 'the action toolbar sticks to the bottom and survives a scroll'
 SEL_CHECK = {'cm-toolbar': CLAIM, 'cm-toolbar__count': CLAIM}
 
@@ -34,7 +34,7 @@ MUTANTS = [
 
 
 def run_suite():
-    r = subprocess.run(['node', 'tests/run.mjs'], cwd='/root/projects/oem-ui',
+    r = subprocess.run(['node', 'tests/run.mjs'], cwd=str(Path(__file__).resolve().parents[1]),
                        capture_output=True, text=True, timeout=900)
     out = re.sub(r'\x1b\[[0-9;]*m', '', r.stdout + r.stderr)
     m = re.search(r'(\d+) passed, (\d+) failed', out)
@@ -43,7 +43,7 @@ def run_suite():
 
 if __name__ == '__main__':
     orig = C.read_text()
-    os.chdir('/root/projects/oem-ui')
+    os.chdir(str(Path(__file__).resolve().parents[1]))
     try:
         base, _ = run_suite()
         if base is None or base != 0:

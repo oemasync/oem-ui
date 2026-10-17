@@ -11,7 +11,7 @@ import pathlib
 import re
 import sys
 
-CSS = pathlib.Path("/root/projects/oem-ui/src/styles/components.css")
+CSS = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + "/src/styles/components.css")
 raw = CSS.read_text()
 # Strip comments first: a comment that MENTIONS a declaration is not one.
 css = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)), raw, flags=re.S)

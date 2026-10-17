@@ -9,9 +9,9 @@ import shutil
 import subprocess
 import sys
 
-TEST = '/root/projects/oem-ui/tests/contract-type-scale.py'
-LIB = pathlib.Path('/root/projects/oem-ui/src/styles/components.css')
-TOK = pathlib.Path('/root/projects/oem-ui/src/styles/tokens.css')
+TEST = str(pathlib.Path(__file__).resolve().parents[1]) + '/tests/contract-type-scale.py'
+LIB = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src/styles/components.css')
+TOK = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src/styles/tokens.css')
 DASH = pathlib.Path('/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src/pages/Dashboard.tsx')
 PY = '/root/.venvs/mau/bin/python'
 

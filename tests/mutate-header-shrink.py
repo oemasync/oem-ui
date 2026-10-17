@@ -11,8 +11,8 @@ import shutil
 import subprocess
 import sys
 
-CSS = pathlib.Path('/root/projects/oem-ui/src/styles/components.css')
-GUARD = pathlib.Path('/root/projects/oem-ui/tests/contract-header-shrink.py')
+CSS = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src/styles/components.css')
+GUARD = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/tests/contract-header-shrink.py')
 BACKUP = pathlib.Path('/tmp/components.css.bak')
 
 original = CSS.read_text()

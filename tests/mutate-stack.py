@@ -8,7 +8,7 @@ is OPT-IN (a list that did not ask for a stack is still flush).
 Each mutation edits the library source in a temp copy, runs the real
 suite, and must be caught. A survivor is a broken transfer.
 
-Run from /root/projects/oem-ui:  /root/.venvs/mau/bin/python tests/mutate-stack.py
+Run from the repo root:  /root/.venvs/mau/bin/python tests/mutate-stack.py
 """
 import re
 import shutil
@@ -17,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-LIB = Path('/root/projects/oem-ui').resolve()
+LIB = Path(str(Path(__file__).resolve().parents[1])).resolve()
 CSS = LIB / 'src/styles/components.css'
 VENV = '/root/.venvs/mau/bin/python'
 

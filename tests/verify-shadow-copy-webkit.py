@@ -24,7 +24,7 @@ import sys
 import urllib.request
 
 URL = "http://192.168.1.68:4322/"
-LIB = "/root/projects/oem-ui/src/js/cli-mono.js"
+LIB = str(Path(__file__).resolve().parents[1]) + "/src/js/cli-mono.js"
 SERVED = "http://192.168.1.68:4322/cli-mono.js"
 
 results = []

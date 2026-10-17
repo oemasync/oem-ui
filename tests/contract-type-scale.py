@@ -13,7 +13,7 @@ import pathlib
 import re
 import sys
 
-LIB_DIR = pathlib.Path('/root/projects/oem-ui/src/styles')
+LIB_DIR = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src/styles')
 APP = pathlib.Path('/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src')
 
 fails = []

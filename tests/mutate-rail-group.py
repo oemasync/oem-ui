@@ -7,11 +7,11 @@ rather than a pass - a mutation harness that cannot fail is decoration.
 """
 import re, shutil, subprocess, sys
 
-CSS = '/root/projects/oem-ui/src/styles/components.css'
+CSS = str(Path(__file__).resolve().parents[1]) + '/src/styles/components.css'
 BAK = '/tmp/oemui-components.bak'
 
 def suite():
-    r = subprocess.run(['node', 'tests/run.mjs'], cwd='/root/projects/oem-ui',
+    r = subprocess.run(['node', 'tests/run.mjs'], cwd=str(Path(__file__).resolve().parents[1]),
                        capture_output=True, text=True)
     return r.stdout + r.stderr
 

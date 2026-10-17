@@ -17,7 +17,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path('/root/projects/oem-ui')
+ROOT = Path(str(Path(__file__).resolve().parents[1]))
 JS = ROOT / 'src/js/cli-mono.js'
 CSS = ROOT / 'src/styles/components.css'
 HARNESS = ROOT / 'tests/verify-calendar.py'

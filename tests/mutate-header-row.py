@@ -10,8 +10,8 @@ import pathlib
 import subprocess
 import sys
 
-TEST = '/root/projects/oem-ui/tests/contract-header-row.py'
-LIB = pathlib.Path('/root/projects/oem-ui/src/styles/components.css')
+TEST = str(pathlib.Path(__file__).resolve().parents[1]) + '/tests/contract-header-row.py'
+LIB = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src/styles/components.css')
 DASH = pathlib.Path(
     '/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src/pages/Dashboard.tsx')
 MET = pathlib.Path(

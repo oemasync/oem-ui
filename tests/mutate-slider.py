@@ -9,7 +9,7 @@ pass on broken code.
 """
 import pathlib, subprocess, sys
 
-ROOT = pathlib.Path('/root/projects/oem-ui')
+ROOT = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]))
 VENV = '/root/.venvs/mau/bin/python'
 FILES = ['src/styles/components.css', 'src/js/cli-mono.js']
 CSS = 'src/styles/components.css'

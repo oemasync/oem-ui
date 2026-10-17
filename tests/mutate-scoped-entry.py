@@ -14,7 +14,7 @@ by concurrent cycles, and a checkout would revert THEIR work too.
 """
 import pathlib, re, shutil, subprocess, sys, tempfile
 
-ROOT = pathlib.Path("/root/projects/oem-ui")
+ROOT = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]))
 RUN = ROOT / "tests/run.mjs"
 CHECKER = ROOT / "scripts/check-design-sync.sh"
 GEN = ROOT / "scripts/make-scoped-entry.mjs"

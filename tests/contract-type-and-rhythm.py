@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-LIB = Path('/root/projects/oem-ui/src')
+LIB = Path(str(Path(__file__).resolve().parents[1]) + '/src')
 CSS = (LIB / 'styles/components.css').read_text()
 BASE = (LIB / 'styles/base.css').read_text()
 TOK = (LIB / 'styles/tokens.css').read_text()

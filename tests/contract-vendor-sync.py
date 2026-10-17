@@ -20,7 +20,7 @@ import hashlib
 import pathlib
 import sys
 
-LIB = pathlib.Path('/root/projects/oem-ui/src')
+LIB = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src')
 APP = pathlib.Path('/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src')
 
 # (library-relative, app-relative) - the snapshot the app actually loads

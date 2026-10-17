@@ -16,7 +16,7 @@ loud SKIP, never a phantom survivor.
 """
 import pathlib, re, subprocess, sys
 
-ROOT = pathlib.Path('/root/projects/oem-ui')
+ROOT = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]))
 VENV = '/root/.venvs/mau/bin/python'
 JS = 'src/js/cli-mono.js'
 PAGE = 'src/pages/[...family].astro'

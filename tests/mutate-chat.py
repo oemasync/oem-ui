@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path('/root/projects/oem-ui')
+ROOT = Path(str(Path(__file__).resolve().parents[1]))
 TAB = '\t'
 
 MUTANTS = [

@@ -33,17 +33,25 @@ for a in ("MUTATIONS", "MUTANTS", "MUTANTS_LIST"):
         break
 if table is None:
     print(json.dumps({"skip": "no static table"})); raise SystemExit(0)
+import os
+repo = os.getcwd()
 rows = []
 for e in table:
     if not isinstance(e, (list, tuple)) or len(e) < 3:
         continue
-    name, p, old = e[0], e[1], e[2]
-    if not isinstance(p, str) or not isinstance(old, str):
-        continue
+    name, cand, old = e[0], e[1], e[2]
+    # Tables come in several shapes. Only judge an entry when its second
+    # element names a file that EXISTS - otherwise the table is
+    # (name, old, new, expect, tag) shaped and this census cannot resolve
+    # it. Unresolvable entries are counted, never called stale.
+    if not isinstance(cand, str) or not isinstance(old, str) or not os.path.isfile(cand):
+        rows.append([str(name), "unclassified"]); continue
+    if not os.path.abspath(cand).startswith(repo + os.sep):
+        rows.append([str(name), "WRONG-TREE " + cand]); continue
     try:
-        src = open(p, encoding="utf8").read()
+        src = open(cand, encoding="utf8").read()
     except OSError:
-        rows.append([str(name), "MISSING-FILE " + p]); continue
+        rows.append([str(name), "unreadable " + cand]); continue
     if old not in src:
         rows.append([str(name), "NO-OP"])
 print(json.dumps({"rows": rows}))
@@ -73,10 +81,14 @@ def main():
         if "skip" in data:
             print("skip %-34s %s" % (os.path.basename(f), data["skip"])); continue
         rows = data.get("rows", [])
-        bad = [r for r in rows if r[1]]
+        bad = [r for r in rows if r[1] not in ("unclassified",)]
+        skipped_n = sum(1 for r in rows if r[1] == "unclassified")
         total += len(bad)
+        tail = "all match" if not bad else "%d problem(s)" % len(bad)
+        if skipped_n:
+            tail += " (%d unclassified)" % skipped_n
         print("%-4s %-34s %3d patterns  %s" % ("PASS" if not bad else "WARN",
-              os.path.basename(f), len(rows), "all match" if not bad else "%d problem(s)" % len(bad)))
+              os.path.basename(f), len(rows), tail))
         for name, why in bad:
             print("        %-14s %s" % (why, name))
     print("\n%d stale pattern(s) across %d harness(es)" % (total, len(files)))

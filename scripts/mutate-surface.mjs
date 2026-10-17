@@ -24,7 +24,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const ROOT = '/root/projects/oem-ui';
+const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const CSS = join(ROOT, 'src/styles/components.css');
 const ASTRO = join(ROOT, 'src/pages/[...family].astro');
 const SNAP = join(tmpdir(), 'cm-surface-snap.css');

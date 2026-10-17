@@ -5,7 +5,7 @@ Logs each result to stdout AND /root/.hermes/cache/scratch/mut9.txt so a
 long run that outlives its caller still reports."""
 import pathlib, subprocess, sys, time
 
-ROOT = pathlib.Path('/root/projects/oem-ui')
+ROOT = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]))
 CSS = ROOT / 'src/styles/components.css'
 JS = ROOT / 'src/js/cli-mono.js'
 PAGE = ROOT / 'src/pages/[...family].astro'

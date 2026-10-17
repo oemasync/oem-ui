@@ -11,8 +11,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-LIB = Path('/root/projects/oem-ui/src/styles')
-GUARD = Path('/root/projects/oem-ui/tests/contract-type-and-rhythm.py')
+LIB = Path(str(Path(__file__).resolve().parents[1]) + '/src/styles')
+GUARD = Path(str(Path(__file__).resolve().parents[1]) + '/tests/contract-type-and-rhythm.py')
 PY = '/root/.venvs/mau/bin/python'
 
 MUTATIONS = [

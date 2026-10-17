@@ -15,7 +15,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-const ROOT = '/root/projects/oem-ui';
+const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const p = (f) => `${ROOT}/${f}`;
 
 /* These tests read the BUILT page, and three of the six mutations change

@@ -8,7 +8,7 @@ import pathlib
 import subprocess
 import sys
 
-TEST = '/root/projects/oem-ui/tests/contract-vendor-sync.py'
+TEST = str(pathlib.Path(__file__).resolve().parents[1]) + '/tests/contract-vendor-sync.py'
 VEND = pathlib.Path(
     '/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src/styles/cli-mono/components.css')
 INDEX = pathlib.Path('/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src/index.css')

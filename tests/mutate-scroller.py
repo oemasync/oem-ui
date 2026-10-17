@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path('/root/projects/oem-ui')
+ROOT = Path(str(Path(__file__).resolve().parents[1]))
 
 MUTANTS = [
     ('the frame stops opening at the live edge (attr)', 'src/pages/[...family].astro',

@@ -11,7 +11,7 @@
 # severity) was a JS edit that sailed straight past it.
 set -euo pipefail
 
-LIB="${1:-/root/projects/oem-ui/src}"
+LIB="${1:-$(cd "$(dirname "$0")/.." && pwd)/src}"  # the checkout this script lives in
 DEST="${2:-/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src}"
 
 PAIRS=(

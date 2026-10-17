@@ -15,7 +15,7 @@ import pathlib
 import re
 import sys
 
-CSS = pathlib.Path('/root/projects/oem-ui/src/styles/components.css')
+CSS = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + '/src/styles/components.css')
 
 fails = []
 

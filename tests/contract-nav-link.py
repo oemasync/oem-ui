@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-CSS = Path("/root/projects/oem-ui/src/styles/components.css")
+CSS = Path(str(Path(__file__).resolve().parents[1]) + "/src/styles/components.css")
 raw = CSS.read_text()
 # Strip comments first. A comment that MENTIONS a declaration is not a
 # declaration -- and here the comment explaining the removed underline

@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path('/root/projects/oem-ui')
+ROOT = Path(str(Path(__file__).resolve().parents[1]))
 HARNESS = [str(ROOT / 'tests/verify-shortcuts-toast.py')]
 JS = ROOT / 'src/js/cli-mono.js'
 CSS = ROOT / 'src/styles/components.css'

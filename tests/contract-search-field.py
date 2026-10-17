@@ -25,11 +25,11 @@ import pathlib
 import re
 import sys
 
-OEM = pathlib.Path("/root/projects/oem-ui/src/styles/components.css")
+OEM = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + "/src/styles/components.css")
 VENDOR = pathlib.Path(
     "/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src/styles/cli-mono/components.css"
 )
-BASE_OEM = pathlib.Path("/root/projects/oem-ui/src/styles/base.css")
+BASE_OEM = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]) + "/src/styles/base.css")
 BASE_VENDOR = pathlib.Path(
     "/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src/styles/cli-mono/base.css"
 )

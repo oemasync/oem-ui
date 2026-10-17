@@ -15,11 +15,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-CSS = Path("/root/projects/oem-ui/src/styles/components.css")
+CSS = Path(str(Path(__file__).resolve().parents[1]) + "/src/styles/components.css")
 # The focus-ring mutants live in base.css, so the backup/restore has to
 # cover BOTH files or a run leaves a mutant behind in a file it never
 # snapshotted - and a green suite over a dirty tree proves nothing.
-SRC = Path("/root/projects/oem-ui/src/styles")
+SRC = Path(str(Path(__file__).resolve().parents[1]) + "/src/styles")
 FILES = ["components.css", "base.css"]
 BAKS = {f: Path("/root/.hermes/cache/scratch/%s.bak" % f) for f in FILES}
 
@@ -198,7 +198,7 @@ def main():
     # Non-empty baseline or abort - an empty run would report "survived"
     # for every mutant and that is indistinguishable from a broken suite.
     base = subprocess.run(
-        ["node", "tests/run.mjs"], cwd="/root/projects/oem-ui",
+        ["node", "tests/run.mjs"], cwd=str(Path(__file__).resolve().parents[1]),
         capture_output=True, text=True,
     )
     if base.returncode != 0:
@@ -225,7 +225,7 @@ def main():
             assert src.count(anchor) == 1, (label, target, src.count(anchor))
             path.write_text(src.replace(anchor, repl))
             run = subprocess.run(
-                ["node", "tests/run.mjs"], cwd="/root/projects/oem-ui",
+                ["node", "tests/run.mjs"], cwd=str(Path(__file__).resolve().parents[1]),
                 capture_output=True, text=True,
             )
             out = run.stdout + run.stderr

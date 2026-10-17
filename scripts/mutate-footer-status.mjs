@@ -25,7 +25,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, copyFileSync, rmSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ROOT = '/root/projects/oem-ui';
+const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 // NOT a mktemp under TMPDIR: the scratch dir is pruned after 24h, and a
 // sweep that outlives the prune dies mid-run with its snapshot gone -
 // which is how a mutation was left committed to the working tree. A stable

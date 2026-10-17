@@ -12,7 +12,7 @@ import sys
 import time
 from pathlib import Path
 
-REPO = Path('/root/projects/oem-ui')
+REPO = Path(str(Path(__file__).resolve().parents[1]))
 JS = REPO / 'src/js/cli-mono.js'
 CSS = REPO / 'src/styles/components.css'
 LOG = Path('/root/.hermes/cache/scratch/mut10.txt')
