@@ -73,6 +73,8 @@ with sync_playwright() as p:
 
     # ---- the RAIL layout: selection must not scroll the page away ----
     pg = b.new_page(viewport={'width': 1280, 'height': 900})
+    pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     pg.goto(URL, wait_until='domcontentloaded', timeout=120000)
     pg.wait_for_timeout(2500)
 

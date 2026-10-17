@@ -161,6 +161,8 @@ def main():
         b = pw.webkit.launch()
         for (w, hgt) in WIDTHS:
             page = b.new_page(viewport={'width': w, 'height': hgt})
+            page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             errs = []
             page.on('pageerror', lambda e: errs.append(str(e)))
             page.goto(URL, wait_until='networkidle')

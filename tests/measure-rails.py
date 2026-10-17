@@ -76,6 +76,8 @@ def main():
         c = b.new_context(viewport={"width": 390, "height": 844},
                          device_scale_factor=3, is_mobile=True, has_touch=True)
         p = c.new_page()
+        p.set_default_timeout(180000)  # starved box: 27s+ to boot
+
         p.goto(URL, wait_until="networkidle")
         p.wait_for_timeout(500)
         p.screenshot(path=SHOT)

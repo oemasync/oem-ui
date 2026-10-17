@@ -61,6 +61,8 @@ with sync_playwright() as pw:
 
     # ================= desktop, 1280 =================
     page = b.new_page(viewport={'width': 1280, 'height': 800})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     page_errors = []
     page.on('pageerror', lambda e: page_errors.append(str(e)))
     page.goto(URL, wait_until='networkidle')

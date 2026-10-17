@@ -37,6 +37,8 @@ JS = """() => {
 with sync_playwright() as ph:
     b = ph.webkit.launch()
     p = b.new_page(viewport={'width': 390, 'height': 844})
+    p.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     p.goto(URL, wait_until='load')
     p.wait_for_function('() => !!window.cliMono', timeout=boot_timeout())
     p.wait_for_timeout(400)

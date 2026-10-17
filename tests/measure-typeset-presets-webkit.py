@@ -31,6 +31,8 @@ def check(name, cond, extra=''):
 with sync_playwright() as p:
     b = p.webkit.launch()
     pg = b.new_page(viewport={'width': 390, 'height': 844})
+    pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until='networkidle')

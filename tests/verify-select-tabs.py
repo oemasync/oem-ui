@@ -47,6 +47,8 @@ with sync_playwright() as pw:
 
     # ---------- desktop 1280 ----------
     page = b.new_page(viewport={'width': 1280, 'height': 900})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     page.goto(URL, wait_until='networkidle')
 
     trig = page.locator('[popovertarget="select-demo"]')

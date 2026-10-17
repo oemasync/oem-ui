@@ -120,6 +120,8 @@ def main():
         try:
             for w in WIDTHS:
                 page = b.new_page(viewport={'width': w, 'height': HEIGHT})
+                page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
                 page.emulate_media(reduced_motion='reduce')
                 errors = []
                 page.on('pageerror', lambda e: errors.append(str(e)))

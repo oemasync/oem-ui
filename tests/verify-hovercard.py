@@ -16,6 +16,8 @@ def check(name, ok, detail=''):
 with sync_playwright() as pw:
     b = pw.webkit.launch()
     page = b.new_page(viewport={'width': 1280, 'height': 900})
+    page.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errs = []
     page.on('pageerror', lambda e: errs.append(str(e)))
     page.goto(URL, wait_until='networkidle')

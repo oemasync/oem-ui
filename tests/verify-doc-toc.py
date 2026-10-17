@@ -46,6 +46,8 @@ with sync_playwright() as p:
 
     # ---- the whole page has no TOC (the rail already lists everything) ----
     pg = b.new_page(viewport={'width': 1400, 'height': 900})
+    pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)

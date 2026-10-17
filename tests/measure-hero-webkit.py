@@ -86,6 +86,8 @@ def main():
         b = pw.webkit.launch()
         for w, h in WIDTHS:
             pg = b.new_page(viewport={"width": w, "height": h})
+            pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             pg.emulate_media(reduced_motion="reduce")
             pg.goto(URL, wait_until="load")
             # Wait for the RUNTIME, never for milliseconds: networkidle can

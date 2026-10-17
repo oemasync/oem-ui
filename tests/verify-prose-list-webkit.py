@@ -53,6 +53,8 @@ def main():
         b = pw.webkit.launch()
         for width, height in ((375, 667), (390, 844), (402, 874), (1024, 900)):
             pg = b.new_page(viewport={"width": width, "height": height})
+            pg.set_default_timeout(180000)  # starved box: 27s+ to boot
+
             pg.goto(URL, wait_until="networkidle")
             pg.evaluate("() => localStorage.clear()")
             pg.reload(wait_until="networkidle")
