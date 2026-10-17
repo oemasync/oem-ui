@@ -483,3 +483,30 @@ non-matchers: `why` notes (tree-resize, calendar), `name` descriptions
 (otp-palette), and `_claim` prose (msglist). Alert, chart and direction
 predict which oracle kills a pattern and measure it by running both, so a
 wrong guess is recorded, not broken.
+
+## 11. The re-proof era: what re-running every sweep found
+
+Every browser-driving sweep was re-run against the current tree, through the
+current harnesses, on this lane's preview port. The sweeps themselves turned
+out to be the least reliable part of the rig. Five classes, each fixed at the
+root:
+
+- **Wrong tree / wrong port.** 60 harnesses defaulted to the sibling
+  checkout's port; one survivor of that sweep defaulted to 4481 under a
+  unique env name and aborted every run.
+- **Anchored to dead code.** Mutants that land on a rule or code path the
+  page never resolves measure ORACLE BLIND: forms-fade's focus mutant sat on
+  the advance path while its check exercises the submit loop, and composer's
+  l02-l04 edited the direct-child field rule while the markup resolves the
+  mention-anchor rule. Mutants must target what the page uses.
+- **Expect drift.** Predictions must be verbatim substrings of what the
+  oracle actually prints. Rail, burger, sidebar and records each carried
+  guesses, one of which (`the records section is not in the nav`) exists
+  nowhere in the suite.
+- **Overshooting patterns.** A lazy group whose terminator is not a
+  structural token can cross rule boundaries: records' stat-label regex ate
+  a span of unrelated rules and went red for the wrong reason. Bound the
+  group to its own block.
+- **Cleanup and contract bugs.** A sweep that fails to restore must not
+  stall a queue (runners now restore leftovers and continue); harnesses
+  invoked with `--baseline` must consume it rather than navigate to it.
