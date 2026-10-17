@@ -5980,6 +5980,31 @@ check('cm-timeline: the dot is centred on the rail by construction', () => {
 		'the dot must take its fill from a token, not a literal');
 });
 
+// ---- cm-msglist: what the avatars compose, and what the dividers say ---
+check('cm-msglist: real avatars compose .cm-avatar and the dividers carry words', () => {
+	// Read from the page SOURCE: the mutation runners that own these
+	// claims do not rebuild the dist, so a dist-reading check is blind to
+	// them (see the records/who field notes). These three claims are the
+	// ones the msglist sweep found surviving with rc=0 - nothing asserted
+	// them anywhere: an avatar span that restates its own skin, a day
+	// divider whose label span is emptied, and an unread rule that keeps
+	// its bar and loses its words.
+	const page = read('src/pages/[...family].astro');
+	const avatars = [...page.matchAll(/<span class="([^"]*cm-msglist__avatar[^"]*)"[^>]*>([^<]*)<\/span>/g)];
+	assert(avatars.length >= 2, 'no msglist avatars in the page source');
+	for (const [, cls, text] of avatars) {
+		if (text.trim() === '') continue;      // the reserved empty slot
+		assert(/\bcm-avatar\b/.test(cls),
+			`a real msglist avatar must compose .cm-avatar (got class="${cls}")`);
+	}
+	const day = /<span class="cm-msglist__daylabel">([^<]*)<\/span>/.exec(page);
+	assert(day && day[1].trim().length >= 3,
+		'the day divider must carry its label as words');
+	const unread = /<span class="cm-msglist__unreadlabel">([^<]*)<\/span>/.exec(page);
+	assert(unread && unread[1].trim().length >= 3,
+		'the unread divider must carry its label as words, not as a rule alone');
+});
+
 check('cm-timeline: "now" is a fill, not a second hue', () => {
 	// The palette is greyscale. If the current record were marked with a
 	// colour it would be the only colour on the page; a filled dot reads
