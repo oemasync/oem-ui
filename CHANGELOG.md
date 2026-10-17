@@ -85,11 +85,14 @@ to the sibling path remains. Two suite pins turned out to be satisfied by a
 prose after the real query was rewritten to `1px`, and `/--rail-w:/` matched
 a tokens comment after the declaration was deleted - both mutants SURVIVED
 until the pins demanded the declaration itself (the query's `{`, and
-`^\t--rail-w:\s*\d+px;`). `tests/preflight-mutations.py` is new: it loads
-each harness's pattern table in its own subprocess and reports every pattern
-that no longer matches the tree, so drift is found in seconds instead of
-after a twenty-minute sweep - it refuses to import any script without a
-`__main__` guard, since importing one would RUN it.
+`^\t--rail-w:\s*\d+px;`). `tests/preflight-mutations.py` is new: it reads
+each Python harness's pattern table in a subprocess that blocks every write
+and every subprocess, so drift is found in seconds instead of after a
+twenty-minute sweep, and a harness without a `__main__` guard cannot sweep
+the tree merely by being read. That guard is not theoretical: two census
+runs done the wrong way started unguarded sweeps in parallel with a queued
+one, and the interleaved writes left four mutants behind - the queue's own
+dirt check stopped, and both sweeps were re-run.
 
 ## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
 

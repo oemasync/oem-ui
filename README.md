@@ -3844,10 +3844,13 @@ checkout. Preflight them before spending a sweep:
 /root/.venvs/mau/bin/python tests/preflight-mutations.py tests/mutate-rail.py
 ```
 
-It loads each harness's pattern table in its own subprocess and reports any
-pattern that no longer matches the tree - a stale pattern "passes" without
-ever being applied, which reads as proof and is not one. Read-only: it
-writes nothing and runs no suite.
+It reads each Python harness's pattern table - in its own subprocess, with
+writes and subprocesses blocked, so a harness without a `__main__` guard
+cannot sweep the tree just by being read - and reports any pattern that no
+longer matches the tree. A stale pattern "passes" without ever being
+applied, which reads as proof and is not one. Read-only: it writes nothing
+and runs no suite. (`.mjs`/`.sh` harnesses are reported as not probeable;
+their sweeps pre-check each pattern themselves.)
 
 This is a static showcase with no write routes and no credentials, so it is
 fine unauthenticated inside your own network. It is bound to the LAN only: no

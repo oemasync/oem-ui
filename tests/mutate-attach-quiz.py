@@ -23,8 +23,8 @@ MUTANTS = [
      '\tborder: 1px solid var(--line-soft);\n\tbackground: var(--panel-nested);',
      '\tbackground: var(--panel-nested);', 'suite'),
     ('error loses the double-rule', 'src/styles/components.css',
-     '.cm-attach--error { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }',
-     '.cm-attach--error { border-color: var(--ink); }', 'suite'),
+     '\tborder-color: var(--ink);\n\toutline: 1px solid var(--ink);',
+     '\tborder-color: var(--ink);', 'suite'),
     ('the group stops snapping', 'src/styles/components.css',
      '\tscroll-snap-type: x mandatory;\n\tpadding-block: var(--space-1);',
      '\tscroll-snap-type: none;\n\tpadding-block: var(--space-1);', 'harness'),
@@ -74,8 +74,8 @@ MUTANTS = [
      'class="cm-attach-group cm-scroll-fade" tabindex="0" role="group"',
      'class="cm-attach-group cm-scroll-fade" role="group"', 'suite'),
     ('the section leaves the nav', 'src/pages/[...family].astro',
-     "'chat', 'attachment', 'quiz', 'search',",
-     "'chat', 'attachment', 'search',", 'suite'),
+     "'attachment', 'quiz', 'search',",
+     "'attachment', 'search',", 'suite'),
 ]
 
 SUITE_CMD = 'npm test'
