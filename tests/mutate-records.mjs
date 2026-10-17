@@ -48,9 +48,15 @@ const MUTATIONS = [
 	{
 		name: 'the stat label loses its mobile floor',
 		file: 'src/styles/components.css',
-		from: /^\.cm-stat__label\s*\{\n([\s\S]*?)font-size:\s*max\(var\(--min-font\), 0\.72rem\);/m,
-		to: '.cm-stat__label {\n$1font-size: 0.72rem;',
-		expectFail: 'declares a font-size with no --min-font floor',
+		// Bounded to the rule's own block: a lazy `[\s\S]*?` here used to
+		// cross rule boundaries (the live file carries
+		// `max(var(--min-font), var(--text-micro))`, not the historical
+		// `0.72rem`), so the "mutation" nuked an entire span of unrelated
+		// rules and the suite went red for the wrong reason.
+		from: /^\.cm-stat__label\s*\{\n([^}]*?)font-size:\s*max\(var\(--min-font\),\s*var\(--text-micro\)\);/m,
+		to: '.cm-stat__label {\n$1font-size: var(--text-micro);',
+		expectFail: ['declares a font-size with no --min-font floor',
+			'the font sizes carry the --min-font floor'],
 	},
 	{
 		name: 'the rail moves onto the list, where it cannot know the last record',
@@ -158,7 +164,12 @@ const MUTATIONS = [
 		file: 'src/pages/[...family].astro',
 		from: "'code', 'overlays', 'records', 'trace',",
 		to: "'code', 'overlays', 'trace',",
-		expectFail: 'the records section is not in the nav',
+		// The predicted phrase exists nowhere in the suite: removing a
+		// section fires the TOC count check (whose FAIL line names it)
+		// and the section-index check, not a per-section nav probe.
+		expectFail: ['the records section is not in the nav',
+			'the docs TOC carries exactly the sections',
+			'one section index'],
 	},
 	{
 		name: 'the README stops documenting the tile note',
