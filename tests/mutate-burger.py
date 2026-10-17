@@ -64,9 +64,12 @@ MUTATIONS = [
      'aria-label="Menu"', 'aria-hidden="true"'),
     ('remove the panel id aria-controls points at', HDR,
      'id="cm-header-links"', 'data-panel="cm-header-links"'),
-    ('render the burger with nothing behind it', HDR,
-     'links.length > 0 && (\n\t\t\t\t<button\n\t\t\t\t\tclass="cm-icon-btn cm-nav-toggle"',
-     'true && (\n\t\t\t\t<button\n\t\t\t\t\tclass="cm-icon-btn cm-nav-toggle"'),
+    [
+        'render the burger with nothing behind it',
+        '/mnt/pve/mrx-thunder/projects/b26-chart/src/astro/Header.astro',
+        '(links.length + navGroups.length) > 0 && (\n\t\t\t\t<button\n\t\t\t\t\tclass="cm-icon-btn cm-nav-toggle"',
+        'true && (\n\t\t\t\t<button\n\t\t\t\t\tclass="cm-icon-btn cm-nav-toggle"',
+    ],
     ('unguard the bar transition against reduced motion', CSS,
      '.cm-nav-toggle__bars::before,\n\t.cm-nav-toggle__bars::after,\n\t.cm-nav-toggle__bar { transition: none; }',
      '.cm-nav-toggle__bars::before { transition: none; }'),
@@ -76,8 +79,17 @@ MUTATIONS = [
      '.cm-header__nav {\n\tbackdrop-filter: blur(8px);\n\t-webkit-backdrop-filter: blur(8px);\n}\n/* NO backdrop-filter on .cm-header, and none on .cm-header__nav either.'),
     ('make the header background translucent again', TOK,
      '--header-bg: #0a0a0a;', '--header-bg: rgba(10, 10, 10, 0.92);'),
-    ('stop locking page scroll behind the drawer', JS,
-     "body.style.overflow = 'hidden';", '/* no lock */'),
+    # ('stop locking page scroll behind the drawer', JS,
+    #  "body.style.overflow = 'hidden';", '/* no lock */'),
+    # RETIRED 2026-10-16: the lock this mutant removed is gone from the
+    # source on purpose. Setting `overflow: hidden` on <body> never locked
+    # anything - <html> is the scrolling element in this layout - and it
+    # made body the containing block for the sticky header. The drawer is
+    # stable without it (the reason is written up at the top of the drawer
+    # block in cli-mono.js). A mutant against code that no longer exists
+    # proves nothing, so it is retired rather than re-anchored onto the
+    # unlock path, which stays covered by 'never restore page scroll after
+    # closing the drawer' below.
     ('never restore page scroll after closing the drawer', JS,
      "body.style.overflow = '';", '/* no unlock */'),
     ('drop the scroll-spy active state from the mobile panel', CSS,

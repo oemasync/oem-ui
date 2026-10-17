@@ -119,13 +119,13 @@ PATTERNS = [
      'suite'),
 
     # ---- the content must clear the rail ----
-    ('the content stops clearing the rail',
-     CSS,
-     "\t.cm-shell--rail {\n"
-     "\t\tpadding-left: calc(var(--rail-w) + var(--gutter));\n",
-     "\t.cm-shell--rail {\n"
-     "\t\tpadding-left: 0;\n",
-     'suite+harness'),
+    [
+        'the content stops clearing the rail',
+        'src/styles/components.css',
+        '\t.cm-shell--rail {\n\t\tpadding-inline-start: calc(var(--rail-w) + var(--gutter));\n',
+        '\t.cm-shell--rail {\n\t\tpadding-inline-start: 0;\n',
+        'suite+harness',
+    ],
 
     # ---- the harness's own coverage ----
     ('the harness forgets the desktop width',

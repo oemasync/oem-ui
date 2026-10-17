@@ -202,8 +202,24 @@ with sync_playwright() as pw:
     page.mouse.move(rb['x'] + rb['width'] / 2, cy)
     page.mouse.down()
     page.mouse.move(rb['x'] + rb['width'] / 2 + 80, cy, steps=6)
+    # 7b. WITH the drag live, the document veto must swallow a native
+    # dragstart. The platform's own drag would otherwise take the gesture
+    # away mid-move - that is the bug this batch fixed, and the veto is
+    # load-bearing. Dispatched in-page so the assertion is about
+    # defaultPrevented, not about a hook landing somewhere.
+    VETO_PROBE = ("() => { const el = document.querySelector('.cm-sidebar__rail');"
+                  " const e = new Event('dragstart', {bubbles: true, cancelable: true});"
+                  " el.dispatchEvent(e); return e.defaultPrevented; }")
+    vetoed = page.evaluate(VETO_PROBE)
+    check('a live drag vetoes the platform dragstart (defaultPrevented)',
+          vetoed is True, f'defaultPrevented={vetoed}')
     page.mouse.up()
     page.wait_for_timeout(250)
+    # 7c. ...and with no drag live the same event must pass through: a veto
+    # that fires always would take dragstart away from the whole page.
+    idle_veto = page.evaluate(VETO_PROBE)
+    check('with no drag live the dragstart is NOT vetoed',
+          idle_veto is False, f'defaultPrevented={idle_veto}')
     drag = geo(page)
     token = page.evaluate(
         "() => document.querySelector('#sidebar .cm-sidebar')"

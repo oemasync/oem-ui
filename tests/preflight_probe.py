@@ -40,12 +40,13 @@ def deny(what):
     return _f
 
 def main():
-    if len(sys.argv) < 2:
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if not args:
         print(json.dumps({"skip": "no target"}))
         return 1
-    path = sys.argv[1]
-    if len(sys.argv) > 2:
-        os.chdir(sys.argv[2])
+    path = args[0]
+    if len(args) > 1:
+        os.chdir(args[1])
     repo = os.getcwd()
 
     real_open = builtins.open
@@ -91,6 +92,7 @@ def main():
         return 0
 
     rows = []
+    bad_detail = []
     for entry in table:
         if not isinstance(entry, (list, tuple)) or len(entry) < 3:
             continue
@@ -108,7 +110,17 @@ def main():
             continue
         if old not in body:
             rows.append([str(label), "NO-OP"])
-    print(json.dumps({"rows": rows, "blocked_at": blocked_at}))
+            detail: dict = {"label": str(label), "why": "NO-OP", "path": cand, "old": old}
+            if len(entry) > 3 and isinstance(entry[3], str):
+                detail["new"] = entry[3]
+            # The resolved entry, so a repairer knows the whole tuple even
+            # when the table composes it from module constants.
+            detail["entry"] = [v if isinstance(v, str) else "«%r»" % (v,) for v in entry]
+            bad_detail.append(detail)
+    out = {"rows": rows, "blocked_at": blocked_at}
+    if "--dump" in sys.argv:
+        out["bad"] = bad_detail
+    print(json.dumps(out))
     return 0
 
 if __name__ == "__main__":

@@ -59,10 +59,13 @@ PATTERNS = [
      JS, "window.matchMedia('(hover: hover) and (pointer: fine)').matches",
      "window.matchMedia('(hover: hover)').matches", 'suite'),
 
-    ('the timer opens even after the pointer has left',
-     JS, "if (bar.__cmNavHoverLast !== trigger || !navFine()) return;",
-     "if (bar.__cmNavHoverLast === trigger && navFine()) return;",
-     'harness'),
+    [
+        'the timer opens even after the pointer has left',
+        'src/js/cli-mono.js',
+        "\t\t\tif (bar.__cmNavHoverLast !== trigger || !navFine() ||\n\t\t\t\t!trigger.matches(':hover')) {",
+        '\t\t\tif (false) {',
+        'harness',
+    ],
 
     ('the hover stops owning what it opened',
      JS, "bar.__cmNavHoverOwned = 1;",

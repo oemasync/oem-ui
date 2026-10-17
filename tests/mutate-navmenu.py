@@ -28,10 +28,13 @@ PATTERNS = [
      "\tif (typeof document !== 'undefined') document.addEventListener('keydown', onNavmenuKey);",
      '\tvoid onNavmenuKey;', 'suite+harness'),
 
-    ('an idle bar starts stealing the arrows from the page',
-     'src/js/cli-mono.js',
-     '\t\tif (!wasOpen) return;\n\t\te.preventDefault();',
-     '\t\tif (false) return;\n\t\te.preventDefault();', 'harness'),
+    [
+        'an idle bar starts stealing the arrows from the page',
+        'src/js/cli-mono.js',
+        '\t\tif (!wasOpen) return;',
+        '\t\tif (false) return;',
+        'harness',
+    ],
 
     ('the next panel never opens in the same press',
      'src/js/cli-mono.js',

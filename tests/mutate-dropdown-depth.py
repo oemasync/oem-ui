@@ -45,10 +45,13 @@ PATTERNS = [
      "(e.key === 'Enter' && t.getAttribute('aria-haspopup') === 'menu')",
      "(e.key === 'Enter' && false)", 'harness'),
 
-    ('Left stops closing the submenu',
-     'src/js/cli-mono.js',
-     'if (closeSubmenu(t.closest(POP_SEL))) e.preventDefault();',
-     'if (false) e.preventDefault();', 'harness'),
+    [
+        'Left stops closing the submenu',
+        'src/js/cli-mono.js',
+        'if (closeSubmenu(here)) e.preventDefault();',
+        'if (false) e.preventDefault();',
+        'harness',
+    ],
 
     ('Left stops returning focus to the parent row',
      'src/js/cli-mono.js',

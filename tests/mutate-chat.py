@@ -50,9 +50,13 @@ MUTANTS = [
     ('the icon is no longer decorative', 'src/pages/[...family].astro',
      '<span class="cm-marker__icon" aria-hidden="true">',
      '<span class="cm-marker__icon">', 'suite'),
-    ('the section leaves the nav', 'src/pages/[...family].astro',
-     "'scrollarea', 'utilities', 'chat', 'search',",
-     "'scrollarea', 'utilities', 'search',", 'suite'),
+    [
+        'the section leaves the nav',
+        'src/pages/[...family].astro',
+        "'utilities', 'chat', 'guildrail',",
+        "'utilities', 'guildrail',",
+        'suite',
+    ],
 ]
 
 SUITE_CMD = 'npm test'
