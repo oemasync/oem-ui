@@ -150,11 +150,22 @@ def main():
         return None
 
     for _raw in table:
-        fields = as_fields(_raw)
-        if fields is None:
+        if isinstance(_raw, dict):
+            fields = as_fields(_raw)
+            if fields is None:
+                continue
+            label, cand, old, _new_field = fields
+            # A dict table has no positional tail, so its own dict IS the
+            # entry (the shape downstream would see).
+            entry = tuple(v for v in (label, cand, old, _new_field) if v is not None)
+        elif isinstance(_raw, (list, tuple)) and len(_raw) >= 3:
+            # KEEP THE WHOLE TUPLE: the tail carries count=all / marker,
+            # and truncating it to four fields made two count-all sweeps
+            # read as AMBIGUOUS.
+            entry = tuple(_raw)
+            label, cand, old = entry[0], entry[1], entry[2]
+        else:
             continue
-        label, cand, old, _new_field = fields
-        entry = tuple(v for v in (label, cand, old, _new_field) if v is not None)
         if not isinstance(cand, str) or not isinstance(old, str) or not os.path.isfile(cand):
             rows.append([str(label), "unclassified"])
             continue
