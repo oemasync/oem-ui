@@ -16,8 +16,9 @@ import json
 import sys
 
 from playwright.sync_api import sync_playwright
+import os
 
-URL = 'http://192.168.1.68:4321/'
+URL = (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/')
 VIEWPORTS = [(390, 844, False), (375, 667, False), (390, 844, True), (1440, 900, False)]
 
 PROBE = """

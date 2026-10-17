@@ -11,7 +11,7 @@ by MEASUREMENT, not by screenshot opinion:
   5. the label slot survives the copy (the glyph is not destroyed)
   6. both themes compute a distinct colour for .is-copied
 
-Usage: OEM_UI_URL=http://192.168.1.68:4321 /root/.venvs/mau/bin/python
+Usage: OEM_UI_URL=http://192.168.1.68:4471 /root/.venvs/mau/bin/python
        verify-code-webkit.py
 """
 import json
@@ -21,7 +21,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-URL = os.environ.get("OEM_UI_URL", "http://192.168.1.68:4321/")
+URL = os.environ.get("OEM_UI_URL", "http://192.168.1.68:4471/")
 OUT = pathlib.Path(os.environ.get("OEM_UI_SCRATCH", "/root/.hermes/cache/scratch"))
 OUT.mkdir(parents=True, exist_ok=True)
 

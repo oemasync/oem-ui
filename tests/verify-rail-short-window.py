@@ -31,7 +31,7 @@ import sys
 
 from playwright.async_api import async_playwright
 
-URL = os.environ.get("RAIL_URL", "http://192.168.1.68:4321/")
+URL = os.environ.get("RAIL_URL", "http://192.168.1.68:4471/")
 
 # Heights chosen around the measured failure: 800 was the last height that
 # stacked, 760 the first that moved the controls, 700 the first that put the

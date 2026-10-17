@@ -28,7 +28,7 @@ import sys
 
 from playwright.async_api import async_playwright
 
-BASE = os.environ.get("BASE_URL", "http://192.168.1.68:4321/")
+BASE = os.environ.get("BASE_URL", "http://192.168.1.68:4471/")
 
 # 641-999 is the band that wrapped. 390/375 are the phone, 1000+ the rail.
 WIDTHS = (375, 390, 641, 700, 768, 900, 999, 1000, 1280)

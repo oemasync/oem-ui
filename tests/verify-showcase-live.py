@@ -3,7 +3,7 @@ iPhone viewport.
 
 Two claims, two different oracles:
 
-1. The showcase (192.168.1.68:4321) still renders and the z-bearing
+1. The showcase (192.168.1.68:4471) still renders and the z-bearing
    components compute a real stacking order there too. The showcase is the
    one URL Omar opens on his phone, so a build that broke it is not a
    passing test suite.
@@ -15,7 +15,7 @@ Two claims, two different oracles:
 import asyncio, pathlib, sys
 from playwright.async_api import async_playwright
 
-SHOWCASE = "http://192.168.1.68:4321/"
+SHOWCASE = "http://192.168.1.68:4471/"
 
 READ = """() => {
   const html = document.documentElement;

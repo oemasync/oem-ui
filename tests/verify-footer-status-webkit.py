@@ -14,7 +14,7 @@ This probe reports, per width:
 import asyncio, sys
 from playwright.async_api import async_playwright
 
-TARGET = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4321/"
+TARGET = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4471/"
 
 PROBE = r"""
 () => {

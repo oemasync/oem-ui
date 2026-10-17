@@ -40,7 +40,7 @@ import sys
 
 from playwright.async_api import async_playwright
 
-BASE = os.environ.get("BASE_URL", "http://192.168.1.68:4321/")
+BASE = os.environ.get("BASE_URL", "http://192.168.1.68:4471/")
 WIDTHS = [int(x) for x in os.environ.get("WIDTHS", "320,360,390,402,430").split(",")]
 
 PROBE = """

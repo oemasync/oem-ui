@@ -7,7 +7,7 @@ probe in this repo reported a false contrast failure from exactly that.
 """
 from playwright.sync_api import sync_playwright
 
-URL = "http://192.168.1.68:4321/"
+URL = "http://192.168.1.68:4471/"
 
 JS = """
 () => {

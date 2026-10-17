@@ -23,7 +23,7 @@ Usage: /root/.venvs/mau/bin/python tests/verify-byline-sep.py
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = "http://192.168.1.68:4321/f/prose/"
+URL = "http://192.168.1.68:4471/f/prose/"
 WIDTHS = [(320, 667), (360, 780), (390, 844), (402, 874), (430, 932), (1280, 900)]
 NARROW = 190  # a card / sidebar / chat bubble: the component's real habitat
 SEP_GLYPHS = {"", "\u00b7", "|", "/", "\\", "\u2013", "\u2014", "*"}

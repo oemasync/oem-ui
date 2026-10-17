@@ -3,11 +3,12 @@
 rebuild each time because the harness reads dist."""
 import sys
 import pathlib, subprocess, sys
+import os
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CSS = ROOT / 'src/styles/components.css'
 PY = '/root/.venvs/mau/bin/python'
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
+URL = sys.argv[1] if len(sys.argv) > 1 else (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/')
 
 MUTANTS = [
     ('panel visible at rest (visibility gate gone)',

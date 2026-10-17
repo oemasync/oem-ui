@@ -14,7 +14,7 @@ Three questions, each one a place a probe can lie:
 import json
 from playwright.sync_api import sync_playwright
 
-URL = "http://127.0.0.1:4321/"
+URL = "http://127.0.0.1:4471/"
 WIDTHS = [(320, 667), (375, 667), (390, 844), (402, 874), (768, 1024), (1280, 900)]
 
 PROBE = r"""

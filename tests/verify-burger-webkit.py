@@ -14,7 +14,7 @@ import asyncio, sys
 from playwright.async_api import async_playwright
 
 URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get(
-    'OEM_UI_URL', 'http://localhost:4321/')
+    'OEM_UI_URL', (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/'))
 results = []
 
 def check(name, ok, detail=''):

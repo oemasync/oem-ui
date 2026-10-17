@@ -408,6 +408,19 @@ if '--scan' in sys.argv:
 
 only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
 chosen = [m for m in MUTANTS if only is None or only in m[0]]
+
+if '--dry' in sys.argv:
+    # Preflight only: every entry checked against its source, nothing edited.
+    # A batch must not die on one drifted anchor, so collect and report.
+    originals = {p: (ROOT / p).read_text() for p in {m[1] for m in chosen}}
+    bad = 0
+    for name, path, old_, new_, _claim, marker, count in chosen:
+        why = preflight(originals[path], old_, new_, marker, count)
+        if why:
+            bad += 1
+            print(f'  MALFORMED - {name} [{path}]: {why}')
+    print(f'{len(chosen) - bad}/{len(chosen)} entries ready')
+    sys.exit(1 if bad else 0)
 if only is not None:
     print(f'--only {only!r}: {len(chosen)}/{len(MUTANTS)} mutants')
 

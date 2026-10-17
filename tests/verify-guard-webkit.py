@@ -24,7 +24,7 @@ IPHONE = {"width": 390, "height": 844}
 
 TARGETS = [
     # (name, url, the key this project's <html> declares, extra legacy keys)
-    ("showcase", f"http://{LAN}:4321/", "cm-theme", []),
+    ("showcase", f"http://{LAN}:4471/", "cm-theme", []),
     ("links", f"http://{LAN}:4322/", "oem-links-theme", ["cm-theme"]),
     ("oem-portfolio", f"http://{LAN}:4323/", "cm-theme", []),
 ]

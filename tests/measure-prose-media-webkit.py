@@ -18,8 +18,9 @@ Run:  /root/.venvs/mau/bin/python tests/measure-prose-media-webkit.py [base-url]
 """
 import sys
 from playwright.sync_api import sync_playwright
+import os
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
+BASE = sys.argv[1] if len(sys.argv) > 1 else (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/')
 URL = BASE + 'f/prose/'
 passed = failed = 0
 

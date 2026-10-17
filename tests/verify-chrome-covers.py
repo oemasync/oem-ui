@@ -30,7 +30,7 @@ import sys
 
 from playwright.async_api import async_playwright
 
-BASE = os.environ.get("BASE_URL", "http://192.168.1.68:4321/")
+BASE = os.environ.get("BASE_URL", "http://192.168.1.68:4471/")
 
 # (width, height) - 320 is the narrowest phone the showcase supports, 402
 # is Omar's iPhone in Safari, 1440 is the desktop rail.

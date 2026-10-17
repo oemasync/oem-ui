@@ -45,7 +45,7 @@ import sys
 
 from playwright.async_api import async_playwright
 
-BASE_URL = os.environ.get("BASE_URL", "http://192.168.1.68:4321/")
+BASE_URL = os.environ.get("BASE_URL", "http://192.168.1.68:4471/")
 WIDTHS = [int(w) for w in os.environ.get("WIDTHS", "320,375,390,402,430").split(",")]
 HEIGHT = int(os.environ.get("HEIGHT", "667"))
 

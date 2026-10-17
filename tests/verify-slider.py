@@ -8,6 +8,7 @@ values - never asserted from the source.
 import sys, pathlib, struct, zlib
 from playwright.sync_api import sync_playwright
 from harness_wait import boot_timeout
+import os
 
 def load_png(path):
     """Read a screenshot with the standard library alone.
@@ -77,7 +78,7 @@ def load_png(path):
     return w, h, get
 
 ROOT = pathlib.Path(str(pathlib.Path(__file__).resolve().parents[1]))
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
+URL = sys.argv[1] if len(sys.argv) > 1 else (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/')
 SHOT = pathlib.Path('/root/.hermes/cache/scratch/_slider.png')
 results, problems = [], []
 

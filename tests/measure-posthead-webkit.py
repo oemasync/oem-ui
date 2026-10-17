@@ -12,7 +12,7 @@ Specifically checks the new .cm-post-head block:
   - nothing inside it overflows, and no text sits under the 12px floor
   - the sticky header does not overlap the top of the block on a phone
 
-Run: OEM_UI_URL=http://localhost:4321/ python tests/measure-posthead-webkit.py
+Run: OEM_UI_URL=http://localhost:4471/ python tests/measure-posthead-webkit.py
 """
 import os
 import tempfile
@@ -22,7 +22,7 @@ import json
 from playwright.sync_api import sync_playwright
 
 URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get(
-    'OEM_UI_URL', 'http://localhost:4321/')
+    'OEM_UI_URL', (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/'))
 
 
 def main() -> int:

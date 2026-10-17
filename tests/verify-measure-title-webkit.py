@@ -17,7 +17,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4321/"
+URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4471/"
 
 # `--measure-title` is 42ch, and getComputedStyle resolves `ch` to px. The
 # RESOLVED value is what proves the specimen is painted from the token
@@ -113,7 +113,10 @@ def main() -> int:
                 if w == CASES[0][0]:
                     print(f"page title: {title!r}")
                     if "oem/ui" not in title:
-                        print("FAIL wrong page served on 4321")
+                        print(f"FAIL wrong page served at {URL}")
+                        # A preview from another checkout answers too, and
+                        # measures ITS build: this lane was pointed at an
+                        # oem-ui server on 4321 for a whole sweep once.
                         return 1
                 r = pg.evaluate(PROBE)
                 if "error" in r:

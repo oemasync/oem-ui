@@ -40,7 +40,7 @@ and hands you the same unlaid-out page.
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4321/"
+URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4471/"
 VIEWPORTS = [
     ("iPhone SE", 375, 667),
     ("iPhone 15 Pro", 402, 874),

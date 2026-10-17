@@ -17,7 +17,7 @@ import json
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = os.environ.get('OEM_UI_URL', 'http://localhost:4321/')
+URL = os.environ.get('OEM_UI_URL', (os.environ.get('CLI_MONO_URL') or 'http://127.0.0.1:4471/'))
 OUT = os.environ.get('OEM_UI_SCRATCH', tempfile.gettempdir()) + '/nav-webkit'
 
 

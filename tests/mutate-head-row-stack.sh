@@ -25,7 +25,7 @@ F=src/styles/components.css
 # Measured by hand, so the harness does not depend on a preview being up:
 # the probe needs a served page and a WebKit build. If it is not reachable,
 # say so and skip rather than report a green run that proved nothing.
-URL=http://192.168.1.68:4321/
+URL=http://192.168.1.68:4471/
 if ! curl -sf -o /dev/null "$URL"; then
   echo "skip: $URL is not serving -- start the preview, this harness needs a real page"
   exit 0

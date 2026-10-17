@@ -15,7 +15,7 @@ Usage: /root/.venvs/mau/bin/python tests/probe-byline-sep.py
 import json
 from playwright.sync_api import sync_playwright
 
-URL = "http://192.168.1.68:4321/f/prose/"
+URL = "http://192.168.1.68:4471/f/prose/"
 
 PROBE = r"""
 () => {

@@ -16,7 +16,7 @@ import sys
 
 from playwright.async_api import async_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4321/"
+URL = sys.argv[1] if len(sys.argv) > 1 else "http://192.168.1.68:4471/"
 WIDTHS = [(390, 844), (375, 812), (430, 932)]
 
 PROBE = """() => {

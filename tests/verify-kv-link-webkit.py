@@ -22,7 +22,7 @@ import json
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = "http://192.168.1.68:4321/"
+URL = "http://192.168.1.68:4471/"
 
 JS = """
 () => {
