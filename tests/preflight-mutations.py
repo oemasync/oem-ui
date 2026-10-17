@@ -55,12 +55,16 @@ def main():
             skipped.append((f, data["skip"]))
             continue
         rows = data.get("rows", [])
-        bad = [r for r in rows if r[1] != "unclassified"]
-        unclassified = sum(1 for r in rows if r[1] == "unclassified")
+        not_a_finding = ("unclassified", "under-mutation (skipped)")
+        bad = [r for r in rows if r[1] not in not_a_finding]
+        unclassified = sum(1 for r in rows if r[1] not in ("under-mutation (skipped)",) and r[1] == "unclassified")
+        mid = sum(1 for r in rows if r[1] == "under-mutation (skipped)")
         total += len(bad)
         tail = "all match" if not bad else "%d problem(s)" % len(bad)
         if unclassified:
             tail += " (%d unclassified)" % unclassified
+        if mid:
+            tail += " (%d mid-mutation, skipped - re-run when the sweep ends)" % mid
         print("%-4s %-34s %3d patterns  %s" % ("PASS" if not bad else "WARN",
                                                os.path.basename(f), len(rows), tail))
         for label, why in bad:

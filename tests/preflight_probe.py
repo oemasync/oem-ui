@@ -49,6 +49,24 @@ def main():
         os.chdir(args[1])
     repo = os.getcwd()
 
+    # WHICH FILES ARE MID-MUTATION RIGHT NOW. A running sweep leaves its
+    # mutant in the working tree for as long as it takes to build and test,
+    # so a census reading that window would call the file's REAL pattern
+    # stale. Dirty targets are reported as skipped instead - the reading is
+    # honest about what it could see. This runs BEFORE the sandbox goes up
+    # (the sandbox blocks the subprocess git needs).
+    dirty = set()
+    try:
+        out = subprocess.run(["git", "status", "--porcelain"], capture_output=True,
+                             text=True, timeout=30).stdout
+        for line in out.splitlines():
+            p = line[3:].strip()
+            if p:
+                dirty.add(os.path.abspath(p))
+                dirty.add(p)
+    except Exception:
+        pass
+
     real_open = builtins.open
 
     def ro_open(file, mode="r", *a, **kw):
@@ -102,6 +120,11 @@ def main():
             continue
         if not os.path.abspath(cand).startswith(repo + os.sep):
             rows.append([str(label), "WRONG-TREE " + cand])
+            continue
+        if cand in dirty or os.path.abspath(cand) in dirty:
+            # Mid-mutation: the pattern may be absent because a sweep has its
+            # mutant in the file this second. Not a finding - say so.
+            rows.append([str(label), "under-mutation (skipped)"])
             continue
         try:
             body = real_open(cand, encoding="utf8").read()
