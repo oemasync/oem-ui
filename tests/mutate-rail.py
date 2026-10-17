@@ -130,10 +130,12 @@ MUTATIONS = [
     # and clamps with `min(token, 100%)`. The same shipped defect is
     # reachable through that clamp, and the mutant goes for it directly:
     # `var(--maxw)` alone measures 1112px of prose inside a 440px box at
-    # 1000px - the sideways scroll this batch fixed.
+    # 1000px - the sideways scroll this batch fixed. The catcher is the
+    # cap test, so the expect is its name, verbatim: anything else books a
+    # correct kill as a wrong-test.
     ('the body keeps its whole measure and runs under the rail',
      CSS, '\t\tmax-width: min(var(--maxw), 100%);\n', '\t\tmax-width: var(--maxw);\n',
-     'the rail clears the content, and the measure stays centred beside it'),
+     'the rail measure is capped by the room that actually exists'),
 
     ('the content is not offset clear of the rail at all',
      CSS, 'padding-inline-start: calc(var(--rail-w) + var(--gutter));',
@@ -149,7 +151,10 @@ MUTATIONS = [
     ('the rail link rule goes back to styling the demo specimens',
      CSS, '\t.cm-header--rail .cm-header__links > .cm-header__link,\n\t.cm-header--rail .cm-header__group .cm-header__link {',
      '.cm-header--rail .cm-header__link {',
-     'the rail link rules are scoped to direct children of the list'),
+     # The test's name drifted to SPECIMEN; the expect must be verbatim
+     # inside the FAIL line, and a wrong expect books a correct kill as a
+     # wrong-test.
+     'the rail link rules reach a grouped link without styling a SPECIMEN'),
 
     # --- the tap floor --------------------------------------------------
     ('a rail link keeps the tap floor',
