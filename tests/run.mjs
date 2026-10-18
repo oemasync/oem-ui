@@ -16370,6 +16370,14 @@ console.log('\nshadcn-parity: guildrail + composer');
 		}
 		assert((block.match(/var\(--guildrail-bleed\)/g) || []).length >= 3,
 			'--guildrail-bleed is not doing the three jobs it exists for (pad, cancel, cap)');
+		// The token's VALUE is the contract, not just its shape. The 18rem cap
+		// is what keeps the bleed inside the room beside the rail on a phone;
+		// a wider cap is live-invisible (the margin cancels it and the bleed
+		// is transparent - proven equivalent, see mutate-guildrail.py), so the
+		// source is the only layer that can hold it.
+		const bleedDef = (tokenSrc.match(/^\s*--guildrail-bleed:\s*([^;]+);/m) || [])[1] || '';
+		assert(bleedDef.trim() === 'min(18rem, 52vw)',
+			`the bleed cap drifted from the contract value: --guildrail-bleed is ${JSON.stringify(bleedDef.trim())}, the contract is min(18rem, 52vw)`);
 	});
 
 	check('batch 29: reduced motion kills the new transitions, not the states', () => {

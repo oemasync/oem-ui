@@ -219,6 +219,10 @@ MUTANTS = [
      '<span class="cm-guildrail__badge" aria-hidden="true">99+</span>',
      '<span class="cm-guildrail__badges" aria-hidden="true">99+</span>',
      'suite', False),
+    ('s32 the bleed cap is the contract value', 'src/styles/tokens.css',
+     '\t--guildrail-bleed: min(18rem, 52vw);',
+     '\t--guildrail-bleed: min(30rem, 52vw);',
+     'suite', False),
     # ---- live: measured in WebKit ---------------------------------------
     ('l03 the bleed is not paid for', 'src/styles/components.css',
      'margin-inline-end: calc(0px - var(--guildrail-bleed));',
@@ -252,10 +256,6 @@ MUTANTS = [
      "aria-current='true'] {\n\tbackground: var(--surface-raised);\n\tcolor: var(--ink);\n}",
      "aria-current='true'] {\n\tbackground: var(--surface-raised);\n}",
      'live', True),
-    ('l14 the bleed bleeds the document', 'src/styles/tokens.css',
-     '\t--guildrail-bleed: min(18rem, 52vw);',
-     '\t--guildrail-bleed: min(30rem, 52vw);',
-     'live', True),
 ]
 
 # ---- proven-equivalent mutations, deliberately NOT in the list -------------
@@ -267,6 +267,24 @@ MUTANTS = [
 # kill trains the reader to ignore survivors - the failure mode this file
 # exists to prevent. Each is still covered at the SOURCE layer (the sNN
 # named), so the invariant is not lost, only its live duplicate.
+#
+#   bleed token value (l14-adjacent). `--guildrail-bleed: min(18rem, 52vw)`
+#     changed to `min(30rem, 52vw)` and run against the live harness:
+#     SURVIVED. Measured in WebKit at ten viewports (1280..402), pristine
+#     vs mutant, dist rebuilt for each: the document's scrollWidth was
+#     byte-identical at EVERY viewport (1284, 1188, 993, 918, 818, 718,
+#     668, 625, 607, 402), because the bleed is (a) fully cancelled by
+#     `margin-inline-end: calc(0px - var(--guildrail-bleed))` - the probe
+#     read margin-inline-end = -480px against padding-inline-end = 480px
+#     for the mutant, exactly offsetting; (b) transparent (the rail's
+#     background is clipped to its content box, so the extra 192px paints
+#     nothing); (c) non-interactive (clicks fall through, proven by the
+#     surviving `clicks fall through the bleed to the column behind`);
+#     (d) below 554px the 52vw term is smaller than even 18rem, so the
+#     two tokens are identical there outright. The only thing that moves
+#     is the position of the transparent padding edge (railPadR 717 ->
+#     909 at 1280px), which no assertion can observe. The source layer
+#     now pins the token's exact value via the s-entry below.
 #
 #   bound (s01). Removing `max-block-size: 100%` leaves the rail's used
 #     max-block-size at `none`, and it STILL scrolls: measured scrollRange
