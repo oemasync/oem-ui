@@ -17736,4 +17736,169 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 		assert(exists('tests/measure-prose-media-webkit.py'),
 			'tests/measure-prose-media-webkit.py is missing');
 	});
+
+	console.log('\ncontract: the media lattice (batch 33)');
+	/* The component is `ul.cm-media-grid > li > .cm-media-grid__tile`.
+	   Every one of these checks names a TOKEN or a SELECTOR, never just a
+	   property name - a presence test on `grid-template-columns:` or on
+	   `object-fit:` passes for `minmax(20rem, 1fr)` and for `cover`
+	   respectively, which are exactly the two copy-paste mistakes the
+	   component exists to avoid. */
+	const MEDIA_GRID_CLASSES = [
+		'cm-media-grid',
+		'cm-media-grid__tile',
+		'cm-media-grid__thumb',
+		'cm-media-grid__name',
+		'cm-media-grid__meta',
+		'cm-media-grid__actions',
+	];
+
+	check('batch 33: every media-grid class is defined in the library', () => {
+		const comp = read('src/styles/components.css');
+		for (const c of MEDIA_GRID_CLASSES) {
+			assert(new RegExp(`\\.${c}[ ,{]`).test(comp),
+				`.${c} is used by the showcase but defined nowhere in components.css`);
+		}
+	});
+
+	check('batch 33: every media-grid class is DEMONSTRATED, so none is dead CSS', () => {
+		const show = read('src/pages/[...family].astro');
+		for (const c of MEDIA_GRID_CLASSES) {
+			assert(show.includes(`"${c}"`) || show.includes(`${c} "`),
+				`.${c} is defined but never rendered: no showcase markup uses it`);
+		}
+		/* The specimen has to be inside the documented section, not parked
+		   somewhere a reader never scrolls. Scope the read: a whole-file
+		   `includes` says the class exists on the page, not that this
+		   section demonstrates it. */
+		const s0 = show.indexOf('id="mediablocks"');
+		assert(s0 > 0, 'the showcase has no mediablocks section to host the lattice');
+		const s1 = show.indexOf('<section', s0 + 4);
+		const sec = show.slice(s0, s1 > 0 ? s1 : undefined);
+		assert((sec.match(/cm-media-grid__tile/g) || []).length >= 4,
+			'the mediablocks lattice carries fewer than four tiles, so there is nothing to compare between');
+	});
+
+	check('batch 33: the floor is the KNOWN knob with its fallback, not a number someone typed', () => {
+		const comp = read('src/styles/components.css');
+		/* The knob token, written the way component-scoped knobs must be
+		   (base.css/tokens.css cannot supply it to a scoped install). */
+		const rule = comp.match(/\.cm-media-grid \{[\s\S]{0,400}?\}/);
+		assert(rule, 'no .cm-media-grid rule to read the floor from');
+		assert(/minmax\(min\(var\(--media-grid-min, 150px\), 100%\)/.test(rule[0]),
+			'the column floor is not written as var(--media-grid-min, 150px): a bare 150px is ' +
+			'un-tunable and a bare var() with no fallback dies on a scoped install that has no tokens.css');
+		/* `auto-fill`, not `auto-fit`: auto-fit collapses empty tracks, so a
+		   lattice with a few files stretches into fat plates and the floor
+		   stops meaning anything. */
+		assert(/\bauto-fill\b/.test(rule[0]), 'the lattice uses auto-fit, which collapses empty tracks');
+	});
+
+	check('batch 33: the preview is CONTAINED in a 4:3 well, so a preview cannot hide its own edges', () => {
+		const comp = read('src/styles/components.css');
+		const well = comp.match(/\.cm-media-grid__thumb \{[\s\S]{0,300}?\}/);
+		assert(well, 'no .cm-media-grid__thumb rule to read the well ratio from');
+		assert(/aspect-ratio:\s*4\s*\/\s*3/.test(well[0]),
+			'the well does not state aspect-ratio: 4 / 3, so the letterbox contract has no shape to hold');
+		const img = comp.match(/\.cm-media-grid__thumb img \{[\s\S]{0,400}?\}/);
+		assert(img, 'no .cm-media-grid__thumb img rule');
+		assert(/object-fit:\s*contain/.test(img[0]),
+			'the tile image is not contain: `cover` crops, and cropping a preview the reader ' +
+			'is choosing between is the defect this component exists to avoid');
+		/* Belt and braces against the shorthand trap from the select arrow:
+		   `object-fit: cover` written ANYWHERE in this rule re-crops it. */
+		assert(!/cover/.test(img[0]), 'the tile image rule mentions `cover`');
+	});
+
+	check('batch 33: the name clips to one line at the type floor, and a long name cannot widen its track', () => {
+		const comp = read('src/styles/components.css');
+		const name = comp.match(/\.cm-media-grid__name \{[\s\S]{0,400}?\}/);
+		assert(name, 'no .cm-media-grid__name rule');
+		assert(/white-space:\s*nowrap/.test(name[0]), 'the name may wrap, which pushes the row below out of line');
+		assert(/text-overflow:\s*ellipsis/.test(name[0]), 'the name clips without an ellipsis, so it looks truncated at random');
+		assert(/max\(var\(--min-font\)/.test(name[0]), 'the name carries no --min-font floor');
+		const meta = comp.match(/\.cm-media-grid__meta \{[\s\S]{0,400}?\}/);
+		assert(meta && /max\(var\(--min-font\)/.test(meta[0]), 'the meta line carries no --min-font floor');
+		/* The claim the source comment makes about grid items. Asserting the
+		   selector, not `min-width: 0` anywhere: the tile's own min-width
+		   would satisfy a value-shaped test while the ITEM kept its
+		   automatic min-content and widened the track anyway. */
+		const item = comp.match(/\.cm-media-grid > li \{[^}]*\}/);
+		assert(item, 'the grid ITEM carries no rule, so min-content sets the track width');
+		assert(/min-width:\s*0/.test(item[0]), 'the grid item does not zero its min-width');
+	});
+
+	check('batch 33: the specimen is shaped so the letterbox is OBSERVABLE', () => {
+		const show = read('src/pages/[...family].astro');
+		const s0 = show.indexOf('id="mediablocks"');
+		const s1 = show.indexOf('<section', s0 + 4);
+		const sec = show.slice(s0, s1 > 0 ? s1 : undefined);
+		/* Tile 0 must have a source whose own ratio differs from the well's,
+		   or `contain` and `cover` render the SAME picture and the WebKit
+		   probe cannot tell them apart - its own assertion says exactly
+		   this, and it would report a failure on a correct build.
+
+		   Scoped to the grid's own <ul>: a bare `<img width height>` over
+		   the whole section bound the SINGLE-image `.cm-media` figure that
+		   shares this section (1200x420), so re-tuning the panorama tile
+		   was invisible to this check - MEASURED as mutant M7, which
+		   changed the panorama to 1200x900 and survived. */
+		const gridAt = sec.indexOf('class="cm-media-grid"');
+		assert(gridAt > 0, 'the showcase has no .cm-media-grid in the media section');
+		const gridSec = sec.slice(gridAt, sec.indexOf('</ul>', gridAt));
+		const m = /<img[^>]*width="(\d+)" height="(\d+)"/.exec(gridSec);
+		assert(m, 'the lattice specimen has no sized <img> to read a ratio from');
+		const ar = Number(m[1]) / Number(m[2]);
+		assert(Math.abs(ar - 4 / 3) > 0.15,
+			`tile 0 is ${m[1]}x${m[2]} (ratio ${ar.toFixed(2)}), within 0.15 of the 4:3 well, ` +
+			'so the specimen cannot tell contain from cover');
+		/* The long name is the fixture that exercises the min-width: 0 rule
+		   above; without it that rule is unproven decoration. */
+		assert(/a-very-long-filename-that-nobody-shortened\.png/.test(sec),
+			'the specimen has no long filename, so nothing exercises the grid item min-width');
+	});
+
+	check('batch 33: the README documents the lattice and the probe that measures it', () => {
+		const rm = read('README.md');
+		const at = rm.indexOf('### The media lattice');
+		assert(at > 0, 'the README has no section for the media lattice');
+		const end = rm.indexOf('\n### ', at + 4);
+		const sec = rm.slice(at, end > 0 ? end : undefined);
+		/* The CSS facts are asserted against the FENCED BLOCK, not the
+		   whole section: this section's own prose says `object-fit:
+		   contain`, so a section-wide grep passes even when the documented
+		   snippet has been reverted to `cover` - the exact shape of the
+		   batch-32 lesson (a doc check that greps for the tag settles for
+		   the section's own prose). */
+		const f0 = sec.indexOf('```css');
+		assert(f0 > 0, 'the README section has no fenced CSS block to document the lattice');
+		const fence = sec.slice(f0, sec.indexOf('```', f0 + 6));
+		assert(/var\(--media-grid-min, 150px\)/.test(fence),
+			'the README fenced block does not document the floor knob WITH its fallback');
+		/* The knob's VALUE is deliberately tunable, so nothing pins it to
+		   150px - but the fence must show whatever the library actually
+		   declares, or the docs drift the moment someone re-tunes it. */
+		const compCss = read('src/styles/components.css');
+		const cssKnob = /--media-grid-min:\s*([0-9.]+px)/.exec(compCss);
+		const docKnob = /--media-grid-min:\s*([0-9.]+px)/.exec(fence);
+		assert(cssKnob && docKnob && cssKnob[1] === docKnob[1],
+			`the README fence declares --media-grid-min: ${docKnob && docKnob[1]} but the library declares `
+			+ `${cssKnob && cssKnob[1]}: re-tune one, re-document the other`);
+		assert(/object-fit:\s*contain/.test(fence),
+			'the README fenced block does not document that previews are contained, not cropped');
+		assert(/auto-fill/.test(fence),
+			'the README fenced block does not document auto-fill (auto-fit collapses empty tracks)');
+		/* The probe is named in the PROSE, which is where a name belongs. */
+		assert(/measure-media-grid-webkit/.test(sec),
+			'the README does not name the probe that measures the lattice');
+		assert(exists('tests/measure-media-grid-webkit.py'),
+			'tests/measure-media-grid-webkit.py is missing');
+		/* The pixel probe is the negative control for the specimen's own
+		   contrast - the one that caught the #1c1c1c-on-rgb(22) canvas
+		   where contain and cover were indistinguishable in pixels. */
+		assert(/probe-media-grid-fit/.test(sec),
+			'the README does not name the pixel probe that measures the painted band');
+		assert(exists('tests/probe-media-grid-fit.py'),
+			'tests/probe-media-grid-fit.py is missing');
+	});
 }

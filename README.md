@@ -1371,6 +1371,81 @@ Verified by `tests/measure-prose-media-webkit.py` — 47 measurements over
 non-regression direction, all reading **computed** values rather than the
 source text. Suite coverage: five contract checks in `tests/run.mjs`.
 
+### The media lattice — `.cm-media-grid`, previews a reader chooses between
+
+`.cm-media` frames **one** picture a person wrote. A CMS and a renderer both
+emit the other shape: **N previews the reader picks from**. `.cm-cards` is
+the wrong host for that — it floors a column at 20rem, which is one column
+on a phone *and* at 860px, so a gallery of twenty files reads as twenty
+full-width plates. The lattice floors at 150px and fills the row.
+
+```css
+.cm-media-grid {
+  --media-grid-min: 150px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--media-grid-min, 150px), 100%), 1fr));
+  gap: var(--space-3);
+  list-style: none; margin: 0; padding: 0; min-width: 0;
+}
+.cm-media-grid > li { min-width: 0; }
+.cm-media-grid__thumb { aspect-ratio: 4 / 3; overflow: hidden; background: var(--bg-3);
+  border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.cm-media-grid__thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.cm-media-grid__name { font-size: max(var(--min-font), var(--text-xs));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+```
+
+Four things in that block are load-bearing rather than cosmetic:
+
+- **`object-fit: contain`, not `cover`.** A thumbnail well under `cover` is
+  the default everywhere and it is wrong here: `cover` crops whatever the
+  source's ratio is not, so a 6:1 panorama inside a 4:3 well paints its
+  middle 22%. The reader is *choosing between these tiles*, so a preview that
+  hides its own edges defeats the component. The ratio lives on the **well**,
+  not the image — under both `contain` and `cover` the `<img>` **box** fills
+  the well, so a probe that compares boxes cannot tell them apart. What
+  differs is the painting, which is why the harness asserts the *declared*
+  fit together with a source whose own ratio is not the well's.
+- **`min(var(--media-grid-min, 150px), 100%)`.** The `min()` is what keeps a
+  320px screen from overflowing its own column; the `100%` is why the floor
+  can never do it. Written with the fallback because a *scoped* install gets
+  `components.css` and no `tokens.css`, so a bare `var()` would invalidate
+  the whole declaration — the same trap `--fade-size` and the table cap
+  document.
+- **`auto-fill`, not `auto-fit`.** `auto-fit` collapses empty tracks, so a
+  three-file gallery stretches into three fat plates and the 150px floor
+  stops meaning anything.
+- **`min-width: 0` on the grid ITEM as well as the tile.** A grid item's
+  automatic minimum is its min-content, and the name is `nowrap`, so one
+  long filename widens its own track past the `1fr` the floor asked for: the
+  lattice stops being a lattice and the page gains a horizontal scroll. The
+  showcase's third tile is exactly that filename.
+
+The name **clips** rather than wraps for the same reason a table column
+does: a wrapped name pushes everything below it out of line with its
+neighbours in that column only, and the grid lining up is the whole point.
+Both text parts carry `max(var(--min-font), …)`, so a coarse pointer gets
+the same floor every other component does.
+
+The well is 4:3 and the lattice is a `ul`, so the specimen is
+`ul.cm-media-grid > li > .cm-media-grid__tile` — `.cm-prose`'s list rule is
+`:not([class])`-scoped, so a classed list keeps its own box and no bullets
+appear.
+
+Verified by `tests/measure-media-grid-webkit.py` — four viewports
+(320/390/860/1280), reading computed fit, the natural ratio against the
+well's, distinct left edges for the column count, the one-line name, the
+`--min-font` floor, and the page's own horizontal overflow. The painted
+pixels get their own probe: `tests/probe-media-grid-fit.py` screenshots the
+6:1 well and counts non-background rows — measured band 30.8px against the
+29.3px contain arithmetic at 860, where `cover` would paint 132px. It is
+also the negative control for the specimen's contrast: when the panorama's
+canvas was `#1c1c1c` against the well's `rgb(22,22,22)`, contain and cover
+were six levels apart and therefore indistinguishable in pixels. Suite
+coverage: the batch-33 contract checks in `tests/run.mjs` (no count
+stated — a hardcoded number rots the moment one is added, which is how
+this section shipped saying "six" over seven).
+
 ### Prose tables — `.cm-prose-table` vs `.cm-table`
 
 Two different tables, and picking the wrong one is a real defect in each

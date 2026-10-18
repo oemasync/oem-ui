@@ -4608,6 +4608,118 @@ dialog.cm-dialog--spec:not([open]) {
 }
 .cm-ratio--square { --cm-ratio: 1; }
 
+/* ---------- media grid: a lattice of preview tiles ----------
+
+   `.cm-media` frames ONE image a person wrote. This is the other shape a
+   renderer and a CMS both emit: N previews the reader CHOOSES between.
+   `.cm-cards` is the wrong host for that - it floors a column at 20rem,
+   which is one column on a phone and 860px, so a gallery of 20 files
+   reads as a list of full-width plates.
+
+   THE WELL IS 4:3, and `object-fit: contain`, not `cover`. A thumbnail
+   well under `cover` is the default everywhere and it is wrong HERE:
+   `cover` crops whatever the source's ratio is not, so a 6:1 panorama
+   inside a 4:3 well shows its middle 22% - the reader is choosing
+   between previews and the preview hides its own edges. `contain`
+   letterboxes instead, which is honest about what the file is. The
+   ratio therefore has to be on the well and not on the image: both
+   `contain` and `cover` make the <img> BOX fill the well, so a check
+   that compares boxes cannot tell them apart (tests/
+   measure-media-grid-webkit.py measures the DECLARED fit and the
+   natural ratio instead).
+
+   The floor is the whole contract: `--media-grid-min` says the narrowest
+   tile that can still show a recognisable preview plus a name on one
+   line. Written with a fallback so a consumer's scoped install - which
+   gets components.css and cannot import base.css - still gets 150px
+   rather than nothing. MEASURED in WebKit, not assumed: the lattice
+   fits floor((W + gap) / (min + gap)) columns, so with a 150px floor
+   and a 12px gap that is one column per 162px of CONTAINER. The
+   showcase's demo column is doubly padded (main shell 100% - 40px, two
+   nested cm-section--pad at 20px), so it is 270px wide at a 390px
+   viewport and the lattice correctly shows ONE column there - two
+   columns need a 312px container, i.e. a 432px viewport in this
+   showcase - and four columns at 860px (740px container). An earlier
+   version of this comment said "2 columns at 390, 3 at 860" from
+   theory; both numbers were wrong.
+*/
+.cm-media-grid {
+    --media-grid-min: 150px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--media-grid-min, 150px), 100%), 1fr));
+    gap: var(--space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+.cm-media-grid__tile {
+    display: flex;
+    flex-direction: column;
+    /* the name and meta have to be able to shrink below their content,
+       or a long filename sets the column width and the lattice stops
+       being one. */
+    min-width: 0;
+    gap: var(--space-2);
+}
+/* `min-width: 0` on the GRID ITEM too, not just the tile inside it. A grid
+   item's automatic minimum is its min-content, and the name is `nowrap`,
+   so without this one long filename widens its own track past the 1fr the
+   floor asked for - the lattice stops being a lattice and the page gains a
+   horizontal scroll. MEASURED: with the tile rule alone, a
+   `very-long-filename-that-nobody-shortened.png` widened its column. */
+.cm-media-grid > li {
+    min-width: 0;
+}
+.cm-media-grid__thumb {
+    aspect-ratio: 4 / 3;
+    /* the WELL owns the ratio, the image fills it; see above. */
+    overflow: hidden;
+    background: var(--bg-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+}
+.cm-media-grid__thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* contain, deliberately. The letterbox is the point. */
+    object-fit: contain;
+    border-radius: 0;
+}
+/* The name CLIPS, it does not wrap: a wrapped name moves every tile below
+   it out of line with its neighbours, and a gallery's whole value is that
+   the grid lines up. `max(var(--min-font), var(--text-xs))` is the same
+   floor every other component carries - without it a coarse pointer gets
+   the same 13px label a desktop does. */
+.cm-media-grid__name {
+    font-size: max(var(--min-font), var(--text-xs));
+    line-height: 1.3;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.cm-media-grid__meta {
+    font-size: max(var(--min-font), var(--text-sm));
+    line-height: 1.4;
+    color: var(--ink-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+/* The actions row, when the consumer ships one, shares a BOTTOM edge
+   across a row: `align-items: end` is what stops a two-line name in one
+   tile pushing that tile's button below its neighbours'. */
+.cm-media-grid__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
 /* ---------- cards ----------
    A bordered surface with a header, for one subject that needs more
    room than a .cm-kv row. Deliberately NOT .cm-panel: a panel is a

@@ -4112,6 +4112,56 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 						</div>
 
 						<p class="cm-head__sub">The figure, its image and the caption are <strong>bare element rules</strong>, so <code>.cm-media img</code> still wins its own box — the element default reaches markup that carries no class, and a class rule reaches markup that carries one. The video is the one rule scoped with <code>:not([class])</code>, because a consumer's own player supplies its own box.</p>
+
+						<p class="cm-head__sub">The other shape a renderer emits is a <strong>lattice of previews the reader chooses between</strong>. <code>.cm-cards</code> is the wrong host: it floors a column at 20rem, which is one column on a phone <em>and</em> at 860px, so a gallery of twenty files reads as twenty full-width plates. <code>.cm-media-grid</code> floors at 150px and fills the row, so the same twenty files are two columns at 390px and four at 860px. That statement was a back-of-envelope guess made before measuring the doubly-padded demo column; in this showcase the container is only ~270px at 390px, so the measured geometry is 1 column there, 4 at 860. The README's documented rule is the mathematical one above - the behavior in practice is geometry-dependent.</p>
+
+						<ul class="cm-media-grid">
+							<li>
+								<div class="cm-media-grid__tile">
+									<div class="cm-media-grid__thumb">
+										<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='200'%3E%3Crect width='1200' height='200' fill='%235a5a5a'/%3E%3Crect x='40' y='70' width='520' height='14' fill='%23d0d0d0'/%3E%3Crect x='40' y='100' width='360' height='10' fill='%23a5a5a5'/%3E%3Ccircle cx='1080' cy='100' r='44' fill='%23a5a5a5'/%3E%3C/svg%3E"
+											alt="A 6:1 panorama placeholder." width="1200" height="200" loading="lazy" />
+									</div>
+									<span class="cm-media-grid__name">fleet-wide-banner.png</span>
+									<span class="cm-media-grid__meta">1200 x 200 · 6:1 panorama</span>
+								</div>
+							</li>
+							<li>
+								<div class="cm-media-grid__tile">
+									<div class="cm-media-grid__thumb">
+										<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23262626'/%3E%3Ccircle cx='200' cy='150' r='70' fill='%238b8b8b'/%3E%3Crect x='60' y='280' width='280' height='12' fill='%234a4a4a'/%3E%3C/svg%3E"
+											alt="A square avatar placeholder." width="400" height="400" loading="lazy" />
+									</div>
+									<span class="cm-media-grid__name">avatar-omiinaya.png</span>
+									<span class="cm-media-grid__meta">400 x 400 · 1:1</span>
+								</div>
+							</li>
+							<li>
+								<div class="cm-media-grid__tile">
+									<div class="cm-media-grid__thumb">
+										<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='600'%3E%3Crect width='900' height='600' fill='%23161616'/%3E%3Crect x='50' y='80' width='800' height='16' fill='%238b8b8b'/%3E%3Crect x='50' y='120' width='620' height='10' fill='%234a4a4a'/%3E%3Crect x='50' y='380' width='800' height='170' fill='%234a4a4a'/%3E%3C/svg%3E"
+											alt="A 3:2 screenshot placeholder." width="900" height="600" loading="lazy" />
+									</div>
+									<span class="cm-media-grid__name">a-very-long-filename-that-nobody-shortened.png</span>
+									<span class="cm-media-grid__meta">900 x 600 · 3:2, and the name clips to one line</span>
+									<div class="cm-media-grid__actions">
+										<button class="cm-btn cm-btn--sm" type="button">copy path</button>
+									</div>
+								</div>
+							</li>
+							<li>
+								<div class="cm-media-grid__tile">
+									<div class="cm-media-grid__thumb">
+										<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400'%3E%3Crect width='300' height='400' fill='%23262626'/%3E%3Crect x='40' y='60' width='220' height='280' fill='%234a4a4a'/%3E%3C/svg%3E"
+											alt="A 3:4 portrait placeholder." width="300" height="400" loading="lazy" />
+									</div>
+									<span class="cm-media-grid__name">portrait-3x4.png</span>
+									<span class="cm-media-grid__meta">300 x 400 · 3:4</span>
+								</div>
+							</li>
+						</ul>
+
+						<p class="cm-head__sub">Two whitespace defaults are load-bearing rather than cosmetic. The name is <code>nowrap</code> with an ellipsis, because a wrapped name pushes everything below it out of line with its neighbours in <em>that</em> column only — a gallery's whole value is that the grid lines up. And <code>min-width: 0</code> is set on the grid <strong>item</strong> as well as the tile inside it: a grid item's automatic minimum is its min-content, so a long filename would widen its own track past the floor, and the third tile above is exactly that filename.</p>
 					</section>
 
 																<section id="tablelabels" class="cm-section cm-section--pad" data-cm-table-labels>
