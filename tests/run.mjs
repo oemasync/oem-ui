@@ -8660,6 +8660,17 @@ check('cm-progress: the runtime owns the bar it drives', () => {
 	// SPA that renders a bar after boot is never bound without it
 	assert(/\[data-cm-navmenu\], \[data-cm-progress\], \.cm-prose-table/.test(js),
 		'the late-markup observer list omits [data-cm-progress]');
+	// ...and the served showcase must SHIP a bar for it to own. A runtime
+	// with no demonstration is a capability nobody can reach - the same
+	// failure that left [data-cm-progress] bound with no button on any page.
+	// Assert the MARKUP, not the string: `data-cm-progress` also appears
+	// in the inlined runtime (its own querySelectorAll) and in the prose
+	// label, so a bare /data-cm-progress/ passes a showcase that ships no
+	// bar at all - which is exactly how mutant 'the showcase stops shipping
+	// a live bar' survived the first sweep of this check.
+	const html = read('dist/index.html');
+	assert(/<div class="cm-progress"[^>]*\bdata-cm-progress\b/.test(html),
+		'the served showcase ships no <div class="cm-progress" data-cm-progress> bar');
 });
 
 check('cm-progress: --cm-progress and aria-valuenow always read the same number', () => {
@@ -8796,6 +8807,97 @@ check('cm-progress: --cm-progress and aria-valuenow always read the same number'
 	ctx.window.cliMono.initProgress(doc);
 	assert(listeners.length === before,
 		`initProgress double-bound: ${before} listeners grew to ${listeners.length}`);
+});
+
+check('cm-progress: a container bar tracks its container, not the page', () => {
+	// The `#id` form is the half the page-mode test cannot see: a bar bound
+	// to a scroll box must answer to THAT box's scroll, and must NOT be
+	// moved by the page scrolling past it. A runtime that ignores `src`
+	// and always reads document.scrollingElement passes every page-mode
+	// assertion above and is wrong for every consumer that embeds a log.
+	const listeners = [];
+	const boxListeners = [];
+	const logBar = {
+		attrs: { 'data-cm-progress': '#log' },
+		style: { setProperty: (k, v) => { logBar.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { logBar.attrs[k] = v; },
+		getAttribute(k) { return k in logBar.attrs ? logBar.attrs[k] : null; },
+		addEventListener() {}, removeEventListener() {},
+	};
+	// The container: its OWN scroll range, deliberately different from the
+	// page's, so a runtime reading the wrong box cannot land on the same
+	// number by luck.
+	const logBox = {
+		scrollTop: 0, scrollHeight: 500, clientHeight: 100,   // range 400
+		addEventListener: (t, fn) => { boxListeners.push([t, fn]); },
+		removeEventListener() {},
+	};
+	const docEl = {
+		scrollTop: 0, scrollHeight: 4000, clientHeight: 800,  // range 3200
+		style: { setProperty() {}, removeProperty() {} },
+		attrs: {}, classList: { add() {}, remove() {}, contains: () => false },
+		setAttribute(k, v) { this.attrs[k] = v; },
+		getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+	};
+	const doc = {
+		readyState: 'loading',
+		documentElement: docEl,
+		scrollingElement: docEl,
+		body: { style: {}, appendChild() {} },
+		querySelectorAll: (s) => (s === '[data-cm-progress]' ? [logBar] : []),
+		querySelector: (sel) => (sel === '#log' ? logBox : null),
+		getElementById: () => null,
+		addEventListener() {},
+		createElement: () => ({ style: {}, classList: { add() {} },
+			setAttribute() {}, getAttribute() { return null; }, appendChild() {} }),
+	};
+	const ctx = {
+		document: doc,
+		window: {
+			addEventListener: (t, fn) => { listeners.push([t, fn]); },
+			scrollY: 0, innerHeight: 800, requestAnimationFrame() {},
+			matchMedia: () => ({ matches: false, addEventListener() {},
+				removeEventListener() {}, addListener() {}, removeListener() {} }),
+		},
+		localStorage: { getItem: () => null, setItem() {} },
+		navigator: {},
+		MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; },
+		ResizeObserver: function () { this.observe = () => {}; },
+		module: { exports: {} },
+	};
+	ctx.globalThis = ctx;
+	ctx.self = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	ctx.window.cliMono.initProgress(doc);
+
+	const prop = () => logBar.attrs['prop:--cm-progress'];
+	const aria = () => logBar.attrs['aria-valuenow'];
+
+	// At bind time the container is at 0/400 = 0%, while the PAGE is also
+	// at 0. Move the container a quarter of its range: 100/400 = 25%.
+	logBox.scrollTop = 100;
+	boxListeners.filter(([t]) => t === 'scroll').forEach(([, fn]) => fn());
+	assert(prop() === '25%' && aria() === '25',
+		`the container at 100/400 must read 25%, got ${prop()} / ${aria()}`);
+
+	// Now scroll the PAGE to its own halfway point. The container-bound bar
+	// must not move: it belongs to #log, not to the document.
+	docEl.scrollTop = 1600;
+	listeners.filter(([t]) => t === 'scroll').forEach(([, fn]) => fn());
+	assert(prop() === '25%' && aria() === '25',
+		`a page scroll moved a container bar: ${prop()} / ${aria()}`);
+
+	// A resize repaints from the CONTAINER, still not the page.
+	logBox.scrollHeight = 900;   // range 800; scrollTop 100 -> 12.5% -> 13
+	listeners.filter(([t]) => t === 'resize').forEach(([, fn]) => fn());
+	assert(prop() === '13%' && aria() === '13',
+		`resize must repaint from the container: ${prop()} / ${aria()}`);
+
+	// The listener must be on the CONTAINER, not only on the window: a
+	// consumer whose box scrolls without a window scroll must still update.
+	assert(boxListeners.filter(([t]) => t === 'scroll').length > 0,
+		'no scroll listener was bound to the container itself');
 });
 
 check('.cm-tag survives a word too long for its column', () => {
