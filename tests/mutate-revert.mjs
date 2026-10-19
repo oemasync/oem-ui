@@ -31,10 +31,12 @@ const RUNTIME = 'src/js/cli-mono.js';
 const MUTATIONS = [
 	{
 		// The glyph is the "not colour alone" backbone for the banner.
+		// There are 7 rules with the same glyph; the regex must scope to
+		// the revert rule's body, or the mutant edits a different rule.
 		name: "the revert banner loses its warning glyph",
 		file: COMP,
-		from: /\.cm-revert::before \{[\s\S]*?content: '\\\\25b2\\\\00a0'/,
-		to: ".cm-revert::before { content: ''; }",
+		from: /\.cm-revert::before \{\s+content: '\\25b2\\00a0'/,
+		to: ".cm-revert::before {\n	content: ''",
 		expectFail: "the banner carries a glyph, so it is not a bare box",
 		skipBuild: true,
 	},
@@ -78,29 +80,29 @@ const MUTATIONS = [
 	{
 		// stop() must clearInterval, not just set a flag — a flag still burns
 		// wall-clock and still expires.
-		name: 'stop() does not clearInterval',
+		name: 'initRevert does not clearInterval on pause',
 		file: RUNTIME,
-		from: /clearInterval\(timer\)/,
-		to: "/* timer = null; */",
-		expectFail: "stop() does not clearInterval on pause",
+		from: /clearInterval\(timer\);/,
+		to: "/* timer cleared */",
+		expectFail: "initRevert does not clearInterval on pause",
 		skipBuild: true,
 	},
 	{
 		// Undo must stop the timer — otherwise expire fires after undo.
-		name: 'Undo does not stop the timer',
+		name: 'initRevert has no Undo handling',
 		file: RUNTIME,
-		from: /if \(undo\) undo\.addEventListener\('click', function \(\) \{ resolve\('undo'\); \}\)/,
+		from: /if \(undo\) undo\.addEventListener\('click', function \(\) \{ resolve\('undo'\); \}\);?/,
 		to: "/* undo listener removed */",
-		expectFail: "Undo/Apply must stop the timer",
+		expectFail: "initRevert has no Undo handling",
 		skipBuild: true,
 	},
 	{
 		// Apply must stop the timer — otherwise expire fires after apply.
-		name: 'Apply does not stop the timer',
+		name: 'initRevert has no Apply handling',
 		file: RUNTIME,
-		from: /if \(apply\) apply\.addEventListener\('click', function \(\) \{ resolve\('apply'\); \}\)/,
+		from: /if \(apply\) apply\.addEventListener\('click', function \(\) \{ resolve\('apply'\); \}\);?/,
 		to: "/* apply listener removed */",
-		expectFail: "Undo/Apply must stop the timer",
+		expectFail: "initRevert has no Apply handling",
 		skipBuild: true,
 	},
 	{
@@ -115,9 +117,10 @@ const MUTATIONS = [
 	},
 	{
 		// Dead-CSS direction: kill the status rule entirely.
+		// The rule may be followed by a comment, so match to the next section or EOF.
 		name: 'the cm-revert__status rule is deleted',
 		file: COMP,
-		from: /\.cm-revert__status \{[^}]*\}\n/,
+		from: /\.cm-revert__status \{[^}]*\}/,
 		to: '',
 		expectFail: 'every cm-revert class is defined in the library',
 		skipBuild: true,

@@ -18320,12 +18320,13 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 			   source audits guarantee the runtime wires the right listeners. */
 			{
 				const REVERT_CLASSES = [
-					'cm-revert',
-					'cm-revert__body',
-					'cm-revert__message',
-					'cm-revert__actions',
-					'cm-revert__countdown',
-				];
+								'cm-revert',
+								'cm-revert__body',
+								'cm-revert__message',
+								'cm-revert__actions',
+								'cm-revert__countdown',
+								'cm-revert__status',
+							];
 
 				check('batch 35: every cm-revert class is defined in the library', () => {
 					const comp = read('src/styles/components.css');
@@ -18336,18 +18337,25 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 				});
 
 				check('batch 35: every cm-revert class is DEMONSTRATED on the page', () => {
-					const page2 = read('dist/index.html');
-					for (const cls of REVERT_CLASSES) {
-						assert(new RegExp(`class="[^"]*${cls}`).test(page2),
-							`.${cls} is defined but never rendered on the built page`);
-					}
-				});
+								// Read the astro source directly — the mutant edits source with skipBuild:true.
+								const show = read('src/pages/[...family].astro');
+								for (const cls of REVERT_CLASSES) {
+									assert(new RegExp(`class="[^"]*${cls}`).test(show),
+										`.${cls} is defined but never rendered in the specimen`);
+								}
+							});
 
 				check('batch 35: the banner carries a glyph, so it is not a bare box', () => {
-					const comp = read('src/styles/components.css');
-					assert(/\.cm-revert::before\s*\{[^}]*content:/.test(comp),
-						'the revert banner has no ::before glyph, so nothing marks it as pending');
-				});
+								const comp = read('src/styles/components.css');
+								// Scope to THIS rule's body: a lazy [\s\S]*?content: would skip
+								// the mutant's empty content: '' and find some later rule's
+								// content: in the 10k-line sheet — a false pass.
+								const at = comp.indexOf('.cm-revert::before');
+								assert(at >= 0, 'the revert banner has no ::before rule at all');
+								const body = comp.slice(at, comp.indexOf('}', at));
+								assert(/content:\s*['"][^'"]+['"]/.test(body),
+									'the revert banner has no ::before glyph, so nothing marks it as pending');
+							});
 
 				check('batch 35: the countdown is the APP\'s number, announced politely', () => {
 					const show = read('src/pages/[...family].astro');
@@ -18358,26 +18366,29 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 						'the countdown slot has no literal starting value in the markup');
 				});
 
-				check('batch 35: initRevert exists, listens for focusin/focusout, and uses setInterval/clearInterval', () => {
-					const js = read('src/js/cli-mono.js');
-					const at = js.indexOf('function initRevert');
-					assert(at > 0, 'initRevert is missing from the runtime');
-					const body = js.slice(at, js.indexOf('\n	function ', at + 10) || js.length);
-					assert(/addEventListener\('focusin'/.test(body), 'initRevert does not listen for focusin');
-					assert(/addEventListener\('focusout'/.test(body), 'initRevert does not listen for focusout');
-					assert(/clearInterval/.test(body), 'initRevert does not clearInterval on pause');
-					assert(/setInterval/.test(body), 'initRevert does not setInterval for the countdown');
-				});
+						check('batch 35: initRevert exists, listens for focusin/focusout, and uses setInterval/clearInterval', () => {
+							const js = read('src/js/cli-mono.js');
+							const at = js.indexOf('function initRevert');
+							assert(at > 0, 'initRevert is missing from the runtime');
+							const nextFn = js.indexOf('\n	function ', at + 10);
+							const body = js.slice(at, nextFn === -1 ? js.length : nextFn);
+							assert(/addEventListener\('focusin'/.test(body), 'initRevert does not listen for focusin');
+							assert(/addEventListener\('focusout'/.test(body), 'initRevert does not listen for focusout');
+							assert(/clearInterval/.test(body), 'initRevert does not clearInterval on pause');
+							assert(/setInterval/.test(body), 'initRevert does not setInterval for the countdown');
+						});
 
-				check('batch 35: Undo and Apply both stop the timer and resolve the banner', () => {
-					const js = read('src/js/cli-mono.js');
-					const at = js.indexOf('function initRevert');
-					assert(at > 0, 'initRevert is missing');
-					const body = js.slice(at, js.indexOf('\n	function ', at + 10) || js.length);
-					assert(/Undo|undo/.test(body), 'initRevert has no Undo handling');
-					assert(/Apply|apply/.test(body), 'initRevert has no Apply handling');
-					assert(/clearInterval/.test(body), 'Undo/Apply must stop the timer');
-				});
+						check('batch 35: Undo and Apply both stop the timer and resolve the banner', () => {
+										const js = read('src/js/cli-mono.js');
+										const at = js.indexOf('function initRevert');
+										assert(at > 0, 'initRevert is missing');
+										const nextFn = js.indexOf('\n	function ', at + 10);
+										const body = js.slice(at, nextFn === -1 ? js.length : nextFn);
+										// Check for the actual listener registration, not just the word 'undo'/'apply'.
+										assert(/undo\.addEventListener\('click'/.test(body), 'initRevert has no Undo handling');
+										assert(/apply\.addEventListener\('click'/.test(body), 'initRevert has no Apply handling');
+										assert(/clearInterval/.test(body), 'Undo/Apply must stop the timer');
+									});
 
 				check('batch 35: the README documents the revert banner and its runtime', () => {
 					const rm = read('README.md');

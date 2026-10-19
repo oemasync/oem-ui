@@ -2339,6 +2339,10 @@ button.cm-row:hover { background: var(--bg-2); }
 	font-size: var(--text-xs);
 	color: var(--ink-dim);
 }
+.cm-revert__status {
+	margin: var(--space-3) 0 0;
+	color: var(--ink-faint);
+}
 /* The resolved notice: after expire/undo/apply the banner STAYS, with this
    line unhidden. A disappearing banner is the exact ambiguity the undo
    exists to remove. */
