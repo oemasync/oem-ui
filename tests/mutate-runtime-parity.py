@@ -10,9 +10,9 @@ PY = '/root/.venvs/mau/bin/python'
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4460/'
 
 MUTANTS = [
-    ('opening does not focus the menu', "if (first && typeof first.focus === 'function') first.focus();", ''),
+    ('opening does not focus the menu', "var first = menuItems(menu)[0] ||\n\t\t\t\t\tmenu.querySelector('button, a[href], input, [tabindex]:not([tabindex=\"-1\"])');\n\t\t\t\tif (first && typeof first.focus === 'function') first.focus();", "var first = menuItems(menu)[0] ||\n\t\t\t\t\tmenu.querySelector('button, a[href], input, [tabindex]:not([tabindex=\"-1\"])');"),
     ('arrow keys unbound', "document.addEventListener('keydown', onMenuKey);", ''),
-    ('disabled items not skipped', "return el.getAttribute('aria-disabled') !== 'true' && !el.disabled;", 'return true;'),
+    ('disabled items not skipped', "el.getAttribute('aria-disabled') !== 'true' && !el.disabled;", "true;"),
     ('ArrowDown does not wrap', "next = items[(i + 1) % items.length];", "next = items[Math.min(i + 1, items.length - 1)];"),
     ('single mode not exclusive', "o.setAttribute('aria-pressed', o === opt ? 'true' : 'false');", "if (o === opt) o.setAttribute('aria-pressed', 'true');"),
     ('multi mode behaves as single', "if (mode === 'multi') {", "if (mode === 'multi-x') {"),
