@@ -55,7 +55,7 @@ mutation(
     SCRIPT,
     '\t\t\trel_to_t "$d"\n\t\t\treturn 0',
     '\t\t\trel_to_t "$d/styles"\n\t\t\treturn 0',
-    expect_named="nested (web/src): a byte-identical consumer",
+    expect_named="nested (web/src): a byte-identical consumer must report in sync",
 )
 
 mutation(
@@ -63,7 +63,7 @@ mutation(
     SCRIPT,
     '\tJD="$(js_dir_for "$t" || true)"',
     '\tJD="src/js"',
-    expect_named="nested (web/src): a byte-identical consumer",
+    expect_named="nested (web/src): a byte-identical consumer must report in sync",
 )
 
 mutation(
@@ -71,7 +71,7 @@ mutation(
     SCRIPT,
     '\t\t\tsrc/styles/*) d="$t/${CD:-src/styles/cli-mono}/$(css_leaf "${dest#src/styles/}")" ;;',
     '\t\t\tsrc/styles/*) d="$t/src/styles/${dest#src/styles/}" ;;',
-    expect_named="nested (web/src): a byte-identical consumer",
+    expect_named="nested (web/src): a byte-identical consumer must report in sync",
 )
 
 mutation(
