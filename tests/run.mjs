@@ -18308,5 +18308,81 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 			assert(/cm-diff/.test(rm), 'the README never mentions cm-diff');
 			assert(/data-op/.test(rm), 'the README does not document the data-op contract');
 		});
-	}
-}
+			}
+
+			/* ============================================================ batch 35
+			   cm-revert — the countdown-undo banner. PLAN-01 Gap 2.
+
+			   This component HAS a runtime (timer arithmetic + focus-pause), so the
+			   suite verifies the CONTRACT statically: CSS classes, specimen markup,
+			   runtime source shape, and README docs. Behavioural timer tests that
+			   depend on a controlled clock are out of scope for this batch — the
+			   source audits guarantee the runtime wires the right listeners. */
+			{
+				const REVERT_CLASSES = [
+					'cm-revert',
+					'cm-revert__body',
+					'cm-revert__message',
+					'cm-revert__actions',
+					'cm-revert__countdown',
+				];
+
+				check('batch 35: every cm-revert class is defined in the library', () => {
+					const comp = read('src/styles/components.css');
+					for (const cls of REVERT_CLASSES) {
+						const styled = new RegExp(`\\.${cls}(?![a-z0-9_-])`).test(comp);
+						assert(styled, `.${cls} has no rule in components.css`);
+					}
+				});
+
+				check('batch 35: every cm-revert class is DEMONSTRATED on the page', () => {
+					const page2 = read('dist/index.html');
+					for (const cls of REVERT_CLASSES) {
+						assert(new RegExp(`class="[^"]*${cls}`).test(page2),
+							`.${cls} is defined but never rendered on the built page`);
+					}
+				});
+
+				check('batch 35: the banner carries a glyph, so it is not a bare box', () => {
+					const comp = read('src/styles/components.css');
+					assert(/\.cm-revert::before\s*\{[^}]*content:/.test(comp),
+						'the revert banner has no ::before glyph, so nothing marks it as pending');
+				});
+
+				check('batch 35: the countdown is the APP\'s number, announced politely', () => {
+					const show = read('src/pages/[...family].astro');
+					assert(/data-cm-revert-countdown[^>]*aria-live="polite"/.test(show)
+						|| /aria-live="polite"[^>]*data-cm-revert-countdown/.test(show),
+						'the countdown slot is not aria-live="polite"');
+					assert(/data-cm-revert-countdown[^>]*>\s*\d+s\s*</.test(show),
+						'the countdown slot has no literal starting value in the markup');
+				});
+
+				check('batch 35: initRevert exists, listens for focusin/focusout, and uses setInterval/clearInterval', () => {
+					const js = read('src/js/cli-mono.js');
+					const at = js.indexOf('function initRevert');
+					assert(at > 0, 'initRevert is missing from the runtime');
+					const body = js.slice(at, js.indexOf('\n	function ', at + 10) || js.length);
+					assert(/addEventListener\('focusin'/.test(body), 'initRevert does not listen for focusin');
+					assert(/addEventListener\('focusout'/.test(body), 'initRevert does not listen for focusout');
+					assert(/clearInterval/.test(body), 'initRevert does not clearInterval on pause');
+					assert(/setInterval/.test(body), 'initRevert does not setInterval for the countdown');
+				});
+
+				check('batch 35: Undo and Apply both stop the timer and resolve the banner', () => {
+					const js = read('src/js/cli-mono.js');
+					const at = js.indexOf('function initRevert');
+					assert(at > 0, 'initRevert is missing');
+					const body = js.slice(at, js.indexOf('\n	function ', at + 10) || js.length);
+					assert(/Undo|undo/.test(body), 'initRevert has no Undo handling');
+					assert(/Apply|apply/.test(body), 'initRevert has no Apply handling');
+					assert(/clearInterval/.test(body), 'Undo/Apply must stop the timer');
+				});
+
+				check('batch 35: the README documents the revert banner and its runtime', () => {
+					const rm = read('README.md');
+					assert(/cm-revert/.test(rm), 'the README never mentions cm-revert');
+					assert(/data-cm-revert/.test(rm), 'the README does not document the data-cm-revert contract');
+				});
+			}
+		}

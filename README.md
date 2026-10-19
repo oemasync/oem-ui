@@ -3844,6 +3844,36 @@ li.cm-diff__row {
 The fold is a `<details>` element — expansion is the platform's. The runtime
 never owns it, so there is no `data-cm-diff` attribute and no JS init.
 
+### Revert banner — `cm-revert`
+
+The countdown-undo banner for RevertGuard-armed writes (host, port, URL base,
+restores) and any destructive operation the plan marks reversible. The banner
+offers **Undo** (cancel the pending write) or **Apply now** (fire it early).
+The countdown pauses while focus is inside — a user reading the copy or tabbing
+through controls must not be rushed.
+
+```html
+<div class="cm-revert" data-cm-revert data-cm-revert-seconds="10">
+  <div class="cm-revert__body">
+    <p class="cm-revert__message">
+      Writing new host: <code>192.168.1.50</code>.
+      The change will apply in
+      <span data-cm-revert-countdown aria-live="polite">10s</span>.
+    </p>
+    <div class="cm-revert__actions">
+      <button data-cm-revert-undo>Undo</button>
+      <button data-cm-revert-apply>Apply now</button>
+    </div>
+    <p data-cm-revert-status hidden></p>
+  </div>
+</div>
+```
+
+The runtime (`initRevert`) ticks the countdown once per second, dispatches
+`cm-revert:expire` / `cm-revert:undo` / `cm-revert:apply` on resolution, and
+leaves the banner in place as a resolved notice — a vanishing banner would
+leave the reader unable to tell whether the write happened.
+
 ### JS API
 
 ```js

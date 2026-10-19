@@ -408,6 +408,115 @@
 		});
 	}
 
+	/* ---------- revert banner (countdown-undo) ----------
+	   A RevertGuard-armed write is pending for N seconds: the reader can
+	   *Undo* (cancel) or *Apply now* (fire early), and if they do nothing
+	   the write commits when the countdown expires.
+
+	   Three behaviours this owns, all measured by the suite:
+	   1. THE COUNTDOWN PAUSES WHILE FOCUS IS INSIDE THE BANNER. A reader
+	      who tabs into the banner and starts reading must not be rushed
+	      into a commit; the clock stops on focusin and resumes on
+	      focusout.
+	   2. EXPIRY FIRES THE COMMITTED ACTION AND RESOLVES THE BANNER. It
+	      does not silently vanish - the banner becomes a resolved notice
+	      so the reader can see what happened.
+	   3. THE NUMBER IS REAL TEXT the app can read; the countdown element
+	      carries aria-live="polite" so a screen reader is told politely,
+	      not interrupted.
+
+	   The element contract:
+	     [data-cm-revert]                     the banner
+	     [data-cm-revert-seconds]             total seconds (default 10)
+	     [data-cm-revert-countdown]           the number slot
+	     [data-cm-revert-undo]                cancel
+	     [data-cm-revert-apply]               fire now
+	     [data-cm-revert-status]              resolved-notice slot
+
+	   Events: `cm-revert:expire`, `cm-revert:undo`, `cm-revert:apply`,
+	   each an ordinary CustomEvent (when the host supports it) carrying
+	   `{ seconds }`, so the app can wire its own write without the
+	   component knowing what the write IS. */
+	function initRevert(root) {
+		var scope = root || document;
+		scope.querySelectorAll('[data-cm-revert]').forEach(function (banner) {
+			if (banner.__cmRevertArmed) return;
+			banner.__cmRevertArmed = true;
+
+			var total = parseInt(banner.getAttribute('data-cm-revert-seconds'), 10);
+			if (isNaN(total) || total <= 0) total = 10;
+			var left = total;
+			var slot = banner.querySelector('[data-cm-revert-countdown]');
+			var status = banner.querySelector('[data-cm-revert-status]');
+			var timer = null;
+			var done = false;
+
+			function paint() {
+				if (!slot) return;
+				slot.textContent = left + 's';
+			}
+
+			function stop() {
+				if (timer !== null) {
+					clearInterval(timer);
+					timer = null;
+				}
+			}
+
+			function resolve(kind) {
+				if (done) return;
+				done = true;
+				stop();
+				// The banner STAYS, as a resolved notice. A banner that
+				// disappears leaves the reader unable to tell whether the
+				// write happened - the exact ambiguity the undo exists for.
+				banner.setAttribute('data-cm-revert-resolved', kind);
+				if (status) {
+					status.textContent = kind === 'undo'
+						? 'Reverted. Nothing was written.'
+						: 'Applied. The change is live.';
+					status.removeAttribute('hidden');
+				}
+				if (slot) slot.textContent = '';
+				var ev;
+				try {
+					ev = new CustomEvent('cm-revert:' + kind, { detail: { seconds: total } });
+				} catch (e) {
+					ev = null;
+				}
+				if (ev) banner.dispatchEvent(ev);
+			}
+
+			function tick() {
+				left -= 1;
+				if (left <= 0) {
+					left = 0;
+					paint();
+					resolve('expire');
+					return;
+				}
+				paint();
+			}
+
+			function start() {
+				if (done || timer !== null) return;
+				timer = setInterval(tick, 1000);
+			}
+
+			var undo = banner.querySelector('[data-cm-revert-undo]');
+			var apply = banner.querySelector('[data-cm-revert-apply]');
+			if (undo) undo.addEventListener('click', function () { resolve('undo'); });
+			if (apply) apply.addEventListener('click', function () { resolve('apply'); });
+
+			// Rule 1: focus inside pauses the clock, leaving resumes it.
+			banner.addEventListener('focusin', stop);
+			banner.addEventListener('focusout', function () { start(); });
+
+			paint();
+			start();
+		});
+	}
+
 	/* ---------- measure specimen readout ----------
 	   A token specimen that reports its own live state, so the width
 	   band a column is in play for is visible rather than asserted in
@@ -4689,6 +4798,7 @@
 		initToasts(root);
 		initTooltipClamp(root);
 		initYears();
+		initRevert(root);
 		initMeasureReadout();
 		initTableLabels(root);
 		cmInitResize(root);

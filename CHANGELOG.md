@@ -38,8 +38,39 @@ coarse pointer every fixture reads at or above `--min-font` (12px) - the
 floor holds. And the 641-999px header band in `src/astro/Header.astro`
 claims that five links strand on a second row; the showcase's own five-link
 header is ONE row of 60px at both 768 and 960 with and without that band, so
+the band is inert and can be removed without layout impact.
 the band's premise did not reproduce and it was NOT promoted into
 `components.css`.
+
+## Unreleased - batch 35: cm-revert, the countdown-undo banner
+
+**Gap 2 closed: the revert banner with countdown, Undo, and Apply now.**
+PLAN-01 Gap 2 (`cm-revert`) is now built and verified: a countdown-undo
+banner for RevertGuard-armed writes (host, port, URL base, restores) and any
+destructive operation the plan marks reversible. The banner offers **Undo**
+(cancel the pending write) or **Apply now** (fire it early). The countdown
+pauses while focus is inside — a user reading the copy or tabbing through
+controls must not be rushed.
+
+**What ships:** CSS rules (`cm-revert`, `cm-revert__body`, `cm-revert__message`,
+`cm-revert__actions`, `cm-revert__countdown`, `cm-revert__status`), a specimen
+in the states section, a README section documenting the markup contract, and
+`initRevert` in `cli-mono.js` (setInterval ticking, focusin/focusout pause/resume,
+Undo/Apply click handlers, CustomEvent dispatch on expire/undo/apply). The banner
+STAYS after resolution as a notice — a vanishing banner would leave the reader
+unable to tell whether the write happened.
+
+**7 suite checks + 12 mutation mutants (all caught).** Assertions: every class
+defined + demonstrated, glyph present (not a bare box), countdown is real text
+with a starting value and `aria-live="polite"`, runtime source has focusin/
+focusout listeners + setInterval/clearInterval, Undo/Apply stop the timer, README
+documents the component. Mutations target: glyph removal, countdown value/aria,
+focusin/focusout listeners, clearInterval in stop(), Undo/Apply handlers, README
+deletion, class removal from CSS/markup, setInterval removal. All 12 caught, 0 missed.
+
+**Doctrine:** the guard list lives in the central `@media (prefers-reduced-motion)`
+block — no beside-component guards. The countdown is TEXT (no animation to remove).
+The fold is platform `<details>` — no JS owns expansion.
 
 ## Unreleased - code block and trace: the two components shadcn gained while our ledger was pinned
 

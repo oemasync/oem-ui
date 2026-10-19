@@ -1185,6 +1185,23 @@ What a surface shows before it has data, and after it fails. Status is carried b
 							<p class="cm-alert__text">loading is the only mark that MOVES: a spinning ↻ under the same reduced-motion block as the spinner.</p>
 						</div>
 					</div>
+
+					<!-- ============ cm-revert — countdown-undo banner ============
+					     A RevertGuard-armed write is pending: Undo (cancel), Apply now (fire early),
+					     or wait for the countdown to expire. The clock pauses while focus is inside
+					     the banner, so a reader tabbing through is not rushed. -->
+					<div class="cm-revert" data-cm-revert data-cm-revert-seconds="10" role="status">
+						<div class="cm-revert__body">
+							<p class="cm-revert__message">
+								Host changed to <code>0.0.0.0</code>. Revert in <span class="cm-revert__countdown" data-cm-revert-countdown aria-live="polite">10s</span>.
+							</p>
+							<div class="cm-revert__actions">
+								<button type="button" class="cm-btn cm-btn--ghost cm-btn--sm" data-cm-revert-undo>Undo</button>
+								<button type="button" class="cm-btn cm-btn--primary cm-btn--sm" data-cm-revert-apply>Apply now</button>
+							</div>
+							<p class="cm-revert__status" data-cm-revert-status hidden></p>
+						</div>
+					</div>
 				</div>
 
 				<h3 class="cm-kicker">table</h3>

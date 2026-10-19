@@ -2298,6 +2298,57 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-alert--info .cm-toast__mark::before { content: '\2139\00a0'; }
 .cm-alert--loading { border-inline-start-color: var(--ink-dim); }
 
+/* ============ cm-revert — countdown-undo banner ============
+   RevertGuard-armed settings writes (host, port, URL base, restores) and
+   any destructive operation the plan marks reversible. The banner offers
+   *Undo* (cancel the pending write) or *Apply now* (fire it early). The
+   countdown pauses while focus is inside the banner — a user reading the
+   copy or tabbing through controls must not be rushed.
+
+   Reuses the alert glyph pattern (● warn) but is its own component so
+   the app's class contract matches the gap document exactly.
+
+   Reduced-motion: no ticking animation, just "auto-applies in Ns". */
+
+.cm-revert {
+	display: flex;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--line);
+	border-inline-start-width: 3px;
+	border-inline-start-color: var(--ink-faint);
+	border-radius: var(--radius-sm);
+	background: var(--panel);
+}
+/* The glyph: ⚠ (warning triangle, \25b2) — the action is pending, not done.
+   Same glyph as cm-alert--warn, but owned by this component. */
+.cm-revert::before {
+	content: '\25b2\00a0';
+	color: var(--ink-dim);
+	flex: 0 0 auto;
+}
+.cm-revert__body { min-width: 0; flex: 1 1 auto; }
+.cm-revert__message { margin: 0; }
+.cm-revert__actions {
+	display: flex;
+	gap: var(--space-2);
+	margin-top: var(--space-3);
+}
+.cm-revert__countdown {
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	color: var(--ink-dim);
+}
+/* The resolved notice: after expire/undo/apply the banner STAYS, with this
+   line unhidden. A disappearing banner is the exact ambiguity the undo
+   exists to remove. */
+/* The countdown is live text — polite announcements only (aria-live on the
+   slot in the markup), so a screen reader does not interrupt on every tick.
+   The app updates the number; the component only styles it. Typography only:
+   the slot sits inside the message, so there is no flex/positioning here.
+   Reduced-motion: nothing to remove — there is no animation at all; the
+   ticking TEXT is the affordance, and the guard list lives centrally. */
+
 /* ---------- table ----------
    Data, not prose. The scroll wrapper is part of the component because a
    wide table that overflows the page is the single most common way a
