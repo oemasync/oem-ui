@@ -14,7 +14,7 @@ MUTANTS = [
     ('danger loses its heavier rule', "\tbox-shadow: inset 0 0 0 1px var(--ink);\n}\n.cm-btn--danger::before", "\tbox-shadow: none;\n}\n.cm-btn--danger::before"),
     ('danger rounds', "\tbox-shadow: inset 0 0 0 1px var(--ink);\n}\n.cm-btn--danger::before", "\tbox-shadow: inset 0 0 0 1px var(--ink);\n\tborder-radius: 4px;\n}\n.cm-btn--danger::before"),
     ('joined group keeps a gap', '.cm-btn-group--joined { gap: 0;', '.cm-btn-group--joined { gap: 8px;'),
-    ('joined seam stays double', '.cm-btn-group--joined > .cm-btn + .cm-btn { border-left-width: 0; }', '.cm-btn-group--joined > .cm-btn + .cm-btn { border-left-width: 1px; }'),
+    ('joined seam stays double', '.cm-btn-group--joined > .cm-btn + .cm-btn { border-inline-start-width: 0; }', '.cm-btn-group--joined > .cm-btn + .cm-btn { border-inline-start-width: 1px; }'),
     ('left sheet sticks to the right', '.cm-dialog--sheet-left {\n\tmargin: 0 auto 0 0;', '.cm-dialog--sheet-left {\n\tmargin: 0 0 0 auto;'),
     ('top sheet fills the viewport', '\theight: auto;\n\tmax-height: min(24rem, 100%);', '\theight: 100%;\n\tmax-height: 100%;'),
     ('bottom sheet sticks to the top', '.cm-dialog--sheet-bottom {\n\tmargin: auto 0 0 0;', '.cm-dialog--sheet-bottom {\n\tmargin: 0 0 auto 0;'),
