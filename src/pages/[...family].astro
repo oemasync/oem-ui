@@ -1494,6 +1494,22 @@ Each row is one modifier against its own base, so the difference is the thing be
 						</span>
 						<span class="cm-spec__val"><code>33% / 66% / 100%</code></span>
 					</div>
+					<div class="cm-spec__row">
+						<span class="cm-spec__label"><code>data-cm-progress</code></span>
+						<span class="cm-spec__sample" style="width:100%">
+							<div class="cm-stack">
+								<div class="cm-progress" data-cm-progress style="--cm-progress:0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Reading progress">
+									<span class="cm-progress__fill"></span>
+								</div>
+								<p class="cm-lede" style="max-width:36ch; margin:0">
+									This bar tracks reading progress of the current page. It sets
+									<code>--cm-progress</code> and <code>aria-valuenow</code> in lockstep,
+									and clamps to 0–100 even under rubber-band and when nothing needs to scroll.
+								</p>
+							</div>
+						</span>
+						<span class="cm-spec__val"><code>page (live)</code></span>
+					</div>
 				</div>
 
 				<h3 class="cm-kicker">media</h3>

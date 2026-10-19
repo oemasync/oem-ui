@@ -8641,6 +8641,163 @@ check('shadcn-parity: message scroller mirrors their state contract', () => {
 		'sharp corners only in the scroller');
 });
 
+check('cm-progress: CSS pair is load-bearing', () => {
+	const css = read('src/styles/components.css');
+	assert(/\.cm-progress \{\s*width: 100%;/.test(css),
+		'.cm-progress lost its track declarations');
+	assert(/\.cm-progress__fill \{/.test(css),
+		'.cm-progress__fill lost its rule');
+	assert(/transform: translateX\(calc\(var\(--cm-progress, 0%\) - 100%\)\)/.test(css),
+		'.cm-progress__fill lost its transform-driven fill');
+});
+
+check('cm-progress: the runtime owns the bar it drives', () => {
+	const js = read('src/js/cli-mono.js');
+	assert(/function cmInitProgress\(root\)/.test(js), 'cmInitProgress missing');
+	assert(/cmInitProgress\(root\);/.test(js), 'cmInitProgress not registered in init');
+	assert(/\binitProgress\b/.test(js), 'initProgress not exposed on the handle');
+	// the late-markup observer is the SECOND owner of this component: a
+	// SPA that renders a bar after boot is never bound without it
+	assert(/\[data-cm-navmenu\], \[data-cm-progress\], \.cm-prose-table/.test(js),
+		'the late-markup observer list omits [data-cm-progress]');
+});
+
+check('cm-progress: --cm-progress and aria-valuenow always read the same number', () => {
+	// The bar is only honest if the FILL and the ATTRIBUTE move together.
+	// A bar that repaints while aria-valuenow stays put draws a progress
+	// that assistive tech cannot see; a bar that updates only the
+	// attribute draws nothing. Both halves are written by one paint(), so
+	// this drives a real runtime in a sandbox and checks the pair at every
+	// scroll position, including the two the arithmetic can get wrong.
+	const listeners = [];
+	const bar = {
+		attrs: { 'data-cm-progress': '' },   // bare attribute = page mode
+		style: { setProperty: (k, v) => { bar.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { bar.attrs[k] = v; },
+		getAttribute(k) { return k in bar.attrs ? bar.attrs[k] : null; },
+		hasAttribute(k) { return k in bar.attrs; },
+		removeAttribute(k) { delete bar.attrs[k]; },
+		addEventListener() {}, removeEventListener() {},
+	};
+	// A bar whose source selector names no element: no write, no listener.
+	const orphan = {
+		attrs: { 'data-cm-progress': '#nope' },
+		style: { setProperty: (k, v) => { orphan.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { orphan.attrs[k] = v; },
+		getAttribute(k) { return k in orphan.attrs ? orphan.attrs[k] : null; },
+		addEventListener() {}, removeEventListener() {},
+	};
+	const docEl = {
+		scrollTop: 0, scrollHeight: 2000, clientHeight: 800,
+		style: { setProperty() {}, removeProperty() {} },
+		attrs: {}, classList: { add() {}, remove() {}, contains: () => false },
+		setAttribute(k, v) { this.attrs[k] = v; },
+		getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+	};
+	const doc = {
+		readyState: 'loading',   // no auto-init: the test calls the entrypoint
+		documentElement: docEl,
+		scrollingElement: docEl,
+		body: { style: {}, appendChild() {} },
+		querySelectorAll: (s) => (s === '[data-cm-progress]' ? [bar, orphan] : []),
+		// `#nope` resolves to nothing: a bar whose source names no element
+		// must be left exactly as authored, not silently rebound to the page.
+		querySelector: (sel) => (sel === '#nope' ? null : null),
+		getElementById: () => null,
+		addEventListener() {},
+		createElement: () => ({ style: {}, classList: { add() {} },
+			setAttribute() {}, getAttribute() { return null; }, appendChild() {} }),
+	};
+	const ctx = {
+		document: doc,
+		window: {
+			addEventListener: (t, fn) => { listeners.push([t, fn]); },
+			scrollY: 0, innerHeight: 800, requestAnimationFrame() {},
+			matchMedia: () => ({ matches: false, addEventListener() {},
+				removeEventListener() {}, addListener() {}, removeListener() {} }),
+		},
+		localStorage: { getItem: () => null, setItem() {} },
+		navigator: {}, MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; },
+		ResizeObserver: function () { this.observe = () => {}; },
+		module: { exports: {} },
+	};
+	ctx.globalThis = ctx;
+	ctx.self = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+
+	assert(typeof ctx.window.cliMono.initProgress === 'function',
+		'the handle does not expose initProgress, so a SPA cannot bind a late bar');
+
+	ctx.window.cliMono.initProgress(doc);
+
+	const prop = () => bar.attrs['prop:--cm-progress'];
+	const aria = () => bar.attrs['aria-valuenow'];
+	const scroll = listeners.filter(([t]) => t === 'scroll');
+	const paint = () => scroll.forEach(([, fn]) => fn());
+	const pair = (where) => assert(prop() === aria() + '%',
+		`the pair split at ${where}: --cm-progress=${prop()} aria-valuenow=${aria()}`);
+
+	// The pair must be written at BIND time, before any scroll: a bar that
+	// waits for the reader's first scroll ships a stale authored value.
+	assert(prop() !== undefined && aria() !== undefined,
+		'nothing was written at bind time - the bar never painted');
+	pair('bind time');
+	assert(prop() === '0%' && aria() === '0',
+		`top of page must read 0, got --cm-progress=${prop()} aria=${aria()}`);
+
+	// The orphan was in the same bind pass and must have been skipped:
+	// no property, no attribute, nothing that claims a source it lacks.
+	assert(orphan.attrs['prop:--cm-progress'] === undefined,
+		`a bar whose source names no element was written to: ${orphan.attrs['prop:--cm-progress']}`);
+	assert(orphan.attrs['aria-valuenow'] === undefined,
+		`an unbound bar must not announce a value: aria=${orphan.attrs['aria-valuenow']}`);
+
+	const scrollSpec = (px, want) => {
+		docEl.scrollTop = px;
+		paint();
+		pair(`scrollTop=${px}`);
+		assert(prop() === want && aria() === String(parseInt(want, 10)),
+			`scrollTop=${px} must read ${want}, got --cm-progress=${prop()} aria=${aria()}`);
+	};
+
+	// halfway through a 1200px scroll range (2000 - 800)
+	scrollSpec(600, '50%');
+	scrollSpec(1200, '100%');
+	// WebKit's rubber-band takes scrollTop PAST the end: the bar must clamp
+	// to 100, not report a progress nobody can reach.
+	scrollSpec(1500, '100%');
+	// ...and NEGATIVE at the top of an overscrolled page: clamp to 0, not -4%.
+	scrollSpec(-50, '0%');
+
+	// A document with nothing to scroll has no distance to divide by. An
+	// unguarded ratio writes NaN% into the property, and NaN into aria.
+	docEl.scrollHeight = docEl.clientHeight;
+	docEl.scrollTop = 0;
+	paint();
+	pair('a document with nothing to scroll');
+	assert(prop() === '100%' && aria() === '100',
+		`a page that fits must read 100, not ${prop()} / ${aria()}`);
+
+	// The resize listener is what re-paints after fonts/images move the
+	// page: without it the bar stays where the first paint put it.
+	docEl.scrollHeight = 3000;
+	const resize = listeners.filter(([t]) => t === 'resize');
+	assert(resize.length > 0, 'no resize listener was bound');
+	docEl.scrollTop = 1100;   // 1100 / (3000-800) = 50%
+	resize.forEach(([, fn]) => fn());
+	pair('after a resize');
+	assert(prop() === '50%' && aria() === '50',
+		`resize must repaint, got --cm-progress=${prop()} aria=${aria()}`);
+
+	// A second bind (SPA re-init) must not double-bind: two listeners means
+	// every scroll paints twice for the life of the page.
+	const before = listeners.length;
+	ctx.window.cliMono.initProgress(doc);
+	assert(listeners.length === before,
+		`initProgress double-bound: ${before} listeners grew to ${listeners.length}`);
+});
+
 check('.cm-tag survives a word too long for its column', () => {
 	// Measured in WebKit at 390 and 320: a long single-word tag laid out at
 	// its max-content width and pushed 26px past a 220px row, because
@@ -14259,7 +14416,10 @@ check('shadcn-parity: the navmenu indicator is measured, not authored', () => {
 	// The late-markup observer arms on this list. A SPA commits its tree
 	// after this module evaluates, so a hook missing here is a navmenu that
 	// never binds in a consumer - and the page still looks right.
-	assert(js.includes("'[data-cm-navmenu], .cm-prose-table'"),
+	// (The list gained [data-cm-progress] between navmenu and the prose
+	// table when the reading-progress bar shipped, so this pins navmenu's
+	// presence and the list's tail rather than an adjacent pair.)
+	assert(js.includes("'[data-cm-navmenu], [data-cm-progress], .cm-prose-table'"),
 		'the navmenu hook must arm the late-markup observer');
 	// One re-measure after load: the first pass runs before webfonts swap,
 	// and the sections this bar points at sit below 20,000px of specimens.

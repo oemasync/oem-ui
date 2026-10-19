@@ -156,7 +156,7 @@
 		);
 	}
 
-	/* ---------- header scroll state ---------- */
+	/* ---------- reading / scroll progress (placeholder sentinel) */
 	function initHeader(header) {
 		if (!header) return;
 		var ticking = false;
@@ -4357,6 +4357,78 @@
 		}
 	}
 
+	/* ---------- reading / scroll progress ----------
+	   `.cm-progress` has always shipped the BAR - track, fill and the
+	   `--cm-progress` knob - and nothing ever drove it: a capability
+	   with no surface is a capability nobody can reach, the same
+	   failure that left `[data-cm-copy]` bound for months with no
+	   button on any page. This is the surface.
+
+	   `[data-cm-progress]` marks the bar for the runtime, and its VALUE
+	   names the scroll source:
+
+	     [data-cm-progress]            the page (reading progress)
+	     [data-cm-progress="page"]     the same, written out
+	     [data-cm-progress="#log"]     that element's own scroll box
+
+	   TWO writes, always together: the custom property the fill draws
+	   from, and `aria-valuenow`. The CSS makes the pair the contract -
+	   a bar that repaints while the attribute stays put lies to
+	   assistive tech - so the invariant is that both always read the
+	   same number, and the test holds the two against each other.
+
+	   The percentage is the FRACTION OF THE SCROLLABLE DISTANCE, not of
+	   the document: 0 at the top, 100 at the end. Two guards that are
+	   not cosmetic:
+	   - a source with nothing to scroll has no distance to divide by,
+	     and an unguarded ratio writes `NaN%` into the property - it
+	     reads 100 instead, because everything it holds is on screen;
+	   - WebKit's rubber-band lets `scrollTop` go NEGATIVE at the top
+	     and past `scrollHeight` on momentum, so the result is clamped
+	     to 0..100 before it is written, in both directions.
+
+	   One paint at bind time, so the bar is never wrong before the
+	   reader's first scroll; then `scroll` (passive, on the source) and
+	   `resize` (content height moves with the viewport). No rAF
+	   coalescing: the write is one custom property and one attribute,
+	   and an unproven throttle is exactly the redundancy whose removal
+	   nobody could test. */
+	function cmInitProgress(root) {
+		var bars = (root || document).querySelectorAll('[data-cm-progress]');
+		for (var i = 0; i < bars.length; i++) {
+			(function (bar) {
+				if (bar.__cmProgressBound) return;
+				bar.__cmProgressBound = true;
+				var mode = bar.getAttribute('data-cm-progress');
+				var src = null; // null = the page scroller
+				if (mode && mode !== 'page') {
+					src = document.querySelector(mode);
+					// A selector that names nothing leaves the bar exactly
+					// as authored: no write, no listener, no throw.
+					if (!src) return;
+				}
+				function read() {
+					var box = src
+						|| document.scrollingElement
+						|| document.documentElement;
+					var max = (box.scrollHeight || 0) - (box.clientHeight || 0);
+					if (max <= 0) return 100;
+					var pct = Math.round(((box.scrollTop || 0) / max) * 100);
+					return pct < 0 ? 0 : pct > 100 ? 100 : pct;
+				}
+				function paint() {
+					var pct = read();
+					bar.style.setProperty('--cm-progress', pct + '%');
+					// The pair, always together. See above.
+					bar.setAttribute('aria-valuenow', String(pct));
+				}
+				(src || window).addEventListener('scroll', paint, { passive: true });
+				window.addEventListener('resize', paint, { passive: true });
+				paint();
+			})(bars[i]);
+		}
+	}
+
 	function cmInitQuiz(root) {
 		var forms = root.querySelectorAll('[data-cm-quiz]');
 		for (var q = 0; q < forms.length; q++) {
@@ -4627,6 +4699,7 @@
 		cmInitForms(root);
 		cmInitQuiz(root);
 		cmInitScroller(root);
+		cmInitProgress(root);
 		cmInitDatepickers(root);
 		cmInitSort(root);
 		cmInitTables(root);
@@ -4694,7 +4767,7 @@
 		return !!document.querySelector(
 			'[data-cm-header], [data-cm-nav-toggle], [data-cm-copy], ' +
 			'[data-cm-tabs], [data-cm-toast], [data-cm-quiz], [data-cm-scroller], ' +
-			'[data-cm-navmenu], .cm-prose-table'
+			'[data-cm-navmenu], [data-cm-progress], .cm-prose-table'
 		);
 	}
 
@@ -6105,7 +6178,8 @@
 		copyText: copyText,
 		toast: toast,
 		dismissToast: dismiss,
-		chartMarkup: chartMarkup
+		chartMarkup: chartMarkup,
+		initProgress: cmInitProgress
 	};
 
 	// Global handle for any project, plus module export for bundlers.
