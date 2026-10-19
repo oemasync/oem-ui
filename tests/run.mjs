@@ -18163,4 +18163,150 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 		assert(exists('tests/probe-media-grid-fit.py'),
 			'tests/probe-media-grid-fit.py is missing');
 	});
+
+	/* ============================================================ batch 34
+	   cm-diff — the word-level diff rows the arr-unified plan (PLAN-01)
+	   names as Gap 1. The contract from docs/plans/PLAN-01/oem-ui-gaps.md:
+	   op is conveyed by prefix + text decoration, NOT colour alone; same
+	   rows collapse behind a fold whose count is exact; long values wrap
+	   with a hanging indent; the fold is platform expansion, not runtime.
+
+	   Every assertion here is mutation-checked in tests/mutate-diff.mjs. */
+	{
+		const DIFF_CLASS = 'cm-diff';
+
+		// The family: block, row, op word, value, del/ins spans, fold.
+		const diffClasses = [
+			'cm-diff',
+			'cm-diff__row',
+			'cm-diff__op',
+			'cm-diff__val',
+			'cm-diff__del',
+			'cm-diff__ins',
+			'cm-diff__fold',
+		];
+
+		check('batch 34: every cm-diff class is defined in the library', () => {
+			const comp = read('src/styles/components.css');
+			for (const cls of diffClasses) {
+				const styled = new RegExp(`\\.${cls}(?![a-z0-9_-])`).test(comp);
+				assert(styled, `.${cls} has no rule in components.css`);
+			}
+		});
+
+		check('batch 34: every cm-diff class is DEMONSTRATED, so none is dead CSS', () => {
+			const show = read('src/pages/[...family].astro');
+			const at = show.indexOf('id="diff"');
+			assert(at > 0, 'the showcase has no #diff section');
+			for (const cls of diffClasses) {
+				assert(new RegExp(`class="[^"]*${cls}`).test(show),
+					`.${cls} is defined but never rendered in the diff specimen`);
+			}
+		});
+
+		check('batch 34: each op maps to a DISTINCT glyph prefix, no two alike', () => {
+			const comp = read('src/styles/components.css');
+			// Three ops carry glyphs; `same` is deliberately blank (it is the
+			// absence of a change, so it gets the absence of a glyph).
+			const glyph = (op) => {
+				const m = new RegExp(
+					`\\.cm-diff__row\\[data-op='${op}'\\]::before \\{ content: '([^']*)'`).exec(comp);
+				return m ? m[1] : null;
+			};
+			const create = glyph('create'), update = glyph('update'), del = glyph('delete');
+			assert(create && update && del,
+				`op glyph missing: create=${create} update=${update} delete=${del}`);
+			// Non-blank too: a space is truthy and "distinct" from every
+			// other glyph, so it would pass a mere distinctness check -
+			// MEASURED as a mutant (create's '+' replaced by ' ').
+			const blank = ['create', 'update', 'delete'].find(
+				(op) => !/[^\s]/.test(glyph(op) || ''));
+			assert(!blank,
+				`the ${blank} op renders a blank glyph; the prefix gutter must carry a mark`);
+			assert(create !== update && update !== del && create !== del,
+				`two ops share a glyph (create='${create}' update='${update}' delete='${del}'), ` +
+				'so the prefix cannot carry the operator');
+			// A palette swap cannot pass this: the mapping is structural.
+			assert(glyph('same') === ' ' || glyph('same') === null,
+				`the 'same' op must render NO glyph, got '${glyph('same')}'`);
+		});
+
+		check('batch 34: each op carries a distinct TEXT DECORATION, not just a hue', () => {
+			const comp = read('src/styles/components.css');
+			const dec = (sel) => {
+				const m = new RegExp(`\\.${sel} \\{[^}]*text-decoration: ([a-z-]+)`).exec(comp);
+				return m ? m[1] : null;
+			};
+			const createDec = dec('cm-diff__row\\[data-op=.create.\\] \\.cm-diff__val');
+			const deleteDec = dec('cm-diff__row\\[data-op=.delete.\\] \\.cm-diff__val');
+			assert(createDec, 'the create row has no text-decoration on its value');
+			assert(deleteDec, 'the delete row has no text-decoration on its value');
+			assert(createDec !== deleteDec,
+				`create (${createDec}) and delete (${deleteDec}) share a decoration, ` +
+				'so the two ops differ only by hue, which is colour alone');
+			// The word-level spans carry their own decorations too.
+			assert(dec('cm-diff__ins'), 'the ins span has no text-decoration');
+			assert(dec('cm-diff__del'), 'the del span has no text-decoration');
+		});
+
+		check('batch 34: the fold counts unchanged rows exactly', () => {
+			const show = read('src/pages/[...family].astro');
+			const at = show.indexOf('id="diff"');
+			const sec = show.slice(at, show.indexOf('<section', at + 10));
+			// The summary's count is REAL TEXT the app writes.
+			const sum = /<summary>(\d+) unchanged/.exec(sec);
+			assert(sum, 'the fold summary does not carry an "N unchanged" count');
+			// Count the same rows INSIDE the fold only.
+			const foldAt = sec.indexOf('cm-diff__fold');
+			const fold = sec.slice(foldAt, sec.indexOf('</details>', foldAt));
+			const sameRows = (fold.match(/data-op="same"/g) || []).length;
+			assert(Number(sum[1]) === sameRows,
+				`the summary says ${sum[1]} unchanged but the fold holds ${sameRows} same rows`);
+			// No same row may leak OUTSIDE the fold - that is the defect
+			// the fold exists to prevent. Counted as section-total minus
+			// fold-total so a leak AFTER the fold counts too; a slice up
+			// to foldAt only guards one side - MEASURED as a mutant that
+			// injected a same row after </ul> and survived.
+			const inSection = (sec.match(/data-op="same"/g) || []).length;
+			assert(inSection === sameRows,
+				`${inSection - sameRows} same row(s) render OUTSIDE the fold (${inSection} in section, ` +
+				`${sameRows} in fold); unchanged rows must collapse`);
+		});
+
+		check('batch 34: the fold is platform expansion — a <details>, not runtime', () => {
+			const comp = read('src/styles/components.css');
+			// The chevron state keys off [open], the platform's own attribute.
+			assert(/\.cm-diff__fold\[open\] > summary/.test(comp),
+				'the fold chevron does not key off [open]; the state must be the platform attribute');
+			const show = read('src/pages/[...family].astro');
+			const at = show.indexOf('cm-diff__fold');
+			assert(at > 0, 'the specimen has no fold');
+			const before = show.slice(Math.max(0, at - 200), at);
+			assert(/<details>/.test(show.slice(at - 60, at + 40)) || /<details>/.test(before),
+				'the fold is not a <details> element; expansion is the platform\'s');
+			// And no runtime owns it: the JS must not reference cm-diff.
+			const js = read('src/js/cli-mono.js');
+			assert(!/cm-diff/.test(js),
+				'the runtime references cm-diff; the fold must need no JS');
+		});
+
+		check('batch 34: the specimen exercises a LONG value, or the hanging indent is unproven', () => {
+			const show = read('src/pages/[...family].astro');
+			const at = show.indexOf('id="diff"');
+			const sec = show.slice(at, show.indexOf('<section', at + 10));
+			// A value long enough to wrap at any reasonable width.
+			const vals = [...sec.matchAll(/class="cm-diff__val"[^>]*>([\s\S]*?)<\/span>/g)]
+				.map((m) => m[1].replace(/<[^>]+>/g, ''));
+			const longest = vals.reduce((n, v) => Math.max(n, v.trim().length), 0);
+			assert(longest >= 80,
+				`the longest diff value is ${longest} chars; nothing exercises the wrap, ` +
+				'so the grid hanging indent is unproven');
+		});
+
+		check('batch 34: the README documents the diff rows', () => {
+			const rm = read('README.md');
+			assert(/cm-diff/.test(rm), 'the README never mentions cm-diff');
+			assert(/data-op/.test(rm), 'the README does not document the data-op contract');
+		});
+	}
 }

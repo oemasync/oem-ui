@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'trace', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'diff', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -82,7 +82,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["surfaces", 7],
 	["tables", 6],
 	["panels", 6],
-	["content", 5],
+	["content", 6],
 	["prose", 8],
 	["layout", 7],
 	["composed", 8],
@@ -3440,6 +3440,63 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 						</div>
 					</li>
 				</ol>
+			</section>
+			)}
+
+<!-- ==================================================== diff
+     Word-level diff rows for preview-then-apply surfaces. -->
+			{shows('content') && (
+			<section id="diff" class="cm-section cm-section--pad">
+				<SectionHead title="diff / reconcile rows">
+					<p class="cm-head__sub">
+						Word-level diff for preview-then-apply. The operator is conveyed by a prefix and text decoration, never by colour alone.
+						<code>same</code> rows collapse behind a fold; the count is real text.
+					</p>
+				</SectionHead>
+
+				<ul class="cm-diff">
+					<li class="cm-diff__row" data-op="create" aria-label="create: new field">
+						<span class="cm-diff__op">create</span>
+						<span class="cm-diff__val">new field: <code>api_key</code></span>
+					</li>
+					<li class="cm-diff__row" data-op="update" aria-label="update: url base">
+						<span class="cm-diff__op">update</span>
+						<span class="cm-diff__val">url base: <del class="cm-diff__del">http://old</del> → <ins class="cm-diff__ins">https://new</ins></span>
+					</li>
+					<li class="cm-diff__row" data-op="delete" aria-label="delete: legacy_port">
+						<span class="cm-diff__op">delete</span>
+						<span class="cm-diff__val">legacy_port</span>
+					</li>
+					<li class="cm-diff__fold">
+						<details>
+							<summary>3 unchanged</summary>
+							<ul style="margin:0;padding:0;list-style:none">
+								<li class="cm-diff__row" data-op="same" aria-label="same: log_level">
+									<span class="cm-diff__op">same</span>
+									<span class="cm-diff__val">log_level: info</span>
+								</li>
+								<li class="cm-diff__row" data-op="same" aria-label="same: bind">
+									<span class="cm-diff__op">same</span>
+									<span class="cm-diff__val">bind: 0.0.0.0</span>
+								</li>
+								<li class="cm-diff__row" data-op="same" aria-label="same: cache">
+									<span class="cm-diff__op">same</span>
+									<span class="cm-diff__val">cache: 100</span>
+								</li>
+							</ul>
+						</details>
+					</li>
+				</ul>
+
+				<h3 class="cm-kicker" style="margin-top:var(--space-4)">long values</h3>
+				<ul class="cm-diff">
+					<li class="cm-diff__row" data-op="update" aria-label="update: path with long value">
+						<span class="cm-diff__op">update</span>
+						<span class="cm-diff__val">
+							/config/rclone/remotes/prod-archive: <del class="cm-diff__del">rclone:securesync-legacy-prod</del> → <ins class="cm-diff__ins">rclone:securesync-v2-prod</ins>
+						</span>
+					</li>
+				</ul>
 			</section>
 			)}
 

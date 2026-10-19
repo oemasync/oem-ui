@@ -10908,6 +10908,147 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 /* NO reduced-motion rule here: the chevron swap is not animated — hiding
    it under reduce would REMOVE an affordance rather than remove a motion. */
 
+/* ============ cm-diff — word-level diff rows (batch 34) ============
+   For Config Sync reconcile results, profile previews, and any
+   preview-then-apply surface.
+
+   THE OPERATOR IS NOT A COLOUR. This library has no chroma that could
+   carry an op even if it wanted to, so the interesting question is what
+   DOES carry it: a distinct glyph prefix on every row plus a distinct
+   text decoration. `+` create / `~` update / `-` delete, with delete
+   struck through and create underlined. Read the grep in the suite's
+   op-mapping check: three ops, three glyphs, three decorations, no two
+   alike - a palette swap cannot pass it.
+
+   `update` rows carry the word-level spans the APP computes; the
+   component only renders and styles them, which is why there is no diff
+   algorithm anywhere in this file. */
+
+.cm-diff {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	line-height: 1.6;
+}
+
+/* One row = an op gutter and a value column. `grid-template-columns` is
+   what gives long values the HANGING indent the contract asks for: the
+   value wraps inside its own column, so continuation lines align at the
+   text edge rather than running back under the op glyph. */
+.cm-diff__row {
+	display: grid;
+	grid-template-columns: 2.2em 1fr;
+	align-items: baseline;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	border-block-start: 1px solid var(--line-soft);
+}
+.cm-diff__row:first-child { border-block-start: 0; }
+
+/* The glyph. `content` on a pseudo-element means the prefix is paint, not
+   content, so it is aria-hidden by construction and the accessible name
+   comes from the row's own text - a diff row announced as "plus foo" is
+   worse than one announced as "foo, create". The op WORD is real text in
+   `.cm-diff__op`, which is what a screen reader reads. */
+.cm-diff__row::before {
+	content: ' ';
+	color: var(--ink);
+	font-weight: 600;
+	text-align: center;
+}
+.cm-diff__row[data-op='create']::before { content: '+'; }
+.cm-diff__row[data-op='update']::before { content: '~'; }
+.cm-diff__row[data-op='delete']::before { content: '−'; }
+.cm-diff__row[data-op='same']::before { content: ' '; }
+
+/* The op word, for the reader who gets no glyph. Visually a small
+   uppercase label; structurally real text. Borrowing the library's
+   sr-only pattern (1px box, clipped, no layout impact). */
+.cm-diff__op {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Decoration is the second half of "not colour alone", and it is what
+   survives greyscale print. */
+.cm-diff__row[data-op='create'] .cm-diff__val { text-decoration: underline; text-decoration-color: var(--ink-faint); }
+.cm-diff__row[data-op='delete'] .cm-diff__val { text-decoration: line-through; text-decoration-color: var(--ink-dim); }
+
+/* Word-level spans. `del` and `ins` are real elements - the semantics are
+   the browser's, so nothing has to restate them. */
+.cm-diff__del {
+	text-decoration: line-through;
+	text-decoration-color: var(--ink-dim);
+	opacity: 0.72;
+}
+.cm-diff__ins {
+	text-decoration: underline;
+	text-decoration-color: var(--ink);
+	font-weight: 600;
+}
+/* A wrapped `ins` span must not draw its decoration under the break in a
+   way that reads as two separate insertions. */
+.cm-diff__ins, .cm-diff__del { box-decoration-break: clone; }
+
+/* ============ the unchanged fold ============
+   `same` rows are the majority of any real diff, and rendering them all
+   is how a 400-line config change becomes unreadable. They collapse
+   behind a count. The count is REAL TEXT in the trigger, written by the
+   app from the data it already has - a number the component computed
+   would be a second ledger, and the suite checks the app's count is what
+   renders.
+
+   The fold is a `<details>` element - expansion is the platform's, and
+   the runtime does not need to own what `<details>` already gives us. */
+.cm-diff__fold {
+	list-style: none;
+	border-block-start: 1px solid var(--line-soft);
+}
+.cm-diff__fold > summary {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	width: 100%;
+	min-height: var(--tap);
+	margin: 0;
+	padding: var(--space-2) var(--space-3);
+	border: 0;
+	background: none;
+	color: var(--ink-dim);
+	font: inherit;
+	font-size: var(--text-xs);
+	text-align: start;
+	cursor: pointer;
+}
+.cm-diff__fold > summary:hover { color: var(--ink); }
+.cm-diff__fold > summary:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: -2px;
+}
+.cm-diff__fold > summary::-webkit-details-marker { display: none; }
+/* The chevron is an affordance, not the state: the state is `[open]`
+   and the label word. Hiding the chevron under reduced motion would drop
+   an affordance rather than a motion, so there is no reduced-motion rule
+   here - the same call `.cm-trace__trigger` makes. */
+.cm-diff__fold > summary::after {
+	content: '▸';
+	margin-inline-start: auto;
+	color: var(--ink-faint);
+}
+.cm-diff__fold[open] > summary::after { content: '▾'; }
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number

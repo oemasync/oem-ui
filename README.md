@@ -3778,6 +3778,72 @@ The title is the library's first fluid ramp, floored at `--head-h1` and
 capped at `4rem`. A page title must not shift between routes, so `--head-h1`
 is fixed; a hero title is the one element allowed to be large.
 
+### Diff rows — `cm-diff`
+
+Word-level diff for preview-then-apply surfaces (Config Sync reconcile,
+profile previews). The operator is carried by a **prefix glyph** and a
+**text decoration** — never by colour alone. `same` rows collapse behind a
+platform `<details>` fold; the count is real text the app writes.
+
+```css
+/* The block */
+ul.cm-diff { font-family: var(--font-mono); }
+
+/* One row = op gutter + value column. The grid gives long values
+   a hanging indent: continuation lines align at the text edge. */
+li.cm-diff__row {
+  display: grid;
+  grid-template-columns: 2.2em 1fr;
+}
+
+/* Prefix glyph. `content` is paint — the op word is real text
+   in .cm-diff__op (sr-only) so a screen reader reads "foo, create"
+   not "plus foo". */
+.cm-diff__row[data-op='create']::before { content: '+'; }
+.cm-diff__row[data-op='update']::before { content: '~'; }
+.cm-diff__row[data-op='delete']::before { content: '−'; }
+.cm-diff__row[data-op='same']::before   { content: ' '; }
+
+/* Second half of "not colour alone": text-decoration survives
+   greyscale print. */
+.cm-diff__row[data-op='create'] .cm-diff__val {
+  text-decoration: underline;
+}
+.cm-diff__row[data-op='delete'] .cm-diff__val {
+  text-decoration: line-through;
+}
+
+/* Word-level spans. The app computes the diff; the component styles it. */
+.cm-diff__ins { text-decoration: underline; font-weight: 600; }
+.cm-diff__del { text-decoration: line-through; opacity: 0.72; }
+```
+
+```html
+<ul class="cm-diff">
+  <li class="cm-diff__row" data-op="create" aria-label="create: new field">
+    <span class="cm-diff__op">create</span>
+    <span class="cm-diff__val">new field: <code>api_key</code></span>
+  </li>
+  <li class="cm-diff__row" data-op="update" aria-label="update: url base">
+    <span class="cm-diff__op">update</span>
+    <span class="cm-diff__val">
+      url base: <del class="cm-diff__del">http://old</del> →
+      <ins class="cm-diff__ins">https://new</ins>
+    </span>
+  </li>
+  <!-- same rows collapse behind a platform <details> -->
+  <li class="cm-diff__fold">
+    <details>
+      <summary>3 unchanged</summary>
+      <!-- same rows go here, collapsed by default -->
+    </details>
+  </li>
+</ul>
+```
+
+The fold is a `<details>` element — expansion is the platform's. The runtime
+never owns it, so there is no `data-cm-diff` attribute and no JS init.
+
 ### JS API
 
 ```js
