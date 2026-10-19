@@ -19,7 +19,7 @@ MUTANTS = [
      JS, "POP_SEL = '.cm-dropdown__menu[popover], .cm-popover[popover]';",
      "POP_SEL = '.cm-dropdown__menu[popover]';"),
     ('the card right-aligns like a menu',
-     JS, 'var x = card ? t.left : t.right - w;', 'var x = t.right - w;'),
+     JS, 'var x = start ? t.left : t.right - w;', 'var x = t.right - w;'),
     ('the value takes the whole row, hint and all',
      JS, 'input.value = optionLabel(o);', 'input.value = o.textContent.trim();'),
     ('focusing after a choice reopens the list',
@@ -31,8 +31,8 @@ MUTANTS = [
      JS, 'var hit = !q || o.textContent.toLowerCase().indexOf(q) !== -1;',
      'var hit = !q;'),
     ('the card stops following its trigger on scroll',
-     JS, "window.addEventListener('scroll', popPin, { passive: true });\n"
-         "\t\twindow.addEventListener('scrollend', popPin);\n",
+     JS, "window.addEventListener('scroll', fn, { passive: true });\n"
+         "\t\twindow.addEventListener('scrollend', fn);\n",
      ''),
 ]
 
