@@ -3738,6 +3738,15 @@ dialog.cm-dialog--spec:not([open]) {
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.2;
 	cursor: pointer;
+	position: relative;
+}
+/* The visible target is 16px wide (glyph + 2x4px padding); shadcn's
+   equivalent close button is 24x24 (p-1 + h-4 w-4). An invisible
+   pseudo-element widens the hit area to 24px without moving the glyph. */
+.cm-toast__close::after {
+	content: "";
+	position: absolute;
+	inset: 0 -4px;
 }
 .cm-toast__close:hover { color: var(--ink); }
 .cm-toast--ok { border-inline-start-color: var(--ink-dim); }
