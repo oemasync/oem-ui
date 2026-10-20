@@ -31,7 +31,12 @@ mutation(
     SCRIPT,
     '\tif [ -f "$t/src/styles/cli-mono/components.css" ]; then\n\t\tprintf \'src/styles/cli-mono\'; return 0\n\tfi',
     '\tif [ -f "$t/src/styles/cli-mono/components.css" ]; then\n\t\tprintf \'src\'; return 0\n\tfi',
-    expect_named="bare scan must FIND",
+    # The mutant makes prefix_for return 'src', so the comparison step
+    # targets the consumer's wrong path and the in-sync public/ copy is
+    # reported as drifted - the suite dies on THAT assertion, not the
+    # bare-scan one (which still finds the consumer; only the PREFIX it
+    # is told is wrong).
+    expect_named="a consumer with a current public/ copy must pass",
 )
 
 mutation(

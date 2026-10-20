@@ -60,6 +60,31 @@ with sync_playwright() as pw:
 
     # ---------------- popover ----------------
     trigger = page.query_selector('[popovertarget="pop-demo"]')
+    # The specimen sits in #overlays, deep in a ~95,000px showcase: at the
+    # top of the page the trigger is 50+ viewports below the fold, and the
+    # placer's pin-to-bottom fallback (the documented last resort for a
+    # trigger neither below nor above can hold) would carry every
+    # "hangs below" and "stays adjacent" measurement to the viewport edge
+    # instead of the 4px anchor. Scroll the trigger into view first, so the
+    # checks measure the contract - the card hanging 4px under its trigger.
+    # -300 leaves room for the card below AND keeps the trigger in view
+    # after the +240 scroll in the adjacency check.
+    trig_doc_top = page.evaluate(
+        "() => document.querySelector(\"[popovertarget='pop-demo']\").getBoundingClientRect().top + scrollY")
+    tgt = max(0, trig_doc_top - 300)
+    # Instant: a 34,000px smooth scroll never settles on this box
+    # (measured: 180s timeout, still mid-jump).
+    page.evaluate(f"() => window.scrollTo({{'top': {tgt}, 'behavior': 'instant'}})")
+    page.wait_for_function(f"() => Math.abs(scrollY - {tgt}) < 2", timeout=180000)
+    # Wait for content-visibility reflows to settle: the doc height must
+    # stabilize before we click, or the placer reads a moving trigger.
+    page.wait_for_function("""() => {
+      const h = document.documentElement.scrollHeight;
+      if (!window.__prevH) { window.__prevH = h; return false; }
+      const stable = Math.abs(h - window.__prevH) < 2;
+      window.__prevH = h;
+      return stable;
+    }""", timeout=180000)
     trigger.click()
     page.wait_for_function("() => document.getElementById('pop-demo').matches(':popover-open')")
     st = snap(page)
@@ -113,12 +138,17 @@ with sync_playwright() as pw:
     # its trigger, because the anchoring is fixed-positioned by design.
     trigger.click()
     page.wait_for_function("() => document.getElementById('pop-demo').matches(':popover-open')")
-    page.evaluate("() => window.scrollTo(0, 240)")
-    # The page scrolls SMOOTHLY (html{scroll-behavior:smooth}), so reading
-    # after a fixed 120ms measured the viewport half way down a 26,000px
-    # jump - the card was correct for that frame and wrong for the test.
+    pre = page.evaluate("() => scrollY")
+    # RELATIVE scroll: the specimen sits ~34,000px down the showcase, so an
+    # absolute scrollTo(0, 240) is a 34,000px jump that parks the trigger
+    # off-screen - the card is then pinned to the viewport (correctly), and
+    # "adjacent to its trigger" is unmeasurable. +240 keeps the trigger in
+    # view and still forces a full re-anchor. Instant: the page's CSS is
+    # scroll-behavior:smooth, and a smooth jump to measure against races
+    # the re-anchor frame.
+    page.evaluate(f"() => window.scrollBy({{'top': 240, 'behavior': 'instant'}})")
     # Wait for the scroll to finish, then for the re-anchor's next frame.
-    page.wait_for_function("() => Math.abs(scrollY - 240) < 2", timeout=180000)
+    page.wait_for_function(f"() => Math.abs(scrollY - ({pre} + 240)) < 2", timeout=180000)
     page.wait_for_timeout(150)
     st = snap(page)
     adjacent = abs(st['dy'] - 4) <= 6 or abs(st['above'] - 4) <= 6
