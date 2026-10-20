@@ -3229,6 +3229,40 @@ button.cm-row:hover { background: var(--bg-2); }
 	}
 	.cm-js .cm-header__links { display: none; }
 	.cm-js .cm-header__links[data-open] { display: flex; }
+	/* A grouped rail's list is a .cm-header__links NESTED inside the panel
+	   (see Header.astro), so the rule above hides every group list inside
+	   the opened drawer: the reader sees nine group labels and none of the
+	   links, and the labels are plain spans, so nothing opens them. The
+	   drawer becomes nine dead headings. MEASURED in WebKit at 390x844 on
+	   the shipped showcase: 9 labels visible, 0 of 52 links, on both the
+	   whole-page and family builds. A shadcn-style sheet lists its rows
+	   flat with nothing collapsed, so the groups keep their labels but
+	   their lists stay open inside the drawer.
+
+	   The nested lists also inherit the PANEL's geometry, and it is wrong
+	   for a child of the panel: the drawer rule above makes every
+	   .cm-header__links `position: fixed; top: 60px; bottom: 0`, so all
+	   nine group lists fixed to the same viewport box and painted on top
+	   of each other (measured: 56 links, every one at top 61), and the
+	   rail block's `width: 100%` / `flex: 1 1 auto` / `min-height: 0`
+	   outrank this block's one-class rules and make each list a
+	   collapsible scroll container. All of those must be reset on the
+	   child only - `:not(#cm-header-links)` on the child alone is not
+	   enough, because the panel is a .cm-header__links that CONTAINS
+	   groups, and the child selector below simply never matches it. The
+	   group keeps its natural height (the list's flex-basis is its
+	   content, so the group's min-content is its full height) and the
+	   panel - which already scrolls - carries the overflow. */
+	.cm-header--rail .cm-header__group > .cm-header__links {
+		position: static;
+		display: flex;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		flex: 0 0 auto;
+		width: auto;
+		overflow: visible;
+		border-inline-end: 0;
+	}
 	.cm-header__link,
 	.cm-header__link:first-child {
 		display: flex;
