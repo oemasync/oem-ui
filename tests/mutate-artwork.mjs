@@ -117,10 +117,14 @@ const MUTATIONS = [
 		skipBuild: true,
 	},
 	{
+		// "Not colour alone" / not decoration alone: the overlay must carry
+		// each composed child the README promises. Anchored to the artwork
+		// tile by its SD chip — a bare cm-dot pattern hits the two earlier
+		// cm-dot spans (lines 1618/1632) and the artwork tile keeps its dot.
 		name: 'the overlay stops composing a status dot',
 		file: SHOW,
-		from: /<span class="cm-dot cm-dot--on" aria-hidden="true"><\/span>/,
-		to: '',
+		from: /<span class="cm-chip cm-chip--warn">SD<\/span>\n	+<span class="cm-dot cm-dot--on" aria-hidden="true"><\/span>/,
+		to: '<span class="cm-chip cm-chip--warn">SD</span>',
 		expectFail: 'the overlay never composes a status dot',
 		skipBuild: true,
 	},
