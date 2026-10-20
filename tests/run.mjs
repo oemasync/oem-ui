@@ -18451,7 +18451,10 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 								const show = read('src/pages/[...family].astro');
 								const at = show.indexOf('id="guide"');
 								assert(at >= 0, 'no guide section in the specimen');
-								const section = show.slice(at, show.indexOf('<section', at + 10));
+								// Start AFTER the section's own opening tag: the first
+								// "<section" at or after the id is this section itself.
+								const open = show.indexOf('>', at) + 1;
+								const section = show.slice(open, show.indexOf('<section', open));
 								const programs = (section.match(/cm-guide__program/g) || []).length;
 								assert(programs >= 2, `the specimen has only ${programs} program cell(s); the grid geometry is unproven`);
 							});
@@ -18460,7 +18463,8 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 								const show = read('src/pages/[...family].astro');
 								const at = show.indexOf('id="guide"');
 								assert(at >= 0, 'no guide section');
-								const section = show.slice(at, show.indexOf('<section', at + 10));
+								const open = show.indexOf('>', at) + 1;
+								const section = show.slice(open, show.indexOf('<section', open));
 								assert(/cm-guide__program--now/.test(section),
 									'the specimen has no cm-guide__program--now; the variant is unproven');
 							});
@@ -18510,7 +18514,9 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 							});
 							check('batch 37: the follow status is announced politely', () => {
 								const src = read('src/pages/[...family].astro');
-								assert(/aria-live="polite"/.test(src),
+								// Scoped to the term status element: three other
+								// specimens on the page also announce politely.
+								assert(/cm-term__status" aria-live="polite"/.test(src),
 									'the follow status does not announce politely; state changes are silent');
 							});
 							check('batch 37: the jump-to-tail affordance exists', () => {
