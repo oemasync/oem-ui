@@ -556,3 +556,63 @@ unread divider's words. Its re-run under the plague showed all 36 mutants
 killed - including the three former survivors - but the run's cleanup crashed
 under the parallel window, so its clean verdict is the one queued after this
 entry.
+
+## 13. The campaign closes: every sweep re-proven, and the battery runs on the drained tree (2026-10-19)
+
+The queued msglist verdict landed first: **36/36 killed, 0 survived**,
+restore verified, exit 0 - the three former survivors included. That was the
+last sweep without a clean verdict, so all 42 now have one earned on this
+tree. The last two to earn theirs needed the root-cause work this era kept
+predicting: the sweeps are the least reliable part of the rig.
+
+**sync-prefix** was 9/9 killed all along - the suite died on every mutant;
+one of the nine `expect_named` strings simply named the wrong check (the
+mutant's `prefix_for` returns `src`, so the comparison targets the consumer's
+wrong path and the suite dies on "a consumer with a current public/ copy
+must pass", not the bare-scan check, which still FINDs the consumer with a
+wrong prefix). Renamed the expectation; the kill was real.
+
+**popover-combobox** was the harness fault, not the product. The specimen
+sits in `#overlays`, 34,000px down a 95,000px showcase. A harness that
+opened the card from `scrollY=0` measured the placer's **pin-to-bottom
+fallback** - the documented last resort for a trigger neither below nor
+above can hold - and called the product wrong for doing exactly what it is
+for. The fix is three waits, not one: instant-scroll the trigger into view
+(a 34,000px smooth scroll never settles on this box - measured 180s and
+still mid-jump); wait for the `content-visibility` reflow to stabilise
+(document height must stop growing before the click, or the placer reads a
+moving trigger - the reflow was 800px and it moved the trigger's viewport
+top from 217 to 671 between two of my own measurements); and make the
+adjacency scroll RELATIVE, because an absolute `scrollTo(0, 240)` from
+34,000 down parks the trigger 33,000px off-screen again. Baseline 18/18,
+then 10/10 mutants killed on a clean tree.
+
+Two lessons worth keeping. First, a **killed-sweep that exits non-zero is
+not always a dead sweep**: a dirty-tree guard that trips on an *uncommitted
+test edit* is a harness complaint, not a verdict - the composer rc=1 that
+aborted the first chain was exactly this (34/34 killed, then the guard
+refused on `M tests/mutate-popover-combobox.py`). Second, a **timeout-kill
+strands the mutant in the tree** and the next sweep's dirt guard correctly
+refuses to start - the rescue is `git checkout --` the stranded file, not a
+re-run on top of it. A re-proof run against a dirty tree is a measurement of
+the dirt.
+
+The quiet-window battery, on the drained tree (every sweep restored,
+`git status` empty, dist rebuilt):
+
+- census: **100 harnesses, 0 stale patterns, exit 0**
+- suite: `npm test` — **688 passed, 0 failed**
+- `npm run parity:live`: pinned 66 = live 66, **identical membership AND order**
+- demos audit (`tests/audit-demos.py` on the live preview, both viewports):
+  **clean, exit 0** — "every demo control is named, in its box, over the
+  floor, and clicking it raised nothing"; the 30 notes are the desktop
+  fine-pointer AAA touch-floor reports the audit is designed to print, not
+  to fail on
+
+The catalogue half was re-confirmed by the same live check: shadcn's list
+has not moved since the 10-13 rebuild (66, same membership, same order).
+No `src/` commit has landed since the verdict queue of 10-16/17, so the
+thirty-four verdicts that queue earned (every browser-driven sweep but the
+eight re-earned in this window: composer, the six, and msglist) stand as
+earned. **The re-proof campaign is closed: all 42 sweeps hold clean
+verdicts on this tree, and the battery ran green on the drained tree.**
