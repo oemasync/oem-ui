@@ -3997,6 +3997,50 @@ poster walls (PLAN-01 Gap 5). Three facts the component guarantees:
 `--artwork-shade` and `--artwork-fade` are the only knobs the overlay
 gradient exposes; the fade stops use `--shade` so they follow the theme.
 
+### Saved views — filter chips and view toggles
+
+Library-scale lists (Library touches 10k entities, Decisions explodes) need
+a filter state that is visible, removable, and **recallable** — URL state
+alone is invisible and unrecoverable. The toolbar carries two presentational
+slots; the app owns the filter algebra and the persistence (saved views are a
+column on the user row, the same contract as the theme):
+
+- `.cm-toolbar__filters` — the chip row. A removable chip is a `cm-chip`
+  containing a real `<button class="cm-chip__x">` with an `aria-label`
+  ("Remove filter: …"). The ✕ glyph is decoration; the button is the control.
+- `.cm-toolbar__views` — the saved views. Each is a real
+  `<button class="cm-toolbar__view">` carrying `aria-pressed`, so the active
+  view's state is announced, not just tinted. `.cm-toolbar__view-save` opens
+  a naming step (dashed, never pressed); `.cm-toolbar__view--clear` drops all
+  filters. Long names ellipsize via `.cm-toolbar__view-label`.
+
+```html
+<div class="cm-toolbar">
+  <div class="cm-toolbar__filters">
+    <span class="cm-chip cm-chip--warn">status: failing
+      <button class="cm-chip__x" type="button"
+              aria-label="Remove filter: status failing">✕</button>
+    </span>
+  </div>
+  <div class="cm-toolbar__views">
+    <button class="cm-toolbar__view" type="button" aria-pressed="true">
+      <span class="cm-toolbar__view-label">failing deep</span>
+    </button>
+    <button class="cm-toolbar__view" type="button" aria-pressed="false">
+      <span class="cm-toolbar__view-label">all open</span>
+    </button>
+    <button class="cm-toolbar__view cm-toolbar__view-save" type="button">
+      save this view</button>
+    <button class="cm-toolbar__view cm-toolbar__view--clear" type="button">
+      clear</button>
+  </div>
+</div>
+```
+
+What the library guarantees: slot layout, chip-removal affordance, pressed
+view styling, real buttons everywhere. What it deliberately does not touch:
+which filters exist, view naming, or where views are stored.
+
 ### JS API
 
 ```js

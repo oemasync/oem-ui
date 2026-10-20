@@ -1,6 +1,8 @@
-## Unreleased - batch 38: fixed-aspect artwork tiles
+## Unreleased - batch 38+39: fixed-aspect artwork tiles, saved views
 
-PLAN-01 Gap 5. `cm-artwork` gives library grids, discover strips, detail
+PLAN-01 Gaps 5 and 6.
+
+`cm-artwork` gives library grids, discover strips, detail
 headers and poster walls a tile whose aspect is enforced on the **frame**
 rather than the image, so a lazy image that loads late never shifts the grid.
 Three variants: poster `2 / 3`, backdrop `16 / 9`, square `1 / 1`.
@@ -22,6 +24,23 @@ page, per-variant `aspect-ratio` read from each variant's own rule body (not
 a file-wide grep), the fallback's `position: absolute` + `inset: 0` +
 `background`, overlay composition counted per tile, `loading="lazy"` on every
 artwork image, and the README mention.
+
+Gap 6, saved views. The toolbar gains two PRESENTATIONAL slots:
+`.cm-toolbar__filters` for removable filter chips and `.cm-toolbar__views`
+for saved-view toggles. A removable chip's control is a real
+`<button class="cm-chip__x">` with an `aria-label` naming the filter it
+removes; a saved view is a real `<button class="cm-toolbar__view">` carrying
+`aria-pressed`, styled in both states, so the active view is announced and
+not merely tinted. "Save this view" (`.cm-toolbar__view-save`) and "clear"
+(`.cm-toolbar__view--clear`) are dashed VIEW-shaped affordances.
+
+The component stays presentational on purpose: the app owns the filter
+algebra, the naming step, and the persistence contract (saved views are a
+column on the user row, the same contract as the theme). What six
+batch-39 checks pin is everything below that line: slot presence and
+demonstration, chip removal with real buttons and accessible names, the
+pressed-view style rule, the save affordance's real-button contract, and
+the README mention.
 
 ## Unreleased - composer: a fix a shipped commit silently reverted, and a test that measured prose
 

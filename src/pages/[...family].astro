@@ -1688,6 +1688,29 @@ A selected row takes a left rule and a faint tint rather than an outline: an out
 					<button class="cm-btn cm-btn--sm cm-btn--primary">delete all</button>
 					<button class="cm-btn cm-btn--sm cm-btn--ghost">clear</button>
 				</div>
+				<!-- Saved views (Gap 6): filters are removable chips, views are
+				     pressed toggles. The app owns the algebra and the storage
+				     contract; the toolbar only carries the two slots. -->
+				<div class="cm-toolbar">
+					<div class="cm-toolbar__filters">
+						<span class="cm-chip cm-chip--warn">status: failing
+							<button class="cm-chip__x" type="button" aria-label="Remove filter: status failing">✕</button>
+						</span>
+						<span class="cm-chip cm-chip--set">depth: deep
+							<button class="cm-chip__x" type="button" aria-label="Remove filter: depth deep">✕</button>
+						</span>
+					</div>
+					<div class="cm-toolbar__views">
+						<button class="cm-toolbar__view" type="button" aria-pressed="true">
+							<span class="cm-toolbar__view-label">failing deep</span>
+						</button>
+						<button class="cm-toolbar__view" type="button" aria-pressed="false">
+							<span class="cm-toolbar__view-label">all open</span>
+						</button>
+						<button class="cm-toolbar__view cm-toolbar__view-save" type="button">save this view</button>
+						<button class="cm-toolbar__view cm-toolbar__view--clear" type="button">clear</button>
+					</div>
+				</div>
 				</div>
 
 				<h3 class="cm-kicker">inline edit</h3>

@@ -5925,6 +5925,88 @@ button.cm-link:focus-visible {
 	font-size: max(var(--min-font), var(--text-xs));
 	margin-inline-end: var(--space-2);
 }
+/* ---------- toolbar: filter chips and saved views ---------- PLAN-01 Gap 6.
+   Library surfaces (Library, Decisions, Verification) carry thousands of
+   rows; a filter that only exists in URL state is invisible and
+   unrecoverable. This adds two SLOTS to the toolbar and stays
+   presentational — the app owns the filter algebra and the persistence
+   contract (views are a column on the user row, per the theming rule).
+
+   The remove control is a REAL BUTTON, not a clickable span, so it gets
+   the library's button reset (min hit area, focus ring) and a real
+   accessible name. The chip's marker glyph stays decorative. */
+.cm-toolbar__filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+	flex: 1 1 12rem;
+	justify-content: flex-start;
+}
+.cm-toolbar__views {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-1);
+	margin-inline-start: auto;
+}
+.cm-toolbar__view {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1) var(--space-2);
+	min-height: 1.75rem;
+	background: transparent;
+	color: var(--ink-dim);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: max(var(--min-font), var(--text-xs));
+	cursor: pointer;
+}
+.cm-toolbar__view:hover { color: var(--ink); border-color: var(--ink-dim); }
+/* A pressed view is state, so it is a real aria-pressed toggle — the
+   same contract cm-seg's options use. */
+.cm-toolbar__view[aria-pressed='true'] {
+	color: var(--ink);
+	background: var(--panel);
+	border-color: var(--ink-dim);
+}
+.cm-toolbar__view-label {
+	max-width: 12rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* "Save this view" — a VIEW-shaped button (dashed, dim) that opens a
+   naming step; it does not act on the list, so it is never pressed. */
+.cm-toolbar__view-save {
+	border-style: dashed;
+	color: var(--ink-dim);
+}
+/* The clear affordance is a VIEW-shaped button with no view behind it —
+   dashed so it never reads as the pressed view. */
+.cm-toolbar__view--clear {
+	border-style: dashed;
+	color: var(--ink-dim);
+}
+.cm-chip__x {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 1.25rem;
+	min-block-size: 1.25rem;
+	margin-inline-start: var(--space-1);
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--ink-dim);
+	font: inherit;
+	cursor: pointer;
+}
+.cm-chip__x:hover { color: var(--ink); }
 
 /* ---------- check row: a bare checkbox in a tappable label ----------
    The library already styles `input[type=checkbox]` down to the tick, so the

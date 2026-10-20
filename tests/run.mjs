@@ -18677,8 +18677,94 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 															}
 														});
 														check('batch 38: the README documents the artwork tile', () => {
-															const rm = read('README.md');
-															assert(/cm-artwork/.test(rm), 'the README never mentions cm-artwork');
-														});
+																									const rm = read('README.md');
+																									assert(/cm-artwork/.test(rm), 'the README never mentions cm-artwork');
+																								});
+
+																								/* ============================================================ batch 39
+																								   saved views — filter chips and view toggles
+																								   (PLAN-01 Gap 6).
+
+																								   The gap's tests: chip add/remove algebra, and the
+																								   saved-view contract against the app's storage.
+																								   The library is presentational — the app owns both —
+																								   so what the checks can pin is the SLOTS and the
+																								   control contracts: removable chips, pressed view
+																								   toggles, an affordance that is a real button, and
+																								   the clear action. */
+																								const VIEW_CLASSES = [
+																									'cm-toolbar__filters',
+																									'cm-toolbar__views',
+																									'cm-toolbar__view',
+																									'cm-toolbar__view-label',
+																									'cm-toolbar__view-save',
+																									'cm-toolbar__view--clear',
+																									'cm-chip__x',
+																								];
+																								check('batch 39: every saved-view class is defined in the library', () => {
+																									const css = read('src/styles/components.css');
+																									for (const cls of VIEW_CLASSES) {
+																										assert(new RegExp('\\.' + cls + '\\b').test(css),
+																											`the ${cls} rule is not defined in the library`);
+																									}
+																								});
+																								check('batch 39: every saved-view class is DEMONSTRATED on the page', () => {
+																									const show = read('src/pages/[...family].astro');
+																									for (const cls of VIEW_CLASSES) {
+																										assert(new RegExp(`class="[^"]*${cls}`).test(show),
+																											`.${cls} is defined but never rendered in the specimen`);
+																									}
+																								});
+																								check('batch 39: the filter slot demonstrates chip removal algebra', () => {
+																									const show = read('src/pages/[...family].astro');
+																									const at = show.indexOf('cm-toolbar__filters');
+																									assert(at >= 0, 'the toolbar has no filter slot');
+																									const slot = show.slice(at, show.indexOf('</div>', at));
+																									// A removable chip is a chip PLUS a real button with an
+																									// accessible name — an ✕ glyph alone is decorative.
+																									assert((slot.match(/cm-chip__x/g) || []).length >= 2,
+																										'the filter slot demonstrates fewer than two removable chips');
+																									const xs = slot.match(/<button[^>]*cm-chip__x[^>]*>/g) || [];
+																									for (const x of xs) {
+																										assert(/type="button"/.test(x), 'a chip remove control is not a real button');
+																										assert(/aria-label="Remove filter:/.test(x),
+																											'a chip remove control has no accessible name');
+																									}
+																								});
+																								check('batch 39: a saved view is a pressed-state toggle, never colour alone', () => {
+																									const show = read('src/pages/[...family].astro');
+																									const at = show.indexOf('cm-toolbar__views');
+																									assert(at >= 0, 'the toolbar has no views slot');
+																									const slot = show.slice(at, show.indexOf('</div>', at));
+																									const views = slot.match(/<button[^>]*cm-toolbar__view"[^>]*>/g) || [];
+																									assert(views.length >= 2, 'the views slot demonstrates fewer than two views');
+																									for (const v of views) {
+																										assert(/type="button"/.test(v), 'a saved view is not a real button');
+																										assert(/aria-pressed=/.test(v),
+																											'a saved view does not carry aria-pressed — its state is invisible');
+																									}
+																									assert(/aria-pressed="true"/.test(slot) && /aria-pressed="false"/.test(slot),
+																										'the specimen shows no both-states pair to compare');
+																									// The pressed state must be STYLED, not just announced.
+																									const css = read('src/styles/components.css');
+																									const rule = css.slice(css.indexOf('.cm-toolbar__view[aria-pressed'),
+																										css.indexOf('}', css.indexOf('.cm-toolbar__view[aria-pressed')));
+																									assert(/background:/.test(rule) && /color:/.test(rule),
+																										'the pressed view has no visual state — the toggle would be invisible');
+																								});
+																								check('batch 39: the save affordance is a real button with a naming label', () => {
+																									const show = read('src/pages/[...family].astro');
+																									const at = show.indexOf('cm-toolbar__view-save');
+																									assert(at >= 0, 'the save-this-view affordance is missing');
+																									const open = show.lastIndexOf('<button', at);
+																									const tag = show.slice(open, show.indexOf('>', open));
+																									assert(/type="button"/.test(tag), 'the save affordance is not a real button');
+																									assert(/save this view/i.test(show.slice(at, at + 200)),
+																										'the save affordance does not say what it does');
+																								});
+																								check('batch 39: the README documents saved views', () => {
+																									const rm = read('README.md');
+																									assert(/saved view/i.test(rm), 'the README never documents saved views');
+																								});
 													}
 													}
