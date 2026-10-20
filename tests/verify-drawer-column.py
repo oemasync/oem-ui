@@ -37,7 +37,16 @@ PROBE = """
   const list = document.querySelector('.cm-header .cm-header__links');
   if (!list) return {skip: 'no .cm-header .cm-header__links'};
   const panel = list.getBoundingClientRect();
-  const links = [...list.querySelectorAll(':scope > a')];
+  // The rail is divided into labelled groups, and each group's links sit
+  // inside a .cm-header__group, not as direct children of the panel.
+  // Reading only :scope > a (the pre-grouping shape) returned zero rows,
+  // and links[-1] on the empty list threw inside the page, so EVERY
+  // viewport was an exception and the guard checked nothing - it failed
+  // with "nothing was checked" on a healthy drawer. Read every link in
+  // document order instead; the one-column / scroll / inside-panel
+  // signals below are unchanged.
+  const links = [...list.querySelectorAll('a')];
+  if (!links.length) return {skip: 'no links in .cm-header .cm-header__links'};
   const rows = links.map((el) => {
     const r = el.getBoundingClientRect();
     return {
@@ -69,8 +78,9 @@ PROBE = """
     panelTop: Math.round(p2.top),
     panelBot: Math.round(p2.bottom),
     panelRight: Math.round(panel.right),
-    // Anything whose right edge crosses the panel is bleeding out.
-    wide: rows.filter((r) => r.x + 1 > 0 && r.x > 1).map((r) => r.t),
+    // Anything whose left edge is not flush left of the panel is in a
+    // second column.
+    wide: rows.filter((r) => r.x > 1).map((r) => r.t),
   };
 }
 """
