@@ -1937,6 +1937,67 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-term__prompt { color: var(--ink-faint); user-select: none; }
 .cm-term__line { display: block; white-space: pre-wrap; }
 .cm-term__line--out { color: var(--ink-dim); }
+/* Log levels — prefix + text decoration, not colour alone (a11y). */
+.cm-term__line--debug { border-inline-start: 2px solid var(--ink-faint); padding-inline-start: var(--space-2); }
+.cm-term__line--info { border-inline-start: 2px solid var(--accent); padding-inline-start: var(--space-2); }
+.cm-term__line--warn { border-inline-start: 2px solid #f59e0b; padding-inline-start: var(--space-2); }
+.cm-term__line--error { border-inline-start: 2px solid #ef4444; padding-inline-start: var(--space-2); font-weight: 600; }
+/* Follow mode controls — a second bar below the title bar. */
+.cm-term__controls {
+	display: flex; align-items: center; justify-content: space-between;
+	padding: var(--space-2) var(--space-3);
+	border-bottom: 1px solid var(--line);
+	background: var(--bg-3);
+	font-size: var(--text-xs);
+}
+.cm-term__follow-toggle {
+	display: inline-flex; align-items: center; gap: var(--space-2);
+	padding: var(--space-1) var(--space-2);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--panel);
+	color: var(--ink);
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	cursor: pointer;
+}
+.cm-term__follow-toggle:hover { background: var(--panel-nested); }
+.cm-term__follow-toggle[aria-pressed="true"] {
+	background: var(--accent);
+	color: var(--bg);
+	border-color: var(--accent);
+}
+.cm-term__status {
+	color: var(--ink-dim);
+	font-size: var(--text-xs);
+}
+.cm-term__follow-indicator {
+	width: 6px; height: 6px; border-radius: 3px;
+	background: var(--ink-dim);
+}
+.cm-term__follow-toggle[aria-pressed="true"] .cm-term__follow-indicator {
+	background: var(--bg);
+	box-shadow: 0 0 0 1px var(--bg);
+}
+/* Jump-to-tail affordance — appears when follow disengages. */
+.cm-term__jump-tail {
+	display: none;
+	position: absolute;
+	bottom: var(--space-3);
+	inset-inline-end: var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	background: var(--accent);
+	color: var(--bg);
+	border: none;
+	border-radius: var(--radius-sm);
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+	z-index: 10;
+}
+.cm-term__jump-tail[aria-hidden="false"] { display: inline-flex; align-items: center; gap: var(--space-2); }
+.cm-term__body--following { overflow-y: auto; max-height: 25rem; scroll-behavior: smooth; }
 
 /* ---------- definition / key-value grid ---------- */
 .cm-kv {
@@ -2352,6 +2413,74 @@ button.cm-row:hover { background: var(--bg-2); }
    the slot sits inside the message, so there is no flex/positioning here.
    Reduced-motion: nothing to remove — there is no animation at all; the
    ticking TEXT is the affordance, and the guard list lives centrally. */
+
+/* ============ cm-guide — EPG guide grid ============
+   Channels × time. One row per channel, fixed time scale, a "now"
+   vertical line computed from an injected timestamp. Keyboard scroll
+   (arrows pan, Home/End jump). Virtualised rows for large lineups.
+   Mobile collapses to a single-channel agenda list (the grid is not
+   squeezed).
+
+   The now-line is deterministic: `--guide-now-x` is set by the app from
+   the current time and the scale; the component only renders it. */
+
+.cm-guide {
+	display: grid;
+	grid-template-columns: 12rem repeat(var(--guide-hours, 24), 6rem);
+	grid-auto-rows: 2.5rem;
+	overflow: auto;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+}
+.cm-guide__channel-label {
+	grid-column: 1;
+	grid-row: var(--guide-row, auto);
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	background: var(--panel);
+	border-inline-end: 1px solid var(--line);
+}
+.cm-guide__program {
+	grid-column: var(--guide-col-start, auto) / span var(--guide-col-span, 1);
+	grid-row: var(--guide-row, auto);
+	display: flex;
+	align-items: center;
+	padding: 0 var(--space-2);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--panel-nested);
+	min-width: 0;
+	overflow: hidden;
+}
+.cm-guide__program--now {
+	background: var(--accent);
+	color: var(--bg);
+}
+.cm-guide__now-line {
+	position: sticky;
+	top: 0;
+	inset-inline-start: var(--guide-now-x, 9.5rem);
+	height: 100%;
+	width: 2px;
+	background: var(--ink-dim);
+	pointer-events: none;
+	z-index: 1;
+}
+/* Mobile: agenda list — one channel at a time, stacked programs */
+@media (max-width: 640px) {
+	.cm-guide {
+		grid-template-columns: 1fr;
+		grid-auto-rows: auto;
+	}
+	.cm-guide__channel-label,
+	.cm-guide__program {
+		grid-column: 1;
+	}
+	.cm-guide__now-line { display: none; }
+}
 
 /* ---------- table ----------
    Data, not prose. The scroll wrapper is part of the component because a

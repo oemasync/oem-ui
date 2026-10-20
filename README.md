@@ -3874,6 +3874,78 @@ The runtime (`initRevert`) ticks the countdown once per second, dispatches
 leaves the banner in place as a resolved notice — a vanishing banner would
 leave the reader unable to tell whether the write happened.
 
+### Guide grid — `cm-guide`
+
+The EPG guide: channels × time. One row per channel, fixed time scale, a
+vertical "now" line whose position is computed from a single injected
+timestamp (`--guide-now-x`). Keyboard scroll (arrows pan, Home/End jump).
+On mobile (≤640px) the grid collapses to a single-channel agenda list — the
+grid is never squeezed.
+
+```html
+<div class="cm-guide" role="grid" aria-label="TV guide"
+     style="--guide-hours: 4; --guide-now-x: 9.5rem;">
+  <div class="cm-guide__channel-label" style="--guide-row: 1;">KEXP-HD</div>
+  <div class="cm-guide__program"
+       style="--guide-row: 1; --guide-col-start: 2; --guide-col-span: 2;">
+    Morning Edition
+  </div>
+  <div class="cm-guide__program cm-guide__program--now"
+       style="--guide-row: 1; --guide-col-start: 4; --guide-col-span: 2;">
+    The Midday Show
+  </div>
+  <div class="cm-guide__now-line" aria-hidden="true"></div>
+</div>
+```
+
+The app sets `--guide-hours` (number of time slots) and `--guide-now-x` (the
+now-line's x offset in rem, computed from the current time and slot width).
+Each program cell uses `--guide-col-start` and `--guide-col-span` to place
+itself; the now-line is sticky so it scrolls with the timeline.
+
+### Terminal follow mode — `cm-term`
+
+The live log tail. A terminal panel grows a controls bar with a follow toggle
+that disengages when the user scrolls up (the user wants to read history, and
+yanking them back on every append fights them), and a "jump to tail" button
+that re-engages it. Log lines carry level classes
+(`.cm-term__line--debug/info/warn/error`) with a left border and weight —
+colour is not the only signal (a11y). The DOM is bounded by virtualised
+windowing: the body keeps at most 1000 rows and drops from the top when
+appends overflow, so a 100k-line buffer holds without layout collapse.
+
+```html
+<div class="cm-term">
+  <div class="cm-term__bar">
+    <span class="cm-term__dot"></span>
+    <span class="cm-term__title">pipeline.log</span>
+  </div>
+  <div class="cm-term__controls" role="toolbar" aria-label="Log controls">
+    <button type="button" class="cm-term__follow-toggle" aria-pressed="true"
+            data-cm-follow-toggle>
+      <span class="cm-term__follow-indicator" aria-hidden="true"></span>
+      <span>Follow</span>
+    </button>
+    <span class="cm-term__status" aria-live="polite">Following tail</span>
+  </div>
+  <div class="cm-term__body cm-term__body--following" data-cm-term-body tabindex="0">
+    <pre>
+<span class="cm-term__line cm-term__line--info">[INFO] Starting pipeline</span>
+<span class="cm-term__line cm-term__line--warn">[WARN] Cache miss</span>
+<span class="cm-term__line cm-term__line--error">[ERROR] Timeout</span>
+    </pre>
+  </div>
+  <button type="button" class="cm-term__jump-tail" aria-hidden="true"
+          data-cm-jump-tail>
+    <span aria-hidden="true">⬇</span>
+    <span>Jump to tail</span>
+  </button>
+</div>
+```
+
+The app calls `window.cliMono.termAppend(text, level)` to append lines; the
+runtime keeps the DOM bounded and auto-scrolls only while following.
+
 ### JS API
 
 ```js

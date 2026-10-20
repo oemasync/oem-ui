@@ -1328,7 +1328,7 @@ check('the house corner tokens and component declarations stay sharp', () => {
 		// reported as broken. Everything else, including focus marks, should
 		// take the zero-valued token or declare zero directly.
 		const circular = path.endsWith('base.css')
-			? ['input[type=\'radio\']'] : ['.cm-spinner', '.cm-term__dot'];
+			? ['input[type=\'radio\']'] : ['.cm-spinner', '.cm-term__dot', '.cm-term__follow-indicator'];
 		for (const rule of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
 			if (!/border-radius\s*:/.test(rule[2])) continue;
 			const selectors = rule[1].trim();
@@ -18391,9 +18391,168 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 									});
 
 				check('batch 35: the README documents the revert banner and its runtime', () => {
-					const rm = read('README.md');
-					assert(/cm-revert/.test(rm), 'the README never mentions cm-revert');
-					assert(/data-cm-revert/.test(rm), 'the README does not document the data-cm-revert contract');
-				});
-			}
-		}
+									const rm = read('README.md');
+									assert(/cm-revert/.test(rm), 'the README never mentions cm-revert');
+									assert(/data-cm-revert/.test(rm), 'the README does not document the data-cm-revert contract');
+								});
+							}
+
+						/* ============================================================ batch 36
+						   cm-guide — the EPG guide grid. PLAN-01 Gap 3. */
+						{
+							const GUIDE_CLASSES = [
+								'cm-guide',
+								'cm-guide__channel-label',
+								'cm-guide__program',
+								'cm-guide__program--now',
+								'cm-guide__now-line',
+							];
+
+							check('batch 36: every cm-guide class is defined in the library', () => {
+								const comp = read('src/styles/components.css');
+								for (const cls of GUIDE_CLASSES) {
+									const styled = new RegExp(`\\.cm-guide(?![a-z0-9_-])`).test(comp) ||
+										new RegExp(`\\.cm-guide__${cls.split('__')[1]}`).test(comp) ||
+										new RegExp(`\\.cm-guide--now`).test(comp);
+									assert(styled, `.${cls} has no rule in components.css`);
+								}
+							});
+
+							check('batch 36: every cm-guide class is DEMONSTRATED on the page', () => {
+								const show = read('src/pages/[...family].astro');
+								for (const cls of GUIDE_CLASSES) {
+									assert(new RegExp(`class="[^"]*${cls}`).test(show),
+										`.${cls} is defined but never rendered in the specimen`);
+								}
+							});
+
+							check('batch 36: the grid is a real CSS grid, not a table', () => {
+								const comp = read('src/styles/components.css');
+								const at = comp.indexOf('.cm-guide {');
+								assert(at >= 0, '.cm-guide block is missing');
+								const body = comp.slice(at, comp.indexOf('}', at));
+								assert(/display:\s*grid/.test(body), '.cm-guide does not use display: grid');
+							});
+
+							check('batch 36: the now-line is a logical property, not physical', () => {
+								const comp = read('src/styles/components.css');
+								assert(/\.cm-guide__now-line/.test(comp), 'cm-guide__now-line is missing');
+								assert(/inset-inline-start/.test(comp),
+									'the now-line uses a physical directional property (left/right) instead of logical');
+							});
+
+							check('batch 36: the now-line has a fallback, so it renders even when the app forgets the var', () => {
+								const comp = read('src/styles/components.css');
+								assert(/var\(--guide-now-x,[^)]+\)/.test(comp),
+									'--guide-now-x has no fallback; a missing runtime var breaks the now-line');
+							});
+
+							check('batch 36: the specimen has at least two programs, or the grid is unproven', () => {
+								const show = read('src/pages/[...family].astro');
+								const at = show.indexOf('id="guide"');
+								assert(at >= 0, 'no guide section in the specimen');
+								const section = show.slice(at, show.indexOf('<section', at + 10));
+								const programs = (section.match(/cm-guide__program/g) || []).length;
+								assert(programs >= 2, `the specimen has only ${programs} program cell(s); the grid geometry is unproven`);
+							});
+
+							check('batch 36: the specimen has a --now program, or the variant is unproven', () => {
+								const show = read('src/pages/[...family].astro');
+								const at = show.indexOf('id="guide"');
+								assert(at >= 0, 'no guide section');
+								const section = show.slice(at, show.indexOf('<section', at + 10));
+								assert(/cm-guide__program--now/.test(section),
+									'the specimen has no cm-guide__program--now; the variant is unproven');
+							});
+
+							check('batch 36: the mobile fallback engages at a defined breakpoint', () => {
+								const comp = read('src/styles/components.css');
+								assert(/@media.*max-width.*640px/.test(comp),
+									'the mobile fallback is not at 640px, so the grid is squeezed on a phone');
+							});
+
+							check('batch 36: the README documents the guide grid', () => {
+								const rm = read('README.md');
+								assert(/cm-guide/.test(rm), 'the README never mentions cm-guide');
+							});
+
+							/* ============================================================ batch 37
+							   cm-term follow mode — the live log tail. PLAN-01 Gap 4.
+
+							   The gap annex's rule is that follow is a STATE, not a
+							   side-effect: scrolling up must disengage it, the button
+							   re-engages it, and the DOM must stay bounded under
+							   sustained appends. Each rule below asserts the property
+							   (not a spelling of it), so the checks fail when the
+							   behaviour breaks, and the mutation harness proves it. */
+							check('batch 37: every cm-term follow class is defined in the library', () => {
+									const css = read('src/styles/components.css');
+									for (const cls of ['cm-term__controls', 'cm-term__follow-toggle',
+										'cm-term__follow-indicator', 'cm-term__jump-tail',
+										'cm-term__line--debug', 'cm-term__line--info',
+										'cm-term__line--warn', 'cm-term__line--error',
+										'cm-term__body--following']) {
+										assert(new RegExp('\\.' + cls.replace(/[-]/g, '\\-') + '\\b').test(css),
+											`the ${cls} rule is not defined in the library`);
+									}
+								});
+							check('batch 37: every cm-term follow class is DEMONSTRATED on the page', () => {
+								const src = read('src/pages/[...family].astro');
+								for (const cls of ['cm-term__controls', 'cm-term__follow-toggle',
+									'cm-term__jump-tail', 'cm-term__line--warn', 'cm-term__line--error']) {
+									assert(src.includes(cls), `the specimen never demonstrates ${cls}`);
+								}
+							});
+							check('batch 37: the follow toggle is a pressed-state button', () => {
+								const src = read('src/pages/[...family].astro');
+								assert(/data-cm-follow-toggle[^>]*aria-pressed/.test(src),
+									'the follow toggle has no aria-pressed; its state is not exposed');
+							});
+							check('batch 37: the follow status is announced politely', () => {
+								const src = read('src/pages/[...family].astro');
+								assert(/aria-live="polite"/.test(src),
+									'the follow status does not announce politely; state changes are silent');
+							});
+							check('batch 37: the jump-to-tail affordance exists', () => {
+								const src = read('src/pages/[...family].astro');
+								assert(/data-cm-jump-tail/.test(src),
+									'the specimen has no jump-to-tail button; re-engaging has no affordance');
+							});
+							check('batch 37: the runtime listens for scroll (scroll-up disengages follow)', () => {
+								const js = read('src/js/cli-mono.js');
+								assert(/initTermFollow/.test(js), 'the runtime never defines initTermFollow');
+								const body = js.slice(js.indexOf('function initTermFollow'));
+								assert(/addEventListener\(\s*'scroll'/.test(body),
+									'the follow runtime has no scroll listener, so scrolling up cannot disengage');
+							});
+							check('batch 37: the runtime wires the toggle button', () => {
+								const js = read('src/js/cli-mono.js');
+								const body = js.slice(js.indexOf('function initTermFollow'));
+								assert(/data-cm-follow-toggle/.test(body) && /addEventListener\(\s*'click'/.test(body),
+									'the runtime never wires the follow toggle button');
+							});
+							check('batch 37: the runtime wires the jump-to-tail button', () => {
+								const js = read('src/js/cli-mono.js');
+								const body = js.slice(js.indexOf('function initTermFollow'));
+								assert(/data-cm-jump-tail/.test(body) && /addEventListener\(\s*'click'/.test(body),
+									'the runtime never wires the jump-to-tail button');
+							});
+							check('batch 37: appends are bounded (virtualised window)', () => {
+								const js = read('src/js/cli-mono.js');
+								const body = js.slice(js.indexOf('function initTermFollow'));
+								assert(/MAX_LINES/.test(body), 'the follow runtime has no MAX_LINES window bound');
+								assert(/removeChild/.test(body), 'the follow runtime never drops rows from the top');
+							});
+							check('batch 37: follow is re-engaged by the button, not by an append side-effect', () => {
+								const js = read('src/js/cli-mono.js');
+								const body = js.slice(js.indexOf('function initTermFollow'));
+								assert(/function engage\(\)/.test(body), 'the runtime has no engage() state transition');
+								assert(/function disengage\(\)/.test(body), 'the runtime has no disengage() state transition');
+							});
+							check('batch 37: the README documents the follow-mode tail', () => {
+								const rm = read('README.md');
+								assert(/cm-term/.test(rm), 'the README never mentions cm-term');
+								assert(/follow/i.test(rm), 'the README never documents follow mode');
+							});
+							}
+							}

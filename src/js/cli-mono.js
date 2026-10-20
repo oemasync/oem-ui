@@ -514,8 +514,89 @@
 
 			paint();
 			start();
-		});
-	}
+			});
+			}
+
+			/* ---------- cm-term follow mode ----------
+			The live-log tail. Follow is a STATE, not a side effect:
+			- scrolling up disengages it (the user wants to read history,
+			and yanking them back to the tail on every append is the
+			exact "fighting the user" the gap annex bans);
+			- the jump-to-tail button re-engages it;
+			- the toggle button is the same state machine in the other
+			direction, so all three controls stay coherent.
+			DOM is bounded by VIRTUALISED WINDOWING: the body keeps at most
+			MAX_LINES rows and drops from the top when appends overflow —
+			a 100k-line buffer therefore holds without layout collapse. */
+			function initTermFollow(root) {
+			var scope = root || document;
+			scope.querySelectorAll('[data-cm-term-body]').forEach(function (body) {
+				if (body.__cmTermArmed) return;
+				body.__cmTermArmed = true;
+
+				var term = body.closest('.cm-term');
+				if (!term) return;
+				var toggle = term.querySelector('[data-cm-follow-toggle]');
+				var jump = term.querySelector('[data-cm-jump-tail]');
+				var status = term.querySelector('.cm-term__status');
+				var MAX_LINES = 1000;
+				var following = true;
+
+				function paint() {
+					if (toggle) toggle.setAttribute('aria-pressed', following ? 'true' : 'false');
+					if (jump) jump.setAttribute('aria-hidden', following ? 'true' : 'false');
+					if (status) status.textContent = following ? 'Following tail' : 'Follow paused (scrolled up)';
+					body.classList.toggle('cm-term__body--following', following);
+				}
+
+				function engage() {
+					if (following) return;
+					following = true;
+					body.scrollTop = body.scrollHeight;
+					paint();
+					term.dispatchEvent(new CustomEvent('cm-term:follow', { detail: { following: true } }));
+				}
+
+				function disengage() {
+					if (!following) return;
+					following = false;
+					paint();
+					term.dispatchEvent(new CustomEvent('cm-term:follow', { detail: { following: false } }));
+				}
+
+				function toTail() {
+					body.scrollTop = body.scrollHeight;
+				}
+
+				// Scroll-up disengages; scrolling back to the bottom re-engages.
+				body.addEventListener('scroll', function () {
+					var atTail = body.scrollHeight - body.scrollTop - body.clientHeight < 4;
+					if (atTail) engage();
+					else disengage();
+				}, { passive: true });
+
+				if (toggle) toggle.addEventListener('click', function () {
+					if (following) disengage();
+					else { engage(); }
+				});
+				if (jump) jump.addEventListener('click', function () { toTail(); engage(); });
+
+				// Append hook for the app: window.cliMono.termAppend(body, text, level)
+				body.__cmTermAppend = function (text, level) {
+					var pre = body.querySelector('pre') || body;
+					var line = document.createElement('span');
+					line.className = 'cm-term__line' + (level ? ' cm-term__line--' + level : '');
+					line.textContent = text;
+					pre.appendChild(line);
+					// Virtualised window: keep the DOM bounded.
+					while (pre.children.length > MAX_LINES) pre.removeChild(pre.firstChild);
+					if (following) toTail();
+				};
+
+				paint();
+				if (following) toTail();
+			});
+			}
 
 	/* ---------- measure specimen readout ----------
 	   A token specimen that reports its own live state, so the width
@@ -4800,6 +4881,7 @@
 		initYears();
 		initRevert(root);
 		initMeasureReadout();
+		initTermFollow(root);
 		initTableLabels(root);
 		cmInitResize(root);
 		cmInitCal(root);
@@ -6289,7 +6371,12 @@
 		toast: toast,
 		dismissToast: dismiss,
 		chartMarkup: chartMarkup,
-		initProgress: cmInitProgress
+		initProgress: cmInitProgress,
+		termAppend: function (text, level) {
+			// Find the first armed term body and append to it.
+			var body = document.querySelector('[data-cm-term-body]');
+			if (body && body.__cmTermAppend) body.__cmTermAppend(text, level);
+		}
 	};
 
 	// Global handle for any project, plus module export for bundlers.

@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'trace', 'diff', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -82,7 +82,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["surfaces", 7],
 	["tables", 6],
 	["panels", 6],
-	["content", 6],
+	["content", 8],
 	["prose", 8],
 	["layout", 7],
 	["composed", 8],
@@ -3517,6 +3517,87 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 			</section>
 			)}
 
+<!-- ==================================================== guide
+		     Channels × time: the EPG grid. One row per channel, a
+		     fixed time scale, and a now-line whose x is computed
+		     from ONE injected timestamp (the app sets --guide-now-x,
+		     so the geometry is deterministic and testable).
+		     On a phone the same markup collapses to an agenda list
+		     at 640px — the grid is never squeezed. -->
+			{shows('content') && (
+			<section id="guide" class="cm-section cm-section--pad">
+				<SectionHead title="Guide grid">
+					<Fragment slot="sub">
+						Channels × time. The now-line position comes from a single
+						injected timestamp; arrows pan, Home/End jump to the ends.
+					</Fragment>
+				</SectionHead>
+				<div class="cm-guide" role="grid" aria-label="TV guide, four channels, four hours"
+					style="--guide-hours: 4; --guide-now-x: 9.5rem;">
+					<!-- row 1 -->
+					<div class="cm-guide__channel-label" style="--guide-row: 1;" role="rowheader">KEXP-HD</div>
+					<div class="cm-guide__program" style="--guide-row: 1; --guide-col-start: 2; --guide-col-span: 2;" role="gridcell">Morning Edition</div>
+					<div class="cm-guide__program cm-guide__program--now" style="--guide-row: 1; --guide-col-start: 4; --guide-col-span: 2;" role="gridcell">The Midday Show</div>
+					<!-- row 2 -->
+					<div class="cm-guide__channel-label" style="--guide-row: 2;" role="rowheader">PBS-1080i</div>
+					<div class="cm-guide__program" style="--guide-row: 2; --guide-col-start: 2; --guide-col-span: 3;" role="gridcell">Nature: Rivers of Ice</div>
+					<div class="cm-guide__program" style="--guide-row: 2; --guide-col-start: 5; --guide-col-span: 1;" role="gridcell">Newshour</div>
+					<!-- row 3 -->
+					<div class="cm-guide__channel-label" style="--guide-row: 3;" role="rowheader">BRVO-720p</div>
+					<div class="cm-guide__program cm-guide__program--now" style="--guide-row: 3; --guide-col-start: 2; --guide-col-span: 1;" role="gridcell">Top Chef</div>
+					<div class="cm-guide__program" style="--guide-row: 3; --guide-col-start: 3; --guide-col-span: 3;" role="gridcell">A Very British Scandal</div>
+					<!-- row 4 -->
+					<div class="cm-guide__channel-label" style="--guide-row: 4;" role="rowheader">TCM-1080p</div>
+					<div class="cm-guide__program" style="--guide-row: 4; --guide-col-start: 2; --guide-col-span: 2;" role="gridcell">The Third Man</div>
+					<div class="cm-guide__program" style="--guide-row: 4; --guide-col-start: 4; --guide-col-span: 2;" role="gridcell">Casablanca</div>
+					<!-- the now-line: x is computed by the app, injected here -->
+					<div class="cm-guide__now-line" aria-hidden="true"></div>
+				</div>
+			</section>
+			)}
+
+			{shows('content') && (
+					<section id="term" class="cm-section cm-section--pad">
+							<SectionHead title="term">
+								The terminal panel with follow mode for live logs. A controls bar
+								with a follow toggle that disengages when the user scrolls up, and a
+								"jump to tail" button that re-engages it. Log lines carry level classes
+								(`.cm-term__line--debug/info/warn/error`) with a left border and weight.
+							</SectionHead>
+
+							<div class="cm-term">
+								<div class="cm-term__bar">
+									<span class="cm-term__dot"></span><span class="cm-term__dot"></span><span class="cm-term__dot"></span>
+									<span class="cm-term__title">pipeline.log</span>
+								</div>
+								<div class="cm-term__controls" role="toolbar" aria-label="Log controls">
+									<button type="button" class="cm-term__follow-toggle" data-cm-follow-toggle aria-pressed="true">
+										<span class="cm-term__follow-indicator" aria-hidden="true"></span>
+										<span>Follow</span>
+									</button>
+									<span class="cm-term__status" aria-live="polite">Following tail</span>
+								</div>
+								<div class="cm-term__body cm-term__body--following" data-cm-term-body tabindex="0">
+									<pre>
+			<span class="cm-term__line cm-term__line--info">[INFO] Starting pipeline run #4821</span>
+			<span class="cm-term__line cm-term__line--debug">[DEBUG] Loading configuration from /etc/app/config.yaml</span>
+			<span class="cm-term__line cm-term__line--info">[INFO] Connected to database (latency: 12ms)</span>
+			<span class="cm-term__line cm-term__line--warn">[WARN] Cache miss for key "user:1847:profile"</span>
+			<span class="cm-term__line cm-term__line--error">[ERROR] Failed to fetch artwork for media_id=92847: timeout after 5s</span>
+			<span class="cm-term__line cm-term__line--info">[INFO] Processing 1,847 library items...</span>
+			<span class="cm-term__line cm-term__line--debug">[DEBUG] Scanned 500/1847 (27%)</span>
+			<span class="cm-term__line cm-term__line--debug">[DEBUG] Scanned 1000/1847 (54%)</span>
+			<span class="cm-term__line cm-term__line--info">[INFO] Pipeline complete. 3 warnings, 1 error.</span>
+									</pre>
+								</div>
+								<button type="button" class="cm-term__jump-tail" aria-hidden="true" data-cm-jump-tail>
+									<span aria-hidden="true">⬇</span>
+									<span>Jump to tail</span>
+								</button>
+							</div>
+						</section>
+						)}
+
 <!-- ==================================================== cards
 			     One subject that needs more room than a row, and a
 			     number that is a proportion rather than a count. -->
@@ -5109,22 +5190,22 @@ A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
 				</p>
 				<div data-cm-theme="light">
 					<Fragment set:html={CHARTS.light} />
-				</div>
+									</div>
 
-				<div class="cm-term">
-					<div class="cm-term__bar">
-						<span class="cm-term__dot"></span><span class="cm-term__dot"></span><span class="cm-term__dot"></span>
-						<span class="cm-term__title">chart.html</span>
-					</div>
-					<div class="cm-term__body">
-						<pre>{CHART_SNIPPET}</pre>
-					</div>
-				</div>
-			</section>
-			)}
+									<div class="cm-term">
+										<div class="cm-term__bar">
+											<span class="cm-term__dot"></span><span class="cm-term__dot"></span><span class="cm-term__dot"></span>
+											<span class="cm-term__title">chart.html</span>
+										</div>
+										<div class="cm-term__body">
+											<pre>{CHART_SNIPPET}</pre>
+										</div>
+									</div>
+								</section>
+								)}
 
-			{shows('layout') && (
-			<section id="utilities" class="cm-section cm-section--pad">
+					{shows('layout') && (
+					<section id="utilities" class="cm-section cm-section--pad">
 				<SectionHead title="utilities">
 Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					masks a scrollport's own edges off ITS OWN scroll position:
@@ -5195,6 +5276,8 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 				</p>
 			</section>
 			)}
+
+
 
 			{shows('composed') && (
 			<section id="chat" class="cm-section cm-section--pad">

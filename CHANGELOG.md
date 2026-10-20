@@ -42,6 +42,41 @@ the band is inert and can be removed without layout impact.
 the band's premise did not reproduce and it was NOT promoted into
 `components.css`.
 
+## Unreleased - batch 36+37: the EPG guide grid and the follow-mode log tail
+
+PLAN-01 Gaps 3 and 4 are now built and verified in the library before a
+line of the app exists, per the gap programme's rule that every component
+the app needs ships here first with its own specimen, tests and docs.
+
+**Batch 36 (`cm-guide`)** — the channels x time EPG grid, the one genuinely
+new geometry in the app. A CSS grid with one row per channel and a fixed
+time scale, program cells placed by `--guide-row` / `--guide-col-start` /
+`--guide-col-span` custom properties (the app computes positions; the
+component renders), and a sticky now-line whose x comes from a single
+injected `--guide-now-x` with a literal fallback so it renders even when
+the app forgets the var. The now-line is a logical property
+(`inset-inline-start`) and the `--now` program variant is accent-filled
+with `--bg` text. On mobile (max-width 640px) the grid collapses to a
+single-column agenda list - the grid is never squeezed.
+
+**Batch 37 (`cm-term` follow mode)** - the live log tail. A second
+controls bar grows under the terminal title bar: a follow toggle
+(`aria-pressed`) with a state indicator, and a status line announced
+politely (`aria-live="polite"`). Follow is a STATE, not a side effect:
+the scroll listener disengages it when the user scrolls up (the exact
+"fighting the user" the gap annex bans), and the jump-to-tail button
+(`inset-inline-end`, shown only while unfollowed) re-engages it. Log
+lines carry level classes `.cm-term__line--debug/info/warn/error` with a
+left border and weight - colour is not the only signal. The runtime
+(`initTermFollow`, registered in the boot sequence) exposes
+`window.cliMono.termAppend(text, level)` for the app and keeps the DOM
+bounded by virtualised windowing: at most `MAX_LINES` rows, dropped from
+the top, so a 100k-line buffer holds without layout collapse.
+
+Suite: 730 checks green. Every class is both defined in the library and
+demonstrated on the page; both components carry README sections with
+copy-paste markup.
+
 ## Unreleased - batch 35: cm-revert, the countdown-undo banner
 
 **Gap 2 closed: the revert banner with countdown, Undo, and Apply now.**
