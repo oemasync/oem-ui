@@ -10457,6 +10457,22 @@ input.cm-slider:disabled {
 	padding: var(--space-8) var(--gutter) var(--space-7);
 	text-align: center;
 }
+/* The title is a .cm-card, so it clips (overflow:hidden) when a word is wider
+   than the card's padding box. At 44.8px the word "Everything" is ~260px but
+   the box is 198px at a 320px viewport, so its right edge is cut. Measured
+   against the padding-box clip line: the default 2rem+4vw clips from 320
+   through 368px (a further 1px sub-pixel cut at 372). A steeper ramp on
+   narrow phones keeps the same fluid "ramp not step" shape - 17.5vw - 21px
+   sits 2px under the measured fits at every width in the band (35px at 320,
+   where the word is 260px in a 198px box) and meets the default ramp within
+   0.1px at 392, so there is no visible size jump at the boundary. The 2px
+   under-fit is deliberate margin: font metrics round sub-pixel, and a word
+   ending flush on the clip line still shows a cut glyph tip in WebKit. */
+@media (max-width: 392px) {
+	.cm-hero {
+		--hero-title: clamp(var(--head-h1), 17.5vw - 21px, 4rem);
+	}
+}
 .cm-hero__title {
 	font-size: var(--hero-title, clamp(var(--head-h1), 2rem + 4vw, 4rem));
 	line-height: 1.05;
