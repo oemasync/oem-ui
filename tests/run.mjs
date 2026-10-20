@@ -18617,7 +18617,9 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 														check('batch 38: every cm-artwork class is defined in the library', () => {
 															const css = read('src/styles/components.css');
 															for (const cls of ARTWORK_CLASSES) {
-																assert(new RegExp('\\.' + cls.replace(/-/g, '\\-') + '\\b').test(css),
+																// Anchored on the rule FORM: a comment that names
+																// the class must not satisfy the check.
+																assert(new RegExp('\\.' + cls + '\\s*\\{').test(css),
 																	`the ${cls} rule is not defined in the library`);
 															}
 														});
@@ -18704,7 +18706,9 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 																								check('batch 39: every saved-view class is defined in the library', () => {
 																									const css = read('src/styles/components.css');
 																									for (const cls of VIEW_CLASSES) {
-																										assert(new RegExp('\\.' + cls + '\\b').test(css),
+																										// Anchored on the rule FORM: a comment that names the class must
+																										// not satisfy the check.
+																										assert(new RegExp('\\.' + cls + '\\s*\\{').test(css),
 																											`the ${cls} rule is not defined in the library`);
 																									}
 																								});
@@ -18725,6 +18729,10 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 																									assert((slot.match(/cm-chip__x/g) || []).length >= 2,
 																										'the filter slot demonstrates fewer than two removable chips');
 																									const xs = slot.match(/<button[^>]*cm-chip__x[^>]*>/g) || [];
+																									// Without this count the check PASSES when every remove
+																									// control stops being a button — the loop over an empty
+																									// list never fires.
+																									assert(xs.length >= 2, 'a chip remove control is not a real button');
 																									for (const x of xs) {
 																										assert(/type="button"/.test(x), 'a chip remove control is not a real button');
 																										assert(/aria-label="Remove filter:/.test(x),
@@ -18758,6 +18766,10 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 																									assert(at >= 0, 'the save-this-view affordance is missing');
 																									const open = show.lastIndexOf('<button', at);
 																									const tag = show.slice(open, show.indexOf('>', open));
+																									// The found tag must BE the save affordance; otherwise a
+																									// span conversion makes lastIndexOf skip back to the
+																									// previous view button and the check passes on it.
+																									assert(/cm-toolbar__view-save/.test(tag), 'the save affordance is not a real button');
 																									assert(/type="button"/.test(tag), 'the save affordance is not a real button');
 																									assert(/save this view/i.test(show.slice(at, at + 200)),
 																										'the save affordance does not say what it does');
@@ -18795,7 +18807,11 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 							check('batch 40: every cm-bell class is defined in the library', () => {
 								const css = read('src/styles/components.css');
 								for (const cls of BELL_CLASSES) {
-									assert(new RegExp('\\.' + cls.replace(/-/g, '\\-') + '\\b').test(css),
+									// Anchored on the rule FORM: the bell's own block
+									// comment names `.cm-bell--off` in backticks, and a
+									//  regex matched the prose, so deleting the rule
+									// still passed this check.
+									assert(new RegExp('\\.' + cls + '\\s*\\{').test(css),
 										`the ${cls} rule is not defined in the library`);
 								}
 							});
@@ -18814,7 +18830,7 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 								assert(at >= 0, 'the count badge has no rule');
 								const rule = css.slice(at, css.indexOf('}', at));
 								assert(/position:\s*absolute/.test(rule), 'the count badge is not absolutely positioned, so it cannot overflow');
-								assert(/inset-inline-end:/.test(rule), 'the count badge is not anchored to the inline end');
+								assert(/inset-inline-end:\s*0/.test(rule), 'the count badge is not anchored to the inline end');
 							});
 							check('batch 40: the disconnected state is drawn, not just announced', () => {
 								const css = read('src/styles/components.css');
@@ -18828,7 +18844,7 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 								const at = css.indexOf('.cm-bell__count[data-overflow]');
 								assert(at >= 0, 'the capped count has no rule');
 								const rule = css.slice(at, css.indexOf('}', at));
-								assert(/inline-size:/.test(rule), 'the capped count does not pin its width');
+								assert(/inline-size:\s*1\.75rem/.test(rule), 'the capped count does not pin its width');
 							});
 							check('batch 40: all three states render, and each button name carries its count', () => {
 								const show = read('src/pages/[...family].astro');
@@ -18839,7 +18855,7 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 								assert((section.match(/class="cm-bell[" ]/g) || []).length >= 3,
 									'all three states must render: unread, all-read, disconnected');
 								assert(/class="cm-bell cm-bell--off"/.test(section), 'the disconnected state is not demonstrated');
-								assert(/class="cm-bell__count"/.test(section), 'the unread state shows no count badge');
+								assert(/class="cm-bell__count">/.test(section), 'the unread state shows no count badge');
 								assert(/data-overflow/.test(section), 'the capped count is not demonstrated');
 								// The a11y bar: the accessible NAME folds the count in.
 								// A badge's text is not the button's name.
