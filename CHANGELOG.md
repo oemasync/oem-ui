@@ -1,3 +1,28 @@
+## Unreleased - batch 38: fixed-aspect artwork tiles
+
+PLAN-01 Gap 5. `cm-artwork` gives library grids, discover strips, detail
+headers and poster walls a tile whose aspect is enforced on the **frame**
+rather than the image, so a lazy image that loads late never shifts the grid.
+Three variants: poster `2 / 3`, backdrop `16 / 9`, square `1 / 1`.
+
+No-art is a designed state: `.cm-artwork__fallback` is a positioned fill over
+the frame, so a row without artwork renders a mark and a label instead of the
+browser's broken-image glyph. There is deliberately **no `onerror` swap** —
+the app knows which rows have art, so it ships the fallback rather than the
+CSS guessing at load failure. That choice also keeps the family free of
+runtime JS.
+
+The overlay slot is composition, not feature: `.cm-artwork__overlay` is a
+scrim region at the foot of the frame that the app fills with a quality
+`cm-chip`, a watched-progress `cm-progress` strip, a `cm-dot`, or a
+`cm-artwork__meta` caption.
+
+Seven batch-38 checks pin it: class presence, class demonstration on the
+page, per-variant `aspect-ratio` read from each variant's own rule body (not
+a file-wide grep), the fallback's `position: absolute` + `inset: 0` +
+`background`, overlay composition counted per tile, `loading="lazy"` on every
+artwork image, and the README mention.
+
 ## Unreleased - composer: a fix a shipped commit silently reverted, and a test that measured prose
 
 Two guarantees this library thought it had were not being kept, and both

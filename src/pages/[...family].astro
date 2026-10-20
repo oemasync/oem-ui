@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -82,7 +82,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["surfaces", 7],
 	["tables", 6],
 	["panels", 6],
-	["content", 8],
+	["content", 9],
 	["prose", 8],
 	["layout", 7],
 	["composed", 8],
@@ -3597,6 +3597,60 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 							</div>
 						</section>
 						)}
+
+<!-- ==================================================== artwork
+			     Fixed-aspect tiles: poster 2:3, backdrop 16:9, square
+			     1:1. The third tile ships no art on purpose — the
+			     fallback is a designed state, not a broken image. -->
+			{shows('content') && (
+			<section id="artwork" class="cm-section cm-section--pad">
+				<SectionHead title="Artwork tiles">
+					<p>Aspect lives on the frame, so a lazy image never shifts the
+					grid. The overlay slot carries a progress strip, a status dot
+					and a quality badge.</p>
+				</SectionHead>
+				<ul class="cm-artwork">
+					<li>
+						<span class="cm-artwork__item">
+							<span class="cm-artwork__frame cm-artwork__frame--poster">
+								<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20300'%3E%3Crect%20width='200'%20height='300'%20fill='%23242424'/%3E%3Ctext%20x='100'%20y='150'%20fill='%23666'%20font-size='14'%20text-anchor='middle'%3Eposter%3C/text%3E%3C/svg%3E" alt="Sample poster artwork" loading="lazy" decoding="async">
+								<span class="cm-artwork__overlay" aria-hidden="true">
+									<span class="cm-chip cm-chip--ok">1080p</span>
+									<span class="cm-artwork__meta">S2 · E4</span>
+								</span>
+							</span>
+						</span>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">The Long Afternoon</span>
+					</li>
+					<li>
+						<span class="cm-artwork__item">
+							<span class="cm-artwork__frame cm-artwork__frame--backdrop">
+								<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%20180'%3E%3Crect%20width='320'%20height='180'%20fill='%23242424'/%3E%3Ctext%20x='160'%20y='90'%20fill='%23666'%20font-size='14'%20text-anchor='middle'%3Ebackdrop%3C/text%3E%3C/svg%3E" alt="Sample backdrop artwork" loading="lazy" decoding="async">
+								<span class="cm-artwork__overlay" aria-hidden="true">
+									<span class="cm-progress" style="--cm-progress:62%"><span class="cm-progress__fill"></span></span>
+								</span>
+							</span>
+						</span>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">Harbour Lights — watched 62%</span>
+					</li>
+					<li>
+						<span class="cm-artwork__item">
+							<span class="cm-artwork__frame cm-artwork__frame--square">
+								<span class="cm-artwork__fallback">
+									<span class="cm-artwork__fallback-mark" aria-hidden="true">HL</span>
+									<span class="cm-artwork__fallback-label">No artwork yet</span>
+								</span>
+								<span class="cm-artwork__overlay" aria-hidden="true">
+									<span class="cm-chip cm-chip--warn">SD</span>
+									<span class="cm-dot cm-dot--on" aria-hidden="true"></span>
+								</span>
+							</span>
+						</span>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">Untitled draft</span>
+					</li>
+				</ul>
+			</section>
+			)}
 
 <!-- ==================================================== cards
 			     One subject that needs more room than a row, and a

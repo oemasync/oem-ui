@@ -3946,6 +3946,57 @@ appends overflow, so a 100k-line buffer holds without layout collapse.
 The app calls `window.cliMono.termAppend(text, level)` to append lines; the
 runtime keeps the DOM bounded and auto-scrolls only while following.
 
+### Artwork tiles — `cm-artwork`
+
+Fixed-aspect artwork for library grids, discover strips, detail headers and
+poster walls (PLAN-01 Gap 5). Three facts the component guarantees:
+
+1. **Aspect is enforced on the frame**, not the image — `aspect-ratio` on
+   `.cm-artwork__frame`, so a lazy image that loads late never shifts the
+   grid. Poster 2:3, backdrop 16:9, square 1:1.
+2. **No-art is a designed state.** `.cm-artwork__fallback` is a positioned
+   fill over the frame — absence of art never shows the browser's
+   broken-image glyph. Ship the tile without an `<img>` and the fallback
+   renders. (Deliberately no `onerror` swap: the app knows which rows have
+   art; it decides, the CSS doesn't guess.)
+3. **The overlay slot is composition, not feature.** `.cm-artwork__overlay`
+   sits over the bottom of the frame with the scrim gradient; the app puts
+   whatever belongs there — a quality `cm-chip`, a watched-progress
+   `cm-progress` strip, a `cm-dot` availability marker.
+
+```html
+<div class="cm-artwork">
+  <div class="cm-artwork__item">
+    <!-- with art: lazy, async, aspect lives on the frame -->
+    <div class="cm-artwork__frame cm-artwork__frame--poster">
+      <img class="cm-artwork__img" src="poster.webp" alt=""
+           loading="lazy" decoding="async">
+      <div class="cm-artwork__overlay" aria-hidden="true">
+        <span class="cm-chip cm-chip--ok">1080p</span>
+        <span class="cm-progress" style="--cm-progress:62%">
+          <span class="cm-progress__fill"></span>
+        </span>
+      </div>
+    </div>
+    <div class="cm-artwork__meta">The Long Afternoon</div>
+  </div>
+
+  <div class="cm-artwork__item">
+    <!-- no art: no <img>, the fallback IS the state -->
+    <div class="cm-artwork__frame cm-artwork__frame--square">
+      <div class="cm-artwork__fallback">
+        <span class="cm-artwork__fallback-mark" aria-hidden="true">HL</span>
+        <span class="cm-artwork__fallback-label">No artwork yet</span>
+      </div>
+    </div>
+    <div class="cm-artwork__meta">Untitled draft</div>
+  </div>
+</div>
+```
+
+`--artwork-shade` and `--artwork-fade` are the only knobs the overlay
+gradient exposes; the fade stops use `--shade` so they follow the theme.
+
 ### JS API
 
 ```js

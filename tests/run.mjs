@@ -18587,9 +18587,98 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 								assert(/function disengage\(\)/.test(body), 'the runtime has no disengage() state transition');
 							});
 							check('batch 37: the README documents the follow-mode tail', () => {
-								const rm = read('README.md');
-								assert(/cm-term/.test(rm), 'the README never mentions cm-term');
-								assert(/follow/i.test(rm), 'the README never documents follow mode');
-							});
-							}
-							}
+															const rm = read('README.md');
+															assert(/cm-term/.test(rm), 'the README never mentions cm-term');
+															assert(/follow/i.test(rm), 'the README never documents follow mode');
+														});
+
+														/* ============================================================ batch 38
+														   cm-artwork — fixed-aspect artwork tiles (PLAN-01 Gap 5).
+
+														   The gap's three tests: aspect enforcement ACROSS
+														   variants, a designed fallback when the source is
+														   absent, and overlay-slot composition. Each asserts
+														   the property, so the mutation harness can prove the
+														   check fires. */
+														const ARTWORK_CLASSES = [
+															'cm-artwork',
+															'cm-artwork__item',
+															'cm-artwork__frame',
+															'cm-artwork__frame--poster',
+															'cm-artwork__frame--backdrop',
+															'cm-artwork__frame--square',
+															'cm-artwork__img',
+															'cm-artwork__fallback',
+															'cm-artwork__fallback-mark',
+															'cm-artwork__fallback-label',
+															'cm-artwork__overlay',
+															'cm-artwork__meta',
+														];
+														check('batch 38: every cm-artwork class is defined in the library', () => {
+															const css = read('src/styles/components.css');
+															for (const cls of ARTWORK_CLASSES) {
+																assert(new RegExp('\\.' + cls.replace(/-/g, '\\-') + '\\b').test(css),
+																	`the ${cls} rule is not defined in the library`);
+															}
+														});
+														check('batch 38: every cm-artwork class is DEMONSTRATED on the page', () => {
+															const show = read('src/pages/[...family].astro');
+															for (const cls of ARTWORK_CLASSES) {
+																assert(new RegExp(`class="[^"]*${cls}`).test(show),
+																	`.${cls} is defined but never rendered in the specimen`);
+															}
+														});
+														check('batch 38: all three aspect variants are declared with a real ratio', () => {
+															const css = read('src/styles/components.css');
+															// Ratios are on the FRAME, never the image: a ratio on
+															// the img still lets the frame collapse before load.
+															for (const [mod, ratio] of [
+																['poster', '2 / 3'], ['backdrop', '16 / 9'], ['square', '1 / 1'],
+															]) {
+																const at = css.indexOf(`.cm-artwork__frame--${mod}`);
+																assert(at >= 0, `the ${mod} variant has no rule`);
+																const rule = css.slice(at, css.indexOf('}', at));
+																assert(new RegExp(`aspect-ratio:\\s*${ratio.replace(/ \//g, '\\s*/\\s*')}`).test(rule),
+																	`the ${mod} variant does not enforce aspect-ratio ${ratio} on the frame`);
+															}
+														});
+														check('batch 38: the fallback is a designed state, not a broken image', () => {
+															const css = read('src/styles/components.css');
+															const at = css.indexOf('.cm-artwork__fallback {');
+															assert(at >= 0, 'the fallback has no rule');
+															const rule = css.slice(at, css.indexOf('}', at));
+															// positioned over the frame and filled: absence of art
+															// must never surface the browser's broken-image glyph.
+															assert(/position:\s*absolute/.test(rule) && /inset:\s*0/.test(rule),
+																'the fallback does not cover the frame, so no-art shows a browser artifact');
+															assert(/background:/.test(rule), 'the fallback has no designed background');
+														});
+														check('batch 38: the overlay slot composes a chip, a progress and a dot', () => {
+															const show = read('src/pages/[...family].astro');
+															const at = show.indexOf('id="artwork"');
+															assert(at >= 0, 'no artwork section in the specimen');
+															const open = show.indexOf('>', at) + 1;
+															const section = show.slice(open, show.indexOf('<section', open));
+															assert((section.match(/cm-artwork__overlay/g) || []).length >= 3,
+																'the overlay slot is not demonstrated on all three tiles');
+															assert(/cm-chip cm-chip--ok/.test(section), 'the overlay never composes a quality chip');
+															assert(/cm-progress/.test(section), 'the overlay never composes a progress strip');
+															assert(/cm-dot/.test(section), 'the overlay never composes a status dot');
+														});
+														check('batch 38: artwork images are lazy, so a 100-tile wall costs no eager fetch', () => {
+															const show = read('src/pages/[...family].astro');
+															const at = show.indexOf('id="artwork"');
+															const open = show.indexOf('>', at) + 1;
+															const section = show.slice(open, show.indexOf('<section', open));
+															const imgs = section.match(/<img [^>]*>/g) || [];
+															assert(imgs.length >= 2, 'the specimen ships no artwork images');
+															for (const img of imgs) {
+																assert(/loading="lazy"/.test(img), 'an artwork image is not lazy');
+															}
+														});
+														check('batch 38: the README documents the artwork tile', () => {
+															const rm = read('README.md');
+															assert(/cm-artwork/.test(rm), 'the README never mentions cm-artwork');
+														});
+													}
+													}
