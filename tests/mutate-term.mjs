@@ -158,11 +158,17 @@ for (const mut of MUTATIONS) {
 	try {
 		const out = runSuite();
 		// String expectations anchor to the check NAME, which also
-		// appears on passing "ok" lines — require the FAIL prefix or a
-		// passing check would count as a catch. Regexes anchor to
-		// assertion messages, which only FAIL lines carry.
+		// appears on passing "ok" lines — require the FAIL line (the
+		// suite prints "FAIL  name", TWO spaces) or a passing check
+		// would count as a catch. Regexes anchor to assertion messages,
+		// which only FAIL lines carry.
+		// A FAIL block spans TWO lines: "FAIL  <check name>" then the
+		// indented assertion message. String expectations may be either
+		// the name or the message, so test both lines of each block.
+		const lines = out.split('\n');
 		const hit = typeof mut.expectFail === 'string'
-			? out.includes('FAIL ' + mut.expectFail)
+			? lines.some((ln, i) => ln.startsWith('FAIL')
+				&& (ln.includes(mut.expectFail) || (lines[i + 1] || '').includes(mut.expectFail)))
 			: mut.expectFail.test(out);
 		if (hit && /FAIL/.test(out)) {
 			caught++;

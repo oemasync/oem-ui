@@ -84,13 +84,16 @@ const MUTATIONS = [
 		// breakpoint; without it the grid is squeezed on a phone.
 		name: 'the mobile fallback breakpoint is removed',
 		file: COMP,
-		from: /@media[^{]*max-width:\s*640px[^{]*\{/,
+		// /g: the file's first 640px block belongs to another component;
+		// hitting every one guarantees the guide's own block goes too,
+		// which is what the (scoped) batch-36 check reads.
+		from: /@media[^{]*max-width:\s*640px[^{]*\{/g,
 		to: '@media (max-width: 9999px) {',
 		expectFail: 'the mobile fallback is not at 640px, so the grid is squeezed on a phone',
 		skipBuild: true,
 	},
-	{
-		// A class the app styles against must be rendered, or the
+
+	{		// A class the app styles against must be rendered, or the
 		// specimen is lying about what ships.
 		name: 'the now-line is dropped from the specimen markup',
 		file: SHOW,

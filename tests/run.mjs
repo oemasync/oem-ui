@@ -18436,8 +18436,13 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 
 							check('batch 36: the now-line is a logical property, not physical', () => {
 								const comp = read('src/styles/components.css');
-								assert(/\.cm-guide__now-line/.test(comp), 'cm-guide__now-line is missing');
-								assert(/inset-inline-start/.test(comp),
+								const at = comp.indexOf('.cm-guide__now-line');
+								assert(at >= 0, 'cm-guide__now-line is missing');
+								// Scope to THIS rule: 30 other rules use inset-inline-start,
+								// so a file-wide grep would pass even with the now-line
+								// switched to a physical left.
+								const rule = comp.slice(at, comp.indexOf('}', at));
+								assert(/inset-inline-start/.test(rule),
 									'the now-line uses a physical directional property (left/right) instead of logical');
 							});
 
@@ -18471,7 +18476,22 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 
 							check('batch 36: the mobile fallback engages at a defined breakpoint', () => {
 								const comp = read('src/styles/components.css');
-								assert(/@media.*max-width.*640px/.test(comp),
+								// File-wide would pass on any of the 8 other 640px blocks;
+								// require a 640px block whose body actually restyles the
+								// guide, or the grid is still squeezed on a phone.
+								let found = false;
+								let i = comp.indexOf('@media (max-width: 640px)');
+								while (i >= 0) {
+									const open = comp.indexOf('{', i);
+									let depth = 0, j = open;
+									for (; j < comp.length; j++) {
+										if (comp[j] === '{') depth++;
+										else if (comp[j] === '}') { depth--; if (depth === 0) break; }
+									}
+									if (/\.cm-guide/.test(comp.slice(open, j))) { found = true; break; }
+									i = comp.indexOf('@media (max-width: 640px)', j);
+								}
+								assert(found,
 									'the mobile fallback is not at 640px, so the grid is squeezed on a phone');
 							});
 
@@ -18527,31 +18547,42 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 							check('batch 37: the runtime listens for scroll (scroll-up disengages follow)', () => {
 								const js = read('src/js/cli-mono.js');
 								assert(/initTermFollow/.test(js), 'the runtime never defines initTermFollow');
-								const body = js.slice(js.indexOf('function initTermFollow'));
+								// Scope to THIS function: 12 other scroll listeners
+								// sit later in the file and would satisfy an
+								// end-of-file slice while follow stayed broken.
+								const at = js.indexOf('function initTermFollow');
+								const body = js.slice(at, js.indexOf('\n	function ', at + 1));
 								assert(/addEventListener\(\s*'scroll'/.test(body),
 									'the follow runtime has no scroll listener, so scrolling up cannot disengage');
 							});
 							check('batch 37: the runtime wires the toggle button', () => {
 								const js = read('src/js/cli-mono.js');
-								const body = js.slice(js.indexOf('function initTermFollow'));
-								assert(/data-cm-follow-toggle/.test(body) && /addEventListener\(\s*'click'/.test(body),
+								const at = js.indexOf('function initTermFollow');
+								const body = js.slice(at, js.indexOf('\n	function ', at + 1));
+								// The element's OWN listener: a generic click
+								// match is satisfied by the jump button still
+								// being wired right below it.
+								assert(/toggle\.addEventListener\(\s*'click'/.test(body),
 									'the runtime never wires the follow toggle button');
 							});
 							check('batch 37: the runtime wires the jump-to-tail button', () => {
 								const js = read('src/js/cli-mono.js');
-								const body = js.slice(js.indexOf('function initTermFollow'));
-								assert(/data-cm-jump-tail/.test(body) && /addEventListener\(\s*'click'/.test(body),
+								const at = js.indexOf('function initTermFollow');
+								const body = js.slice(at, js.indexOf('\n	function ', at + 1));
+								assert(/jump\.addEventListener\(\s*'click'/.test(body),
 									'the runtime never wires the jump-to-tail button');
 							});
 							check('batch 37: appends are bounded (virtualised window)', () => {
 								const js = read('src/js/cli-mono.js');
-								const body = js.slice(js.indexOf('function initTermFollow'));
+								const at = js.indexOf('function initTermFollow');
+								const body = js.slice(at, js.indexOf('\n	function ', at + 1));
 								assert(/MAX_LINES/.test(body), 'the follow runtime has no MAX_LINES window bound');
 								assert(/removeChild/.test(body), 'the follow runtime never drops rows from the top');
 							});
 							check('batch 37: follow is re-engaged by the button, not by an append side-effect', () => {
 								const js = read('src/js/cli-mono.js');
-								const body = js.slice(js.indexOf('function initTermFollow'));
+								const at = js.indexOf('function initTermFollow');
+								const body = js.slice(at, js.indexOf('\n	function ', at + 1));
 								assert(/function engage\(\)/.test(body), 'the runtime has no engage() state transition');
 								assert(/function disengage\(\)/.test(body), 'the runtime has no disengage() state transition');
 							});
