@@ -166,6 +166,30 @@ with sync_playwright() as p:
           pg.evaluate("() => document.activeElement.id") == 'kbd-q',
           pg.evaluate("() => document.activeElement.id || document.activeElement.tagName"))
 
+    # ---- the TAP path: a phone has no keyboard ---------------------------
+    # MEASURED before the fix: `cmKeyFire` was reachable only from the
+    # keydown handler, so this specimen's own "? map" and "/ focus" buttons
+    # were controls that LOOKED live and did nothing when clicked - and a
+    # touch device is the only way Omar reads these pages.
+    pg.evaluate("() => { const d = document.querySelector('dialog.cm-keys');"
+                " if (d && d.open) d.close(); }")
+    pg.wait_for_timeout(150)
+    pg.evaluate(f"() => document.querySelector('{scope_sel} [data-cm-keys-help]').click()")
+    pg.wait_for_timeout(250)
+    check('a TAP on the map trigger opens the map (no keyboard on a phone)',
+          pg.evaluate("() => { const d = document.querySelector('dialog.cm-keys');"
+                      " return !!(d && d.open); }"),
+          'clicking the help trigger left the map closed')
+    pg.evaluate("() => { const d = document.querySelector('dialog.cm-keys');"
+                " if (d && d.open) d.close(); }")
+    pg.wait_for_timeout(150)
+    pg.evaluate("() => document.getElementById('kbd-q').blur()")
+    pg.evaluate(f"() => document.querySelector('{scope_sel} [data-cm-key-focus]').click()")
+    pg.wait_for_timeout(200)
+    check('a TAP on a focus action moves focus, exactly like the chord',
+          pg.evaluate("() => document.activeElement.id") == 'kbd-q',
+          pg.evaluate("() => document.activeElement.id || document.activeElement.tagName"))
+
     # ---- the caret guard, on the same keys ------------------------------
     pg.evaluate("""() => { const i = document.getElementById('kbd-q');
                    i.value = ''; i.focus(); }""")

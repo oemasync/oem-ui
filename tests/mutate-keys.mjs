@@ -194,6 +194,28 @@ const MUTATIONS = [
 		expectFail: 'which the specimen does not contain',
 	},
 
+	// ---- the tap path ----------------------------------------------------
+	{
+		// The binding exists for the reader with no keyboard. A `return` on
+		// the first line of the pass leaves every helper in place and binds
+		// nothing - the shape of "it looks wired and it is not".
+		name: 'the tap path binds no control',
+		file: RT,
+		from: /if \(el\.getAttribute\('data-cm-key-tap'\) === '1'\) return;/,
+		to: 'return;',
+		expectFail: 'clicking the help trigger built nothing',
+	},
+	{
+		// Routing the click through the element's own `click()` is the
+		// obvious wrong fix: it re-enters the button instead of running the
+		// action, which is also how a naive binder recurses forever.
+		name: 'a tap re-clicks the element instead of running its action',
+		file: RT,
+		from: /if \(e && e\.preventDefault\) e\.preventDefault\(\);\n				cmKeyFire\(el\);/,
+		to: 'if (e && e.preventDefault) e.preventDefault();\n				if (el.click) el.click();',
+		expectFail: 'clicking the help trigger built nothing',
+	},
+
 	// ---- the docs --------------------------------------------------------
 	{
 		name: 'the README stops naming the binding attribute',

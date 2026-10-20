@@ -1,5 +1,17 @@
 ## Unreleased - batch 41: the keyboard layer, and a map derived from it
 
+**Fixed after the first landing:** `cmKeyFire` was reachable only from the
+keydown handler, so the specimen's own `? map` and `/ focus` buttons were
+controls that LOOKED live and did nothing when clicked. MEASURED at 1280 in
+WebKit: clicking the help trigger created no dialog at all — the keyboard map
+was unreachable on every touch device, which is the device class these pages
+are read on. An ACTION-bearing binding is now also bound to `click` (help,
+`data-cm-key-focus`, `data-cm-key-href`); a bare chord-only binding keeps its
+native click, and the handler calls `cmKeyFire` rather than `el.click()`, so
+it cannot recurse. Proven by a driven check plus two mutants (a pass that
+binds nothing, and a tap that re-clicks the element) and by two new WebKit
+checks at 390: the tap opens the map and moves focus exactly like the chord.
+
 The library shipped exactly ONE chord (Ctrl/Cmd-K for the palette) and every
 consumer hand-rolled the rest — `/` to focus search, `j`/`k` to walk rows,
 `g`-then-`h` to jump between areas. `docs/plans/PLAN-01/pages/05-activity.md`

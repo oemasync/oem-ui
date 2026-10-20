@@ -4541,6 +4541,24 @@
 			el.setAttribute('aria-keyshortcuts', cmKeyAria(seq[0]));
 			el.setAttribute('data-cm-keyshortcuts', '1');
 		});
+		/* A binding whose ACTION is focus/help/href is also a visible
+		   affordance, and a phone has no keyboard to press: a tap must do
+		   exactly what the chord does. MEASURED before this existed: a click
+		   on the shipped `data-cm-keys-help` button created nothing at 1280,
+		   so the map was unreachable by touch - the one device class Omar
+		   actually reads these pages on. Only an ACTION-bearing binding is
+		   bound; a bare `data-cm-key` keeps its native click, and
+		   `cmKeyFire`'s own `el.click()` fallback would otherwise recurse. */
+		Array.prototype.forEach.call(document.querySelectorAll(
+			'[data-cm-key][data-cm-keys-help], [data-cm-key][data-cm-key-focus], ' +
+			'[data-cm-key][data-cm-key-href]'), function (el) {
+			if (el.getAttribute('data-cm-key-tap') === '1') return;
+			el.setAttribute('data-cm-key-tap', '1');
+			el.addEventListener('click', function (e) {
+				if (e && e.preventDefault) e.preventDefault();
+				cmKeyFire(el);
+			});
+		});
 		if (document.__cmKeysBound) return;
 		document.__cmKeysBound = true;
 		document.addEventListener('keydown', function (e) {

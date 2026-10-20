@@ -18922,9 +18922,13 @@ const kbdFixture = () => {
 		if (label) node.textContent = label;
 		return node;
 	};
-	const input = mk('input', { id: 'kbd-q', type: 'search' });
+	// The fixture's focus target is a CLASS, not the showcase's `#q`: the fake
+	// `matches()` models classes and attributes only, so an id selector
+	// resolves to nothing and the click test would fail on the harness. The
+	// id path is the one the WebKit verifier proves, against the real page.
+	const input = mk('input', { id: 'kbd-q', class: 'cm-input kbd-target', type: 'search' });
 	const focusBtn = mk('button', {
-		class: 'cm-btn', 'data-cm-key': '/', 'data-cm-key-focus': '#kbd-q',
+		class: 'cm-btn', 'data-cm-key': '/', 'data-cm-key-focus': '.kbd-target',
 		'data-cm-key-label': 'Focus the search field',
 	}, '/ focus');
 	const link = mk('a', {
@@ -19121,4 +19125,22 @@ check('batch 41: a local scope does not fire while focus is outside it', () => {
 	pressKey(doc, '?');
 	assert(doc.body.querySelector('dialog.cm-keys') === null,
 		'a local scope built its map from an unfocused scope');
+});
+
+check('batch 41: a binding that carries an ACTION is also clickable, because a phone has no keyboard', () => {
+	// MEASURED before this existed: `cmKeyFire` was reachable only from the
+	// keydown handler, so clicking the shipped `data-cm-keys-help` button
+	// created nothing at 1280 - the map was unreachable on every touch
+	// device, i.e. exactly where the reader reads these pages. A chord-only
+	// binding keeps its native click: the layer must not swallow it.
+	const f = kbdFixture();
+	const { doc } = runOn([f.scope]);
+	f.help.fire('click');
+	const dlg = doc.body.querySelector('dialog.cm-keys');
+	assert(dlg, 'clicking the help trigger built nothing, so the map needs a keyboard to open');
+	assert(dlg.hasAttribute('open'), 'the map was built by a click but never opened');
+	f.focusBtn.fire('click');
+	assert(f.input.focused, 'clicking a data-cm-key-focus control did not move focus');
+	assert(f.link.clicks === 0 && f.mod.clicks === 0,
+		'a click on the scope fired a chord binding, or the handler recursed into el.click()');
 });

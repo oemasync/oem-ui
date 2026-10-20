@@ -4088,6 +4088,12 @@ listener instead, and the bindings are declared in markup:
 - **Three actions:** click the element, `data-cm-key-focus="#id"`, or
   `data-cm-key-href="…"`. A link is a link, so the default (click) is enough
   for one.
+- **A tap does what the chord does.** An ACTION-bearing binding — the map's
+  help trigger, a `data-cm-key-focus` control, a `data-cm-key-href` control —
+  is also bound to `click`, because a phone has no keyboard to press: the
+  visible button and the key are one control, not two. A bare chord-only
+  binding keeps its own click, and the layer never re-dispatches `click()` on
+  itself (that is how a naive binder recurses forever).
 
 Three guards, each one a bug a hand-rolled layer ships:
 
