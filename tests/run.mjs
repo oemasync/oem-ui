@@ -18761,6 +18761,19 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 																									assert(/type="button"/.test(tag), 'the save affordance is not a real button');
 																									assert(/save this view/i.test(show.slice(at, at + 200)),
 																										'the save affordance does not say what it does');
+																									// The dashed border is what separates the affordance
+																									// from the views it sits among; without it, it reads
+																									// as a saved view you can press.
+																									const css = read('src/styles/components.css');
+																									const rule = css.slice(css.indexOf('.cm-toolbar__view-save'),
+																										css.indexOf('}', css.indexOf('.cm-toolbar__view-save')));
+																									assert(/border-style:\s*dashed/.test(rule),
+																										'the save affordance has no dashed styling — it reads as a saved view');
+																									// Long view names must ellipsize, not widen the bar.
+																									const lbl = css.slice(css.indexOf('.cm-toolbar__view-label'),
+																										css.indexOf('}', css.indexOf('.cm-toolbar__view-label')));
+																									assert(/text-overflow:\s*ellipsis/.test(lbl) && /overflow:\s*hidden/.test(lbl),
+																										'the view label does not ellipsize — long names widen the toolbar');
 																								});
 																								check('batch 39: the README documents saved views', () => {
 																									const rm = read('README.md');
