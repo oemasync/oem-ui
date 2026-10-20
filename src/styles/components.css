@@ -6008,6 +6008,64 @@ button.cm-link:focus-visible {
 }
 .cm-chip__x:hover { color: var(--ink); }
 
+/* ---------- bell: the topbar notification trigger ---------- PLAN-01 Gap 7.
+   Decision, recorded once: the composition (a count chip inside a button)
+   FAILS the states — a chip inside a button cannot overflow the corner the
+   way every topbar count does, and the disconnected state has no marker in
+   the existing vocabulary. So a small family: the TRIGGER only. The panel
+   stays cm-popover (the list of notifications is app data, not chrome).
+
+   Three states, because that is what the app has: unread (count badge),
+   all-read (no badge, quiet), disconnected (`.cm-bell--off`, dashed — the
+   same "set/dashed = provisional" rule the chips use).
+
+   The badge is a real element with real text, so the count is readable by
+   a screen reader; the app ALSO folds it into the button's accessible
+   name ("Notifications, 3 unread") because the badge alone is not a
+   button name. That contract is asserted, not assumed. */
+.cm-bell {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 2rem;
+	min-block-size: 2rem;
+	padding: 0;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	color: var(--ink-dim);
+	font: inherit;
+	cursor: pointer;
+}
+.cm-bell:hover { color: var(--ink); border-color: var(--line); }
+.cm-bell--off {
+	border-style: dashed;
+	border-color: var(--line);
+	color: var(--ink-faint);
+}
+.cm-bell__count {
+	position: absolute;
+	top: 0;
+	inset-inline-end: 0;
+	min-inline-size: 1.1rem;
+	padding: 0 var(--space-1);
+	background: var(--ink);
+	color: var(--panel);
+	border-radius: var(--radius-sm);
+	font-size: max(var(--min-font), var(--text-xs));
+	font-weight: 600;
+	line-height: 1.4;
+	text-align: center;
+}
+/* 99+ capping is the app's string, not a CSS trick; the badge pins its
+   own width when capped, so the topbar's layout does not shift between
+   9 and 100 notifications. */
+.cm-bell__count[data-overflow] {
+	inline-size: 1.75rem;
+	padding-inline: 0;
+}
+
 /* ---------- check row: a bare checkbox in a tappable label ----------
    The library already styles `input[type=checkbox]` down to the tick, so the
    control needs no class. What was missing is the ROW: a label whose hit

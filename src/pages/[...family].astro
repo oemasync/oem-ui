@@ -1907,8 +1907,37 @@ The title row every page starts with: a square glyph, the name, one line of what
 									<div class="cm-head__sub">404 catch-all domains</div>
 								</div>
 								<button class="cm-btn cm-btn--sm cm-btn--primary cm-head-row__action">Add Dead Host</button>
-							</div>
-						</section>
+														</div>
+														<p class="cm-head__sub" style="margin-top:var(--space-4)">
+															The topbar notification trigger (<code>cm-bell</code>) is the
+															one place the composition failed and a small family was
+															warranted: a count that overflows the corner, and a
+															disconnected state. Three states, one trigger; the panel is a
+															<code>cm-popover</code> filled with app data. The accessible
+															name folds the count in — a badge is not a button name.
+														</p>
+														<div style="display:flex;gap:var(--space-4);align-items:center;flex-wrap:wrap">
+															<button class="cm-bell" type="button"
+																	aria-label="Notifications, 3 unread">
+																<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="18" height="18"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+																<span class="cm-bell__count">3</span>
+															</button>
+															<span class="cm-head__sub">unread — badge overflows the corner</span>
+														</div>
+														<div style="display:flex;gap:var(--space-4);align-items:center;flex-wrap:wrap">
+															<button class="cm-bell" type="button" aria-label="Notifications, none unread">
+																<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="18" height="18"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+															</button>
+															<span class="cm-head__sub">all read — no badge, quiet trigger</span>
+														</div>
+														<div style="display:flex;gap:var(--space-4);align-items:center;flex-wrap:wrap">
+															<button class="cm-bell cm-bell--off" type="button" aria-label="Notifications, disconnected">
+																<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="18" height="18"><path d="M6 8a6 6 0 0 1 9.3-5"/><path d="M18 8c0 7 3 9 3 9H8"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/></svg>
+																<span class="cm-bell__count" data-overflow>99+</span>
+															</button>
+															<span class="cm-head__sub">disconnected — dashed, capped count pins the width</span>
+														</div>
+													</section>
 						)}
 												{shows('tables') && (
 												<section id="tblaction" class="cm-section cm-section--pad">

@@ -18766,5 +18766,81 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 																									const rm = read('README.md');
 																									assert(/saved view/i.test(rm), 'the README never documents saved views');
 																								});
+							/* ============================================================ batch 40
+							   cm-bell — the topbar notification trigger (PLAN-01 Gap 7).
+
+							   The gap said compose-then-decide; the composition failed
+							   (a chip inside a button cannot overflow the corner; the
+							   disconnected state had no marker), so the decision is a
+							   small trigger-only family. These checks pin the three
+							   states, the overflow geometry, and the a11y bar. */
+							const BELL_CLASSES = [
+								'cm-bell',
+								'cm-bell--off',
+								'cm-bell__count',
+							];
+							check('batch 40: every cm-bell class is defined in the library', () => {
+								const css = read('src/styles/components.css');
+								for (const cls of BELL_CLASSES) {
+									assert(new RegExp('\\.' + cls.replace(/-/g, '\\-') + '\\b').test(css),
+										`the ${cls} rule is not defined in the library`);
+								}
+							});
+							check('batch 40: every cm-bell class is demonstrated on the page', () => {
+								const show = read('src/pages/[...family].astro');
+								for (const cls of BELL_CLASSES) {
+									assert(new RegExp(`class="[^"]*${cls}`).test(show),
+										`.${cls} is defined but never rendered in the specimen`);
+								}
+							});
+							check('batch 40: the count badge OVERFLOWS the trigger corner', () => {
+								// The whole reason the composition failed: the badge is
+								// positioned out of flow so it can sit on the corner.
+								const css = read('src/styles/components.css');
+								const at = css.indexOf('.cm-bell__count {');
+								assert(at >= 0, 'the count badge has no rule');
+								const rule = css.slice(at, css.indexOf('}', at));
+								assert(/position:\s*absolute/.test(rule), 'the count badge is not absolutely positioned, so it cannot overflow');
+								assert(/inset-inline-end:/.test(rule), 'the count badge is not anchored to the inline end');
+							});
+							check('batch 40: the disconnected state is drawn, not just announced', () => {
+								const css = read('src/styles/components.css');
+								const at = css.indexOf('.cm-bell--off {');
+								assert(at >= 0, 'the disconnected state has no rule');
+								const rule = css.slice(at, css.indexOf('}', at));
+								assert(/border-style:\s*dashed/.test(rule), 'the disconnected state has no dashed provisional border');
+							});
+							check('batch 40: the capped count pins its width, so 9 and 100 do not reflow the topbar', () => {
+								const css = read('src/styles/components.css');
+								const at = css.indexOf('.cm-bell__count[data-overflow]');
+								assert(at >= 0, 'the capped count has no rule');
+								const rule = css.slice(at, css.indexOf('}', at));
+								assert(/inline-size:/.test(rule), 'the capped count does not pin its width');
+							});
+							check('batch 40: all three states render, and each button name carries its count', () => {
+								const show = read('src/pages/[...family].astro');
+								const at = show.indexOf('cm-bell');
+								assert(at >= 0, 'no bell in the specimen');
+								const start = Math.max(0, show.lastIndexOf('<section', at));
+								const section = show.slice(start, show.indexOf('</section>', at));
+								assert((section.match(/class="cm-bell[" ]/g) || []).length >= 3,
+									'all three states must render: unread, all-read, disconnected');
+								assert(/class="cm-bell cm-bell--off"/.test(section), 'the disconnected state is not demonstrated');
+								assert(/class="cm-bell__count"/.test(section), 'the unread state shows no count badge');
+								assert(/data-overflow/.test(section), 'the capped count is not demonstrated');
+								// The a11y bar: the accessible NAME folds the count in.
+								// A badge's text is not the button's name.
+								const buttons = section.match(/<button class="cm-bell[^>]*>/g) || [];
+								assert(buttons.length >= 3, 'the bell specimen must ship all three triggers');
+								for (const btn of buttons) {
+									assert(/aria-label="Notifications, /.test(btn),
+										'each bell button needs an accessible name that includes its count/state');
+								}
+							});
+							check('batch 40: the README documents the bell and its recorded decision', () => {
+								const rm = read('README.md');
+								assert(/cm-bell/.test(rm), 'the README never mentions cm-bell');
+								assert(/Gap 7/.test(rm), 'the README never records why the bell is a family');
+							});
 													}
 													}

@@ -4041,6 +4041,26 @@ What the library guarantees: slot layout, chip-removal affordance, pressed
 view styling, real buttons everywhere. What it deliberately does not touch:
 which filters exist, view naming, or where views are stored.
 
+### The notification bell — `cm-bell` (Gap 7: composition failed)
+
+The gap's instruction was compose-then-decide: build a bell family ONLY if
+`cm-popover` + a count chip fails the states or the a11y bar. It fails both,
+so the decision is recorded here, once:
+
+1. **The count cannot overflow.** A chip inside a button stays inside the
+   button; every topbar count sits ON the corner. `.cm-bell__count` is
+   absolutely positioned to the inline-end corner.
+2. **Disconnected is a state with no existing marker.** `.cm-bell--off`
+   draws it with the dashed "provisional" border the chips use.
+3. **The a11y bar:** the count is real text, AND the button's
+   `aria-label` folds it in ("Notifications, 3 unread") — a badge's text
+   is not the button's name.
+
+Three states: unread (badge), all-read (no badge, quiet), disconnected
+(`--off`, capped `99+` whose width is pinned so 9 and 100 do not reflow
+the topbar). The PANEL is not this family — it is a `cm-popover` filled
+with app data.
+
 ### JS API
 
 ```js

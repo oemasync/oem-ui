@@ -1,3 +1,25 @@
+## Unreleased - batch 40: the notification bell, composed-then-decided
+
+PLAN-01 Gap 7. The annex said: compose from `cm-popover` + a count chip, and
+build a bell family ONLY if the composition fails the three states or the
+a11y bar. It fails both — a chip inside a button cannot overflow the corner
+the way every topbar count does, and the disconnected state had no marker in
+the existing vocabulary. The decision is recorded in the README and the gap
+annex: `cm-bell` is a TRIGGER-only family (three classes), the panel stays
+`cm-popover` filled with app data.
+
+Three states ship: unread (`.cm-bell__count`, absolutely positioned on the
+inline-end corner), all-read (no badge, quiet), disconnected
+(`.cm-bell--off`, the dashed "provisional" border the chips use). The capped
+count (`data-overflow`) pins its own width, so the topbar does not reflow
+between 9 and 100 notifications — capping is the app's string, the stability
+is the component's.
+
+The a11y bar the annex demanded: the count is real text, AND each trigger's
+`aria-label` folds the count in ("Notifications, 3 unread") — a badge's text
+is not a button's name. Seven batch-40 checks pin the states, the overflow
+geometry, the disconnected border, the capped width, and the README.
+
 ## Unreleased - batch 38+39: fixed-aspect artwork tiles, saved views
 
 PLAN-01 Gaps 5 and 6.
