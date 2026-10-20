@@ -616,3 +616,97 @@ thirty-four verdicts that queue earned (every browser-driven sweep but the
 eight re-earned in this window: composer, the six, and msglist) stand as
 earned. **The re-proof campaign is closed: all 42 sweeps hold clean
 verdicts on this tree, and the battery ran green on the drained tree.**
+
+## 14. The shape of the site: the drawer, the dead guard, and the measured judgment (2026-10-20)
+
+The catalogue and the sweep campaign were closed, and the user's remaining
+complaint was that the site "doesn't quite work like the shadcn site."
+Measured at four widths on both sites before changing anything: at 768 and
+390 oem-ui already matched shadcn's mobile/tablet shape, and the family
+routes already carried the shadcn shell (rail, capped measure, right
+"on this page" TOC at 1180+). The defects were two, both reproduced in a
+real iPhone touch context.
+
+**The mobile drawer hid every section link.** shadcn's mobile nav is a
+full-screen sheet that lists its 167 links flat — measured from the live
+DOM, nothing collapsed. The oem-ui drawer showed 9 group labels and **0 of
+the 52 links**. Root cause, measured in WebKit at 390x844: `Header.astro`
+renders each group's link list as a nested `.cm-header__links` — the same
+class as the disclosure panel — so the phone rule
+`.cm-js .cm-header__links { display:none }` hid every group list, and the
+runtime only sets `data-open` on the top-level panel. Worse, the nested
+lists also inherited the panel's own geometry: `position: fixed;
+top: 60px; bottom: 0` fixed all nine lists to the same viewport box and
+painted them on top of each other (all 56 links measured at top 61), and
+the rail block's `width: 100%` / `flex: 1 1 auto` / `min-height: 0` made
+each a collapsible container. The fix is one rule, scoped to the phone
+block and to the nested list only:
+`.cm-header--rail .cm-header__group > .cm-header__links` gets `position:
+static`, `display: flex; flex-direction: column; flex-wrap: nowrap;
+flex: 0 0 auto; width: auto; overflow: visible;
+border-inline-end: 0` — the groups keep their labels, their lists stay
+open, each group takes its natural height, and the panel (already a
+scroll container) carries the overflow. Verified in WebKit: **0 of 52 →
+56/56 links visible** (52 sections + the 9 label rows) in one column,
+**0 overlaps**, closed state `display: none`, the last row (readme)
+reachable by scrolling and inside the panel, on BOTH the root and
+`/f/panels` builds, and again on a real iPhone 14 Pro touch context (65/65
+visible, one column, all inside the panel). The 641-999 tablet band is
+untouched: `verify-grouped-rail-tablet` PASS.
+
+**The guard for that drawer had stopped measuring.**
+`tests/verify-drawer-column.py` failed with "nothing was checked" on a
+healthy drawer — confirmed pre-existing (it fails identically at `9c6305d`,
+before the fix). Its probe read `:scope > a`, direct children of the
+panel; after the rail was divided into labelled groups the direct children
+are `.cm-header__group` divs, so the probe returned zero rows,
+`links[-1]` threw inside the page, and every one of the 50 viewports
+landed in the exception branch — the classic instrument rot of section 8,
+where a `:scope >` selector "counted zero rail links after the rail was
+divided into labelled groups." The probe now reads every link in document
+order (`list.querySelectorAll('a')`); the one-column / scroll /
+inside-panel signals are unchanged. Re-earned: **5x10 viewports, one
+column at every height, scrolls when the rows overflow, every link inside
+the panel.**
+
+**The desktop shell was measured and adjudicated, not changed.** shadcn at
+1280 (measured after hydration): full-width **sticky 64px top bar**, 288px
+left sidebar, **640px capped content column** (`max-w-160`, x=320), 288px
+sticky right TOC (x=984). oem-ui at 1280: a **232px full-height fixed left
+rail**, no top bar; root content at x=336 w=860 with no TOC, family content
+x=252 w=720 with the 288px sticky TOC. Three candidates, three verdicts:
+
+- **The full-height rail vs a top bar.** oem-ui's rail is a documented,
+  suite-pinned design (the family routes were accepted as shadcn-shaped
+  through every section of this audit with that same rail), and it is the
+  mobile drawer's desktop continuation — one nav, one scroll-spy, one
+  measure, from 320px to 1440px. Replacing it with a top bar would mean
+  re-doing the mobile/tablet bands this window just re-verified, to match
+  a shell the audit never recorded as a defect. **Judged: deliberate
+  difference, not a gap.**
+- **The 860px root measure vs shadcn's 640px.** The root page is a 52-
+  section specimen wall — code blocks, tables and interactive demos run
+  wide by design (the family routes already cap at their family's measure
+  once a TOC reserves the third column). The 860px box read as a
+  comfortable, balanced measure in the rendered page. **Judged: content-
+  driven, not a gap.**
+- **The root's missing TOC.** shadcn's TOC lists a component's in-page
+  headings — it never duplicates its sidebar. On oem-ui's root page the
+  in-page sections ARE the rail's 52 rows, so a TOC there would be a
+  second copy of the rail; on the family routes it earns its place (the
+  rail's rows are mostly cross-document links). This is why the code
+  renders `TOC_IDS = []` for the root by explicit comment, why
+  `verify-doc-toc.py` pins "the whole page renders no TOC" as a passing
+  check, and why section 5 records it as the *known, deliberate* state
+  rather than a defect. **Judged: correct as built.**
+
+The one thing that genuinely "didn't work" was the drawer — the reader on
+the device this site is actually viewed on (iPhone, Safari) opened the
+menu and got nine dead headings instead of 52 links. That is fixed,
+guarded, and re-earned.
+
+Evidence, on the drained tree: suite **688/0**; `verify-doc-toc` **81/81**;
+`verify-grouped-rail-tablet` **PASS** (tablet 700-999 + rail 1280 + phone
+drawer 390); `verify-drawer-column` **50/50** (was checking 0/50); census
+**100 harnesses, 0 stale**; `parity:live` **66 = 66, identical membership
+AND order**. Commits: `d41efc9` (the drawer), `ae72d2d` (the guard).
