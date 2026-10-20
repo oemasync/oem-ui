@@ -46,11 +46,30 @@ with sync_playwright() as p:
     pg.emulate_media(reduced_motion='reduce')
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(BASE, wait_until='load')
+    # `wait_until='load'` and `'domcontentloaded'` both HANG on this document
+    # in WebKit (measured: goto times out at 30s while `document.readyState`
+    # already reads 'complete'). The lifecycle event is missed on this large,
+    # fast, same-origin document - and a verifier whose first line cannot
+    # load the page proves nothing. 'commit' returns in 0.03s, and the real
+    # readiness signal is the one the runtime itself publishes: the `cm-js`
+    # class. networkidle can fire BEFORE the bundle executes, which is why
+    # that mark - not a timer - is what this file waits for.
+    pg.goto(BASE, wait_until='commit')
     # networkidle can fire before the bundle executes; the runtime marks
     # itself, and that mark is the only readiness signal worth waiting for.
-    pg.wait_for_function(
-        "() => document.documentElement.classList.contains('cm-js')", timeout=15000)
+    # MEASURED: `pg.wait_for_function("() => document.documentElement
+    # .classList.contains('cm-js')")` TIMES OUT (10.9s) on this page while
+    # `className` already reads 'cm-js' and `cliMono` is an object - and so
+    # does the trivial `() => true`, on the FIRST call after a 'commit'
+    # navigation, whichever polling mode is used. The next call resolves in
+    # 0.06s. So the gate polls `evaluate` itself: same doctrine (wait for the
+    # runtime's own mark, never a timer), no dependence on the broken path.
+    for _ in range(150):
+        if pg.evaluate("document.documentElement.classList.contains('cm-js')"):
+            break
+        pg.wait_for_timeout(100)
+    else:
+        raise SystemExit('FAIL the runtime never marked the document (cm-js)')
     pg.wait_for_timeout(300)
 
     scope_sel = '[data-cm-keys]'
