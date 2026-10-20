@@ -1,3 +1,31 @@
+## Unreleased - batch 41: the keyboard layer, and a map derived from it
+
+The library shipped exactly ONE chord (Ctrl/Cmd-K for the palette) and every
+consumer hand-rolled the rest — `/` to focus search, `j`/`k` to walk rows,
+`g`-then-`h` to jump between areas. `docs/plans/PLAN-01/pages/05-activity.md`
+in arr-unified specifies that map for the app, so the app would have written
+it a fourth time.
+
+`cmInitKeys` adds one document listener and a declarative binding:
+`data-cm-key` takes a chord (`mod+k`) or a SEQUENCE (`g l`), and
+`data-cm-keys-help` builds `cm-keys` — a keyboard map DERIVED from the live
+bindings, so it cannot document a key nobody has.
+
+Three guards, each a bug the hand-rolled versions ship: a plain key never
+fires from a caret (a modified chord still does), a printable key matches by
+the character it produced so `?` needs no `shift+` prefix while a named key
+compares Shift exactly, and a hidden or disabled control is not in the map
+(`checkVisibility()`, not `getClientRects()` — the predicate WebKit honours).
+`aria-keyshortcuts` is published for single chords only; a sequence has no
+syntax there, and inventing one would announce a key nobody can press.
+
+New surface: `.cm-keys`, `.cm-keys__bar`, `__title`, `__list`, `__row`,
+`__keys`, `__sep`, `__label`, `__note` (all built by the runtime, proven by
+the reachability list). Nine batch-41 checks, six of them DRIVEN through the
+real runtime on a fake document — the click spy, the prefix consumption, the
+expiry window, and the generated map are all read as behaviour, not as
+source.
+
 ## Unreleased - batch 40: the notification bell, composed-then-decided
 
 PLAN-01 Gap 7. The annex said: compose from `cm-popover` + a count chip, and

@@ -5006,6 +5006,11 @@ const el = (tag, attrs = {}, kids = []) => {
 		focused: false,
 		nodeType: 1,
 		parentNode: null,
+		// A real element answers `tagName` in UPPER CASE. Without it the
+		// runtime's "is this a caret" question got `undefined` from every
+		// fixture, so the typing guard could not be driven at all - the same
+		// shape as a double that answers only the old selector.
+		get tagName() { return String(node.tag).toUpperCase(); },
 		get className() { return node.attrs.class || ''; },
 		set className(v) { node.attrs.class = v; },
 		get id() { return node.attrs.id || ''; },
@@ -8212,6 +8217,19 @@ check('every class the library defines is rendered somewhere on the page', () =>
 		['cm-spec__state', /createElement\('span'\)\s*;?\s*\n\s*out\.className = 'cm-spec__state'/],
 		// applied while the pointer is down, removed on release
 		['cm-drawer--dragging', /classList\.add\(\s*'cm-drawer--dragging'\s*\)/],
+		// The keyboard map is BUILT from the bindings, so its nine classes
+		// exist only after `?` opens it. Each proof names the class AND its
+		// assignment: a bare /cm-keys/ would be satisfied by the dialog's own
+		// querySelector and would let a renamed class go dead in silence.
+		['cm-keys', /className = 'cm-dialog cm-keys'/],
+		['cm-keys__bar', /className = 'cm-keys__bar'/],
+		['cm-keys__title', /className = 'cm-keys__title'/],
+		['cm-keys__list', /className = 'cm-keys__list'/],
+		['cm-keys__row', /className = 'cm-keys__row'/],
+		['cm-keys__keys', /className = 'cm-keys__keys'/],
+		['cm-keys__sep', /className = 'cm-keys__sep'/],
+		['cm-keys__label', /className = 'cm-keys__label'/],
+		['cm-keys__note', /className = 'cm-keys__note'/],
 	]);
 	for (const [cls, proof] of runtimeOnly) {
 		assert(proof.test(runtimeSrc),
@@ -18873,3 +18891,234 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 							});
 													}
 													}
+
+/* ================= batch 41: the keyboard layer =================
+   The layer is a RUNTIME capability, so the checks that matter are DRIVEN:
+   the real runtime, a fake document, and a keydown dispatched the way a
+   browser dispatches one. A source scan proves the handler exists, which is
+   exactly the reading this repo has been burned by (a handler nobody could
+   drive). The specimens below therefore carry spies on `click`, and the
+   assertions read what the layer DID.
+*/
+console.log('\nthe keyboard layer');
+
+const KEYS_CLASSES = [
+	'cm-keys', 'cm-keys__bar', 'cm-keys__title', 'cm-keys__list',
+	'cm-keys__row', 'cm-keys__keys', 'cm-keys__sep', 'cm-keys__label',
+	'cm-keys__note',
+];
+
+// A scope with one of every case the layer claims to handle: a chord, a
+// SEQUENCE, a focus action, the map, a modified chord, and a disabled
+// control. `contains` is real - the runtime asks whether focus is inside
+// the scope, and a fake that answers "no" would make every local-scope test
+// pass for the wrong reason.
+const kbdFixture = () => {
+	let n = 0;
+	const mk = (tag, attrs, label) => {
+		const node = el(tag, attrs, []);
+		node.clicks = 0;
+		node.click = () => { node.clicks++; };
+		if (label) node.textContent = label;
+		return node;
+	};
+	const input = mk('input', { id: 'kbd-q', type: 'search' });
+	const focusBtn = mk('button', {
+		class: 'cm-btn', 'data-cm-key': '/', 'data-cm-key-focus': '#kbd-q',
+		'data-cm-key-label': 'Focus the search field',
+	}, '/ focus');
+	const link = mk('a', {
+		class: 'cm-btn', href: '#lists', 'data-cm-key': 'g l',
+		'data-cm-key-label': 'Go to the lists section',
+	}, 'g then l');
+	const help = mk('button', {
+		class: 'cm-btn', 'data-cm-key': '?', 'data-cm-keys-help': '',
+		'data-cm-key-label': 'Open this keyboard map',
+	}, '? map');
+	const mod = mk('button', {
+		class: 'cm-btn', 'data-cm-key': 'mod+k',
+		'data-cm-key-label': 'Copy this row',
+	}, 'copy');
+	const off = mk('button', {
+		class: 'cm-btn', disabled: '', 'data-cm-key': 'x',
+		'data-cm-key-label': 'never fires',
+	}, 'x disabled');
+	// el() does not parent its kids (a real tree does), and the layer asks
+	// `scope.contains(activeElement)` - a fixture with dangling parents makes
+	// every LOCAL-scope test answer "not focused", which reads as a broken
+	// guard rather than a broken fixture.
+	const scope = el('div', {
+		class: 'cm-card', 'data-cm-keys': '', 'data-cm-keys-title': 'Keys',
+	}, []);
+	for (const k of [input, focusBtn, link, help, mod, off]) scope.appendChild(k);
+	scope.contains = (node) => {
+		let c = node;
+		while (c) { if (c === scope) return true; c = c.parentNode; }
+		return false;
+	};
+	return { scope, input, focusBtn, link, help, mod, off };
+};
+
+// Dispatch a keydown the way the platform does: every document-level handler
+// in registration order, with an event object that carries what the layer
+// reads. `prevented` counts calls, because "the browser's default was
+// stopped" is a claim only the handler's own preventDefault can support.
+const pressKey = (doc, key, extra = {}) => {
+	const e = {
+		target: extra.target || doc.body,
+		key, repeat: false, defaultPrevented: false, prevented: 0,
+		metaKey: false, ctrlKey: false, altKey: false, shiftKey: false,
+		preventDefault() { this.prevented++; },
+		...extra,
+	};
+	for (const fn of (doc.__ev.keydown || [])) fn(e);
+	return e;
+};
+
+check('batch 41: every cm-keys class is defined in the library', () => {
+	for (const sel of KEYS_CLASSES) {
+		const re = new RegExp(`\\.${sel}\\s*[,{]`);
+		assert(re.test(compSrc), `components.css never defines .${sel}`);
+	}
+});
+
+check('batch 41: the specimen is a real scope, and every action names a target that exists', () => {
+	const show = read('src/pages/[...family].astro');
+	const at = show.indexOf('id="shortcuts"');
+	assert(at >= 0, 'the shortcuts section is gone from the showcase');
+	const section = show.slice(at, show.indexOf('</section>', at));
+	assert(/<div class="cm-card" data-cm-keys/.test(section),
+		'the specimen is not a [data-cm-keys] scope, so no binding in it can fire');
+	const binds = [...section.matchAll(/data-cm-key="([^"]+)"/g)].map((m) => m[1]);
+	assert(binds.length >= 4, `expected at least 4 bindings, found ${binds.length}`);
+	assert(binds.includes('g l'),
+		'no SEQUENCE is demonstrated, and a sequence is the half a chord layer usually gets wrong');
+	// The section's own prose NAMES this attribute, so a bare /data-cm-keys-help/
+	// is satisfied by the sentence that explains it. Require it where a tag
+	// carries it: a whitespace before the name is what separates the attribute
+	// from `<code>data-cm-keys-help</code>`.
+	assert(/\sdata-cm-keys-help(?:=|\s|>)/.test(section),
+		'nothing in the specimen opens the map');
+	assert(/data-cm-key="x"/.test(section) && /disabled/.test(section),
+		'the disabled-control case is claimed in prose but not demonstrated');
+	assert((section.match(/data-cm-key-label="/g) || []).length === binds.length,
+		'every binding needs its own label, or the map shows the element text instead');
+	const focusSel = section.match(/data-cm-key-focus="([^"]+)"/);
+	assert(focusSel, 'no focus action is demonstrated');
+	const id = focusSel[1].replace(/^#/, '');
+	assert(section.includes(`id="${id}"`), `data-cm-key-focus names #${id}, which the specimen does not contain`);
+});
+
+check('batch 41: only a single chord publishes aria-keyshortcuts', () => {
+	const f = kbdFixture();
+	runOn([f.scope]);
+	assert(f.focusBtn.getAttribute('aria-keyshortcuts') === '/',
+		`a plain key is its own aria form, got ${f.focusBtn.getAttribute('aria-keyshortcuts')}`);
+	assert(f.mod.getAttribute('aria-keyshortcuts') === 'Control+k',
+		'mod+ must publish the PLATFORM modifier, since aria-keyshortcuts has no "mod"');
+	assert(f.link.getAttribute('aria-keyshortcuts') === null,
+		'a SEQUENCE published an aria-keyshortcuts, which no AT can parse - it must be skipped');
+	assert(f.off.getAttribute('aria-keyshortcuts') === null,
+		'a disabled control published a shortcut nobody can press');
+});
+
+check('batch 41: a caret keeps its plain keys and still lets a modified chord through', () => {
+	const f = kbdFixture();
+	const { doc } = runOn([f.scope]);
+	f.input.focus();
+	pressKey(doc, 'g', { target: f.input });
+	pressKey(doc, 'l', { target: f.input });
+	assert(f.link.clicks === 0, 'a plain sequence fired from inside a text field - it ate the typing');
+	pressKey(doc, 'k', { target: f.input, ctrlKey: true });
+	assert(f.mod.clicks === 1, 'a modified chord was swallowed by the typing guard');
+});
+
+check('batch 41: a sequence fires in order, consumes its prefix, and expires', () => {
+	const f = kbdFixture();
+	const { doc } = runOn([f.scope]);
+	f.scope.focus();
+	const first = pressKey(doc, 'g');
+	assert(f.link.clicks === 0, 'the prefix alone fired the binding');
+	assert(first.prevented === 1,
+		'the prefix was not consumed, so the browser acted on the same key as well');
+	pressKey(doc, 'l');
+	assert(f.link.clicks === 1, 'g then l did not fire the binding');
+	f.link.clicks = 0;
+	pressKey(doc, 'g');
+	// The window is 1000ms. A unit test cannot wait it out, so the clock is
+	// moved the way 1000ms would move it - the state the runtime keeps is
+	// the thing under test, not a sleep.
+	f.scope.__cmKeyState.at = 0;
+	pressKey(doc, 'l');
+	assert(f.link.clicks === 0, 'a chord outside the window still completed the sequence');
+	assert(f.scope.__cmKeyState.depth === 0, 'the state did not reset after the window lapsed');
+});
+
+check('batch 41: the map is DERIVED from the scope, and a disabled control is not in it', () => {
+	const f = kbdFixture();
+	const { doc } = runOn([f.scope]);
+	f.scope.focus();
+	pressKey(doc, '?');
+	// The map is appended to <body>, and the fake document only searches its
+	// ROOTS - so the dialog is read from the body it landed in. The runtime's
+	// own reuse path (`document.querySelector('dialog.cm-keys')`) is proven in
+	// WebKit, where the document can see everything it contains.
+	const dlg = doc.body.querySelector('dialog.cm-keys');
+	assert(dlg, '? did not build the map');
+	assert(dlg.hasAttribute('open'), 'the map was built but never opened');
+	const rows = dlg.querySelectorAll('.cm-keys__row');
+	assert(rows.length === 4,
+		`expected 4 rows (five bindings, one of them disabled), found ${rows.length}`);
+	const labels = rows.map((r) => r.querySelector('.cm-keys__label').textContent);
+	assert(labels.join('|') ===
+		'Focus the search field|Go to the lists section|Open this keyboard map|Copy this row',
+		`the map rows are not the scope's bindings: ${labels.join('|')}`);
+	// A sequence is two chords with a word between them, not one long key.
+	const seqKeys = rows[1].querySelectorAll('.cm-kbd').map((k) => k.textContent);
+	assert(seqKeys.join(',') === 'G,L', `the sequence rendered as ${seqKeys.join(',')}`);
+});
+
+check('batch 41: a bindable element off the page is not in the map', () => {
+	// A closed drawer keeps its links in the DOM at height 0. The layer must
+	// ask checkVisibility(), not "does a rect exist" - the exact predicate
+	// WebKit honours, and the one this repo already got wrong once.
+	const f = kbdFixture();
+	const hidden = el('button', {
+		class: 'cm-btn', 'data-cm-key': 'z', 'data-cm-key-label': 'hidden row',
+	}, []);
+	hidden.checkVisibility = () => false;
+	f.scope.appendChild(hidden);
+	const { doc } = runOn([f.scope]);
+	f.scope.focus();
+	pressKey(doc, '?');
+	const labels = doc.body.querySelector('dialog.cm-keys')
+		.querySelectorAll('.cm-keys__row')
+		.map((r) => r.querySelector('.cm-keys__label').textContent);
+	assert(!labels.includes('hidden row'),
+		'a control that is not visible is in the map, so the map documents a key nobody can press');
+});
+
+check('batch 41: the README documents the keyboard layer and its three guards', () => {
+	const rm = read('README.md');
+	// `data-cm-key-label` and `data-cm-key-focus` would satisfy a bare
+	// /data-cm-key/, so the check names the attribute itself.
+	assert(/data-cm-key=/.test(rm), 'the README never mentions data-cm-key');
+	assert(/data-cm-keys-help/.test(rm), 'the README never mentions the generated map');
+	assert(/aria-keyshortcuts/.test(rm), 'the README never says what reaches assistive tech');
+});
+
+check('batch 41: a local scope does not fire while focus is outside it', () => {
+	// Without this gate every specimen on a page shares one keyboard, and
+	// the last one to bind wins. It is the whole reason this demo can exist
+	// on a page that renders sixty sections.
+	const f = kbdFixture();
+	const { doc } = runOn([f.scope]);
+	doc.body.focus();
+	pressKey(doc, 'g');
+	pressKey(doc, 'l');
+	assert(f.link.clicks === 0,
+		'a local scope fired with no focus inside it, so the page has one global keyboard');
+	pressKey(doc, '?');
+	assert(doc.body.querySelector('dialog.cm-keys') === null,
+		'a local scope built its map from an unfocused scope');
+});

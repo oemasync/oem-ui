@@ -4666,6 +4666,80 @@ dialog.cm-dialog--spec:not([open]) {
 	white-space: nowrap;
 }
 
+/* ---------- the keyboard map: a sheet DERIVED from the page's bindings ----
+
+   The runtime builds this dialog from `[data-cm-key]` on demand, so it has
+   no authored markup and cannot drift from the bindings it documents. The
+   two columns are the point: keys are a fixed, monospaced measure at the
+   inline-start edge and every label starts at the same x, which is what
+   makes forty rows scannable instead of ragged.
+
+   `.cm-keys__label { text-align: end }` and not `right`: the whole library
+   is spelled with logical properties, and the rendering is identical in
+   LTR. `.cm-keys__row + .cm-keys__row` draws the hairline, so the last row
+   never carries one. */
+.cm-dialog.cm-keys {
+	width: min(34rem, calc(100% - (2 * var(--gutter))));
+	padding: 0;
+	overflow: hidden;
+}
+.cm-keys__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin: 0;
+	padding: var(--space-3) var(--space-4);
+	border-block-end: 1px solid var(--line);
+}
+.cm-keys__title {
+	margin: 0;
+	color: var(--ink-faint);
+	font-size: var(--text-sm);
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+.cm-keys__list {
+	margin: 0;
+	padding: 0 var(--space-1);
+	list-style: none;
+	max-height: min(22rem, 55vh);
+	overflow: auto;
+}
+.cm-keys__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+	padding: var(--space-2) var(--space-3);
+}
+.cm-keys__row + .cm-keys__row { border-block-start: 1px solid var(--line-soft); }
+.cm-keys__keys {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-1);
+	color: var(--ink-faint);
+	font-size: max(var(--min-font), var(--text-micro));
+	white-space: nowrap;
+}
+.cm-keys__sep { color: var(--ink-faint); }
+.cm-keys__label {
+	color: var(--ink-dim);
+	text-align: end;
+}
+.cm-keys__note {
+	margin: 0;
+	padding: var(--space-2) var(--space-4) var(--space-4);
+	border-block-start: 1px solid var(--line);
+	color: var(--ink-faint);
+	font-size: var(--text-sm);
+}
+/* The bar's close button is a real button in the flow; the sheet is not a
+   form that submits anywhere, so it never grows a submit affordance. */
+.cm-keys__bar .cm-btn { flex: 0 0 auto; }
+
 /* ---------- pager (pagination) ----------
    Real links in a labelled nav: a page is an address, so no script.
    The current page is `aria-current="page"`, the same marker the header

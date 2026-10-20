@@ -4061,6 +4061,60 @@ Three states: unread (badge), all-read (no badge, quiet), disconnected
 the topbar). The PANEL is not this family — it is a `cm-popover` filled
 with app data.
 
+### The keyboard layer — `data-cm-key`, and a map built from it
+
+Every app hand-rolls the same forty lines of shortcut code, and every one of
+them gets the same three things wrong. The library ships one document
+listener instead, and the bindings are declared in markup:
+
+```html
+<body data-cm-keys>                             <!-- a GLOBAL scope -->
+  <a href="#library" data-cm-key="g l"
+     data-cm-key-label="Go to Library">Library</a>
+
+  <button type="button" data-cm-key="/" data-cm-key-focus="#q">search</button>
+  <button type="button" data-cm-key="?" data-cm-keys-help>keyboard map</button>
+</body>
+```
+
+- **A scope is local unless it says otherwise.** `[data-cm-keys]` on `<body>`
+  or `<html>`, or any element carrying `data-cm-keys-global`, fires anywhere.
+  Every other scope fires only while focus is inside it — which is what lets
+  a page render forty specimens without stealing the reader's keys.
+- **A binding is a chord (`mod+k`) or a SEQUENCE (`g l`).** Chords in a
+  sequence must arrive in order, within `1000ms` of each other; the window is
+  the only state the layer keeps, and a late chord starts over rather than
+  completing a sequence you abandoned.
+- **Three actions:** click the element, `data-cm-key-focus="#id"`, or
+  `data-cm-key-href="…"`. A link is a link, so the default (click) is enough
+  for one.
+
+Three guards, each one a bug a hand-rolled layer ships:
+
+1. **A caret keeps its plain keys.** A plain key never fires from an
+   `<input>`, `<textarea>`, `<select>` or contenteditable — `/` types a slash
+   instead of jumping. A chord with `mod` or `alt` still fires, so `mod+k`
+   works while you are typing.
+2. **Shift is the character's, not the author's.** `?` is Shift+/ on a US
+   layout, so a printable key matches by the character it produced and needs
+   no `shift+` prefix; a NAMED key (`enter`, `escape`, `arrowdown`) compares
+   Shift exactly. Lowercasing the comparison instead would make Shift+G fire
+   a plain `g` binding.
+3. **Hidden and disabled controls are not in the map.** A closed drawer keeps
+   its links in the DOM, so the layer asks `checkVisibility()` — not
+   "does a rect exist" — and skips `disabled` / `aria-disabled="true"`.
+
+`aria-keyshortcuts` is published on every single-chord binding, spelled with
+the platform modifier (`Control+K`, `Meta+K`), because that is what assistive
+technology reads. A sequence publishes nothing: the attribute has no syntax
+for one, so inventing a spelling would announce a shortcut nobody can press.
+
+`data-cm-keys-help` builds the map — a `<dialog class="cm-dialog cm-keys">`
+appended on first use and refilled from the scope's live bindings on every
+open. It is DERIVED, so it cannot document a key that no longer exists, and a
+label comes from `data-cm-key-label`, then `aria-label`, then the element's
+own text. `data-cm-keys-title` sets the sheet's heading.
+
 ### JS API
 
 ```js

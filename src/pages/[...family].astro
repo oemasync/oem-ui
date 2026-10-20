@@ -61,7 +61,7 @@ const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
 	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
-	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'quiz', 'search', 'auth', 'readme',
+	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
 /* The rail's groups, written as SLICES of SECTION_ORDER rather than as a
@@ -85,7 +85,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["content", 9],
 	["prose", 8],
 	["layout", 7],
-	["composed", 8],
+	["composed", 9],
 	["reference", 4],
 ];
 
@@ -6439,6 +6439,72 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<span class="cm-attach__actions">
 						<button class="cm-attach__action" type="button" aria-label="Remove full-card trigger demo">×</button>
 					</span>
+				</div>
+			</section>
+			)}
+			{shows('composed') && (
+			<section id="shortcuts" class="cm-section cm-section--pad">
+				<SectionHead title="keyboard map">
+					one document listener, and every binding declared in markup.
+					<code>data-cm-key</code> takes a chord (<code>mod+k</code>) or a
+					SEQUENCE (<code>g l</code>); <code>data-cm-keys-help</code> builds
+					the map from the bindings that exist, so the sheet cannot
+					document a key nobody has. A scope fires only while focus is
+					inside it unless it is <code>body</code> or carries
+					<code>data-cm-keys-global</code> - which is why this specimen can
+					demo a global feature on a page that renders sixty sections
+					without stealing a single key from the reader. Plain keys never
+					fire from a field (a caret belongs to the field), a modified
+					chord always does, and a disabled or hidden control is not in
+					the map at all.
+				</SectionHead>
+				<div class="cm-spec">
+					<div class="cm-spec__row">
+						<span class="cm-spec__label">binding</span>
+						<span class="cm-spec__val">data-cm-key / data-cm-key-label</span>
+					</div>
+					<div class="cm-spec__row">
+						<span class="cm-spec__label">actions</span>
+						<span class="cm-spec__val">click the element, or data-cm-key-focus=&quot;#id&quot;</span>
+					</div>
+					<div class="cm-spec__row">
+						<span class="cm-spec__label">sequence window</span>
+						<span class="cm-spec__val">1000ms between chords - a late `l` starts over</span>
+					</div>
+					<div class="cm-spec__row">
+						<span class="cm-spec__label">published to AT</span>
+						<span class="cm-spec__val">aria-keyshortcuts, single chords only (a sequence has no syntax)</span>
+					</div>
+				</div>
+				<div class="cm-card" data-cm-keys data-cm-keys-title="Keys in this specimen" tabindex="0" role="group" aria-label="keyboard shortcut specimen" style="display:grid;gap:var(--space-3);max-width:34rem">
+					<div class="cm-field">
+						<label class="cm-field__label" for="kbd-q">search this specimen</label>
+						<input class="cm-input" id="kbd-q" type="search" placeholder="click here, then type g - nothing should move" />
+					</div>
+					<div class="cm-btn-group">
+						<button class="cm-btn cm-btn--sm" type="button"
+							data-cm-key="/" data-cm-key-focus="#kbd-q"
+							data-cm-key-label="Focus the search field">/ focus</button>
+						<a class="cm-btn cm-btn--sm" href="#lists"
+							data-cm-key="g l"
+							data-cm-key-label="Go to the lists section">g then l</a>
+						<button class="cm-btn cm-btn--sm" type="button"
+							data-cm-key="?" data-cm-keys-help
+							data-cm-key-label="Open this keyboard map">? map</button>
+						<button class="cm-btn cm-btn--sm" type="button" disabled
+							data-cm-key="x"
+							data-cm-key-label="never fires">x (disabled)</button>
+					</div>
+					<p class="cm-row__meta">
+						Tab to the panel itself (it is <code>tabindex="0"</code>) - a local
+						scope fires only while focus is inside it. Then <code>/</code>
+						lands in the field, <code>g</code> then <code>l</code> jumps, and
+						<code>?</code> opens the map with exactly three rows: the
+						disabled control is not in it. Click into the field and the same
+						keys belong to the caret - <code>/</code> types a slash and
+						<code>g</code> does nothing, which is the guard that keeps a
+						shortcut layer from eating an email address.
+					</p>
 				</div>
 			</section>
 			)}

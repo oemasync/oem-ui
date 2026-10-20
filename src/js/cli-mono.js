@@ -4301,6 +4301,287 @@
 		});
 	}
 
+	/* ---------- the keyboard layer: declarative bindings, one listener ----
+
+	   The library shipped exactly ONE chord (Ctrl/Cmd-K, above) and every
+	   consumer hand-rolled the rest: `/` to focus search, `j`/`k` to walk
+	   rows, `g`-then-`h` sequences to jump between areas. PLAN-01
+	   pages/05-activity.md specifies that map for the app. This is the
+	   MECHANISM, not the map - the app names its own keys.
+
+	     <div data-cm-keys>                          a scope
+	       <a href="#library" data-cm-key="g l"
+	          data-cm-key-label="Go to Library">Library</a>
+	       <button data-cm-key="/" data-cm-key-focus="#q">search</button>
+	       <button data-cm-key="?" data-cm-keys-help>keyboard map</button>
+	     </div>
+
+	   A scope that IS <body>/<html>, or carries `data-cm-keys-global`,
+	   fires anywhere; every other scope fires only while focus is inside
+	   it. That rule is what keeps one section's demo from taking the
+	   reader's keys on a page that renders sixty of them - and it is the
+	   only reason the showcase can demo a global feature locally.
+
+	   Three things the platform does not give us, each a trap:
+	   - An editable target swallows PLAIN keys only. `/` must not type a
+	     slash into the search field it exists to focus, and Ctrl+K must
+	     still work while the caret is in one.
+	   - A printable key carries its own Shift, so `?` (Shift+/ on a US
+	     layout) matches without the author writing `shift+?`; a NAMED key
+	     compares Shift exactly. Lowercasing the comparison would make
+	     Shift+G fire a plain `g` binding - typing a capital would jump.
+	   - A binding on a hidden or disabled control is not in the map: a
+	     closed drawer keeps its links in the DOM, and `checkVisibility()`
+	     - not getClientRects() - is the predicate WebKit honours.
+	*/
+	var CM_KEY_SEQ_MS = 1000;
+	function cmIsMac() {
+		var p = (typeof navigator !== 'undefined' &&
+			(navigator.platform || navigator.userAgent)) || '';
+		return /Mac|iPhone|iPad|iPod/.test(p);
+	}
+	function cmKeyEditable(el) {
+		if (!el || !el.tagName) return false;
+		/* upper-cased: HTML documents report INPUT, an XML/SVG document does
+		   not, and a fixture is free to spell it either way - the question is
+		   "is this a caret", and that answer must not depend on the case. */
+		var tag = String(el.tagName).toUpperCase();
+		return tag === 'INPUT' || tag === 'TEXTAREA' ||
+			tag === 'SELECT' || el.isContentEditable === true;
+	}
+	/* `expr` is a SEQUENCE of chords separated by whitespace; each chord is
+	   `[mod+][alt+][shift+]key`. Single-character keys keep the authored
+	   case (a capital is a different key than its lowercase), named keys are
+	   lowercased for comparison against `event.key`. */
+	function cmKeyParse(expr) {
+		return String(expr || '').trim().split(/\s+/).map(function (chord) {
+			var c = { mod: false, alt: false, shift: false, key: '' };
+			chord.split('+').forEach(function (part) {
+				if (!part) return;
+				var p = part.toLowerCase();
+				if (p === 'mod' || p === 'cmdorctrl') c.mod = true;
+				else if (p === 'alt' || p === 'option') c.alt = true;
+				else if (p === 'shift') c.shift = true;
+				else c.key = part.length === 1 ? part : p;
+			});
+			return c;
+		}).filter(function (c) { return c.key !== ''; });
+	}
+	/* aria-keyshortcuts spells the platform modifier out; `mod` does not
+	   exist there. */
+	function cmKeyAria(c) {
+		var out = [];
+		if (c.mod) out.push(cmIsMac() ? 'Meta' : 'Control');
+		if (c.alt) out.push('Alt');
+		if (c.shift) out.push('Shift');
+		out.push(c.key.length === 1 ? c.key : c.key.charAt(0).toUpperCase() + c.key.slice(1));
+		return out.join('+');
+	}
+	function cmKeyMatches(c, e) {
+		var mac = cmIsMac();
+		var mod = mac ? !!e.metaKey : !!e.ctrlKey;
+		var other = mac ? !!e.ctrlKey : !!e.metaKey;
+		if (!!c.mod !== mod) return false;
+		/* the other platform's modifier is never ours: Ctrl+K on a Mac must
+		   not fire a Cmd+K binding, or the browser's own shortcuts collide
+		   with ours on exactly the machine that has two. */
+		if (other) return false;
+		if (!!c.alt !== !!e.altKey) return false;
+		var named = c.key.length > 1;
+		if (named && !!c.shift !== !!e.shiftKey) return false;
+		return named
+			? String(e.key || '').toLowerCase() === c.key
+			: e.key === c.key;
+	}
+	function cmKeyUsable(el) {
+		if (!el || !el.getAttribute) return false;
+		/* the property AND the attribute: `disabled` reflects, but markup
+		   written by hand (and every test double) sets only one of them. */
+		if (el.disabled) return false;
+		if (el.hasAttribute && el.hasAttribute('disabled')) return false;
+		if (el.getAttribute('aria-disabled') === 'true') return false;
+		if (typeof el.checkVisibility === 'function') return el.checkVisibility();
+		return true;
+	}
+	function cmKeyBindings(scope) {
+		var out = [];
+		Array.prototype.forEach.call(scope.querySelectorAll('[data-cm-key]'), function (el) {
+			if (!cmKeyUsable(el)) return;
+			var seq = cmKeyParse(el.getAttribute('data-cm-key'));
+			if (!seq.length) return;
+			var text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+			var label = el.getAttribute('data-cm-key-label') ||
+				el.getAttribute('aria-label') || text ||
+				el.getAttribute('data-cm-key');
+			out.push({ el: el, seq: seq, label: label });
+		});
+		return out;
+	}
+	function cmKeyScopeActive(scope) {
+		if (scope === document.body || scope === document.documentElement) return true;
+		if (scope.hasAttribute('data-cm-keys-global')) return true;
+		var a = document.activeElement;
+		return !!a && (a === scope || (scope.contains && scope.contains(a)));
+	}
+	function cmKeyFire(el) {
+		if (el.hasAttribute('data-cm-keys-help')) { cmKeysHelpOpen(el); return; }
+		var focusSel = el.getAttribute('data-cm-key-focus');
+		if (focusSel) {
+			var t = document.querySelector(focusSel);
+			if (t && typeof t.focus === 'function') { t.focus(); return; }
+		}
+		var href = el.getAttribute('data-cm-key-href');
+		if (href) {
+			if (typeof window !== 'undefined' && window.location) window.location.href = href;
+			return;
+		}
+		if (typeof el.click === 'function') el.click();
+	}
+	/* The map is DERIVED from the bindings, so it cannot go stale - which is
+	   the whole reason it is generated rather than authored. */
+	function cmKeysHelpOpen(trigger) {
+		var scope = (trigger.closest && trigger.closest('[data-cm-keys]')) || document.body;
+		var list = cmKeyBindings(scope);
+		var dlg = document.querySelector('dialog.cm-keys');
+		if (!dlg) {
+			dlg = document.createElement('dialog');
+			dlg.className = 'cm-dialog cm-keys';
+			dlg.setAttribute('aria-labelledby', 'cm-keys-title');
+			var bar = document.createElement('form');
+			bar.setAttribute('method', 'dialog');
+			bar.className = 'cm-keys__bar';
+			var h = document.createElement('h2');
+			h.className = 'cm-keys__title';
+			h.setAttribute('id', 'cm-keys-title');
+			h.textContent = scope.getAttribute('data-cm-keys-title') || 'Keyboard shortcuts';
+			var close = document.createElement('button');
+			close.setAttribute('type', 'submit');
+			close.className = 'cm-btn cm-btn--sm';
+			close.setAttribute('value', 'close');
+			close.textContent = 'close';
+			bar.appendChild(h);
+			bar.appendChild(close);
+			var ul = document.createElement('ul');
+			ul.className = 'cm-keys__list';
+			var note = document.createElement('p');
+			note.className = 'cm-keys__note';
+			note.textContent = 'Built from this page\u2019s own bindings, so it cannot go stale.';
+			dlg.appendChild(bar);
+			dlg.appendChild(ul);
+			dlg.appendChild(note);
+			document.body.appendChild(dlg);
+			/* focus goes back to whatever opened the map - the platform
+			   restores it for a modal, but this dialog is appended once and
+			   reopened, so the opener changes every time. */
+			dlg.addEventListener('close', function () {
+				if (dlg.__cmKeysReturn && typeof dlg.__cmKeysReturn.focus === 'function') {
+					dlg.__cmKeysReturn.focus();
+				}
+			});
+		}
+		var host = dlg.querySelector('.cm-keys__list');
+		if (!host) return;
+		host.textContent = '';
+		list.forEach(function (b) {
+			var li = document.createElement('li');
+			li.className = 'cm-keys__row';
+			var keys = document.createElement('span');
+			keys.className = 'cm-keys__keys';
+			b.seq.forEach(function (c, i) {
+				if (i) {
+					var then = document.createElement('span');
+					then.className = 'cm-keys__sep';
+					then.textContent = 'then';
+					keys.appendChild(then);
+				}
+				var parts = [];
+				if (c.mod) parts.push(cmIsMac() ? '\u2318' : 'Ctrl');
+				if (c.alt) parts.push('Alt');
+				if (c.shift) parts.push('Shift');
+				parts.push(c.key.length === 1 && /[a-z]/.test(c.key)
+					? c.key.toUpperCase() : c.key);
+				parts.forEach(function (p, j) {
+					if (j) {
+						var plus = document.createElement('span');
+						plus.className = 'cm-keys__sep';
+						plus.textContent = '+';
+						keys.appendChild(plus);
+					}
+					var k = document.createElement('kbd');
+					k.className = 'cm-kbd';
+					k.textContent = p;
+					keys.appendChild(k);
+				});
+			});
+			var lab = document.createElement('span');
+			lab.className = 'cm-keys__label';
+			lab.textContent = b.label;
+			li.appendChild(keys);
+			li.appendChild(lab);
+			host.appendChild(li);
+		});
+		dlg.__cmKeysReturn = trigger;
+		if (typeof dlg.showModal === 'function') {
+			if (!dlg.open) dlg.showModal();
+		} else if (!dlg.open) {
+			dlg.setAttribute('open', '');
+		}
+	}
+	function cmInitKeys(root) {
+		if (typeof document === 'undefined' || !document.addEventListener) return;
+		/* aria-keyshortcuts has no syntax for a SEQUENCE, so only a
+		   single-chord binding publishes one; the map is where a sequence
+		   becomes visible. Publishing it is the difference between a key
+		   that exists and a key AT can announce. */
+		Array.prototype.forEach.call(document.querySelectorAll('[data-cm-key]'), function (el) {
+			if (el.getAttribute('data-cm-keyshortcuts') === '1') return;
+			if (!cmKeyUsable(el)) return;
+			var seq = cmKeyParse(el.getAttribute('data-cm-key'));
+			if (seq.length !== 1) return;
+			el.setAttribute('aria-keyshortcuts', cmKeyAria(seq[0]));
+			el.setAttribute('data-cm-keyshortcuts', '1');
+		});
+		if (document.__cmKeysBound) return;
+		document.__cmKeysBound = true;
+		document.addEventListener('keydown', function (e) {
+			/* another handler already claimed this key (a tab's arrows, a
+			   menu's Left/Right, the sidebar's Escape) - the layer must not
+			   run the page's bindings on top of it. */
+			if (!e || e.defaultPrevented || e.repeat) return;
+			/* a caret belongs to the field: only a MODIFIED chord may pass */
+			var typing = cmKeyEditable(e.target) &&
+				!(e.metaKey || e.ctrlKey || e.altKey);
+			if (typing) return;
+			var scopes = document.querySelectorAll('[data-cm-keys]');
+			for (var s = 0; s < scopes.length; s++) {
+				var scope = scopes[s];
+				if (!cmKeyScopeActive(scope)) continue;
+				var st = scope.__cmKeyState ||
+					(scope.__cmKeyState = { depth: 0, at: 0, cands: null });
+				var now = Date.now();
+				if (st.depth && now - st.at > CM_KEY_SEQ_MS) { st.depth = 0; st.cands = null; }
+				var cands = st.depth && st.cands ? st.cands : cmKeyBindings(scope);
+				var matched = cands.filter(function (b) { return cmKeyMatches(b.seq[st.depth], e); });
+				if (!matched.length) { st.depth = 0; st.cands = null; continue; }
+				var exact = matched.filter(function (b) { return b.seq.length === st.depth + 1; });
+				if (exact.length) {
+					st.depth = 0;
+					st.cands = null;
+					e.preventDefault();
+					cmKeyFire(exact[0].el);
+					return;
+				}
+				st.cands = matched;
+				st.depth += 1;
+				st.at = now;
+				/* a prefix is ours: without this, `/` opens the browser's
+				   quick-find on its way to focusing the field. */
+				e.preventDefault();
+				return;
+			}
+		});
+	}
+
 
 	/* ---------- validating forms: the browser IS the validator ----------
 	   shadcn's forms guide documents behaviours, not a component:
@@ -4897,6 +5178,11 @@
 		cmInitTables(root);
 		cmInitSidebars(root);
 		cmInitShortcuts();
+		/* The keyboard layer binds ONE document listener and reads the live
+		   DOM per keydown, so late-arriving markup is drivable without a
+		   re-init - but `aria-keyshortcuts` is a DOM write, so that half
+		   runs here where a SPA's `init()` call can reach it. */
+		cmInitKeys(root);
 		cmInitSliders(root);
 		cmInitComboboxes(root);
 		cmInitMentions(root);
