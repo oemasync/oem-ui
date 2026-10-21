@@ -5890,30 +5890,30 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 												<span class="cm-msglist__filetitle">sales-dashboard.pdf</span>
 												<span class="cm-msglist__filenote">4.2 MB · PDF</span>
 											</a>
+										</div>
+										<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
+											<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
+											<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
+											<button type="button" class="cm-icon-btn" aria-label="More actions">⋯</button>
+										</div>
+									</article>
+									<article class="cm-scroller__item cm-msglist__msg" data-message-id="ml11" data-scroll-anchor>
+										<div class="cm-msglist__gutter"><time class="cm-msglist__stamp" datetime="2026-10-10T11:53">Today at 11:53 AM</time></div>
+										<span class="cm-avatar cm-avatar--sm cm-msglist__avatar" aria-hidden="true">KT</span>
+										<div class="cm-msglist__main">
+											<header class="cm-msglist__meta">
+												<span class="cm-msglist__author">kai</span>
+												<time class="cm-msglist__stamp" datetime="2026-10-10T11:53">Today at 11:53 AM</time>
+											</header>
+											<div class="cm-msglist__text cm-msglist__md">
+												<p>Rolling it back now — <strong>redaction wins</strong> over the edit, and the <code class="cm-inline-code">m.replace</code> event stays on the wire.</p>
+												<p><span class="cm-msglist__mention">@omiinaya</span> can you confirm the read marker lands before I close this out?</p>
+												<blockquote>the sync was already delivering this row before the receipt went out</blockquote>
+												<pre><code>curl -XPOST /rooms/$ROOM/receipt/m.read/$EVENT -d '{}'</code></pre>
+												<ul><li>re-receipt with <code>room.getEventReadUpTo</code></li><li>then the divider</li></ul>
+												<p>Full trace in the <a class="cm-inline-link" href="#msglist">runbook</a>.</p>
 											</div>
-											<article class="cm-scroller__item cm-msglist__msg" data-message-id="ml11" data-scroll-anchor>
-											<div class="cm-msglist__gutter"><time class="cm-msglist__stamp" datetime="2026-10-10T11:53">Today at 11:53 AM</time></div>
-											<span class="cm-avatar cm-avatar--sm cm-msglist__avatar" aria-hidden="true">KT</span>
-											<div class="cm-msglist__main">
-												<header class="cm-msglist__meta">
-													<span class="cm-msglist__author">kai</span>
-														<time class="cm-msglist__stamp" datetime="2026-10-10T11:53">Today at 11:53 AM</time>
-												</header>
-												<div class="cm-msglist__text cm-msglist__md">
-													<p>Rolling it back now — <strong>redaction wins</strong> over the edit, and the <code class="cm-inline-code">m.replace</code> event stays on the wire.</p>
-													<p><span class="cm-msglist__mention">@omiinaya</span> can you confirm the read marker lands before I close this out?</p>
-													<blockquote>the sync was already delivering this row before the receipt went out</blockquote>
-													<pre><code>curl -XPOST /rooms/$ROOM/receipt/m.read/$EVENT -d '{}'</code></pre>
-													<ul><li>re-receipt with <code>room.getEventReadUpTo</code></li><li>then the divider</li></ul>
-													<p>Full trace in the <a class="cm-inline-link" href="#msglist">runbook</a>.</p>
-												</div>
-											</div>
-											<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
-												<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
-												<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
-												<button type="button" class="cm-icon-btn" aria-label="More actions">⋯</button>
-											</div>
-											</article>
+										</div>
 										<div class="cm-msglist__actions" role="toolbar" aria-label="Message actions">
 											<button type="button" class="cm-icon-btn" aria-label="Add reaction">＋</button>
 											<button type="button" class="cm-icon-btn" aria-label="Reply">↩</button>
