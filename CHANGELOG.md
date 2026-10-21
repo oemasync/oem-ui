@@ -49,6 +49,16 @@ reachability list is unchanged. 12 new checks (772 total), and
 wrap, palette vs specificity, hide list vs `!important`) are mutated
 separately because either half alone passes a presence-shaped test.
 
+**The sweep found a check defect, which is the point of running it:** the
+`@page` check asserted `/margin:\s*[^;]+;/`, so `margin: 0` satisfied it and
+the mutant SURVIVED. The check now asserts a NON-ZERO length with a print
+unit - the `max-height: none` shape one layer down, a presence test wearing
+a measurement's clothes. Re-run after the fix: 11 mutants, 11 killed, 0
+survived. `tests/measure-print-webkit.py` is the other half: it drives the
+real page at an A4 page box, asserts the palette against the light theme
+live, and reads the twelve chrome elements, the eight scroll containers and
+a relative/absolute/in-page link fixture.
+
 ## Unreleased - batch 41: the keyboard layer, and a map derived from it
 
 **Fixed after the first landing:** `cmKeyFire` was reachable only from the

@@ -19219,9 +19219,18 @@ console.log('\nprint mode');
 	check('print: the page box gets a margin, because @page has no element to inherit one from', () => {
 		const page = /@page\s*\{([^}]*)\}/.exec(compSrc);
 		assert(page, 'components.css declares no @page rule');
-		assert(/margin:\s*[^;]+;/.test(page[1]),
-			'an @page with no margin prints to the paper edge, so every page is clipped by the printer');
-		assert(!/var\(--/.test(page[1]),
+		const m = /margin:\s*([^;]+);/.exec(page[1]);
+		assert(m, 'an @page with no margin prints to the paper edge, so every page is clipped by the printer');
+		const value = m[1].trim();
+		// Assert the VALUE, not the property. The first draft asserted
+		// `/margin:\s*[^;]+;/`, which `margin: 0` satisfies - the mutation
+		// sweep SURVIVED it, which is the `max-height: none` shape one layer
+		// down: a presence test wearing a measurement's clothes.
+		const lengths = value.match(/\d*\.?\d+(mm|cm|in|pt|pc|px)/g) || [];
+		assert(lengths.some((l) => parseFloat(l) > 0),
+			`the @page margin is "${value}": a zero or unitless margin prints to the paper edge, `
+			+ 'so the printer clips every page');
+		assert(!/var\(--/.test(value),
 			'the @page margin names a custom property: a page context has no element, so var() does not resolve there');
 	});
 

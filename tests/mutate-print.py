@@ -29,6 +29,7 @@ Usage:
   python3 tests/mutate-print.py            # run every mutant
   python3 tests/mutate-print.py --preflight  # validate patterns only
   python3 tests/mutate-print.py --only 4   # resume from mutant 4
+  python3 tests/mutate-print.py --one 3    # re-run a single mutant
 """
 import signal
 import subprocess
@@ -123,7 +124,7 @@ PRINT_BANNER = '/* ============ print: the page a reader keeps ============'
 STACK_BANNER = '/* ============ stack ownership (LAST, on purpose) ============'
 
 _originals = {}
-_restored = False
+_in_handler = False
 
 
 def read(p):
@@ -135,10 +136,13 @@ def write(p, text):
 
 
 def restore_all(*_args):
-    global _restored
-    if _restored:
-        return
-    _restored = True
+    """Put the originals back and verify them, EVERY time.
+
+    This must not be idempotent: the loop restores between mutants, and an
+    early-return guard left mutant 2 in the tree for exactly one run (the
+    assert after it caught the skip, which is the only reason it was not a
+    silent poisoning). Only the signal handler needs a re-entry guard.
+    """
     for p, text in _originals.items():
         write(p, text)
     ok = all(read(p) == text for p, text in _originals.items())
@@ -148,6 +152,10 @@ def restore_all(*_args):
 
 
 def on_signal(signum, _frame):
+    global _in_handler
+    if _in_handler:
+        return
+    _in_handler = True
     print(f'\nsignal {signum}: restoring the tree before exit')
     restore_all()
     sys.exit(130)
@@ -199,8 +207,11 @@ def main(argv):
     if '--preflight' in argv:
         preflight()
         return 0
+    only = None
     if '--only' in argv:
         start = int(argv[argv.index('--only') + 1])
+    if '--one' in argv:
+        only = int(argv[argv.index('--one') + 1])
 
     preflight()
     signal.signal(signal.SIGINT, on_signal)
@@ -213,7 +224,7 @@ def main(argv):
     survivors, kills = [], []
     try:
         for i, m in enumerate(MUTANTS, 1):
-            if i < start:
+            if i < start or (only is not None and i != only):
                 continue
             before = read(m['file'])
             if m['old'] is None:
@@ -240,7 +251,6 @@ def main(argv):
                 kills.append(m['n'])
             restore_all()
             assert read(m['file']) == before, f"{m['n']}: restore was not byte-exact"
-            _restored = False
     finally:
         for p, text in _originals.items():
             if read(p) != text:
