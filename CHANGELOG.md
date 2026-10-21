@@ -1,3 +1,54 @@
+## Unreleased - batch 42: print, the fourth render mode
+
+The library owned three layers and two themes, and had **no print rules at
+all** - `grep -rn '@media print'` returned nothing across the library and all
+thirteen consumer trees. Every oem site is a page someone saves as PDF: a
+blog article, a portfolio, a link hub. MEASURED in WebKit on the showcase
+under `emulate_media(media='print')` before this batch:
+
+- dark's `--ink` resolved **#e8e8e8**, which is **1.23:1** against paper -
+  the page printed blank, because browsers print with backgrounds OFF;
+- **twelve** chrome elements printed (header, burger, scrim, drawer, toasts,
+  scroll fade, pager, search, copy buttons, terminal controls, bell, revert
+  countdown);
+- `.cm-scrollarea` held 747px of content in a 222px box, so **525px - 70% of
+  the table - never reached the page**;
+- a bare `.cm-codebar > pre` never wraps, so a line wider than the page lost
+  its tail;
+- no link printed its destination, no row was protected from a page edge,
+  and a prose heading could be left alone at the foot of a page.
+
+Four decisions, each pinned by a source check AND measured in the engine:
+
+1. **Paper is light.** `@media print` in tokens.css resolves the ink family
+   to the LIGHT palette, value for value, so there is one ink-on-light ramp
+   rather than a third set of greys. The selector list repeats the theme
+   blocks' specificity (`:root[data-theme='dark']`,
+   `:root[data-theme='light']`) because `:root` alone is (0,1,0) and loses in
+   either load order.
+2. **What scrolls prints whole.** Eight scroll containers are unclipped on
+   both axes (`max-height: none` AND `overflow: visible` - either alone
+   leaves the box cutting or scrolling), and both `pre` forms wrap.
+   Measured at A4, the unclipping does not widen the page (806px before and
+   after; the 12px is a table's own min-content width).
+3. **Chrome does not print**, and the `!important` on the hide list is
+   load-bearing: `.cm-js .cm-nav-toggle` is (0,2,0) and would otherwise keep
+   the burger on paper. The ARMED revert banner is hidden - a printed
+   "revert in 10s" is a lie - while the resolved notice still prints.
+4. **The fill, the break and the destination.** `print-color-adjust: exact`
+   (+ its `-webkit-` twin) on the four blocks measured inverted; `break-inside:
+   avoid` on rows/cards/code/term/table rows and `break-after: avoid` on prose
+   headings; `.cm-prose a[href^="http"]::after` prints the URL, absolute
+   http(s) only, so `/blog` and `#top` are never printed as addresses.
+   `@page { margin: 14mm 12mm }` gives the printer its gutter in millimetres -
+   a page context has no element, so `var()` cannot reach it.
+
+No new classes: this is a mode, not a component, and the demoed-class
+reachability list is unchanged. 12 new checks (772 total), and
+`tests/mutate-print.py` mutates each half - the two-half rules (unclip vs
+wrap, palette vs specificity, hide list vs `!important`) are mutated
+separately because either half alone passes a presence-shaped test.
+
 ## Unreleased - batch 41: the keyboard layer, and a map derived from it
 
 **Fixed after the first landing:** `cmKeyFire` was reachable only from the

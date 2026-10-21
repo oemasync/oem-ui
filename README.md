@@ -4121,6 +4121,68 @@ open. It is DERIVED, so it cannot document a key that no longer exists, and a
 label comes from `data-cm-key-label`, then `aria-label`, then the element's
 own text. `data-cm-keys-title` sets the sheet's heading.
 
+### Print — the page a reader keeps
+
+Print is a render mode, and the library owns it the way it owns the dark
+theme: in the layer, not in each consumer's stylesheet. `@media print` in
+`components.css` (plus the print palette in `tokens.css` and one `@page`
+rule) is what turns `File → Print` and `Save as PDF` into a page worth
+keeping.
+
+Five decisions, each one a defect that shipped before this existed, all
+measured in WebKit on the showcase:
+
+1. **Paper is light.** Browsers print with backgrounds OFF, so the page
+   arrives on white paper carrying the SCREEN's text colour — dark's
+   `--ink` is `#e8e8e8`, which is **1.23:1** against paper, i.e. blank.
+   Under print the ink family resolves the LIGHT palette, value for value:
+   one ink-on-light ramp to maintain, not a third set of greys that can
+   drift from both themes. The selector list repeats the theme blocks'
+   specificity (`:root[data-theme='dark']`, `:root[data-theme='light']`)
+   because `:root` alone is (0,1,0) and loses to them in either load order.
+2. **What scrolls prints whole.** A scroll container prints its VISIBLE
+   window: `.cm-scrollarea` held 747px of content in a 222px box, so 525px —
+   70% of the table — never reached the page. Scroll containers are
+   unclipped (`max-height: none` **and** `overflow: visible`; either one
+   alone leaves the box cutting or scrolling), and a printed `pre` wraps
+   (`white-space: pre-wrap`) instead of losing the tail of a long line. The
+   unclipping does not widen the page: measured at A4, 806px before and
+   after, and the 12px is a table's own min-content width.
+3. **Chrome does not print.** Header, burger, scrim, drawer, search field,
+   copy buttons, reading-progress bar, pager, bell and the armed revert
+   banner are `display: none !important`. The `!important` is load-bearing:
+   a state rule like `.cm-js .cm-nav-toggle` is (0,2,0) and would otherwise
+   keep the burger on paper. A RESOLVED revert notice still prints — the
+   banner is the countdown, the notice is the record.
+4. **An inverted fill keeps its text.** `.cm-btn--primary`, `.cm-bubble`,
+   `.cm-term__jump-tail` and a selected calendar day paint `--ink` behind a
+   `--bg` label; with backgrounds dropped the label prints white on white.
+   `print-color-adjust: exact` and its `-webkit-` twin (WebKit is the engine
+   verified here) keep the fill that carries the contrast. Only the four
+   blocks MEASURED inverted are listed — the terminal is not among them,
+   because the print palette already prints it light.
+5. **A link prints where it went.** `.cm-prose a[href^="http"]::after` adds
+   ` (url)` in `--text-micro`. Absolute http(s) only: `attr(href)` on a bare
+   `a` would print `/blog` and `#top` as if they were addresses.
+
+Plus the page-break hygiene every printed document needs: rows, cards, code
+blocks, terminals and table rows are `break-inside: avoid`, and a prose
+heading is `break-after: avoid` so it is never left alone at the foot of a
+page. `@page { margin: 14mm 12mm }` gives the printer its gutter — in
+millimetres, because a page context has no element, so `var()` cannot reach
+it.
+
+**What it costs.** The armed revert banner is hidden (a printed "revert in
+10s" is a lie), the header's identity is gone (the footer still carries
+it), and a table wider than the page still overflows by its own min-content
+width — CSS cannot scale a table, and clipping it would be worse.
+
+`tests/measure-print-webkit.py` drives the real page:
+`emulate_media(media='print')` at an A4 page box, then reads the computed
+palette, the chrome list, the scroll containers, the exact-fill list and a
+link fixture. It is the other half of `tests/mutate-print.py`, which proves
+each source check can fail.
+
 ### JS API
 
 ```js

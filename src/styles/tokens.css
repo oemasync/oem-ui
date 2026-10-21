@@ -689,3 +689,55 @@
 	--chart-c5: #999999;
 
 }
+
+/* ================= print — the same page, on paper =================
+   A printed page is not a theme, and it is not the screen's colours
+   either: every browser ships with "print backgrounds" OFF, so the
+   page arrives on white paper carrying the SCREEN's text colour.
+   MEASURED in WebKit on the showcase under print emulation, before
+   this block existed: dark's --ink resolved #e8e8e8, which is
+   1.23:1 against paper - the page printed blank.
+
+   The print palette IS the light palette, deliberately. There is one
+   ink-on-light ramp to maintain, not a third set of greys that can
+   drift from both themes, and the test asserts the two agree value
+   for value.
+
+   The selector list repeats the theme blocks' specificity on purpose.
+   `:root` alone is (0,1,0) and loses to `:root[data-theme='light']`
+   at (0,2,0) in either load order; this block comes LAST and ties at
+   (0,2,0), so it wins where it must and nowhere else.
+
+   Deliberately NOT overridden: --term*, --codebar and the other
+   INVERSELY filled blocks. Those are dark by design, and
+   components.css prints them with `print-color-adjust: exact`, so the
+   fill prints with its text; repainting them light would print a
+   terminal as an empty box. */
+@media print {
+	:root,
+	:root[data-theme='dark'],
+	:root[data-theme='light'] {
+		color-scheme: light;
+		--bg: #fafafa;
+		--bg-2: #ffffff;
+		--bg-3: #f0f0f0;
+		--panel: #f5f5f5;
+		--panel-nested: #ececec;
+		--surface-raised: #f5f5f5;
+		--line: #d6d6d6;
+		--line-soft: #e2e2e2;
+		--ink: #111111;
+		--ink-dim: #4a4a4a;
+		--ink-faint: #6d6d6d;
+		--accent: #111111;
+		--accent-bright: #000000;
+		--accent-dim: #666666;
+		--header-bg: #fafafa;
+		--footer-bg: #f0f0f0;
+		/* Declared because this block paints surfaces, and a block that
+		   paints surfaces defines its scrim; the light value keeps the
+		   two-theme set at two. A scrim never paints on paper - its
+		   backdrop is a hidden dialog - so this is consistency, not ink. */
+		--scrim: rgba(24, 24, 24, 0.42);
+	}
+}

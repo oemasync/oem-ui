@@ -11557,6 +11557,138 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 }
 .cm-diff__fold[open] > summary::after { content: '▾'; }
 
+/* ============ print: the page a reader keeps ============
+   Print is a RENDER MODE, not a screenshot - a queue of decisions the
+   screen makes that paper cannot keep. Four of them are defects a reader
+   meets, all MEASURED in WebKit under print emulation on the showcase at
+   390, before this block existed:
+
+   1. A SCROLL CONTAINER PRINTS ITS WINDOW. `.cm-scrollarea` held 747px of
+      content in a 222px box, so 525px - 70% - never reached the page and
+      the table simply stopped. Unclipped here, and both halves are
+      needed: `max-height: none` alone leaves the box tall but still a
+      scrollport, `overflow: visible` alone leaves the cap cutting it.
+   2. CHROME PRINTS. The header, burger, drawer, scrim, search field, copy
+      buttons, reading-progress bar and revert countdown all rendered on
+      paper - twelve of them. A countdown that says "revert in 10s" is a
+      lie on paper, not a control; the RESOLVED notice is a record, so
+      only the armed banner is hidden.
+   3. A DARK FILL LOSES ITS TEXT. Economy colour drops backgrounds, so an
+      INVERTED block (a terminal, a primary button, a selected calendar
+      day) prints light-on-white: the showcase's terminal text is #e8e8e8,
+      1.23:1 against paper. `print-color-adjust: exact` keeps the fill
+      that carries the contrast.
+   4. A LINK LOSES ITS DESTINATION. On screen the href is behind a
+      pointer; on paper the words are all that is left. Absolute http(s)
+      destinations print after the link. Relative and in-page links do
+      NOT - `attr(href)` would print "/blog" and "#top" as if they were
+      addresses.
+
+   `!important` on the hide list is load-bearing, not decoration: a
+   component's own state rule is usually more specific than the bare class
+   (`.cm-js .cm-nav-toggle` is (0,2,0)), and a print reset must not lose
+   that argument to whichever specific rule happens to exist today. */
+@page {
+	/* A page context has no element, so a custom property cannot reach it:
+	   `margin: var(--x)` resolves to nothing in @page in every engine this
+	   ships to. Millimetres, on purpose, in the one place a token cannot
+	   go. */
+	margin: 14mm 12mm;
+}
+
+@media print {
+	/* 1. what scrolls prints whole */
+	.cm-scrollarea,
+	.cm-scroller,
+	.cm-table-wrap,
+	.cm-code--scroll,
+	.cm-typeset-scroll,
+	.cm-term__body,
+	.cm-codebar pre,
+	pre.cm-code {
+		max-height: none;
+		overflow: visible;
+	}
+	/* `pre` never wraps, so a line wider than the page is not clipped on
+	   paper - the tail is simply gone. `.cm-code--scroll` already wraps on
+	   screen; these are the two that do not, and `.cm-codebar`'s <pre> is
+	   BARE (the wrapper is the class), which is why it needs its own
+	   selector rather than a descendant of `.cm-code`. */
+	.cm-codebar pre,
+	pre.cm-code {
+		white-space: pre-wrap;
+	}
+
+	/* 2. chrome is not content */
+	.cm-header,
+	.cm-nav-toggle,
+	.cm-nav-scrim,
+	.cm-drawer,
+	.cm-toast-region,
+	.cm-scroll-fade,
+	.cm-pager,
+	.cm-search,
+	.cm-copy,
+	.cm-codebar__float,
+	.cm-term__controls,
+	.cm-keys,
+	.cm-bell,
+	.cm-revert:not([data-cm-revert-resolved]),
+	[data-cm-progress] {
+		display: none !important;
+	}
+
+	/* 3. the fill IS the contrast.
+	   Only the blocks MEASURED inverted under print are listed: --ink fill
+	   with a --bg label. The terminal is NOT here, and that is the print
+	   palette doing its job - it prints light, so `exact` on it would be a
+	   rule with nothing to prove. */
+	.cm-btn--primary,
+	.cm-term__jump-tail,
+	.cm-bubble,
+	.cm-cal__day[aria-selected='true'] {
+		print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
+	}
+
+	/* 4. a row, a card or a code block is not split across a page edge */
+	.cm-row,
+	.cm-card,
+	.cm-code,
+	.cm-term,
+	.cm-tile,
+	.cm-stat,
+	.cm-meter,
+	.cm-swatch,
+	.cm-timeline__item,
+	.cm-diff__row,
+	.cm-table tr,
+	.cm-prose-table tr {
+		break-inside: avoid;
+	}
+	/* ...and a heading is not left alone at the foot of a page. */
+	.cm-prose h2,
+	.cm-prose h3,
+	.cm-prose h4,
+	.cm-typeset h2,
+	.cm-typeset h3,
+	.cm-typeset h4 {
+		break-after: avoid;
+	}
+
+	/* 5. where a link went.
+	   `break-word`, not `anywhere`: both break a URL that cannot fit, but
+	   `anywhere` also shrinks min-content sizing, which starves the column
+	   the link sits in (the same call `.cm-tag` makes). */
+	.cm-prose a[href^='http']::after,
+	.cm-typeset a[href^='http']::after {
+		content: ' (' attr(href) ')';
+		font-size: var(--text-micro);
+		color: var(--ink-faint);
+		overflow-wrap: break-word;
+	}
+}
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number

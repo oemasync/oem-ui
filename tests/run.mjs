@@ -19144,3 +19144,230 @@ check('batch 41: a binding that carries an ACTION is also clickable, because a p
 	assert(f.link.clicks === 0 && f.mod.clicks === 0,
 		'a click on the scope fired a chord binding, or the handler recursed into el.click()');
 });
+
+
+// ---------- print mode (batch 42) ----------
+console.log('\nprint mode');
+{
+	// Print is a RENDER MODE, and every assertion here is about a PAIRING,
+	// because each half of this contract is useless alone: an unclipping that
+	// sets `max-height: none` without `overflow: visible` leaves the box a
+	// scrollport, and a hide list without `!important` loses to whichever
+	// (0,2,0) state rule happens to exist. The WebKit half of the proof is
+	// tests/measure-print-webkit.py; this half is the source contract, and
+	// tests/mutate-print.py proves each check can fail.
+	const tokensRaw = read('src/styles/tokens.css');
+	const printTokensRaw = (() => {
+		const m = /^@media print \{\n([\s\S]*?)\n\}\n/m.exec(tokensRaw);
+		assert(m, 'tokens.css has no top-level `@media print` block');
+		return m[1];
+	})();
+	const lightRaw = (() => {
+		const m = /^:root\[data-theme='light'\] \{([^}]*)\}/m.exec(tokensRaw);
+		assert(m, "tokens.css has no light theme block at column 0");
+		return m[1];
+	})();
+	const printPrelude = printTokensRaw.slice(0, printTokensRaw.indexOf('{'));
+
+	const printComp = (() => {
+		const body = allAtRuleBodies(compSrc, '@media print');
+		assert(body.trim().length > 200, 'components.css has no @media print block');
+		return body;
+	})();
+	const printRules = [...printComp.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+		.map((m) => ({ sels: m[1].split(',').map((s) => s.trim()).filter(Boolean), body: m[2] }));
+	const withSel = (sel) => printRules.filter((r) => r.sels.includes(sel));
+	const unionFor = (sel) => withSel(sel).map((r) => r.body).join('\n');
+	const tokenValue = (body, name) => {
+		const m = new RegExp(`--${name}:\\s*([^;]+);`).exec(body);
+		return m ? m[1].trim() : null;
+	};
+
+	check('print: the print palette IS the light palette, value for value', () => {
+		// One ink-on-light ramp, not a third set of greys that can drift from
+		// both themes. A dark-theme page printed white-on-white is the defect
+		// this exists to prevent: MEASURED, dark --ink #e8e8e8 = 1.23:1 on paper.
+		const family = ['bg', 'bg-2', 'bg-3', 'panel', 'panel-nested', 'surface-raised',
+			'line', 'line-soft', 'ink', 'ink-dim', 'ink-faint', 'accent', 'scrim'];
+		const drift = [];
+		for (const t of family) {
+			const p = tokenValue(printTokensRaw, t);
+			const l = tokenValue(lightRaw, t);
+			assert(p !== null, `the print block never declares --${t}, so paper inherits the theme's value`);
+			assert(l !== null, `the light block declares no --${t} to compare against`);
+			if (p !== l) drift.push(`--${t}: print ${p} / light ${l}`);
+		}
+		assert(drift.length === 0,
+			'the print palette has drifted from the light palette (they must be one ramp):\n  ' + drift.join('\n  '));
+	});
+
+	check('print: the override repeats the theme blocks specificity, and comes after them', () => {
+		// `:root` alone is (0,1,0) and loses to `:root[data-theme='light']` at
+		// (0,2,0) in EITHER load order, so a one-selector print block would
+		// silently print the dark theme light and the light theme light - i.e.
+		// the fix would appear to work while only half of it applied.
+		assert(/:root\[data-theme='dark'\]/.test(printPrelude),
+			'the print override does not name :root[data-theme="dark"], so it loses the specificity argument');
+		assert(/:root\[data-theme='light'\]/.test(printPrelude),
+			'the print override does not name :root[data-theme="light"]');
+		const printAt = tokensRaw.indexOf('@media print');
+		const lightAt = tokensRaw.search(/^:root\[data-theme='light'\] \{/m);
+		assert(printAt > lightAt,
+			'the print override sits BEFORE the light theme block; equal specificity means the later rule wins, so it would do nothing');
+	});
+
+	check('print: the page box gets a margin, because @page has no element to inherit one from', () => {
+		const page = /@page\s*\{([^}]*)\}/.exec(compSrc);
+		assert(page, 'components.css declares no @page rule');
+		assert(/margin:\s*[^;]+;/.test(page[1]),
+			'an @page with no margin prints to the paper edge, so every page is clipped by the printer');
+		assert(!/var\(--/.test(page[1]),
+			'the @page margin names a custom property: a page context has no element, so var() does not resolve there');
+	});
+
+	const HIDE = ['.cm-header', '.cm-nav-toggle', '.cm-nav-scrim', '.cm-drawer',
+		'.cm-toast-region', '.cm-scroll-fade', '.cm-pager', '.cm-search', '.cm-copy',
+		'.cm-codebar__float', '.cm-term__controls', '.cm-keys', '.cm-bell',
+		'.cm-revert:not([data-cm-revert-resolved])', '[data-cm-progress]'];
+	check('print: chrome does not print, and each entry wins its specificity argument', () => {
+		const bad = [];
+		for (const sel of HIDE) {
+			const rules = withSel(sel);
+			assert(rules.length > 0, `${sel} is not in any print rule, so it still prints`);
+			const hides = rules.some((r) => /display:\s*none\s*!important/.test(r.body));
+			if (!hides) bad.push(sel);
+		}
+		assert(bad.length === 0,
+			'these print as chrome because their rule lost the cascade (a state rule like `.cm-js .cm-nav-toggle` is '
+			+ '(0,2,0), so the print reset needs !important): ' + bad.join(', '));
+	});
+
+	const SCROLL = ['.cm-scrollarea', '.cm-scroller', '.cm-table-wrap', '.cm-code--scroll',
+		'.cm-typeset-scroll', '.cm-term__body', '.cm-codebar pre', 'pre.cm-code'];
+	check('print: every scroll container is unclipped on BOTH axes', () => {
+		// Both halves, always: `max-height: none` alone leaves a scrollport that
+		// prints its window, `overflow: visible` alone leaves the cap cutting the
+		// page. MEASURED before this: .cm-scrollarea held 747px in a 222px box,
+		// so 525px - 70% of the table - never reached the paper.
+		const bad = [];
+		for (const sel of SCROLL) {
+			const body = unionFor(sel);
+			assert(body, `${sel} is not named in the print block`);
+			if (!/max-height:\s*none/.test(body) || !/overflow:\s*visible/.test(body)) bad.push(sel);
+		}
+		assert(bad.length === 0,
+			'these print clipped or capped, so the reader loses everything past the fold: ' + bad.join(', '));
+	});
+
+	check('print: a printed code block wraps instead of losing its tail', () => {
+		// `pre` does not wrap, and a code line wider than the page is not
+		// clipped on paper - it is gone. `.cm-code--scroll` already wraps on
+		// screen; the BARE <pre> inside .cm-codebar and a plain pre.cm-code do
+		// not, and the bare one carries no class of its own.
+		for (const sel of ['.cm-codebar pre', 'pre.cm-code']) {
+			assert(/white-space:\s*pre-wrap/.test(unionFor(sel)),
+				`${sel} still has white-space: pre in print, so a long line prints without its end`);
+		}
+	});
+
+	check('print: an inverted fill keeps its text, and only the MEASURED blocks are listed', () => {
+		// A list that grows without a measurement is a rule with nothing to
+		// prove; a list that shrinks drops the contrast. Measured in WebKit
+		// under print: these four paint --ink behind a --bg label.
+		const rule = printRules.find((r) => r.body.includes('print-color-adjust: exact'));
+		assert(rule, 'no print rule forces print-color-adjust: exact');
+		const measured = ['.cm-btn--primary', '.cm-term__jump-tail', '.cm-bubble',
+			".cm-cal__day[aria-selected='true']"];
+		const listed = rule.sels.slice().sort();
+		assert(JSON.stringify(listed) === JSON.stringify(measured.slice().sort()),
+			`the exact-fill list is ${JSON.stringify(listed)}, want exactly the measured ${JSON.stringify(measured)}`);
+		assert(/-webkit-print-color-adjust:\s*exact/.test(rule.body),
+			'the unprefixed property is not enough on its own: WebKit is the engine this library is verified in');
+	});
+
+	check('print: a link prints its destination, and only for absolute http(s)', () => {
+		// `attr(href)` on a bare `a` prints "/blog" and "#top" as if they were
+		// addresses. The attribute selector is the whole guard.
+		for (const sel of [".cm-prose a[href^='http']::after", ".cm-typeset a[href^='http']::after"]) {
+			const body = unionFor(sel);
+			assert(body, `${sel} is not declared, so a printed link has no destination`);
+			assert(/content:\s*'[^']*'\s*attr\(href\)/.test(body),
+				`${sel} does not print attr(href)`);
+		}
+		const bare = printRules.some((r) => r.sels.some((s) => /^\.cm-(prose|typeset) a::after$/.test(s)));
+		assert(!bare, 'a print rule expands EVERY prose link, including relative and in-page ones');
+	});
+
+	check('print: page-break hygiene - a row is not split, a heading is not orphaned', () => {
+		const avoid = printRules.find((r) => /break-inside:\s*avoid/.test(r.body));
+		assert(avoid, 'no print rule declares break-inside: avoid');
+		for (const sel of ['.cm-row', '.cm-card', '.cm-code', '.cm-term', '.cm-table tr']) {
+			assert(avoid.sels.includes(sel), `${sel} can be split across a page edge`);
+		}
+		const keep = printRules.find((r) => /break-after:\s*avoid/.test(r.body));
+		assert(keep, 'no print rule declares break-after: avoid');
+		for (const sel of ['.cm-prose h2', '.cm-prose h3', '.cm-typeset h2']) {
+			assert(keep.sels.includes(sel), `${sel} can be left alone at the foot of a page`);
+		}
+	});
+
+	check('print: the block sits BEFORE stack ownership, which stays last', () => {
+		// Stack ownership is last on purpose (it must beat every component's own
+		// block margin). A print block appended after it would still work for
+		// overflow and display, and would quietly become a second owner of
+		// margin - so the order is asserted, not assumed.
+		const raw = read('src/styles/components.css');
+		const printAt = raw.indexOf('/* ============ print: the page a reader keeps');
+		const stackAt = raw.indexOf('/* ============ stack ownership (LAST, on purpose)');
+		assert(printAt > 0, 'the print block banner is gone');
+		assert(stackAt > 0, 'the stack-ownership banner is gone');
+		assert(printAt < stackAt, 'the print block was appended after stack ownership, which must stay last');
+	});
+
+	check('print: the BUILT stylesheet carries the contract', () => {
+		// The source being right proves nothing about what a consumer loads:
+		// a minifier can drop @page, rewrite the border-box, or merge the
+		// prefixed property away.
+		const dir = join(root, 'dist', '_astro');
+		assert(existsSync(dir), 'dist/_astro is missing - run `npm run build` before the contract tests');
+		const names = readdirSync(dir).filter((n) => n.endsWith('.css'));
+		const built = names.map((n) => readFileSync(join(dir, n), 'utf8')).join('');
+		assert(/@media print\{/.test(built), 'the built CSS carries no @media print block');
+		assert(/@page\{[^}]*margin:/.test(built), 'the built CSS dropped the @page margin');
+		assert(/-webkit-print-color-adjust:exact/.test(built),
+			'the built CSS dropped the WebKit-prefixed print-color-adjust');
+		// Bound each print chunk at its MATCHING brace, then look for the rule
+		// inside it. A bare `/\.cm-scrollarea[^{}]*\{...\}/` over the whole file
+		// matches the SCREEN rule first and reports the print rule missing -
+		// a probe that reads the wrong node, which is how the media-grid check
+		// once measured an element its mutant never touched.
+		const chunks = [];
+		for (let at = built.indexOf('@media print{'); at >= 0; at = built.indexOf('@media print{', at + 1)) {
+			const open = built.indexOf('{', at);
+			let depth = 0, end = -1;
+			for (let i = open; i < built.length; i++) {
+				if (built[i] === '{') depth++;
+				else if (built[i] === '}' && --depth === 0) { end = i; break; }
+			}
+			if (end > 0) chunks.push(built.slice(open + 1, end));
+		}
+		assert(chunks.length > 0, 'no @media print block could be bounded in the built CSS');
+		const printBuilt = chunks.join('\n');
+		const scrollRule = [...printBuilt.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+			.find((m) => m[1].includes('.cm-scrollarea'));
+		assert(scrollRule, 'the built print block does not name .cm-scrollarea');
+		assert(/overflow:visible/.test(scrollRule[2]) && /max-height:none/.test(scrollRule[2]),
+			`the built unclipping rule lost a half: ${scrollRule[1].trim()} { ${scrollRule[2]} }`);
+	});
+
+	check('print: the README documents the mode and its four decisions', () => {
+		const rm = read('README.md');
+		// Named tokens, not a section scan: the section's own prose can satisfy a
+		// word the rule no longer contains (the batch-32 lesson).
+		for (const token of ['@media print', 'print-color-adjust', 'break-inside', 'attr(href)', '@page']) {
+			assert(rm.includes(token), `the README never mentions ${token}`);
+		}
+		assert(/absolute http\(s\)|absolute `?http/i.test(rm),
+			'the README does not say the destination rule is absolute-http(s) only, which is the guard');
+	});
+}
