@@ -14,7 +14,7 @@
   "catalog": "badge broken busy-step cat-card cat-grid cat-note cat-tools cc-top fork-setup fs-main fs-remove fs-side logbox policy-line readme repo-row steps tc-top tool-card tool-grid",
   "drawer": "addr arg axis bestline cm code code-cols col-title dfold dh dh-title diff diff-key diff-sum dm dn dr drawer drawer-body drawer-card drawer-head edit-bar editor errlog fail fn-chart fn-chart-note fn-tabs grid k kw lbl match mov narrow note note-box op pin problems repl tab tabs toasts try-msg xref",
   "responsive": "credit err-text nav-open",
-  "js-templates": "asm board btn c dfolded hero-text online"
+  "js-templates": "asm board btn c dfolded hero-text"
  },
  "mapping": [
   {
@@ -606,8 +606,7 @@
     "board",
     "btn",
     "c",
-    "hero-text",
-    "online"
+    "hero-text"
    ],
    "oem": [
     "cm-code",
@@ -616,7 +615,7 @@
     "cm-prose-measure",
     "cm-chip--ok"
    ],
-   "note": "Markup fragments the JS builds at runtime. Each resolves to the component above rather than to a class of its own."
+   "note": "Classes the app emits at runtime rather than declaring in the stylesheet: the assembly block (`asm`), the agent board (`board`), a link wearing button clothes (`btn`), a class on a <pre> (`c`), the collapsed diff body (`dfolded`) and the hero's text block (`hero-text`). Each resolves to the component above rather than to a class of its own."
   }
  ]
 }

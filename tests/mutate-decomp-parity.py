@@ -32,6 +32,19 @@ MANIFEST = REPO / "docs/decomp-parity.json"
 
 
 def run_suite() -> tuple[bool, str]:
+    # The suite reads the BUILT page, not the source: the reachability
+    # check ("every class the library defines is rendered somewhere on the
+    # page") reads dist/index.html. So a CSS mutation is invisible to the
+    # suite unless the page is REBUILT - the mutant survives, and the
+    # harness reports a false pass.
+    #
+    # The build is also the slow part, and it is why this harness took
+    # minutes per mutant. It is kept because a check that cannot see the
+    # mutation is not a check.
+    b = subprocess.run(["npm", "run", "build"], cwd=REPO,
+                       capture_output=True, text=True, timeout=600)
+    if b.returncode != 0:
+        return False, (b.stdout + b.stderr)[-3000:]
     r = subprocess.run(
         ["node", "tests/run.mjs"],
         cwd=REPO, capture_output=True, text=True, timeout=600)
@@ -53,17 +66,30 @@ def mutate_css(old: str, new: str) -> bool:
 
 
 def main() -> int:
+    # The manifest and the stylesheet are the things this harness MUTATES,
+    # and a harness that is interrupted leaves them mutated. The next run
+    # then starts from a red baseline and refuses - correctly - which
+    # turns one interruption into a tree that stays broken until someone
+    # notices.
+    #
+    # So the restore happens in a FINALLY block that also runs on an
+    # interrupt, and the saved copies are taken BEFORE the baseline run so
+    # they are the true pre-mutation state. A stale saved copy is worse
+    # than none: it would restore the mutation instead of the original.
+    saved_css = CSS.read_text()
+    saved_manifest = MANIFEST.read_text()
+
     baseline_ok, baseline_out = run_suite()
     if not baseline_ok:
         print("FAIL  the suite is not green before any mutation; a red baseline")
         print("      cannot prove a mutant is caught.")
         for line in baseline_out.splitlines()[-15:]:
             print("      " + line)
+        print("      (the tree may hold a mutation from an interrupted run -")
+        print("       restore it with: git checkout -- docs/decomp-parity.json src/styles/components.css)")
         return 1
     print("  ok  baseline is green")
 
-    saved_css = CSS.read_text()
-    saved_manifest = MANIFEST.read_text()
     failures = []
     tmpdir = tempfile.mkdtemp(prefix="oem-mutate-")
     survivors = 0
@@ -157,6 +183,27 @@ def main() -> int:
             else:
                 print(f"  ok  mutant 4 killed: the inventory and the mapping must "
                       f"agree (dropped {removed!r})")
+        MANIFEST.write_text(saved_manifest)
+
+        # --- mutant 5: the manifest invents a class the app never emits ----
+        # The "is it a REAL class" check only bites if a fake survives the
+        # OTHER check. So add one to the inventory AND to the mapping: the
+        # set-agreement check passes (it is in both), and only the
+        # against-the-app check can catch it.
+        mutants += 1
+        manifest = json.loads(saved_manifest)
+        manifest["inventory"]["base"] += " decomp-invented-class"
+        manifest["mapping"][0]["decomp"].append("decomp-invented-class")
+        MANIFEST.write_text(json.dumps(manifest, indent=1))
+        if MANIFEST.read_text() == saved_manifest:
+            failures.append("mutant 5 did not apply - the manifest rewrite was a no-op")
+        else:
+            ok, out = run_suite()
+            if ok:
+                survivors += 1
+                failures.append("a class the app never emits passes the parity checks")
+            else:
+                print("  ok  mutant 5 killed: an invented class is caught against the app")
         MANIFEST.write_text(saved_manifest)
 
     finally:

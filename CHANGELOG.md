@@ -36,17 +36,28 @@ box, which is right for a real code sample and wrong for a bare address -
 a box reads as something you can click.
 
 **Also: `docs/decomp-parity.md`** is a measured map of every UI element in
-decomp-sh, and the audit that produced it. The inventory is 286 classes
+decomp-sh, and the audit that produced it. The inventory is 285 classes
 (the union of what `index.html` and `app.js` emit and every selector
 `app.css` defines), bucketed into the 15 regions the app's own stylesheet
-defines them under. The result is NOT a gap list: 284 of the 286 already
+defines them under. The result is NOT a gap list: 283 of the 285 already
 had a component, and the work was deciding WHICH one while refusing the
 tempting wrong answer - `.mono` is not `.cm-inline-code`, `.legend` is
 not a new `.cm-legend` (the series colours belong to the chart, so it is
 `.cm-chart__legend`), and `.danger-zone` is not a red box. The two
 components the audit required are the two above.
 
-**The sweep found three check defects, which is the point of running it:**
+Every inventoried class is then re-verified against the app itself: it
+must be an EXACT selector in `app.css` or a LITERAL class in the markup.
+That check earned its place immediately - it caught `online`, a JS
+*variable* used as `${online ? "on" : ""}`, which the first extraction
+counted as a class. The class it produces is `on`, which is inventoried on
+its own. (The other four first-pass false positives - `false`, `n`,
+`theme`, `toolFilter` - are template artefacts, and `asm`, `board` and
+`btn` turned out to be REAL classes that a substring scan would have
+wrongly dismissed: `<pre class="code asm">`, `<ol class="mini-list board">`,
+`<a class="ghost btn">`.)
+
+**The sweep found four check defects, which is the point of running it:**
 
 1. The chat-family and attachment/quiz guards read RAW CSS, so a class
    named in PROSE satisfied them - a comment mentioning `.cm-attach` made
@@ -61,13 +72,31 @@ components the audit required are the two above.
 3. The reachability check requires every class to RENDER, so the new
    components needed a real specimen section - `#dropzone`, registered in
    `SECTION_ORDER` and in the `composed` family.
+4. The new "is this a REAL class" check split on `buf.split()` - which
+   splits on a COMMA, not whitespace. So the whole class attribute came
+   back as one "class name" containing spaces, every one of them matched
+   nothing, and four REAL classes were reported as invented. `split(/\s+/)`
+   is the actual intent.
 
-3 new checks (775 total). `docs/decomp-parity.json` is the machine-
+4 new checks (776 total). `docs/decomp-parity.json` is the machine-
 readable map, and a check holds it honest in both directions: every target
 must resolve to a RULE in the real stylesheet (comments stripped, so a
-deleted rule cannot leave the doc looking correct), and the inventory and
+deleted rule cannot leave the doc looking correct), the inventory and
 the mapping must be the same SET, so a decomp-sh class added or dropped
-cannot pass unnoticed.
+cannot pass unnoticed, and every inventoried class must be a REAL class
+in decomp-sh - an exact selector in its `app.css` or a literal class in
+its markup.
+
+`tests/mutate-decomp-parity.py` proves all four can fail: 5 mutants, each
+one broken in the way it claims to protect, each one killed. Mutant 4
+existed because the harness's own edit was a STRING replace that did not
+match the manifest's actual formatting - so the mutation silently did
+not apply and the guard was never exercised. A harness that cannot apply
+its own mutant proves nothing, so the edit is now STRUCTURAL (the JSON is
+parsed, changed and re-serialised) and the harness ASSERTS that its
+mutation changed the file. The harness also rebuilds the page before each
+suite run, because the suite reads `dist/` - without the rebuild a CSS
+mutation is invisible to the check that is supposed to catch it.
 
 ## Unreleased - batch 42: print, the fourth render mode
 

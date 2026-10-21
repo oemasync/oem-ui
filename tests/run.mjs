@@ -19419,8 +19419,8 @@ check('decomp-sh parity: every mapped target is a class this stylesheet defines'
 	const inventory = Object.values(manifest.inventory).flatMap((s) => s.split(/\s+/)).filter(Boolean);
 	const mapped = manifest.mapping.flatMap((m) => m.decomp);
 
-	assert(inventory.length === 286,
-		`the decomp-sh inventory holds ${inventory.length} classes, not 286 - if the app changed, re-measure and update the doc`);
+	assert(inventory.length === 285,
+		`the decomp-sh inventory holds ${inventory.length} classes, not 285 - if the app changed, re-measure and update the doc`);
 	assert(new Set(inventory).size === inventory.length, 'a decomp-sh class is listed twice in the inventory');
 	assert(new Set(mapped).size === mapped.length, 'a decomp-sh class is mapped twice, so one of the two mappings is dead');
 	assert(mapped.length === inventory.length,
@@ -19440,6 +19440,76 @@ check('decomp-sh parity: every mapped target is a class this stylesheet defines'
 	}
 	assert(unknown.length === 0,
 		`the parity doc points at ${unknown.length} class(es) this stylesheet does not define:\n  ` + unknown.join('\n  '));
+});
+
+check('decomp-sh parity: every inventoried class is a REAL class in decomp-sh', () => {
+	// The inventory is a claim about another repo, so the claim has to be
+	// checked against that repo - otherwise a typo, a renamed class or a
+	// JS VARIABLE counted as a class all survive here, and the map
+	// describes an app that does not exist.
+	//
+	// A class is real if it is an EXACT selector in the app's stylesheet, or
+	// a LITERAL class in its markup. Both halves matter:
+	//
+	//   - the exact-selector test rejects a SUBSTRING. `.btn` is a class;
+	//     `small-btn` and `as-btn` are different classes, and a scan that
+	//     matched substrings would claim all of them.
+	//   - the literal test rejects a template EXPRESSION. `online` in
+	//     `${online ? "on" : ""}` is a variable, not a class, and the class
+	//     it produces is `on` - which is inventoried on its own.
+	//
+	// The app path is read from an env var so a clone anywhere works, and
+	// the check SKIPS rather than fails when the app is not on this
+	// machine: a missing sibling repo is not a broken library.
+	const APP = process.env.DECOMP_SH_APP ||
+		'/reiki/projects/decomp-wtf/src/decompnet/app/static';
+	if (!exists(APP)) {
+		console.log('  skip  decomp-sh parity: the app is not on this machine');
+		return;
+	}
+	const appCss = read(`${APP}/app.css`);
+	const appHtml = read(`${APP}/index.html`);
+	const appJs = read(`${APP}/app.js`);
+
+	const cssExact = new Set([...appCss.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]));
+
+	// Literal classes only: a `${...}` interpolation is an expression, and
+	// the text around it is what the class attribute actually contains.
+	//
+	// The split is on WHITESPACE, explicitly. `String.split()` with no
+	// argument splits on a COMMA, so `buf.split()` returns the whole
+	// attribute as one item and the extractor silently produces
+	// "class names" that contain spaces - which then match nothing and
+	// read as invented classes. `split(/\s+/)` is the actual intent.
+	const literal = (src) => {
+		const found = new Set();
+		for (const m of src.matchAll(/class="([^"]*)"/g)) {
+			const s = m[1];
+			let i = 0, buf = '';
+			while (i < s.length) {
+				if (s.startsWith('${', i)) {
+					if (buf) { for (const c of buf.split(/\s+/)) found.add(c); buf = ''; }
+					let depth = 0, j = i;
+					for (; j < s.length; j++) {
+						if (s[j] === '{') depth++;
+						else if (s[j] === '}') { depth--; if (!depth) break; }
+					}
+					i = j + 1;
+				} else { buf += s[i]; i++; }
+			}
+			if (buf) for (const c of buf.split(/\s+/)) found.add(c);
+		}
+		return found;
+	};
+	const markup = new Set([...literal(appHtml), ...literal(appJs)]);
+
+	const manifest = JSON.parse(read('docs/decomp-parity.json'));
+	const inventory = Object.values(manifest.inventory).flatMap((s) => s.split(/\s+/)).filter(Boolean);
+	const invented = inventory.filter((c) => !cssExact.has(c) && !markup.has(c));
+	assert(invented.length === 0,
+		`${invented.length} inventoried class(es) are neither an exact selector in ` +
+		`the app's app.css nor a literal class in its markup - they are typos, ` +
+		`renames, or variables counted as classes:\n  ` + invented.join('\n  '));
 });
 
 check('cm-dropzone: the four states of a file target are each declared', () => {

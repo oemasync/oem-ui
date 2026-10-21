@@ -1,6 +1,6 @@
 # decomp-sh parity: every UI element, mapped
 
-Measured 2026-10-21 against decomp-sh at `b83aa36`. Not a survey of what decomp-sh
+Measured 2026-10-21 against decomp-sh at `488bf82`. Not a survey of what decomp-sh
 might need — a class-by-class inventory of what its app actually emits, taken from
 `app.css`, `index.html` and the template strings in `app.js`.
 
@@ -8,17 +8,24 @@ might need — a class-by-class inventory of what its app actually emits, taken 
 
 | source | count | how |
 |---|---|---|
-| classes emitted by decomp-sh | 286 | union of `class="..."` in index.html and app.js, plus every selector defined in app.css |
+| classes emitted by decomp-sh | 285 | union of `class="..."` in index.html and app.js, plus every selector defined in app.css |
 | regions those classes belong to | 15 | the `/* --- */` section each one is defined under |
 | classes oem-ui already had | 759 | `.cm-*` in components.css + base.css |
 | **new components this audit required** | **2** | `.cm-dropzone` (5 rules) and `.cm-mono` |
 
-Four tokens were removed from the raw extraction as false positives: `false`, `n`,
+Five tokens were removed from the raw extraction as false positives: `false`, `n`,
 `theme` and `toolFilter` are the second argument of `classList.toggle()` or an
-interpolated expression inside `class="...${expr}"`, not class names. Counting them
-would have inflated the inventory and produced four mappings to nothing.
+interpolated expression inside `class="...${expr}"`, and `online` is a JS
+*variable* used as `${online ? "on" : ""}` — the class it produces is `on`,
+which is in the inventory on its own. Counting them would have inflated the
+inventory and produced mappings to nothing.
 
-**The result is not a gap list.** 284 of the 286 classes already had a component.
+Every one of the 285 was then re-verified against the app: each is either an
+EXACT selector in `app.css` or a literal class in the markup. A class that is
+neither is a false positive, and the check in `tests/run.mjs` holds both the
+inventory and the mapping to that rule.
+
+**The result is not a gap list.** 283 of the 285 classes already had a component.
 The work was deciding *which* one, and refusing the tempting wrong answer:
 
 - `.mono` is not `.cm-inline-code` — that draws a box around an address the reader
@@ -115,9 +122,9 @@ The work was deciding *which* one, and refusing the tempting wrong answer:
 
 ### js-templates — classes only app.js emits
 
-- **decomp-sh (6):** `asm` `board` `btn` `c` `hero-text` `online`
+- **decomp-sh (5):** `asm` `board` `btn` `c` `hero-text`
 - **oem-ui (5):** `cm-code` `cm-rows` `cm-btn` `cm-prose-measure` `cm-chip--ok`
-- Markup fragments the JS builds at runtime. Each resolves to the component above rather than to a class of its own.
+- Classes the app emits at runtime rather than declaring in the stylesheet: the assembly block (`asm`), the agent board (`board`), a link wearing button clothes (`btn`), a class on a <pre> (`c`), the collapsed diff body (`dfolded`) and the hero's text block (`hero-text`). Each resolves to the component above rather than to a class of its own.
 
 ## The one component that had to be built
 
@@ -164,6 +171,6 @@ Two things this mapping deliberately does **not** claim:
   its own palette and rhythm. The mapping is structural — the same element, in the
   system's vocabulary — and adopting it changes the site's appearance unless the
   token layer is pointed at decomp-sh's own values.
-- It does not claim `.cm-dropzone` is proven in a browser. It is proven to exist,
-  to declare each state, and to come off the spacing scale. Geometry is unmeasured.
+- It does not claim the port is done. Nothing in decomp-sh uses these classes
+  yet; this is the map, not the migration.
 
