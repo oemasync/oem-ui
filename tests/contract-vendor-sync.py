@@ -17,11 +17,29 @@ It reads the REAL vendored files and the REAL library files. The deploy
 preflight runs it, so drift fails the deploy instead of shipping quietly.
 """
 import hashlib
+import os
 import pathlib
 import sys
 
-LIB = pathlib.Path('/root/projects/oem-ui/src')
-APP = pathlib.Path('/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src')
+LIB = pathlib.Path(os.environ.get(
+    'OEM_UI_SRC', '/root/projects/oem-ui/src'))
+
+# The app's vendored copy, on the LIVE tree.
+#
+# This path was `/mnt/pve/mrx-thunder/projects/spacetime-rpm/web/src` and
+# that tree is GONE - the 2026-10-18 thunder->reiki migration moved the
+# projects to /reiki. The old path still resolves here (it is a separate
+# checkout on the old mount, last touched 2026-10-16), so a contract that
+# kept the old path kept comparing the RIGHT FILES against a DEAD TREE:
+# it reported drift that had already been fixed, and it never saw the
+# live tree at all.
+#
+# So the path is read from the environment, and the LIVE tree is the
+# default. The old path is not consulted - a stale tree is not a source
+# of truth, and a contract that can silently compare against one is a
+# contract that can lie.
+APP = pathlib.Path(os.environ.get(
+    'RPM_VENDOR_SRC', '/root/projects/spacetime-rpm/web/src'))
 
 # (library-relative, app-relative) - the snapshot the app actually loads
 PAIRS = [
