@@ -16,6 +16,8 @@
     "test": "node tests/run.mjs",
     "test:chart-contrast": "python3 tests/verify-chart-contrast.py",
     "test:chart-contrast:mutate": "python3 tests/mutate-chart-contrast.py",
+    "test:no-hardcoded-colors": "python3 tests/verify-no-hardcoded-colors.py",
+    "test:no-hardcoded-colors:mutate": "python3 tests/mutate-no-hardcoded-colors.py",
     "parity:live": "node scripts/check-parity-live.mjs"
   },
   "keywords": [

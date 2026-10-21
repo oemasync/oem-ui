@@ -2850,7 +2850,12 @@ button.cm-row:hover { background: var(--bg-2); }
 
 .cm-header.is-scrolled {
 	border-bottom-color: var(--accent-dim);
-	box-shadow: 0 8px 24px -18px rgba(0, 0, 0, 0.9);
+	/* The shadow is --shadow-card's family, not a black literal: the
+	   same alpha under a near-black bar and under a near-white one
+	   reads as a different depth. --shadow-1 is the inset hairline
+	   the bar already has; the drop is derived from the theme's own
+	   shadow token so a light bar gets a light-appropriate cast. */
+	box-shadow: 0 8px 24px -18px var(--shadow-ink);
 }
 .cm-header__nav {
 	max-width: var(--maxw);
@@ -3134,11 +3139,17 @@ button.cm-row:hover { background: var(--bg-2); }
 /* The scrim the runtime appends. Below the drawer (z 99) and below the
    header (z 100) so the burger stays tappable, and above the page. It
    exists ONLY under .cm-js, so a no-JS reader never sees a permanent
-   dark veil over their content. */
+   dark veil over their content.
+
+   The veil is --scrim, not a literal. MEASURED: this rule painted
+   rgb(0 0 0 / 0.55) in BOTH themes, while --scrim is theme-aware
+   (#000000b8 dark, #1818186b light). The same alpha over a near-black
+   page and over a near-white page hides the page by very different
+   amounts - which is the reason --scrim exists as a token at all. */
 .cm-js .cm-nav-scrim {
 	position: fixed;
 	inset: 0;
-	background: rgb(0 0 0 / 0.55);
+	background: var(--scrim);
 	z-index: var(--z-scrim);
 	opacity: 0;
 	pointer-events: none;

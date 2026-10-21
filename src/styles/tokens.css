@@ -446,6 +446,11 @@
 	/* shadow */
 	--shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
 	--shadow-card: 0 20px 50px -24px rgba(0, 0, 0, 0.8);
+	/* The cast a bar drops onto the page. Separate from --shadow-card
+	   because a card sits ON a panel and a bar sits at the top of a
+	   scrolling page: the bar's shadow is a hairline of separation,
+	   not a lift. */
+	--shadow-ink: rgba(0, 0, 0, 0.9);
 
 	/* scrim — the wash behind a modal dialog. A translucent black is the
 	   only dimmer that exists in a greyscale system, and it is the one
@@ -516,6 +521,11 @@
 
 	--shadow-1: 0 1px 0 rgba(0, 0, 0, 0.04) inset;
 	--shadow-card: 0 20px 50px -26px rgba(0, 0, 0, 0.18);
+	/* The cast a bar drops onto the page. In a light theme a black
+	   0.9 cast is a hard band under the bar, not a separation - the
+	   bar sits on #fafafa and the page scrolls under it, so the
+	   shadow has to be as light as a shadow on white can be. */
+	--shadow-ink: rgba(0, 0, 0, 0.18);
 
 	/* The scrim is a wash, not a shadow: it only has to separate the
 	   dialog from the page. 0.72 of black over a near-white page reads
@@ -604,6 +614,11 @@
 	--footer-bg: #080808;
 	--shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
 	--shadow-card: 0 20px 50px -24px rgba(0, 0, 0, 0.8);
+	/* The cast a bar drops onto the page. Separate from --shadow-card
+	   because a card sits ON a panel and a bar sits at the top of a
+	   scrolling page: the bar's shadow is a hairline of separation,
+	   not a lift. */
+	--shadow-ink: rgba(0, 0, 0, 0.9);
 	--scrim: rgba(0, 0, 0, 0.72);
 	--selection-bg: rgba(255, 255, 255, 0.14);
 
@@ -685,6 +700,11 @@
 	--footer-bg: #f0f0f0;
 	--shadow-1: 0 1px 0 rgba(0, 0, 0, 0.04) inset;
 	--shadow-card: 0 20px 50px -26px rgba(0, 0, 0, 0.18);
+	/* The cast a bar drops onto the page. In a light theme a black
+	   0.9 cast is a hard band under the bar, not a separation - the
+	   bar sits on #fafafa and the page scrolls under it, so the
+	   shadow has to be as light as a shadow on white can be. */
+	--shadow-ink: rgba(0, 0, 0, 0.18);
 	--scrim: rgba(24, 24, 24, 0.42);
 	--selection-bg: rgba(0, 0, 0, 0.12);
 
