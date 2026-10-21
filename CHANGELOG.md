@@ -8,9 +8,12 @@ under `emulate_media(media='print')` before this batch:
 
 - dark's `--ink` resolved **#e8e8e8**, which is **1.23:1** against paper -
   the page printed blank, because browsers print with backgrounds OFF;
-- **twelve** chrome elements printed (header, burger, scrim, drawer, toasts,
-  scroll fade, pager, search, copy buttons, terminal controls, bell, revert
-  countdown);
+- **twelve chrome selectors measured rendered on paper** - header, burger,
+  toast region, scroll fade, reading-progress bar, pager, search field, copy
+  button, terminal controls, revert countdown and drawer (the keyboard map was
+  not present; the scrim and the bell were added to the hide list on reading
+  the CSS, not by this measurement), plus the table toolbar, which STAYS on
+  purpose: a filter chip describes the data, it is not chrome;
 - `.cm-scrollarea` held 747px of content in a 222px box, so **525px - 70% of
   the table - never reached the page**;
 - a bare `.cm-codebar > pre` never wraps, so a line wider than the page lost
