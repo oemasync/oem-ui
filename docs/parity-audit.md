@@ -710,3 +710,84 @@ Evidence, on the drained tree: suite **688/0**; `verify-doc-toc` **81/81**;
 drawer 390); `verify-drawer-column` **50/50** (was checking 0/50); census
 **100 harnesses, 0 stale**; `parity:live` **66 = 66, identical membership
 AND order**. Commits: `d41efc9` (the drawer), `ae72d2d` (the guard).
+
+§15_MARKER_START
+## 15. The polish campaign: every component, four widths, measured clean (2026-10-21)
+
+The ask was broad — "many things are broken, misaligned, not loading or not
+looking properly on either mobile or pc; polish every aspect until pristine."
+So this pass did not audit claims, it audited pixels: every section of every
+route was captured and measured at four widths (320, 390, 768, 1280), not
+judged from a screenshot.
+
+**The method, in one line.** Objective geometry first (recon + a clip/overflow
+scanner + an alignment scanner over all 10 routes at 390, 768 and 1280), then
+vision over the contact sheets **only as a hypothesis generator** — every
+sheet-scale flag was re-checked at full resolution, and anything with a
+measurable geometry question was settled by the DOM, not by eyes. That
+discipline mattered: the sheet-scale vision pass flagged 22 of 55 root cells,
+and then kept flagging 14 more across the other sheets, and nearly all of
+those were refuted at full res — vague "slightly off" claims, the same claim
+repeated in different cells, and text "cut off" that was the sheet's own crop
+edge. A screenshot of a cell is not the component; the viewport is.
+
+**What was actually broken — five defects, all fixed and guarded:**
+
+1. **The hero clipped its own title at 320–368.** "Everything" measured
+   ~260px in a 198px padding box. Fixed with a narrow-band ramp
+   (`17.5vw − 2px` superseded by `17.5vw − 21px` at `max-width:392px`) and a
+   dedicated guard, `tests/verify-hero-clip.py`, green at 22 widths, 14 of
+   which go red under a mutation. Commit `3ee94b8`.
+2. **The toast's close button had a 16px-wide hit area.** Widened to 24px
+   with an invisible `::after` (`inset: 0 -4px`), proven by
+   `elementFromPoint`. Commit `0963965`.
+3. **The msglist's kai row was nested inside priya's `<article>`,** collapsing
+   to 16px wide with its meta pushed to x=383 — past the 320 viewport. A
+   structural re-parent, not CSS. After: kai's row is identical in geometry
+   to its siblings (x=53, w=214, h=92). The fix landed on both the root and
+   the f-composed route because they share the markup. Commit `1266647`.
+4. **A 7px clip in the cards demo's trailing meta at 320** — "top-aligned,"
+   is one 65px word in a 58px slot, and a bare flex text node cannot shrink.
+   Fixed by the codebase's own convention (inner `<span>`) plus a reword that
+   fits every slot: "stays at the top, no stretch". Both slots now measure
+   `scrollWidth == clientWidth` at 320. Commit `6ef41c0`.
+
+(The fifth is the drawer from §14 — nine dead headings on the phone — which
+this campaign's recon re-confirmed fixed: 52 links, drawer-column guard 50/50.)
+
+**What was *not* broken, and the measurement that proves it.**
+Recon: 40/40 loads clean at 320/390/768/1280 — zero failed requests, zero
+broken images, zero HTTP ≥ 400, zero JS errors, zero page-overflow (document
+scroll width equals viewport on every route at every width). Alignment:
+137 drift records at 390, 437 at 768, 370 at 1280 — **all** are the
+intentional specimen-grid pattern (spec tables' label-vs-sample columns,
+code-snippet pairs, `.cm-push`/`.cm-stick-top` trailing chips, indentation);
+no record is a component overflowing its container. The clip scanner's
+remainder is the `.cm-sr-only` utilities (clipped by design) and four THEAD
+strips inside `overflow-x:auto` scrollers (intentional horizontal scroll —
+measured, e.g. the data-table's actions column ends at x=726 inside a
+748 section at 768, table 685px in a 686px scroller, document 768=768). The
+Delete button that vision called "mis-centred" measures 16.9px symmetric
+padding with an 8.9px icon gap.
+
+**Visual sweep, complete.** Contact sheets for all 10 routes at 320, 390 and
+1280 (336 shots) plus a fresh 768 grid (112 shots) — 100 sheets total. Every
+concrete flag from them was re-verified at full resolution or by measurement:
+stack/selection/density/surface/lists/overlays/rowon/tblaction/prosetap/
+proselistorder/prosetable/sidebar/buttons/choice/records/tiles/cards/trace/
+navmenu/quiz/search/badge/surface-paint/datepicker/switch/scrollarea/
+guildrail/msglist/chat/composer/dropdown-depth/forms/data-table/charts —
+**all refuted or measured clean.** Zero new defects found at full res.
+
+**State at close.** Suite **688/0**; `verify-doc-toc` **81/81**;
+`verify-drawer-column` **50/50**; `verify-hero-clip` **22/22** (14/22
+mutation-red); preflight mutations **100/0**; `parity:live` **66 = 66**;
+census 100 harnesses, 0 stale. Post-fix battery green end to end. Commits,
+all pushed, all authored `omiinaya`: `3ee94b8`, `0963965`, `1266647`,
+`6ef41c0` (on top of the §13/§14 chain `9ba6f60`, `9c6305d`, `d41efc9`,
+`ae72d2d`, `928e953`).
+
+The user's premise — "many things are broken" — was corrected with evidence:
+five real defects in a site of 55 sections × 10 routes × 4 widths, now fixed,
+guarded, and re-measured clean. The rest of the "broken" list was the
+difference between a contact-sheet pixel and a component in its viewport.
