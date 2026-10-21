@@ -17,6 +17,11 @@
 	   --head-top / --head-h1 are the single source for the top-of-page
 	   head block so every route starts its content at the same y. */
 	--maxw: 860px;
+	/* The height of a sparkline: a chart with its axes, grid, legend
+	   and tooltip removed, so it can sit in a table cell. It is a token
+	   because it is a design decision, not a per-instance value - a
+	   consumer that wants a taller one overrides it in a scope. */
+	--spark-h: 2rem;
 	/* Desktop nav rail. A reference doc with 20 destinations cannot live in
 	   a horizontal bar: measured, 7 links wrapped across 7 rows and pushed
 	   the content 256px down. The rail is 232px, wide enough for the longest

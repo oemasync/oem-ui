@@ -8642,6 +8642,64 @@ input.cm-slider:disabled {
 	.cm-chart__legend { gap: var(--space-1) var(--space-3); }
 }
 
+/* ---------- sparkline: one series, no axes ----------
+   A sparkline is a CHART with everything removed except the shape: no
+   axes, no grid, no labels, no tooltip. It answers one question - "is
+   this going up or down" - inside a table cell that has no room for
+   anything else.
+
+   It is NOT a small .cm-chart. The chart owns a plot, a legend, a
+   table fallback and a runtime; a sparkline in a hundred table rows
+   would carry a hundred of all of that. The whole component is one
+   inline SVG and no JS: the points arrive in the markup.
+
+   The series is drawn in the CHART series scale, not a new colour, so
+   a sparkline and the chart it came from cannot disagree about what
+   the first series looks like. */
+.cm-spark {
+	display: block;
+	width: 100%;
+	height: var(--spark-h);
+	overflow: visible;
+}
+.cm-spark__svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+/* A flat series has no shape to draw, so the line is the ONLY mark
+   and the dot carries the value. */
+.cm-spark__line {
+	fill: none;
+	stroke: var(--chart-c1);
+	stroke-width: 1;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+}
+.cm-spark__area {
+	fill: var(--accent-glow);
+	stroke: none;
+}
+/* The last value is the one a reader looks for, so it gets the ink
+   and the rest of the line recedes to the second series step. */
+.cm-spark__dot {
+	fill: var(--chart-c1);
+	stroke: none;
+}
+.cm-spark--dim .cm-spark__line { stroke: var(--chart-c2); }
+.cm-spark--dim .cm-spark__dot { fill: var(--chart-c2); }
+.cm-spark--muted .cm-spark__line { stroke: var(--chart-c4); }
+.cm-spark--muted .cm-spark__dot { fill: var(--chart-c4); }
+/* An empty sparkline is a hairline, not a gap: the row keeps its
+   shape and the reader sees "no data" instead of a broken cell. */
+.cm-spark--empty .cm-spark__line { stroke: var(--line); }
+.cm-spark__label {
+	color: var(--ink-faint);
+	font-size: var(--text-micro);
+}
+
 /* ---------- guildrail: the server icon rail ----------
    A chat client's far-leading column: one square per server, a visible
    activity pill, an unread count or dot, a separator, and an add

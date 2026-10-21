@@ -536,7 +536,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Sparkline.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -561,6 +561,37 @@ check('every component on disk is claimed by the shipped list', () => {
 				'claims it; add it to astroFiles so it is asserted to be non-empty',
 		);
 	}
+});
+/* ---------- the sparkline ---------- */
+check('the sparkline is defined, and its marks are token-driven', () => {
+	const css = read('src/styles/components.css');
+	const block = css.match(/\.cm-spark \{[\s\S]*?\n\}/);
+	assert(block, 'components.css has no .cm-spark rule');
+	// The series colour comes from the CHART scale, so a sparkline and
+	// the chart it was cut from cannot disagree about the first series.
+	assert(/stroke:\s*var\(--chart-c1\)/.test(css), '.cm-spark__line does not stroke with --chart-c1');
+	assert(!/#[0-9a-f]{3,8}\b/i.test(block[0]), '.cm-spark hardcodes a colour');
+	for (const cls of ['.cm-spark__line', '.cm-spark__area', '.cm-spark__dot', '.cm-spark__svg']) {
+		assert(css.includes(cls), `components.css has no ${cls} rule`);
+	}
+});
+check('the sparkline component computes its own scale', () => {
+	const src = read('src/astro/Sparkline.astro');
+	// The scale has to be computed: an SVG's coordinate system is the
+	// only thing that can place a point BETWEEN two samples.
+	assert(/Math\.min/.test(src) && /Math\.max/.test(src), 'the component does not compute the series range');
+	assert(/polyline/.test(src), 'the component renders no polyline');
+	// A flat series divides by zero, and a zero-division would draw a
+	// line off the canvas instead of through the middle of it.
+	assert(/span = max - min \|\| 1/.test(src), 'a flat series is not guarded');
+	// An empty series has no shape; drawing a flat line would claim
+	// "steady" for data that does not exist.
+	assert(/hasData/.test(src) && /no data/.test(src), 'the empty case is not handled');
+});
+check('the showcase renders the sparkline', () => {
+	const page = read('src/pages/index.astro');
+	assert(page.includes("import Sparkline from '../astro/Sparkline.astro'"), 'the showcase does not import Sparkline');
+	assert(/<Sparkline\s/.test(page), 'the showcase never renders a Sparkline');
 });
 check('--astro installs every file the components IMPORT, not just the .astro files', () => {
 	// The bug this closes shipped in the same release as `current.ts`.

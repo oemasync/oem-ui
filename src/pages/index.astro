@@ -18,6 +18,7 @@ import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
 import Card from '../astro/Card.astro';
 import Meter from '../astro/Meter.astro';
+import Sparkline from '../astro/Sparkline.astro';
 import CodeBlock from '../astro/CodeBlock.astro';
 import HeaderLink from '../astro/HeaderLink.astro';
 import SectionHead from '../astro/SectionHead.astro';
@@ -4211,6 +4212,61 @@ A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
 					polygon has no single point to hit.
 				</p>
 				<Fragment set:html={CHARTS.radar} />
+
+				<h3 class="cm-kicker">sparkline</h3>
+				<p class="cm-head__sub">
+					A chart with the axes, grid, legend and tooltip
+					removed. It lives in a table cell, so it carries a
+					shape and nothing else - and the points arrive in
+					the markup, so a hundred rows cost a hundred shapes
+					and no script. The scale is computed in the
+					component, because an SVG's own coordinate system
+					is the only thing that can place a point between
+					two samples.
+				</p>
+				<div class="cm-table-wrap">
+					<table class="cm-table">
+						<thead>
+							<tr>
+								<th scope="col">series</th>
+								<th scope="col">shape</th>
+								<th scope="col">last</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>latency</td>
+								<td style="width:40%"><Sparkline values={[412, 380, 402, 350, 300, 288, 310, 240, 260, 220, 198, 210]} label="latency, last 12 samples" /></td>
+								<td class="cm-table__num">210ms</td>
+							</tr>
+							<tr>
+								<td>latency (area)</td>
+								<td style="width:40%"><Sparkline values={[12, 18, 15, 30, 28, 44, 40, 62, 58, 74, 70, 88]} variant="area" label="latency, last 12 samples" /></td>
+								<td class="cm-table__num">88ms</td>
+							</tr>
+							<tr>
+								<td>flat series</td>
+								<td style="width:40%"><Sparkline values={[7, 7, 7, 7, 7, 7]} label="flat series" /></td>
+								<td class="cm-table__num">7ms</td>
+							</tr>
+							<tr>
+								<td>dim</td>
+								<td style="width:40%"><Sparkline values={[30, 42, 38, 60, 55, 71]} tone="dim" label="dim series" /></td>
+								<td class="cm-table__num">71ms</td>
+							</tr>
+							<tr>
+								<td>muted</td>
+								<td style="width:40%"><Sparkline values={[30, 42, 38, 60, 55, 71]} tone="muted" label="muted series" /></td>
+								<td class="cm-table__num">71ms</td>
+							</tr>
+							<tr>
+								<td>no data</td>
+								<td style="width:40%"><Sparkline values={[]} label="no data" /></td>
+								<td class="cm-table__num">-</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 
 				<h3 class="cm-kicker">the theme follows the tokens</h3>
 				<p class="cm-head__sub">
