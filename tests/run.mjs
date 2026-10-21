@@ -8494,7 +8494,9 @@ check('a variant is only called demonstrated if it differs from its base', () =>
 	   and the family introduces no motion, no stacking, and no rounding. */
 	check('shadcn-parity: bubble, message, marker compose without hues', () => {
 		const html = read('dist/index.html');
-		const css = read('src/styles/components.css');
+		// Comments stripped: a class named in PROSE is not a rule, and a guard
+		// that reads prose reports a radius that no rule draws.
+		const css = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
 
 		for (const v of ['default', 'secondary', 'muted', 'tinted',
 			'outline', 'ghost', 'danger'])
@@ -8536,7 +8538,10 @@ check('a variant is only called demonstrated if it differs from its base', () =>
 	/* --- shadcn parity: attachment + questionnaire --- */
 	check('shadcn-parity: attachment composes with the utilities, quiz binds', () => {
 		const html = read('dist/index.html');
-		const css = read('src/styles/components.css');
+		// Comments are stripped before any of these rules are read: a class named in
+		// PROSE is not a rule, and a guard that reads prose reports a radius that no
+		// rule draws. Every other check in this suite strips comments first.
+		const css = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
 		const js = read('src/js/cli-mono.js');
 		for (const c of ['cm-attach', 'cm-attach__media', 'cm-attach__content',
 			'cm-attach__title', 'cm-attach__desc', 'cm-attach__actions',
@@ -19380,3 +19385,120 @@ console.log('\nprint mode');
 			'the README does not say the destination rule is absolute-http(s) only, which is the guard');
 	});
 }
+
+/* ==================================================================
+ * decomp-sh parity: the mapping is a CLAIM, and this is what stops it
+ * from drifting.
+ *
+ * `docs/decomp-parity.json` is the measured inventory - the 286 classes
+ * decomp-sh's app actually emits, bucketed into the 15 regions its own
+ * stylesheet defines them under, and mapped onto the class each becomes
+ * here.
+ *
+ * Two ways this rots, and both are checked:
+ *
+ *   1. a target gets renamed or deleted here while the doc keeps
+ *      pointing at it. So every target is resolved against a RULE in
+ *      the real stylesheet. Comments are stripped first, because a
+ *      class named only in a comment is exactly the case where a
+ *      deleted rule leaves the doc looking correct.
+ *
+ *   2. a decomp-sh class is added or dropped and the doc silently
+ *      stops describing the app it claims to describe. So the
+ *      inventory and the mapping must be the same SET - which catches
+ *      a class surviving in one and not the other, in either
+ *      direction.
+ * ================================================================== */
+
+check('decomp-sh parity: every mapped target is a class this stylesheet defines', () => {
+	const manifest = JSON.parse(read('docs/decomp-parity.json'));
+	const css = (read('src/styles/components.css') + read('src/styles/base.css'))
+		.replace(/\/\*[\s\S]*?\*\//g, '');
+	const defined = new Set([...css.matchAll(/\.cm-([a-z0-9_-]+)/g)].map((m) => m[1]));
+
+	const inventory = Object.values(manifest.inventory).flatMap((s) => s.split(/\s+/)).filter(Boolean);
+	const mapped = manifest.mapping.flatMap((m) => m.decomp);
+
+	assert(inventory.length === 286,
+		`the decomp-sh inventory holds ${inventory.length} classes, not 286 - if the app changed, re-measure and update the doc`);
+	assert(new Set(inventory).size === inventory.length, 'a decomp-sh class is listed twice in the inventory');
+	assert(new Set(mapped).size === mapped.length, 'a decomp-sh class is mapped twice, so one of the two mappings is dead');
+	assert(mapped.length === inventory.length,
+		`the inventory has ${inventory.length} classes but the mapping covers ${mapped.length}`);
+
+	const missing = inventory.filter((c) => !mapped.includes(c));
+	const phantom = mapped.filter((c) => !inventory.includes(c));
+	assert(missing.length === 0, `unmapped decomp-sh classes: ${missing.join(', ')}`);
+	assert(phantom.length === 0, `mapped classes decomp-sh does not emit: ${phantom.join(', ')}`);
+
+	const unknown = [];
+	for (const fam of manifest.mapping) {
+		for (const t of fam.oem) {
+			const key = t.startsWith('cm-') ? t.slice(3) : t;
+			if (!defined.has(key)) unknown.push(`${fam.family}: ${t}`);
+		}
+	}
+	assert(unknown.length === 0,
+		`the parity doc points at ${unknown.length} class(es) this stylesheet does not define:\n  ` + unknown.join('\n  '));
+});
+
+check('cm-dropzone: the four states of a file target are each declared', () => {
+	const css = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+	// The body of the rule whose SELECTOR LIST contains `sel`.
+	//
+	// A rule's selector list is not its own name: `.cm-dropzone--over` is
+	// declared alongside a data-attribute twin, so the selector that opens
+	// the block is the LAST one in the list. Matching `sel {` therefore
+	// misses a rule that exists, and the check reports a missing state
+	// that is really a present one. So: find every block, look at the
+	// selector text in front of it, and take the block that names the class.
+	const rule = (sel) => {
+		for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+			const selectors = m[1].split(',').map((s) => s.trim());
+			if (selectors.some((s) => s === sel || s.startsWith(sel + ':') || s.startsWith(sel + ' '))) {
+				return m[2];
+			}
+		}
+		return null;
+	};
+
+	const base = rule('.cm-dropzone');
+	assert(base, '.cm-dropzone is not defined');
+	// Dashed at rest is the affordance: a solid box reads as a container you
+	// cannot drop into. This is the one property that must not be tidied away.
+	assert(/border:\s*1px dashed/.test(base), '.cm-dropzone is not dashed at rest, so it stops reading as a drop target');
+
+	// Every sub-part the state machine needs, as a rule rather than prose.
+	for (const part of ['__mark', '__title', '__text', '__note', '__platforms']) {
+		assert(rule(`.cm-dropzone${part}`), `.cm-dropzone${part} has no rule`);
+	}
+
+	const over = rule('.cm-dropzone--over');
+	assert(over, '.cm-dropzone--over is not declared');
+	assert(/border-style:\s*solid/.test(over),
+		'.cm-dropzone--over does not go solid, so a drag over the target is invisible');
+	for (const state of ['--picked', '--busy', '--err']) {
+		const r = rule(`.cm-dropzone${state}`);
+		assert(r, `.cm-dropzone${state} is not declared`);
+		assert(/border-style:\s*solid/.test(r), `.cm-dropzone${state} drops back to the dashed rest frame`);
+	}
+	// Severity is not carried by hue anywhere in this system; an error edge
+	// that introduced one would be the only red on the page.
+	assert(/border-color:\s*var\(--ink\)/.test(rule('.cm-dropzone--err')),
+		'.cm-dropzone--err must take the ink edge, not a hue');
+	assert(/\.cm-dropzone:focus-visible/.test(css),
+		'a keyboard user cannot drag, so the target must take the focus ring');
+});
+
+check('cm-mono: type only, with no box drawn around it', () => {
+	const css = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+	const m = css.match(/\.cm-mono\s*\{([^}]*)\}/);
+	assert(m, '.cm-mono is not defined');
+	assert(/font-family:\s*var\(--font-mono\)/.test(m[1]), '.cm-mono does not take the mono face from the token');
+	// The whole reason it exists: an address inline in prose must not borrow
+	// the code-span box, which reads as something the user can click.
+	for (const forbidden of ['background', 'border', 'padding']) {
+		assert(!new RegExp(forbidden + ':').test(m[1]),
+			`.cm-mono draws a ${forbidden}, which makes it a code span rather than a type utility`);
+	}
+});

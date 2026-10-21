@@ -983,6 +983,62 @@ The dot is a square, for the same reason the checkbox is: a drawn mark
 reads as drawn, and it is centred on the rail by a negative half-width so
 the two can never drift apart.
 
+### The drop target — `.cm-dropzone`
+
+The surface you drop a file **onto**. It is a different thing from
+`.cm-attach`, which is a file that has already been chosen: the attach
+card is the result, the dropzone is the question.
+
+A file target is a state machine, not a box, so the library owns all of
+it: idle, over, picked, busy, err.
+
+```html
+<div class="cm-dropzone" role="button" tabindex="0" aria-label="Import a ROM">
+  <span class="cm-dropzone__mark" aria-hidden="true">&#8595;</span>
+  <p class="cm-dropzone__title">Drop a ROM to start</p>
+  <p class="cm-dropzone__text">or press Enter to pick a file</p>
+  <ul class="cm-dropzone__platforms">
+    <li class="cm-chip">N64</li><li class="cm-chip">PSX</li>
+  </ul>
+  <p class="cm-dropzone__note">Read locally. Nothing is uploaded.</p>
+</div>
+```
+
+Three decisions, each one a thing a naive version gets wrong:
+
+- **The frame is dashed at rest and solid while a drag is over it.** That
+  is the entire affordance. A solid box reads as a container you cannot
+  drop into, so the resting state has to look *unfinished* and the over
+  state has to look *ready*. `.cm-dropzone--over` (or `data-over="true"`)
+  is the solid one.
+- **Every state keeps the frame.** `picked`, `busy` and `err` change the
+  mark and the copy, never the box, so the page does not jump under the
+  pointer when a drop starts or fails.
+- **The error edge is ink, not a hue.** `.cm-dropzone--err` takes
+  `border-color: var(--ink)` and the mark carries a glyph, because this
+  system carries severity by shape and weight, and greyscale print has
+  to read it too.
+
+It is a **control**, not a `div`: a keyboard user cannot drag, so the zone
+takes focus (`tabindex="0"`, `role="button"`) and the consumer answers
+Enter and Space. The library styles the focus ring; the consumer owns the
+key handling.
+
+MEASURED in WebKit (Safari 26.6) at 320 / 375 / 390 / 402 / 768 / 1280:
+the zone is 240–820px wide and 262–345px tall at every width, the
+document never scrolls sideways, and `--over` computes a different frame
+from the resting state. `tests/measure-dropzone-webkit.py` asserts all of
+that, so a change to the geometry fails a check instead of shipping.
+
+`.cm-mono` is the small sibling of this work: an address or a symbol set
+in running text wants the mono face and **nothing else**. The code span
+(`.cm-inline-code`) draws a box, which is right for a real code sample
+and wrong for a bare address — a box reads as something you can click.
+
+```html
+<span class="cm-mono">192.168.1.104:8080</span>
+```
+
 ### Cards and meters
 
 A card is a unit of content with a title, so it needs more room than a

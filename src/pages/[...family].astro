@@ -61,7 +61,7 @@ const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
 	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
-	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
+	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
 /* The rail's groups, written as SLICES of SECTION_ORDER rather than as a
@@ -85,7 +85,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["content", 9],
 	["prose", 8],
 	["layout", 7],
-	["composed", 9],
+	["composed", 10],
 	["reference", 4],
 ];
 
@@ -5380,8 +5380,19 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					the highlight itself are knobs: <code>--shimmer-duration</code>,
 					<code>--shimmer-spread</code>, <code>--shimmer-angle</code>.
 				</p>
-			</section>
-			)}
+				<p class="cm-head__sub">
+					<code class="cm-mono">cm-mono</code> is TYPE, not a box. An address
+					or a symbol set in running text wants the mono face and nothing
+					else: <span class="cm-mono">192.168.1.104:8080</span>,
+					<span class="cm-mono">0x8FB0</span>,
+					<span class="cm-mono">AGB-A03</span>. The code span
+					(<code class="cm-inline-code">cm-inline-code</code>) draws a box
+					around its content, which is right for a real code sample and
+					wrong for a bare address - a box reads as something you can
+					click, and a plain address is not.
+				</p>
+				</section>
+				)}
 
 
 
@@ -6439,6 +6450,79 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<span class="cm-attach__actions">
 						<button class="cm-attach__action" type="button" aria-label="Remove full-card trigger demo">×</button>
 					</span>
+				</div>
+			</section>
+			)}
+
+			{/* ==================================================== dropzone
+			     The target you drop ONTO, which is a different thing from the
+			     file that has already been chosen. `cm-attach` is the
+			     RESULT; this is the QUESTION.
+
+			     The frame is dashed at rest and solid while a drag is over
+			     it, because that is the entire affordance: a solid box
+			     reads as a container you cannot drop into. Every state
+			     keeps the frame, so the page does not jump when a drop
+			     starts or fails - only the mark and the copy change.
+
+			     It is a control, not a div: a keyboard user cannot drag,
+			     so the zone takes focus and answers Enter and Space. */}
+			{shows('composed') && (
+			<section id="dropzone" class="cm-section cm-section--pad">
+				<SectionHead title="dropzone">
+					the surface you drop a file onto. It is a state machine, not
+					a box: at rest it is dashed, while a drag is over it it goes
+					solid, and it keeps the frame through
+					<code>picked</code>, <code>busy</code> and
+					<code>err</code> so the page never jumps under the pointer.
+					<code>err</code> takes the ink edge and a glyph, never a hue.
+				</SectionHead>
+				<div class="cm-spec">
+					<div class="cm-spec__row">
+						<span class="cm-spec__label">states</span>
+						<span class="cm-spec__val">idle / over / picked / busy / err</span>
+					</div>
+					<div class="cm-spec__row">
+						<span class="cm-spec__label">keyboard</span>
+						<span class="cm-spec__val">tabindex="0" + role="button" - a keyboard user cannot drag</span>
+					</div>
+				</div>
+				<div style="display: grid; gap: var(--space-3);">
+					<div class="cm-dropzone" role="button" tabindex="0" aria-label="Import a ROM">
+						<span class="cm-dropzone__mark" aria-hidden="true">&#8595;</span>
+						<p class="cm-dropzone__title">Drop a ROM to start</p>
+						<p class="cm-dropzone__text">or press Enter to pick a file</p>
+						<ul class="cm-dropzone__platforms">
+							<li class="cm-chip">N64</li>
+							<li class="cm-chip">PSX</li>
+							<li class="cm-chip">GBA</li>
+						</ul>
+						<p class="cm-dropzone__note">Read locally. Nothing is uploaded.</p>
+					</div>
+					<div class="cm-dropzone cm-dropzone--over" role="button" tabindex="0" aria-label="Import a ROM, drag over">
+						<span class="cm-dropzone__mark" aria-hidden="true">&#8595;</span>
+						<p class="cm-dropzone__title">Release to import</p>
+						<p class="cm-dropzone__text">the frame goes solid while the drag is over it</p>
+					</div>
+					<div class="cm-dropzone cm-dropzone--picked" role="button" tabindex="0" aria-label="Import a ROM, file chosen">
+						<span class="cm-dropzone__mark" aria-hidden="true">&#10003;</span>
+						<p class="cm-dropzone__title">pokemon-red.gba</p>
+						<p class="cm-dropzone__text">1.2 MB - ready to match</p>
+						<ul class="cm-dropzone__platforms">
+							<li class="cm-chip">GBA</li>
+							<li class="cm-chip">AGB-A03</li>
+						</ul>
+					</div>
+					<div class="cm-dropzone cm-dropzone--busy" role="button" tabindex="0" aria-label="Import a ROM, working">
+						<span class="cm-dropzone__mark" aria-hidden="true">&#8230;</span>
+						<p class="cm-dropzone__title">Reading the ROM header</p>
+						<p class="cm-dropzone__text">the frame stays put, so nothing shifts under the pointer</p>
+					</div>
+					<div class="cm-dropzone cm-dropzone--err" role="button" tabindex="0" aria-label="Import a ROM, failed">
+						<span class="cm-dropzone__mark" aria-hidden="true">&#10007;</span>
+						<p class="cm-dropzone__title">That is not a ROM we recognise</p>
+						<p class="cm-dropzone__text">The file is a 4 MB save, not a cartridge image. Pick the .gba file itself.</p>
+					</div>
 				</div>
 			</section>
 			)}

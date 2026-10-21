@@ -2204,6 +2204,111 @@ button.cm-row:hover { background: var(--bg-2); }
 	.cm-state__actions .cm-btn { min-height: var(--tap); }
 }
 
+/* ---------- dropzone: the surface you drop a file onto ----------
+   A file target is a state machine, not a box. It has to show what it
+   accepts before anything arrives, what it took once it has, that it is
+   working, and what failed - and it has to LOOK like something to drop on.
+
+   `.cm-attach` is a file that is already chosen; this is the empty target
+   that chooses one. The frame is dashed at rest and solid while a drag is
+   over it, because that is the entire affordance: a solid box reads as a
+   container you cannot drop into. */
+.cm-dropzone {
+	display: grid;
+	gap: var(--space-3);
+	justify-items: center;
+	align-content: center;
+	min-height: 12rem;
+	padding: var(--space-7) var(--space-4);
+	border: 1px dashed var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--panel);
+	color: var(--ink-dim);
+	text-align: center;
+}
+/* The zone is a control, so it takes the focus ring. It is focusable in the
+   markup (role="button" + tabindex="0") because a keyboard user cannot drag:
+   the same element has to accept Enter and Space. */
+.cm-dropzone:focus-visible {
+	outline: var(--focus);
+	outline-offset: 2px;
+}
+.cm-dropzone[aria-disabled='true'] { opacity: 0.5; }
+
+/* Drag-over is transient, so it changes the BORDER rather than adding a
+   shadow: a shadow at this size reads as elevation (a panel lifted above the
+   page) when what actually happened is a hit test succeeding. */
+.cm-dropzone--over,
+.cm-dropzone[data-over='true'] {
+	border-style: solid;
+	border-color: var(--accent);
+	background: var(--bg-3);
+	color: var(--ink);
+}
+
+/* Decoration, and hidden from assistive tech by the caller. The ring is drawn
+   here so a consumer cannot ship a filled mark by accident. */
+.cm-dropzone__mark {
+	display: block;
+	width: 2.4rem;
+	height: 2.4rem;
+	border: 1px dashed var(--line);
+	color: var(--ink-faint);
+	line-height: 2.3rem;
+	font-size: var(--min-font);
+}
+.cm-dropzone__title {
+	margin: 0;
+	color: var(--ink);
+	font-size: var(--text-lg);
+	font-weight: 600;
+}
+.cm-dropzone__text { margin: 0; color: var(--ink-dim); }
+.cm-dropzone__note {
+	margin: 0;
+	max-width: var(--measure-narrow);
+	color: var(--ink-faint);
+	font-size: var(--text-xs);
+}
+
+/* What the target accepts. This row is content, not decoration: the reader
+   decides whether their file is even in scope before dragging anything. */
+.cm-dropzone__platforms {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* Busy and error keep the frame. Only the mark and the copy change, so the
+   page does not jump when a drop starts or fails - the target stays a target.
+   The error edge is SOLID INK plus a glyph, never a colour: the system carries
+   severity by shape and weight, and a hue here would be the only red on the
+   page (see the alert and chip variants). */
+.cm-dropzone--busy { border-style: solid; }
+.cm-dropzone--err {
+	border-style: solid;
+	border-color: var(--ink);
+	color: var(--ink);
+}
+.cm-dropzone--picked {
+	border-style: solid;
+	text-align: start;
+	justify-items: stretch;
+	align-content: start;
+}
+
+/* A symbol, an address or a hash inline in running text is monospace but is
+   NOT a code span: `.cm-inline-code` draws a box, which turns a bare address
+   into an object the reader assumes they can click. This is the type alone. */
+.cm-mono {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
 /* A skeleton is a placeholder, never a spinner. It is aria-hidden because
    "loading" is announced once by the region, not once per bar. */
 .cm-skeleton { display: grid; gap: var(--space-3); }

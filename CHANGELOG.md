@@ -1,3 +1,74 @@
+## Unreleased - batch 43: the drop target, and a map of decomp-sh
+
+**`.cm-dropzone`** is a new component: the surface you drop a file ONTO.
+The library had `.cm-attach` - a file that is already chosen - and no empty
+target that chooses one, so every consumer that wanted one hand-rolled a
+different box. It is a state machine, not a box, and the library now owns
+all of it: `idle`, `over`, `picked`, `busy`, `err`.
+
+Three decisions, each one a thing the naive version gets wrong:
+
+1. **The frame is DASHED at rest and SOLID while a drag is over it.** That
+   is the entire affordance: a solid box reads as a container you cannot
+   drop into, so the resting state has to look unfinished and the over
+   state has to look ready.
+2. **Every state keeps the frame.** `picked`, `busy` and `err` change the
+   mark and the copy, never the box, so the page does not jump under the
+   pointer when a drop starts or fails.
+3. **The error edge is INK, not a hue** (`border-color: var(--ink)` plus a
+   glyph in the mark), because this system carries severity by shape and
+   weight, and greyscale print has to read it too.
+
+It is a **control**, not a `div`: a keyboard user cannot drag, so the zone
+takes `tabindex="0"` and `role="button"`, and the consumer answers Enter
+and Space. The library styles the focus ring; the consumer owns the keys.
+
+MEASURED in WebKit (Safari 26.6, Playwright 1.63.0 / webkit 2359) at 320 /
+375 / 390 / 402 / 768 / 1280: the zone measures 240-820px wide and
+262-345px tall at every width, the document never scrolls sideways, and
+`--over` computes a different border from the resting state.
+`tests/measure-dropzone-webkit.py` asserts all of that, so a geometry
+change fails a check instead of shipping.
+
+`.cm-mono` came with it: an address or a symbol set in running text wants
+the mono face and NOTHING ELSE. The code span (`.cm-inline-code`) draws a
+box, which is right for a real code sample and wrong for a bare address -
+a box reads as something you can click.
+
+**Also: `docs/decomp-parity.md`** is a measured map of every UI element in
+decomp-sh, and the audit that produced it. The inventory is 286 classes
+(the union of what `index.html` and `app.js` emit and every selector
+`app.css` defines), bucketed into the 15 regions the app's own stylesheet
+defines them under. The result is NOT a gap list: 284 of the 286 already
+had a component, and the work was deciding WHICH one while refusing the
+tempting wrong answer - `.mono` is not `.cm-inline-code`, `.legend` is
+not a new `.cm-legend` (the series colours belong to the chart, so it is
+`.cm-chart__legend`), and `.danger-zone` is not a red box. The two
+components the audit required are the two above.
+
+**The sweep found three check defects, which is the point of running it:**
+
+1. The chat-family and attachment/quiz guards read RAW CSS, so a class
+   named in PROSE satisfied them - a comment mentioning `.cm-attach` made
+   a later rule look like it drew a radius. Every other check in the suite
+   strips comments first; these three did not. Fixed in the guards, not in
+   the prose, because the prose was right.
+2. The variant check required `.cm-dropzone--over` to be a rule of its
+   OWN. It is declared alongside a `data-over` twin, so the selector that
+   opens the block is the LAST one in the list and a `sel {` lookup
+   reported a missing state that was really a present one. The lookup now
+   walks every block's selector LIST.
+3. The reachability check requires every class to RENDER, so the new
+   components needed a real specimen section - `#dropzone`, registered in
+   `SECTION_ORDER` and in the `composed` family.
+
+3 new checks (775 total). `docs/decomp-parity.json` is the machine-
+readable map, and a check holds it honest in both directions: every target
+must resolve to a RULE in the real stylesheet (comments stripped, so a
+deleted rule cannot leave the doc looking correct), and the inventory and
+the mapping must be the same SET, so a decomp-sh class added or dropped
+cannot pass unnoticed.
+
 ## Unreleased - batch 42: print, the fourth render mode
 
 The library owned three layers and two themes, and had **no print rules at
