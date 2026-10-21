@@ -791,3 +791,136 @@ The user's premise — "many things are broken" — was corrected with evidence:
 five real defects in a site of 55 sections × 10 routes × 4 widths, now fixed,
 guarded, and re-measured clean. The rest of the "broken" list was the
 difference between a contact-sheet pixel and a component in its viewport.
+
+## 16. The light theme, audited; two measured contrast defects fixed (2026-10-21)
+
+The polish campaign (§15) closed on the DARK theme. The light theme is
+a shipped surface - `src/js/cli-mono-theme-guard.js` sets
+`data-theme="light"` on `<html>` from `localStorage` before first paint,
+and `src/styles/tokens.css` carries a full light token set - and it had
+never been looked at. Two measured defects came out of looking.
+
+### The audit
+
+A WCAG contrast walker (`/tmp/polish/contrast.py`) visits every
+text-bearing element on all 10 routes at 390px, resolves the effective
+background by walking ancestors for the first opaque paint, and computes
+the ratio. It ran in both themes. Dark theme: **0 flags**. Light theme:
+**45 flags, every one of them the same token** - `--ink-faint`.
+
+Separately, a non-text (graphics) audit walked every SVG geometry
+element and resolved the real stroke/fill against the nearest opaque
+background. That one is dominated by decorative chrome (grid lines,
+ticks, spokes) that is deliberately low-contrast in both themes, so the
+signal had to be separated from the noise: the question is not "is this
+line under 3:1" but "is a DATA MARK under 3:1".
+
+### Defect 1 - `--ink-faint` below the AA text floor (light theme)
+
+`--ink-faint: #6d6d6d` on `--panel-nested: #ececec` measures **4.38:1**.
+WCAG 1.4.3 wants 4.5:1 for text under 18.66px, and this token paints
+captions, help lines, stamps and period separators at 12px. 45
+rendered elements were under the floor.
+
+`--ink-faint` is now `#616161`: **5.24:1** on `--panel-nested` and
+5.4-6.2 on every other light surface, so the tier still reads as
+visibly faint without being unreadable. The dark theme's `#8b8b8b` was
+already clean and is untouched.
+
+Re-measured after the change: **0 flags on all 10 routes in both
+themes.**
+
+### Defect 2 - the chart series scale broke the promise its own comments make
+
+Two source comments state the contract:
+
+- `src/styles/tokens.css`: "five greys from --ink down to a floor that
+  still clears 3:1 on --panel and --panel-nested, which is the WCAG
+  figure for a non-text mark."
+- `src/js/cli-mono.js`: "Five tones, because --chart-c1..5 are five... A
+  sixth grey would not be - it could not clear 3:1 on the surface it is
+  drawn on."
+
+MEASURED: the promise was broken, in BOTH themes. The faintest tone is
+the one that has to clear the floor, and it did not:
+
+- dark `c5 #525252` - **2.23:1** on `--panel-nested`
+- light `c5 #999999` - **2.41:1** on `--panel-nested`
+
+A consumer writing a five-series chart got a series that was nearly
+invisible against the card it was drawn on. The shipped specimens only
+ever render two series (`CHART_SERIES` in `[...family].astro` has
+`tone: 1` and `tone: 2`), so **nothing on screen ever showed the
+defect** - this is a defect in the LIBRARY, found by reading the
+contract rather than by looking at a screenshot.
+
+The ramp was re-spaced by solving for the constraint set (every tone
+>= 3.0:1 on `--panel` and `--panel-nested`, adjacent tones still
+>= 1.30 apart, monotonic in each theme's direction), moving the
+shipped c1/c2 as little as the constraint allows:
+
+- dark: `#8c8c8c` / `#787878` / `#666666` (5.18, 3.94, 3.03:1)
+- light: `#747474` / `#878787` (3.96, 3.04:1)
+
+In-situ re-measurement after the change: every rendered series mark
+measures **>= 8.9:1** against its real background in both themes. (The
+1.08:1 entries in the graphics log are the intentional 1px
+surface-coloured seam between stacked bars and the slice outline, not
+data marks.) Full-resolution light-theme chart sheets confirm all
+series, axes, labels and heatmap cells are visible and the two series
+are clearly distinguishable.
+
+### The guards
+
+`tests/verify-chart-contrast.py` reads the real token values out of
+`tokens.css` (no hardcoded copies) and asserts: the 3:1 floor against
+both surfaces, the adjacent separation, the monotonicity, and that all
+four ramp blocks (document dark, document light, scoped dark, scoped
+light) agree with each other - a scoped container must not ship a
+different scale from the document root.
+
+`tests/mutate-chart-contrast.py` reverts each tone to its pre-fix value
+in turn and asserts the guard goes **red**. A guard that has never been
+seen red is not a guard. Result: **3/3 mutants red, green after
+restore.**
+
+Both are wired into `package.json` as `test:chart-contrast` and
+`test:chart-contrast:mutate`.
+
+### Verification
+
+- suite 688/0
+- hero-clip 22/22, doc-toc 81/81, drawer-column 50/50
+- chart-contrast guard green; mutation 3/3 red
+- parity:live 66=66
+- live text-contrast audit: **0 flags** on 10 routes x 2 themes
+- in-situ series marks: all >= 8.9:1 in both themes
+- 768px sweep: every family sheet's claims refuted at full res or by
+  measurement (f-surfaces, f-tables, f-prose closed out)
+
+### The 768px sweep, closed
+
+The remaining 768px claims from the last window were all refuted:
+
+- f-tables: the "size column cut off" is the documented scrollable
+  table pattern - measured, the actions column ends at x=726 inside a
+  748px section boundary and the table (685px) fits its 686px scroller.
+- f-surfaces: selection, surface, stack, density, lists, states and the
+  "Dead Hosts" page head were all checked at full res or by
+  measurement - the page-head title measures clean against its
+  line-height, and the avatar-group "+2" chip has 11px of clearance.
+- f-prose: the "Moderate," table cell is fully inside its column.
+
+### What is still open
+
+Nothing measured. The campaign's honest status: 7 real defects found
+and fixed across the whole sweep (§15's five, plus this window's two),
+and every other flag was refuted by measurement or by full-resolution
+pixels. The corpus behind that claim:
+
+- 448 dark-theme shots + 224 light-theme shots (320/390/768/1280)
+- 60 contact sheets (40 dark, 20 light)
+- 292 alignment section-records carrying 1296 drift entries
+  (131 @390, 88 @768, 73 @1280) - every one an intentional
+  specimen-grid or flex-row pattern
+- 20 contrast passes (10 routes x 2 themes), 0 flags after the fix
