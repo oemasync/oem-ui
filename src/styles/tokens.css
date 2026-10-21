@@ -439,9 +439,9 @@
 
 	--chart-c1: #e8e8e8;
 	--chart-c2: #b4b4b4;
-	--chart-c3: #8a8a8a;
-	--chart-c4: #6b6b6b;
-	--chart-c5: #525252;
+	--chart-c3: #8c8c8c;
+	--chart-c4: #787878;
+	--chart-c5: #666666;
 
 	/* shadow */
 	--shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
@@ -496,7 +496,12 @@
 
 	--ink: #111111;
 	--ink-dim: #4a4a4a;
-	--ink-faint: #6d6d6d;
+	/* Measured, not picked: #6d6d6d was 4.38:1 on --panel-nested
+	   (#ececec) - below the 4.5:1 AA floor for 12px text - on 45
+	   rendered elements (captions, help lines, stamps, periods).
+	   #616161 is 5.24:1 there and 5.4-6.2 on every other light
+	   surface, so the faint tier stays visibly faint but readable. */
+	--ink-faint: #616161;
 
 	--accent: #111111;
 	--accent-bright: #000000;
@@ -541,12 +546,18 @@
 	   not the dark one re-used - measured, c2 at #b4b4b4 is 2.1:1 on
 	   --panel-nested here and c5 at #525252 is 1.1:1, so reusing the
 	   dark values painted three of five series as near-invisible
-	   rules on a white card. */
+	   rules on a white card.
+
+	   RE-SPACED, measured: the faintest tone is the one that has to
+	   clear 3:1 on the surface a mark is drawn on, and it did not.
+	   c5 at #999999 was 2.41:1 on --panel-nested. c4/c5 are now
+	   #747474/#878787 - 3.96:1 and 3.04:1 there, and every tone still
+	   reads as a distinct grey (adjacent separation >= 1.30). */
 	--chart-c1: #111111;
 	--chart-c2: #3f3f3f;
 	--chart-c3: #5f5f5f;
-	--chart-c4: #7d7d7d;
-	--chart-c5: #999999;
+	--chart-c4: #747474;
+	--chart-c5: #878787;
 }
 
 /* ============================================================
@@ -624,12 +635,19 @@
 	   --cm-chart-cN per series from these, so the line, the bar, the
 	   slice, the gradient stop, the legend dot and the tooltip dot
 	   cannot disagree, and the light theme is its own five steps
-	   rather than a second dark chart. */
+	   rather than a second dark chart.
+
+	   The faintest tone is the one that has to clear 3:1 on the
+	   surface a mark is drawn on, and it did not: c5 at #525252 was
+	   2.23:1 on --panel-nested. c3/c4/c5 are now
+	   #8c8c8c/#787878/#666666 - 5.18:1, 3.94:1 and 3.03:1 there -
+	   with every tone still a distinct grey (adjacent separation
+	   >= 1.30). */
 	--chart-c1: #e8e8e8;
 	--chart-c2: #b4b4b4;
-	--chart-c3: #8a8a8a;
-	--chart-c4: #6b6b6b;
-	--chart-c5: #525252;
+	--chart-c3: #8c8c8c;
+	--chart-c4: #787878;
+	--chart-c5: #666666;
 }
 
 [data-cm-theme='light'],
@@ -653,7 +671,12 @@
 	--line-soft: #e2e2e2;
 	--ink: #111111;
 	--ink-dim: #4a4a4a;
-	--ink-faint: #6d6d6d;
+	/* Measured, not picked: #6d6d6d was 4.38:1 on --panel-nested
+	   (#ececec) - below the 4.5:1 AA floor for 12px text - on 45
+	   rendered elements (captions, help lines, stamps, periods).
+	   #616161 is 5.24:1 there and 5.4-6.2 on every other light
+	   surface, so the faint tier stays visibly faint but readable. */
+	--ink-faint: #616161;
 	--accent: #111111;
 	--accent-bright: #000000;
 	--accent-dim: #666666;
@@ -685,7 +708,7 @@
 	--chart-c1: #111111;
 	--chart-c2: #3f3f3f;
 	--chart-c3: #5f5f5f;
-	--chart-c4: #7d7d7d;
-	--chart-c5: #999999;
+	--chart-c4: #747474;
+	--chart-c5: #878787;
 
 }

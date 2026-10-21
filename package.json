@@ -14,6 +14,8 @@
     "preview": "astro preview --host 0.0.0.0",
     "astro": "astro",
     "test": "node tests/run.mjs",
+    "test:chart-contrast": "python3 tests/verify-chart-contrast.py",
+    "test:chart-contrast:mutate": "python3 tests/mutate-chart-contrast.py",
     "parity:live": "node scripts/check-parity-live.mjs"
   },
   "keywords": [

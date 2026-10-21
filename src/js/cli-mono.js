@@ -5130,7 +5130,10 @@
 	/* Five tones, because --chart-c1..5 are five: a sixth series wraps
 	   to c1, and a legend that shows c1 twice is honest about it. A
 	   sixth grey would not be - it could not clear 3:1 on the surface
-	   it is drawn on, which is the WCAG figure for a non-text mark. */
+	   it is drawn on, which is the WCAG figure for a non-text mark.
+	   All five DO clear it: the token scale is spaced so that the
+	   faintest tone still measures 3:1 on --panel and --panel-nested,
+	   and it is re-measured whenever a tone changes. */
 	var CHART_TONES = 5;
 
 	function chEsc(s) {
