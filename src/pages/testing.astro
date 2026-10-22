@@ -1,0 +1,631 @@
+---
+/**
+ * /testing — decomp-sh, rebuilt in oem-ui.
+ *
+ * WHY THIS PAGE EXISTS
+ * --------------------
+ * The parity map (docs/decomp-parity.md) says every decomp-sh class has
+ * an oem-ui equivalent. That is a CLAIM about the vocabulary, not proof
+ * that the result looks like an app. A map can be complete and still
+ * produce a page nobody would ship.
+ *
+ * So this page renders decomp-sh's REAL screens — the home/import view,
+ * a project header with its KPIs, the ROM map panel, the functions table,
+ * the agent list, the activity feed — using the oem-ui classes the map
+ * assigns to each element. The data is representative, not live: this is
+ * a look-and-feel review surface, and it says so at the top.
+ *
+ * It is a SEPARATE ROUTE on purpose. The showcase at / is the reference
+ * document and its contract tests assert its exact shape (62 sections,
+ * one rail, the family pages partitioning it exactly). A second page
+ * that restated the showcase would be a second copy of the library; a
+ * page that shows a CONSUMER is a different thing entirely, and it can
+ * be judged on its own terms.
+ *
+ * Every class used here is one the map assigns. If a class appears on
+ * this page that the map does not list, the map is wrong - and the
+ * check in tests/run.mjs says so.
+ */
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/components.css';
+import themeGuard from '../js/cli-mono-theme-guard.js?raw';
+import PageHead from '../astro/PageHead.astro';
+import Header from '../astro/Header.astro';
+import Footer from '../astro/Footer.astro';
+import StatusStrip from '../astro/StatusStrip.astro';
+import SectionHead from '../astro/SectionHead.astro';
+
+import { SITE } from '../astro/config';
+
+/* Representative numbers. The real app computes these; a review page
+   needs shapes, not truth. */
+const KPI = [
+	{ label: 'Matched code', val: '62', note: 'of 1,204 functions · +9 today' },
+	{ label: 'Functions', val: '1,204', note: '748 matched · 312 tried' },
+	{ label: 'Pace', val: '17', note: 'matches per hour, last 24h' },
+	{ label: 'Agents', val: '3', note: 'running · $2.40 spent' },
+];
+
+const FUNCTIONS = [
+	{ addr: '0x8FB000', name: 'player_update', insns: '412', best: '94%', tries: '6', state: 'matched' },
+	{ addr: '0x8FB1A4', name: 'collision_check', insns: '288', best: '71%', tries: '3', state: 'working' },
+	{ addr: '0x8FB2C8', name: 'animation_tick', insns: '156', best: '38%', tries: '2', state: 'tried' },
+	{ addr: '0x8FB364', name: 'audio_play_sfx', insns: '94', best: '—', tries: '0', state: 'open' },
+	{ addr: '0x8FB3C2', name: 'save_write_block', insns: '221', best: '88%', tries: '4', state: 'matched' },
+];
+
+const AGENTS = [
+	{ who: 'claude-code', what: 'player_update', state: 'working', last: '2m ago' },
+	{ who: 'codex', what: 'collision_check', state: 'working', last: '4m ago' },
+	{ who: 'antigravity', what: 'animation_tick', state: 'done', last: '18m ago' },
+];
+
+const ACTIVITY = [
+	{ who: 'claude-code', what: 'matched player_update at 94%', when: '2m ago' },
+	{ who: 'codex', what: 'rewrote collision_check, 3 attempts', when: '4m ago' },
+	{ who: 'antigravity', what: 'finished animation_tick', when: '18m ago' },
+	{ who: 'claude-code', what: 'read the header, found the player struct', when: '26m ago' },
+];
+
+/* The ROM map: one bar per function, in ROM order, coloured by state.
+   The heights are representative - the real map draws a square per
+   function at its real size. */
+const ROM_MAP = [
+	{ k: 'todo', h: 18 },
+	{ k: 'todo', h: 26 },
+	{ k: 'tried', h: 34 },
+	{ k: 'todo', h: 22 },
+	{ k: 'working', h: 58 },
+	{ k: 'todo', h: 30 },
+	{ k: 'matched', h: 96 },
+	{ k: 'todo', h: 16 },
+	{ k: 'tried', h: 42 },
+	{ k: 'matched', h: 104 },
+	{ k: 'todo', h: 24 },
+	{ k: 'working', h: 48 },
+	{ k: 'todo', h: 20 },
+	{ k: 'matched', h: 88 },
+	{ k: 'todo', h: 28 },
+	{ k: 'tried', h: 36 },
+	{ k: 'matched', h: 92 },
+	{ k: 'todo', h: 14 },
+	{ k: 'working', h: 52 },
+	{ k: 'todo', h: 22 },
+	{ k: 'matched', h: 110 },
+	{ k: 'todo', h: 26 },
+	{ k: 'tried', h: 40 },
+	{ k: 'todo', h: 18 },
+	{ k: 'matched', h: 84 },
+];
+
+/* A chip per state. The glyph is the meaning - this system carries
+   severity by shape, never by hue. */
+const STATE_CHIP: Record<string, string> = {
+	matched: 'cm-chip cm-chip--ok',
+	working: 'cm-chip cm-chip--warn',
+	tried: 'cm-chip',
+	open: 'cm-chip',
+};
+const STATE_LABEL: Record<string, string> = {
+	matched: 'matched',
+	working: 'working',
+	tried: 'tried',
+	open: 'to do',
+};
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>testing — decomp-sh in oem/ui</title>
+		<meta name="description" content="decomp-sh rebuilt with the oem-ui design system. a review surface, not a live app." />
+		<script is:inline set:html={themeGuard}></script>
+	</head>
+	<body>
+		<Header
+			brand={SITE.title}
+			homeHref="/"
+			links={[{ href: '/', label: 'showcase' }, { href: '/testing/', label: 'testing', active: true }]}
+			extraLinks={[{ href: SITE.github, label: 'github' }]}
+			trail
+		/>
+
+		<main class="cm-shell cm-stack cm-stack--section">
+			<PageHead
+				kicker="review surface"
+				title="decomp-sh in oem/ui"
+				sub="decomp-sh's own screens, rebuilt with the classes the parity map assigns. representative data - a look-and-feel check, not a live app."
+			/>
+			<StatusStrip label="status" status="ok">
+				this page renders the port. the live app is untouched.
+			</StatusStrip>
+
+			<!-- ============================================ home / import -->
+			<section id="home" class="cm-section cm-section--pad">
+				<SectionHead title="home">
+					the import surface. decomp-sh's <code>.drop</code> family is the
+					one place the port needed a component that did not exist yet -
+					it is <code>.cm-dropzone</code> now.
+				</SectionHead>
+
+				<div class="cm-dropzone" role="button" tabindex="0" aria-label="Import a ROM">
+					<span class="cm-dropzone__mark" aria-hidden="true">&#8595;</span>
+					<p class="cm-dropzone__title">Drop a ROM to start</p>
+					<p class="cm-dropzone__text">or press Enter to pick a file</p>
+					<ul class="cm-dropzone__platforms">
+						<li class="cm-chip">N64</li>
+						<li class="cm-chip">PSX</li>
+						<li class="cm-chip">GBA</li>
+					</ul>
+					<p class="cm-dropzone__note">Read locally. Nothing is uploaded.</p>
+				</div>
+
+				{/*
+				  The other three states, because the component is a STATE
+				  MACHINE and the idle state alone would not show that.
+				  decomp-sh has all four: `.drop-idle`, `.drop-picked`,
+				  `.drop-busy`, `.drop-error`.
+				*/}
+				<div class="cm-dropzone cm-dropzone--picked" role="button" tabindex="0" aria-label="Import a ROM, file chosen">
+					<span class="cm-dropzone__mark" aria-hidden="true">&#10003;</span>
+					<p class="cm-dropzone__title">pokemon-red.gba</p>
+					<p class="cm-dropzone__text">1.2 MB - ready to match</p>
+					<ul class="cm-dropzone__platforms">
+						<li class="cm-chip">GBA</li>
+						<li class="cm-chip">AGB-A03</li>
+					</ul>
+				</div>
+				<div class="cm-dropzone cm-dropzone--busy" role="button" tabindex="0" aria-label="Import a ROM, working">
+					<span class="cm-dropzone__mark" aria-hidden="true">&#8230;</span>
+					<p class="cm-dropzone__title">Reading the ROM header</p>
+					<p class="cm-dropzone__text">the frame stays put, so nothing shifts under the pointer</p>
+				</div>
+				<div class="cm-dropzone cm-dropzone--err" role="button" tabindex="0" aria-label="Import a ROM, failed">
+					<span class="cm-dropzone__mark" aria-hidden="true">&#10007;</span>
+					<p class="cm-dropzone__title">That is not a ROM we recognise</p>
+					<p class="cm-dropzone__text">The file is a 4 MB save, not a cartridge image. Pick the .gba file itself.</p>
+				</div>
+
+				<ul class="cm-cards">
+					<li class="cm-card">
+						<div class="cm-card__head">
+							<h3 class="cm-card__title">Try the demo</h3>
+							<p class="cm-card__sub">Demo Quest 64</p>
+						</div>
+						<div class="cm-card__body">
+							<p class="cm-card__text">A small N64 ROM made for this app. Watch it work in a minute.</p>
+						</div>
+					</li>
+					<li class="cm-card">
+						<div class="cm-card__head">
+							<h3 class="cm-card__title">Use your own agent</h3>
+							<p class="cm-card__sub">Claude Code, Codex or Antigravity</p>
+						</div>
+						<div class="cm-card__body">
+							<p class="cm-card__text">Connect once, then just ask it: "decompile my game".</p>
+						</div>
+					</li>
+					<li class="cm-card">
+						<div class="cm-card__head">
+							<h3 class="cm-card__title">Join a team</h3>
+							<p class="cm-card__sub">from an invite link</p>
+						</div>
+						<div class="cm-card__body">
+							<p class="cm-card__text">Everyone works from their own computer and copy of the game.</p>
+						</div>
+					</li>
+				</ul>
+			</section>
+
+			<!-- ============================================ project header -->
+			<section id="project" class="cm-section cm-section--pad">
+				<SectionHead title="project">
+					the header: title and chips on one row, the actions pushed to
+					the far end, then the progress meter and the tablist.
+				</SectionHead>
+
+				<div class="cm-head">
+					<div class="cm-head-row">
+						<div class="cm-head-row__text">
+							<div class="cm-chip cm-chip--action">GBA</div>
+							<div class="cm-chip cm-chip--action">AGB-A03</div>
+							<h2 class="cm-head__title">pokemon-red</h2>
+						</div>
+						<div class="cm-push-group">
+							<button class="cm-btn cm-btn--ghost cm-btn--sm" type="button">Decompile together</button>
+							<button class="cm-btn cm-btn--primary" type="button">Start agents</button>
+						</div>
+					</div>
+					<div class="cm-meter cm-meter--row">
+						<div class="cm-meter__top">
+							<span class="cm-meter__label">% of code</span>
+							<span class="cm-meter__val">62%</span>
+						</div>
+						<div class="cm-meter__track"><div class="cm-meter__fill" style="--cm-meter: 62%"></div></div>
+					</div>
+				</div>
+
+				<div class="cm-tabs">
+					<div class="cm-tabs__list" role="tablist" aria-label="Project">
+						<button class="cm-tabs__tab" role="tab" id="pt1" aria-selected="true" aria-controls="pp1">Overview</button>
+						<button class="cm-tabs__tab" role="tab" id="pt2" aria-selected="false" aria-controls="pp2">Functions <span class="cm-chip">1,204</span></button>
+						<button class="cm-tabs__tab" role="tab" id="pt3" aria-selected="false" aria-controls="pp3">Agents <span class="cm-chip">3</span></button>
+						<button class="cm-tabs__tab" role="tab" id="pt4" aria-selected="false" aria-controls="pp4">Activity</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============================================ overview -->
+			<section id="overview" class="cm-section cm-section--pad">
+				<SectionHead title="overview">
+					decomp-sh's <code>.kpis</code> is a stat row, the ROM map is a
+					chart with a legend, and the two lists below it are list rows.
+				</SectionHead>
+
+				<ul class="cm-stats">
+					{KPI.map((k) => (
+						<li class="cm-stat">
+							<span class="cm-stat__label">{k.label}</span>
+							<p class="cm-stat__val">{k.val}</p>
+							<span class="cm-stat__note">{k.note}</span>
+						</li>
+					))}
+				</ul>
+
+				<div class="cm-section">
+					<div class="cm-head-row">
+						<h3 class="cm-section__title">ROM map</h3>
+					</div>
+					<p class="cm-hint">every square is a function, in ROM order</p>
+					{/*
+					  A chart is an SVG with a SCOPED <style>, and the series
+					  colours are the --chart-cN tokens - a greyscale ramp,
+					  because this system has no chroma to carry a series.
+
+					  The legend dots are coloured by the SAME property, so the
+					  legend and the chart can never disagree: one source
+					  paints both.
+					*/}
+					<div
+						class="cm-chart"
+						id="cmc-rom"
+						data-cm-chart=""
+						data-cm-chart-type="bar"
+						data-cm-chart-h="160"
+						data-cm-chart-title="functions by state"
+						data-cm-chart-desc="every function in the ROM, in ROM order, coloured by what state it is in"
+					>
+						<style class="cm-chart__style" set:html={`#cmc-rom{--cm-chart-todo:var(--chart-c4);--cm-chart-tried:var(--chart-c3);--cm-chart-working:var(--chart-c2);--cm-chart-matched:var(--chart-c1)}
+#cmc-rom .cm-chart__bar[data-cm-k="todo"]{fill:var(--cm-chart-todo)}
+#cmc-rom .cm-chart__bar[data-cm-k="tried"]{fill:var(--cm-chart-tried)}
+#cmc-rom .cm-chart__bar[data-cm-k="working"]{fill:var(--cm-chart-working)}
+#cmc-rom .cm-chart__bar[data-cm-k="matched"]{fill:var(--cm-chart-matched)}
+#cmc-rom .cm-chart__legend-dot[data-cm-k="todo"]{background:var(--cm-chart-todo)}
+#cmc-rom .cm-chart__legend-dot[data-cm-k="tried"]{background:var(--cm-chart-tried)}
+#cmc-rom .cm-chart__legend-dot[data-cm-k="working"]{background:var(--cm-chart-working)}
+#cmc-rom .cm-chart__legend-dot[data-cm-k="matched"]{background:var(--cm-chart-matched)}`}></style>
+						<div class="cm-chart__plot">
+							<svg
+								class="cm-chart__svg"
+								viewBox="0 0 640 160"
+								width="640"
+								height="160"
+								role="img"
+								aria-labelledby="cmc-rom-title cmc-rom-desc"
+								tabindex="0"
+								data-cm-chart-svg=""
+							>
+								<title id="cmc-rom-title">functions by state</title>
+								<desc id="cmc-rom-desc">every function in the ROM, in ROM order, coloured by what state it is in</desc>
+								<g>
+									{ROM_MAP.map((f, i) => (
+										<rect
+											class="cm-chart__bar"
+											data-cm-k={f.k}
+											x={24 + i * 22}
+											y={150 - f.h}
+											width="16"
+											height={f.h}
+										></rect>
+									))}
+								</g>
+							</svg>
+						</div>
+						{/*
+						  The legend lives INSIDE the chart element, and that is
+						  not a placement detail: the series colours are
+						  scoped to `#cmc-rom`, so a legend outside it cannot
+						  be reached by the rule that paints the dots. The
+						  library's own chart puts it there for the same
+						  reason - one scope paints the bars and their
+						  legend, so they cannot disagree.
+						*/}
+						<div class="cm-chart__legend">
+							<span class="cm-chart__legend-item"><i class="cm-chart__legend-dot" data-cm-k="todo"></i>to do</span>
+							<span class="cm-chart__legend-item"><i class="cm-chart__legend-dot" data-cm-k="tried"></i>tried</span>
+							<span class="cm-chart__legend-item"><i class="cm-chart__legend-dot" data-cm-k="working"></i>working</span>
+							<span class="cm-chart__legend-item"><i class="cm-chart__legend-dot" data-cm-k="matched"></i>matched</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="cm-cols">
+					<div class="cm-section">
+						<div class="cm-head-row">
+							<h3 class="cm-section__title">Recent matches</h3>
+							<a class="cm-inline-link" href="#functions">All matched</a>
+						</div>
+						<ul class="cm-rows">
+							{AGENTS.map((a) => (
+								<li class="cm-row">
+									<span class="cm-row__body">
+										<span class="cm-row__title cm-mono">{a.what}</span>
+										<span class="cm-row__desc">{a.who}</span>
+									</span>
+									<span class="cm-row__meta">{a.last}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+					<div class="cm-section">
+						<div class="cm-head-row">
+							<h3 class="cm-section__title">Who matched what</h3>
+						</div>
+						<ul class="cm-rows">
+							{FUNCTIONS.slice(0, 4).map((f) => (
+								<li class="cm-row">
+									<span class="cm-row__body">
+										<span class="cm-row__title cm-mono">{f.name}</span>
+										<span class="cm-row__desc cm-mono">{f.addr}</span>
+									</span>
+									<span class={`${STATE_CHIP[f.state]} cm-row__meta`}>{STATE_LABEL[f.state]}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============================================ functions -->
+			<section id="functions" class="cm-section cm-section--pad">
+				<SectionHead title="functions">
+					the sortable table, the search field, the segmented filter, and
+					the "show more" footer.
+				</SectionHead>
+
+				<div class="cm-toolbar">
+					<div class="cm-search">
+						<input class="cm-search__input" type="search" placeholder="Find a function, address or file" aria-label="Find a function" />
+					</div>
+					<div class="cm-seg" role="radiogroup" aria-label="Show">
+						<button class="cm-seg__opt is-on" type="button" role="radio" aria-checked="true">all</button>
+						<button class="cm-seg__opt" type="button" role="radio" aria-checked="false">matched</button>
+						<button class="cm-seg__opt" type="button" role="radio" aria-checked="false">tried</button>
+						<button class="cm-seg__opt" type="button" role="radio" aria-checked="false">working</button>
+					</div>
+				</div>
+
+				<div class="cm-table-wrap">
+					<table class="cm-table">
+						<thead>
+							<tr>
+								<th class="cm-table__sort" aria-sort="ascending">Address</th>
+								<th class="cm-table__sort" aria-sort="none">Function</th>
+								<th class="cm-table__sort cm-table__num" aria-sort="none">Instructions</th>
+								<th class="cm-table__sort cm-table__num" aria-sort="none">Best</th>
+								<th class="cm-table__sort cm-table__num" aria-sort="none">Tries</th>
+								<th class="cm-table__sort" aria-sort="none">Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{FUNCTIONS.map((f) => (
+								<tr>
+									<td class="cm-mono">{f.addr}</td>
+									<td class="cm-mono">{f.name}</td>
+									<td class="cm-table__num cm-mono">{f.insns}</td>
+									<td class="cm-table__num cm-mono">{f.best}</td>
+									<td class="cm-table__num cm-mono">{f.tries}</td>
+									<td><span class={STATE_CHIP[f.state]}>{STATE_LABEL[f.state]}</span></td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+				<div class="cm-list-more">
+					<span class="cm-hint">showing 5 of 1,204 functions</span>
+				</div>
+			</section>
+
+			<!-- ============================================ agents -->
+			<section id="agents" class="cm-section cm-section--pad">
+				<SectionHead title="agents">
+					the launcher on one side, the running sessions and the
+					instructions on the other.
+				</SectionHead>
+
+				<div class="cm-split">
+					<div class="cm-stack">
+						<div class="cm-section">
+							<h3 class="cm-section__title">Start agents</h3>
+							<p class="cm-hint">They work in parallel; each takes a different function</p>
+							<div class="cm-field-row">
+								<label class="cm-field__label" for="agModel">model</label>
+								<div class="cm-field">
+									<select class="cm-select" id="agModel">
+										<option>claude-sonnet-4</option>
+										<option>gpt-5</option>
+										<option>gemini-3</option>
+									</select>
+								</div>
+							</div>
+							<button class="cm-btn cm-btn--primary" type="button">Start agents</button>
+						</div>
+					</div>
+
+					<div class="cm-split__aside">
+						<div class="cm-section">
+							<h3 class="cm-section__title">Working on this project</h3>
+							<ul class="cm-rows cm-rows--stacked">
+								{AGENTS.map((a) => (
+									<li class="cm-row">
+										<span class="cm-row__body">
+											<span class="cm-row__title">{a.who}</span>
+											<span class="cm-row__desc cm-mono">{a.what}</span>
+										</span>
+										<span class="cm-row__meta">{a.last}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+
+						<div class="cm-section">
+							<h3 class="cm-section__title">Instructions for agents</h3>
+							<div class="cm-field">
+								<label class="cm-field__label" for="agInstr">every agent on this project gets these with its task</label>
+								<textarea class="cm-field__control" id="agInstr" rows="5" placeholder="Focus on the game's own code first; leave zlib for later.&#10;Name functions in snake_case."></textarea>
+								<p class="cm-field__help">what to focus on, what you know about the game, conventions, things to leave alone.</p>
+							</div>
+							<button class="cm-btn cm-btn--primary cm-btn--sm" type="button">Save instructions</button>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============================================ activity -->
+			<section id="activity" class="cm-section cm-section--pad">
+				<SectionHead title="activity">
+					the feed. decomp-sh's <code>.feed</code> becomes a timeline, and
+					its message-shaped rows become the message list.
+				</SectionHead>
+
+				<div class="cm-cols">
+					<div class="cm-section">
+						<h3 class="cm-section__title">What happened</h3>
+						<ul class="cm-timeline">
+							{ACTIVITY.map((a) => (
+								<li class="cm-timeline__item">
+									<span class="cm-timeline__role">{a.who}</span>
+									<span class="cm-timeline__org">{a.what}</span>
+									<span class="cm-timeline__meta">{a.when}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+
+					<div class="cm-section">
+						<h3 class="cm-section__title">Agent thoughts</h3>
+						<div class="cm-msglist">
+							{ACTIVITY.slice(0, 3).map((a) => (
+								<div class="cm-msglist__msg">
+									<div class="cm-msglist__main">
+										<span class="cm-msglist__author">{a.who}</span>
+										<span class="cm-msglist__text">{a.what}</span>
+										<span class="cm-msglist__stamp">{a.when}</span>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============================================ the function drawer -->
+			<section id="drawer" class="cm-section cm-section--pad">
+				<SectionHead title="function drawer">
+					the diff view and the code panel, opened from the table.
+				</SectionHead>
+
+				<div class="cm-dialog cm-dialog--spec">
+					<div class="cm-dialog__head">
+						<h3 class="cm-dialog__title cm-mono">player_update</h3>
+						<span class="cm-row__meta cm-mono">0x8FB000</span>
+					</div>
+					<div class="cm-dialog__body">
+						<div class="cm-tabs">
+							<div class="cm-tabs__list" role="tablist" aria-label="View">
+								<button class="cm-tabs__tab" role="tab" aria-selected="true">diff</button>
+								<button class="cm-tabs__tab" role="tab" aria-selected="false">assembly</button>
+							</div>
+						</div>
+						<div class="cm-diff">
+							{/*
+							  The row carries `data-op`, and the library derives
+							  BOTH the visible glyph and the decoration from
+							  it: `create` is underlined, `delete` is struck
+							  through, and the glyph is a ::before the screen
+							  reader reads as the operation. A literal `-`
+							  in the markup would be read as CONTENT, not as
+							  the operation, and would leave the rows
+							  indistinguishable.
+							*/}
+							<div class="cm-diff__row" data-op="delete">
+								<span class="cm-diff__op">delete</span>
+								<span class="cm-diff__val cm-mono">if (p-&gt;hp &lt; 0) p-&gt;hp = 0;</span>
+							</div>
+							<div class="cm-diff__row" data-op="create">
+								<span class="cm-diff__op">create</span>
+								<span class="cm-diff__val cm-mono">if (p-&gt;hp &lt;= 0) p-&gt;hp = 0;</span>
+							</div>
+							<div class="cm-diff__row cm-diff__fold">
+								<span class="cm-diff__val cm-mono">··· 14 identical instructions ···</span>
+							</div>
+							<div class="cm-diff__row" data-op="update">
+								<span class="cm-diff__op">update</span>
+								<span class="cm-diff__val cm-mono">if (p-&gt;hp &lt;= 0 &amp;&amp; p-&gt;state != FIGHT) p-&gt;hp = 0;</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============================================ catalog -->
+			<section id="catalog" class="cm-section cm-section--pad">
+				<SectionHead title="public decomps">
+					the search toolbar, the platform chips, and the card grid.
+				</SectionHead>
+
+				<div class="cm-toolbar">
+					<div class="cm-search">
+						<input class="cm-search__input" type="search" placeholder="Search games and teams" aria-label="Search projects" />
+					</div>
+					<label class="cm-check cm-inline">
+						<input type="checkbox" />
+						<span>Show finished</span>
+					</label>
+				</div>
+
+				<div class="cm-chips">
+					<button class="cm-chip cm-chip--action is-on" type="button">all</button>
+					<button class="cm-chip" type="button">n64</button>
+					<button class="cm-chip" type="button">psx</button>
+					<button class="cm-chip" type="button">gba</button>
+				</div>
+
+				<ul class="cm-cards">
+					{['super mario 64', 'sonic adventure', 'pokemon red', 'final fantasy 7'].map((t, i) => (
+						<li class="cm-card">
+							<div class="cm-card__head">
+								<h3 class="cm-card__title">{t}</h3>
+								<p class="cm-card__sub">{[92, 41, 78, 63][i]}% matched</p>
+							</div>
+							<div class="cm-card__foot">
+								<span class="cm-tag">community</span>
+							</div>
+						</li>
+					))}
+				</ul>
+			</section>
+		</main>
+
+		<Footer
+			items={['review surface', 'decomp-sh in oem/ui']}
+			contactHref="mailto:omar@mrx.sh"
+			status="● representative data"
+		/>
+	</body>
+</html>
+
+<script src="../js/cli-mono.js"></script>

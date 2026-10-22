@@ -19512,6 +19512,53 @@ check('decomp-sh parity: every inventoried class is a REAL class in decomp-sh', 
 		`renames, or variables counted as classes:\n  ` + invented.join('\n  '));
 });
 
+check('the /testing review page renders decomp-sh in oem-ui', () => {
+	// The page exists to be LOOKED at, so it has to keep existing and
+	// keep rendering. A route that quietly stops building is a review
+	// page that reviews nothing.
+	const page = 'dist/testing/index.html';
+	assert(exists(page), 'the /testing page is gone; run `npm run build`');
+	const html = read(page);
+
+	// Every region decomp-sh has, so a region that failed to render is
+	// visible as a missing section rather than as a blank area.
+	for (const id of ['home', 'project', 'overview', 'functions', 'agents',
+		'activity', 'drawer', 'catalog']) {
+		assert(new RegExp(`id="${id}"`).test(html),
+			`the /testing page has no #${id} region`);
+	}
+
+	// The components the port is actually about.
+	for (const c of ['cm-dropzone', 'cm-dropzone--picked', 'cm-dropzone--busy',
+		'cm-dropzone--err', 'cm-mono', 'cm-timeline', 'cm-diff', 'cm-table',
+		'cm-stats', 'cm-chart']) {
+		assert(html.includes(c), `the /testing page does not render ${c}`);
+	}
+
+	// The legend must live INSIDE the chart it labels. The series
+	// colours are scoped to the chart's id, so a legend placed outside
+	// that scope is painted by the default and every dot comes out the
+	// same grey - a legend that says four things and shows one. MEASURED
+	// on the built page: four dots, all rgb(156,156,156).
+	const chart = html.slice(html.indexOf('id="cmc-rom"'));
+	const legendAt = chart.indexOf('cm-chart__legend');
+	const chartEnd = chart.indexOf('</div>\n\t\t\t\t\t</div>');
+	assert(legendAt > -1, 'the /testing chart has no legend');
+	// The legend has to be before the chart's own closing div, so it is
+	// inside the element the scoped style targets.
+	const legendBlock = chart.slice(0, legendAt);
+	assert(!legendBlock.includes('</svg></div></div>'),
+		'the /testing legend sits outside the chart element, so its dots cannot be coloured by the chart scope');
+
+	// A diff row that carries no operation is not a diff. The library
+	// derives the glyph and the decoration from `data-op`, so a row
+	// without it renders as an unmarked line.
+	const rows = [...html.matchAll(/<div class="cm-diff__row"([^>]*)>/g)].map((m) => m[1]);
+	const ops = rows.filter((a) => a.includes('data-op='));
+	assert(ops.length >= 2,
+		`the /testing diff has ${ops.length} row(s) with a data-op; the rest render unmarked`);
+});
+
 check('cm-dropzone: the four states of a file target are each declared', () => {
 	const css = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
 	// The body of the rule whose SELECTOR LIST contains `sel`.

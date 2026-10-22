@@ -1660,6 +1660,24 @@ button.cm-row:hover { background: var(--bg-2); }
 	gap: var(--space-6);
 	min-width: 0;
 }
+/* A GRID ITEM's default `min-width` is `auto`, which means it refuses to
+   shrink below its content's min-content width. So `min-width: 0` on the
+   GRID is not enough: the tracks are sized by the ITEMS, and an item
+   whose content cannot wrap (a nowrap meta, a long unbroken address)
+   pushes its track wider than the grid itself.
+
+   MEASURED on the /testing review page at a 390px viewport: a
+   `.cm-cols` holding a `.cm-section` with a `.cm-timeline` computed
+   `grid-template-columns: 478.875px` inside a 310px grid, and the page
+   scrolled sideways to 519px. Setting `min-width: 0` on the grid
+   ALONE changed nothing - the track was already 310px in one probe and
+   478px in another, because the track is sized by the item, not the
+   grid. Hiding the section dropped the page's scrollWidth from 519 to
+   390, which located the cause; the fix is the item's min-width.
+
+   So the CHILDREN get the floor, not the grid. `> *` so it is the
+   direct items - a nested grid is that grid's own business. */
+.cm-cols > * { min-width: 0; }
 @media (min-width: 760px) {
 	.cm-cols--2 { grid-template-columns: 1fr 1fr; }
 }
