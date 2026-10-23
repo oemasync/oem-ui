@@ -11847,3 +11847,52 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    20, 56, 28) and `lists` four (32, 20, 26, 44). Moved here, every
    section reports a single gap. */
 .cm-section--pad > * { margin-block: 0; }
+
+/* ============================================================
+   cm-table — mono data grid (DataTable.astro)
+   rows-in, table-out; the caller owns the array.
+   ============================================================ */
+.cm-table-wrap {
+	overflow-x: auto;
+	border: 1px solid var(--accent-dim);
+	border-radius: 6px;
+	background: var(--bg);
+}
+.cm-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-family: var(--mono, ui-monospace, monospace);
+	font-size: 13px;
+}
+.cm-table__th {
+	text-align: left;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--accent-dim);
+	color: var(--accent, #7aa2f7);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	font-size: 11px;
+	white-space: nowrap;
+	background: var(--bg-2, var(--bg));
+	position: sticky;
+	top: 0;
+}
+.cm-table__th--center { text-align: center; }
+.cm-table__th--right { text-align: right; }
+.cm-table__th--sortable::after { content: ' ↕'; opacity: 0.5; }
+.cm-table__td {
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--accent-dim);
+	color: var(--text-1, inherit);
+	vertical-align: top;
+}
+.cm-table__td--center { text-align: center; }
+.cm-table__td--right { text-align: right; font-variant-numeric: tabular-nums; }
+.cm-table__tr:last-child .cm-table__td { border-bottom: none; }
+.cm-table__tr:hover .cm-table__td { background: var(--accent-soft, rgba(122, 162, 247, 0.08)); }
+.cm-table__empty {
+	padding: 24px;
+	text-align: center;
+	color: var(--text-2, #565f89);
+}

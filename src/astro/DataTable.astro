@@ -1,0 +1,55 @@
+---
+/**
+ * oem-ui <DataTable> — rows-in, table-out list primitive.
+ *
+ * columns: [{ key, label }] — the head row; extra per-column
+ * options: align ('left'|'center'|'right'), sortable (bool).
+ * rows: plain objects keyed by column.key; values are rendered
+ * via String() unless a `fmt` slot is provided (slot name = key).
+ *
+ * status: pure. No data fetching, no state — the caller owns
+ * the array and re-renders with new rows.
+ */
+interface Column {
+	key: string;
+	label: string;
+	align?: 'left' | 'center' | 'right';
+	sortable?: boolean;
+}
+interface Props {
+	columns: Column[];
+	rows: Record<string, unknown>[];
+}
+
+const { columns, rows } = Astro.props;
+---
+
+<div class="cm-table-wrap">
+	<table class="cm-table">
+		<thead>
+			<tr>
+				{columns.map((c) => (
+					<th class={`cm-table__th cm-table__th--${c.align ?? 'left'}${c.sortable ? ' cm-table__th--sortable' : ''}`}>
+						{c.label}
+					</th>
+				))}
+			</tr>
+		</thead>
+		<tbody>
+			{rows.length === 0 && (
+				<tr>
+					<td class="cm-table__empty" colSpan={columns.length}>— empty —</td>
+				</tr>
+			)}
+			{rows.map((r) => (
+				<tr class="cm-table__tr">
+					{columns.map((c) => (
+						<td class={`cm-table__td cm-table__td--${c.align ?? 'left'}`}>
+							{Astro.slots.has(c.key) ? <slot name={c.key} row={r} /> : String(r[c.key] ?? '')}
+						</td>
+					))}
+				</tr>
+			))}
+		</tbody>
+	</table>
+</div>
