@@ -279,6 +279,10 @@ img { max-width: 100%; height: auto; border-radius: var(--radius); }
    video element carries its own intrinsic box, and stretching a small clip
    up to the full column is nobody's default. */
 video:not([class]) { max-width: 100%; height: auto; display: block; }
+/* Same reason as video: a renderer can emit a bare <audio> and the
+   element's intrinsic box (~150px) would strand it in a column. The
+   width floor stays the platform's; the frame stays opt-in. */
+audio:not([class]) { display: block; max-width: 100%; }
 
 figure { margin: var(--space-6) 0; }
 /* The framed image. Same box as `.cm-media img`, so the same picture reads
@@ -550,6 +554,7 @@ button:focus-visible,
    The picture here is the one `.cm-media img` draws, so a bare figure and
    the opt-in component agree. */
 :where([data-cm-theme]) video { max-width: 100%; height: auto; display: block; }
+:where([data-cm-theme]) audio { max-width: 100%; display: block; }
 :where([data-cm-theme]) figure { margin: var(--space-6) 0; }
 :where([data-cm-theme]) figure img {
 	display: block;

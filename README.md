@@ -1502,6 +1502,39 @@ coverage: the batch-33 contract checks in `tests/run.mjs` (no count
 stated — a hardcoded number rots the moment one is added, which is how
 this section shipped saying "six" over seven).
 
+### The audio frame — `.cm-audio`, a rendered track with its identity
+
+`.cm-media` frames a picture; `.cm-audio` is the same shape for a track. A
+generated song is a record — identity first, then the one thing you do with
+it — so the frame follows the meter's layout: a pinned identity row
+(`__name`, `__meta`) over the platform's own `<audio controls>`. The
+element stays **bare inside**: it carries no class, because the base layer's
+`audio:not([class])` default is what frames markup a renderer emits, and a
+classed element would trip that default out of the component's own markup.
+No hand-rolled scrubber — the system's rule is platform-first, and a custom
+seek control is where focus trapping goes to die.
+
+```html
+<div class="cm-audio">
+  <div class="cm-audio__id">
+    <span class="cm-audio__name">ambient-04.wav</span>
+    <span class="cm-audio__meta">10.0s · 32 kHz stereo</span>
+  </div>
+  <audio src="/track.wav" controls preload="metadata"></audio>
+</div>
+```
+
+The **empty state** keeps the frame while there is no track yet (a render
+still running, or one that failed): swap the `<audio>` for
+`div.cm-audio__empty` with a `.cm-spinner` and the copy. The box does not
+collapse, so the page does not jump the moment the track lands.
+
+The element default is the bare-element twin of the video rule:
+`audio:not([class]) { display: block; max-width: 100%; }` in `base.css`,
+with the scoped `:where([data-cm-theme])` twin beside it. The name clips to
+one line exactly as `.cm-media-grid__name` does — the meta is a separate
+span so a long name does not eat the dimensions.
+
 ### Prose tables — `.cm-prose-table` vs `.cm-table`
 
 Two different tables, and picking the wrong one is a real defect in each

@@ -19619,3 +19619,84 @@ check('cm-mono: type only, with no box drawn around it', () => {
 			`.cm-mono draws a ${forbidden}, which makes it a code span rather than a type utility`);
 	}
 });
+
+/* ---------- batch 44: the audio frame, cm-audio ---------- */
+
+check('cm-audio: the frame and its parts are each declared', () => {
+	// A rule's selector list is not its own name (see the cm-dropzone
+	// check), so match by the selector text in front of the block.
+	const css = compSrc;
+	const rule = (sel) => {
+		for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+			const selectors = m[1].split(',').map((s) => s.trim());
+			if (selectors.some((s) => s === sel || s.startsWith(sel + ':') || s.startsWith(sel + ' '))) {
+				return m[2];
+			}
+		}
+		return null;
+	};
+	const base = rule('.cm-audio');
+	assert(base, '.cm-audio is not defined');
+	assert(/border:\s*1px solid/.test(base), '.cm-audio draws no frame, so a track floats in the page');
+	assert(/background:\s*var\(--bg-2\)/.test(base), '.cm-audio does not take the raised surface token');
+	for (const part of ['__id', '__name', '__meta', '__empty']) {
+		assert(rule(`.cm-audio${part}`), `.cm-audio${part} is not declared`);
+	}
+	// The transport is the platform element, scoped by DESCENDANT rather
+	// than by a class the consumer has to remember to keep in sync.
+	assert(rule('.cm-audio audio'), 'the component never styles its own <audio>, so the element renders at the platform default');
+});
+
+check('cm-audio: the name clips, the meta survives, the name is what clips', () => {
+	// Same split the media-grid makes: a long name must not push the
+	// dimensions out, and it is the NAME that truncates, not the meta.
+	const name = /(^|[};])\s*\.cm-audio__name\s*\{([^}]*)\}/m.exec(compSrc);
+	assert(name, '.cm-audio__name has no rule');
+	assert(/text-overflow:\s*ellipsis/.test(name[2]), '.cm-audio__name wraps instead of clipping, so the row jumps per file');
+	assert(/white-space:\s*nowrap/.test(name[2]), '.cm-audio__name is not pinned to one line');
+	assert(/min-width:\s*0/.test(name[2]), '.cm-audio__name cannot shrink: the flex item keeps its min-content and the row overflows');
+	const meta = /(^|[};])\s*\.cm-audio__meta\s*\{([^}]*)\}/m.exec(compSrc);
+	assert(meta, '.cm-audio__meta has no rule');
+	assert(/font-family:\s*var\(--font-mono\)/.test(meta[2]), '.cm-audio__meta does not take the mono face, so dimensions read as prose');
+	assert(!/text-overflow/.test(meta[2]), '.cm-audio__meta clips itself, which is backwards: the name is the part that gets long');
+});
+
+check('cm-audio: the bare element default exists, with its scoped twin', () => {
+	// The video precedent: a renderer can emit a bare <audio>, and the
+	// element default is what frames it. The scoped twin is the half a
+	// scoped adoption never sees base.css - the media block ships both,
+	// and shipping one is the silent half.
+	assert(/(^|\n)\s*audio:not\(\[class\]\)\s*\{[^}]*max-width:\s*100%/.test(baseSrc),
+		'base.css has no bare <audio> element default, so renderer markup is unframed');
+	assert(/:where\(\[data-cm-theme\]\)\s*audio\s*\{[^}]*max-width:\s*100%/.test(baseSrc),
+		'the scoped adoption has no audio twin, so a scoped consumer renders the platform default');
+});
+
+check('cm-audio: the empty state keeps the frame, and the specimen demonstrates both halves', () => {
+	// A render still running must not collapse the row, or the page jumps
+	// the moment the track lands: the empty state takes the frame's own
+	// padding, and the spinner is the existing component, not a new one.
+	const empty = /(^|[};])\s*\.cm-audio__empty\s*\{([^}]*)\}/m.exec(compSrc);
+	assert(empty, '.cm-audio__empty has no rule');
+	assert(/padding:\s*var\(--space-3\)/.test(empty[2]),
+		'.cm-audio__empty has no padding, so the empty frame collapses to a hairline');
+	assert(/display:\s*flex/.test(empty[2]), '.cm-audio__empty does not lay out, so the spinner and copy stack');
+	// Demonstrated, not merely mentioned: both halves of the component in
+	// the showcase markup, and the section indexed so the nav can reach it.
+	assert(showcase.includes('cm-audio__empty'), 'the showcase never renders the empty state');
+	assert(/<audio[^>]*src="\/audio-specimen\.wav"/.test(showcase),
+		'the showcase specimen has no audio element, so the frame is demonstrated with a dead src');
+	assert(/id="audio"/.test(showcase), 'the showcase has no #audio section');
+	assert(showcaseIndex.includes('audio'), 'the audio section is not in the section index, so the nav cannot reach it');
+	// The README documents it with markup, not a name in a sentence.
+	const readme = read('README.md');
+	const from = readme.indexOf('### The audio frame');
+	const section = readme.slice(from, readme.indexOf('### Prose tables', from));
+	assert(section.length > 400, 'the README has no section documenting the audio frame');
+	let shown = false;
+	for (const m of section.matchAll(/```html\n([\s\S]*?)```/g)) {
+		if (m[1].includes('cm-audio')) { shown = true; break; }
+	}
+	assert(shown, 'the README names .cm-audio but shows no markup for it');
+	assert(section.includes('cm-audio__empty'), 'the README does not document the empty state');
+});

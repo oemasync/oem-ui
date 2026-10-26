@@ -60,7 +60,7 @@ import SectionHead from '../astro/SectionHead.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -83,7 +83,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["tables", 6],
 	["panels", 6],
 	["content", 9],
-	["prose", 8],
+	["prose", 9],
 	["layout", 7],
 	["composed", 10],
 	["reference", 4],
@@ -4439,7 +4439,35 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 						</ul>
 
 						<p class="cm-head__sub">Two whitespace defaults are load-bearing rather than cosmetic. The name is <code>nowrap</code> with an ellipsis, because a wrapped name pushes everything below it out of line with its neighbours in <em>that</em> column only — a gallery's whole value is that the grid lines up. And <code>min-width: 0</code> is set on the grid <strong>item</strong> as well as the tile inside it: a grid item's automatic minimum is its min-content, so a long filename would widen its own track past the floor, and the third tile above is exactly that filename.</p>
-					</section>
+						</section>
+
+						<section id="audio" class="cm-section cm-section--pad">
+						<SectionHead title="audio">
+						<code>.cm-audio</code> is the frame for a rendered track: identity on top, the platform's own transport below, and an empty state that keeps the frame while there is no track yet. The element stays bare inside — the frame is the component, the <code>&lt;audio&gt;</code> is the mechanism.
+						</SectionHead>
+
+						<div class="cm-audio">
+							<div class="cm-audio__id">
+								<span class="cm-audio__name">ambient-04.wav</span>
+								<span class="cm-audio__meta">10.0s · 32 kHz stereo</span>
+							</div>
+							<audio src="/audio-specimen.wav" controls preload="metadata"
+								aria-label="Audio specimen: a two-note tone, 1.4 seconds."></audio>
+						</div>
+
+						<div class="cm-audio">
+							<div class="cm-audio__id">
+								<span class="cm-audio__name">folk-instrumental-01.wav</span>
+								<span class="cm-audio__meta">rendering…</span>
+							</div>
+							<div class="cm-audio__empty">
+								<span class="cm-spinner" role="status" aria-label="Rendering"></span>
+								<span>30 diffusion steps on the GPU — the frame stays put so the page does not jump when the track lands.</span>
+							</div>
+						</div>
+
+						<p class="cm-head__sub">The element default is <strong>bare-element, as with <code>&lt;video&gt;</code></strong>: <code>audio:not([class])</code> takes <code>display: block; max-width: 100%</code>, so markup a renderer emits does not strand a 150px-wide control in a 320px column. The frame is opt-in, and the inner element carries no class, which is also what keeps that default from being tripped by the component's own markup.</p>
+						</section>
 
 																<section id="tablelabels" class="cm-section cm-section--pad" data-cm-table-labels>
 																			<SectionHead title="generated table labels">
