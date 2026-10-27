@@ -21,6 +21,7 @@ import Meter from '../astro/Meter.astro';
 import CodeBlock from '../astro/CodeBlock.astro';
 import HeaderLink from '../astro/HeaderLink.astro';
 import SectionHead from '../astro/SectionHead.astro';
+import DataTable from '../astro/DataTable.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -2191,6 +2192,33 @@ For records a person scans <em>across</em> rather than one at a time - a log is 
 								</div>
 							</div>
 						</div>
+						</section>
+						)}
+						{shows('tables') && (
+						<section class="cm-section cm-section--pad">
+							<SectionHead title="data table primitive">
+							The same grid, as a component: columns in, rows in, table out.
+							The caller owns the array; the component owns the chrome. An
+							empty array renders the empty state rather than a blank box.
+							</SectionHead>
+							<DataTable
+								columns={[
+									{ key: 'name', label: 'name', sortable: true },
+									{ key: 'count', label: 'count', align: 'center' },
+									{ key: 'size', label: 'size', align: 'right' },
+								]}
+								rows={[
+									{ name: 'alpha', count: 3, size: '12 kb' },
+									{ name: 'beta', count: 0, size: '4 kb' },
+								]}
+							/>
+							<DataTable
+								columns={[
+									{ key: 'name', label: 'name' },
+									{ key: 'count', label: 'count', align: 'center' },
+								]}
+								rows={[]}
+							/>
 						</section>
 						)}
 						{shows('tables') && (

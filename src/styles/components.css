@@ -11921,45 +11921,52 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    ============================================================ */
 .cm-table-wrap {
 	overflow-x: auto;
-	border: 1px solid var(--accent-dim);
-	border-radius: 6px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
 	background: var(--bg);
+	position: relative;
+	max-height: var(--table-max-h, 30rem);
 }
 .cm-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-family: var(--mono, ui-monospace, monospace);
-	font-size: 13px;
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
 }
 .cm-table__th {
-	text-align: left;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--accent-dim);
-	color: var(--accent, #7aa2f7);
-	font-weight: 600;
+	text-align: start;
+	padding: var(--space-2) var(--space-3);
+	border-bottom: 1px solid var(--line);
+	color: var(--ink-dim);
+	font-weight: 400;
 	letter-spacing: 0.04em;
-	text-transform: uppercase;
-	font-size: 11px;
+	text-transform: lowercase;
+	font-size: var(--min-font);
 	white-space: nowrap;
-	background: var(--bg-2, var(--bg));
+	background: var(--bg-2);
 	position: sticky;
 	top: 0;
 }
 .cm-table__th--center { text-align: center; }
-.cm-table__th--right { text-align: right; }
-.cm-table__th--sortable::after { content: ' ↕'; opacity: 0.5; }
+.cm-table__th--left { text-align: start; }
+.cm-table__th--right { text-align: end; }
+.cm-table__th--sortable::after { content: ' \2195'; opacity: 0.5; }
 .cm-table__td {
-	padding: 6px 12px;
-	border-bottom: 1px solid var(--accent-dim);
-	color: var(--text-1, inherit);
+	padding: var(--space-1) var(--space-3);
+	border-bottom: 1px solid var(--line);
+	color: var(--ink);
 	vertical-align: top;
+	font-size: max(var(--min-font), var(--text-xs));
 }
 .cm-table__td--center { text-align: center; }
-.cm-table__td--right { text-align: right; font-variant-numeric: tabular-nums; }
+.cm-table__td--left { text-align: start; }
+.cm-table__td--right { text-align: end; font-variant-numeric: tabular-nums; }
+.cm-table__tr { display: table-row; }
 .cm-table__tr:last-child .cm-table__td { border-bottom: none; }
-.cm-table__tr:hover .cm-table__td { background: var(--accent-soft, rgba(122, 162, 247, 0.08)); }
+.cm-table__tr:hover .cm-table__td { background: var(--bg-3); }
 .cm-table__empty {
-	padding: 24px;
+	padding: var(--space-4);
 	text-align: center;
-	color: var(--text-2, #565f89);
+	color: var(--ink-dim);
+	font-size: max(var(--min-font), var(--text-sm));
 }
