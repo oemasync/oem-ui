@@ -1,3 +1,7 @@
+## Unreleased - batch 44: <Alert> Astro wrapper
+
+**`.cm-alert` now ships as `src/astro/Alert.astro`**, the Astro component wrapping the status-bearing banner so consumers stop hand-writing the mark + body. Props: `variant` (ok/warn/err/info/loading), `title`, `text`, `role` (defaults to alert for err, status otherwise), plus a slot for extra body content.
+
 ## Unreleased - batch 43: the drop target, and a map of decomp-sh
 
 **`.cm-dropzone`** is a new component: the surface you drop a file ONTO.

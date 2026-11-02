@@ -1,0 +1,31 @@
+---
+/**
+ * oem-ui <Alert> — a status-bearing banner. The glyph and the border
+ * weight carry the severity (● / ▲ / ✕ / ℹ), never colour alone, so the
+ * banner reads in greyscale print and to colour-blind readers.
+ *
+ * variant: 'ok' | 'warn' | 'err' | 'info' | 'loading'
+ */
+interface Props {
+	/** Severity. Defaults to 'info'. */
+	variant?: 'ok' | 'warn' | 'err' | 'info' | 'loading';
+	/** Bold first line. */
+	title?: string;
+	/** Supporting line. */
+	text?: string;
+	/** ARIA role. 'alert' for errors that need immediate attention, 'status' otherwise. */
+	role?: 'alert' | 'status';
+}
+
+const { variant = 'info', title, text, role } = Astro.props;
+const resolvedRole = role ?? (variant === 'err' ? 'alert' : 'status');
+---
+
+<div class:list={['cm-alert', variant && `cm-alert--${variant}`]} role={resolvedRole}>
+	<span class="cm-alert__mark" aria-hidden="true"></span>
+	<div class="cm-alert__body">
+		{title && <p class="cm-alert__title">{title}</p>}
+		{text && <p class="cm-alert__text">{text}</p>}
+		<slot />
+	</div>
+</div>

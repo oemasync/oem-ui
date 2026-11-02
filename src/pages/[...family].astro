@@ -13,6 +13,7 @@ import PostHead from '../astro/PostHead.astro';
 import Header from '../astro/Header.astro';
 import Footer from '../astro/Footer.astro';
 import StatusStrip from '../astro/StatusStrip.astro';
+import Alert from '../astro/Alert.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
@@ -1186,6 +1187,10 @@ What a surface shows before it has data, and after it fails. Status is carried b
 							<p class="cm-alert__text">loading is the only mark that MOVES: a spinning ↻ under the same reduced-motion block as the spinner.</p>
 						</div>
 					</div>
+
+					<h3 class="cm-kicker">alert component</h3>
+					<p class="cm-hint">the same banner, rendered through the Astro wrapper.</p>
+					<Alert variant="ok" title="saved" text="Rendered via &lt;Alert&gt; so consumers do not hand-write the mark and body." />
 
 					<!-- ============ cm-revert — countdown-undo banner ============
 					     A RevertGuard-armed write is pending: Undo (cancel), Apply now (fire early),

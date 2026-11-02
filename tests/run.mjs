@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19699,4 +19699,15 @@ check('cm-audio: the empty state keeps the frame, and the specimen demonstrates 
 	}
 	assert(shown, 'the README names .cm-audio but shows no markup for it');
 	assert(section.includes('cm-audio__empty'), 'the README does not document the empty state');
+});
+
+check('cm-alert: the Astro wrapper ships and renders the library classes', () => {
+	const a = read('src/astro/Alert.astro');
+	assert(/cm-alert/.test(a), 'Alert.astro does not use the cm-alert class');
+	assert(/cm-alert__mark/.test(a), 'Alert.astro is missing the mark element');
+	assert(/cm-alert__body/.test(a), 'Alert.astro is missing the body element');
+	assert(/cm-alert__title/.test(a) && /cm-alert__text/.test(a),
+		'Alert.astro does not render title/text');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Alert'), 'the showcase never renders <Alert>, so the wrapper is unproven');
 });
