@@ -19711,3 +19711,68 @@ check('cm-alert: the Astro wrapper ships and renders the library classes', () =>
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Alert'), 'the showcase never renders <Alert>, so the wrapper is unproven');
 });
+
+/* ---------- video frame, cm-video ---------- */
+
+check('cm-video: the frame and its parts are each declared', () => {
+	const css = compSrc;
+	const rule = (sel) => {
+		for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+			const selectors = m[1].split(',').map((s) => s.trim());
+			if (selectors.some((s) => s === sel || s.startsWith(sel + ':') || s.startsWith(sel + ' '))) {
+				return m[2];
+			}
+		}
+		return null;
+	};
+	const base = rule('.cm-video');
+	assert(base, '.cm-video is not defined');
+	assert(/border:\s*1px solid/.test(base), '.cm-video draws no frame, so a clip floats in the page');
+	assert(/background:\s*var\(--bg-2\)/.test(base), '.cm-video does not take the raised surface token');
+	for (const part of ['__id', '__name', '__meta', '__empty']) {
+		assert(rule(`.cm-video${part}`), `.cm-video${part} is not declared`);
+	}
+	assert(rule('.cm-video video'), 'the component never styles its own <video>, so the element renders at the platform default');
+});
+
+check('cm-video: the name clips, the meta survives, the name is what clips', () => {
+	const name = /(^|[};])\s*\.cm-video__name\s*\{([^}]*)\}/m.exec(compSrc);
+	assert(name, '.cm-video__name has no rule');
+	assert(/text-overflow:\s*ellipsis/.test(name[2]), '.cm-video__name wraps instead of clipping, so the row jumps per file');
+	assert(/white-space:\s*nowrap/.test(name[2]), '.cm-video__name is not pinned to one line');
+	assert(/min-width:\s*0/.test(name[2]), '.cm-video__name cannot shrink: the flex item keeps its min-content and the row overflows');
+	const meta = /(^|[};])\s*\.cm-video__meta\s*\{([^}]*)\}/m.exec(compSrc);
+	assert(meta, '.cm-video__meta has no rule');
+	assert(/font-family:\s*var\(--font-mono\)/.test(meta[2]), '.cm-video__meta does not take the mono face, so dimensions read as prose');
+	assert(!/text-overflow/.test(meta[2]), '.cm-video__meta clips itself, which is backwards: the name is the part that gets long');
+});
+
+check('cm-video: the bare element default exists, with its scoped twin', () => {
+	assert(/(^|\n)\s*video:not\(\[class\]\)\s*\{[^}]*max-width:\s*100%/.test(baseSrc),
+		'base.css has no bare <video> element default, so renderer markup is unframed');
+	assert(/:where\(\[data-cm-theme\]\)\s*video\s*\{[^}]*max-width:\s*100%/.test(baseSrc),
+		'the scoped adoption has no video twin, so a scoped consumer renders the platform default');
+});
+
+check('cm-video: the empty state keeps the frame, and the specimen demonstrates both halves', () => {
+	const empty = /(^|[};])\s*\.cm-video__empty\s*\{([^}]*)\}/m.exec(compSrc);
+	assert(empty, '.cm-video__empty has no rule');
+	assert(/padding:\s*var\(--space-3\)/.test(empty[2]),
+		'.cm-video__empty has no padding, so the empty frame collapses to a hairline');
+	assert(/display:\s*flex/.test(empty[2]), '.cm-video__empty does not lay out, so the spinner and copy stack');
+	assert(showcase.includes('cm-video__empty'), 'the showcase never renders the empty state');
+	assert(/<video[^>]*src="\/video-specimen\.mp4"/.test(showcase),
+		'the showcase specimen has no video element, so the frame is demonstrated with a dead src');
+	assert(/id="video"/.test(showcase), 'the showcase has no #video section');
+	assert(showcaseIndex.includes('video'), 'the video section is not in the section index, so the nav cannot reach it');
+	const readme = read('README.md');
+	const from = readme.indexOf('### The video frame');
+	const section = readme.slice(from, readme.indexOf('### Prose tables', from));
+	assert(section.length > 400, 'the README has no section documenting the video frame');
+	let shown = false;
+	for (const m of section.matchAll(/```html\n([\s\S]*?)```/g)) {
+		if (m[1].includes('cm-video')) { shown = true; break; }
+	}
+	assert(shown, 'the README names .cm-video but shows no markup for it');
+	assert(section.includes('cm-video__empty'), 'the README does not document the empty state');
+});

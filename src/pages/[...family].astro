@@ -62,7 +62,7 @@ import DataTable from '../astro/DataTable.astro';
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
   'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
-	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'tablelabels', 'layout', 'surface-paint',
+	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'video', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
 
@@ -85,7 +85,7 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["tables", 6],
 	["panels", 6],
 	["content", 9],
-	["prose", 9],
+	["prose", 10],
 	["layout", 7],
 	["composed", 10],
 	["reference", 4],
@@ -4501,6 +4501,34 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 
 						<p class="cm-head__sub">The element default is <strong>bare-element, as with <code>&lt;video&gt;</code></strong>: <code>audio:not([class])</code> takes <code>display: block; max-width: 100%</code>, so markup a renderer emits does not strand a 150px-wide control in a 320px column. The frame is opt-in, and the inner element carries no class, which is also what keeps that default from being tripped by the component's own markup.</p>
 						</section>
+					<section id="video" class="cm-section cm-section--pad">
+						<SectionHead title="video">
+						<code>.cm-video</code> is the frame for a rendered clip: identity on top, the platform's own transport below, and an empty state that keeps the frame while there is no clip yet. The element stays bare inside — the frame is the component, the <code>&lt;video&gt;</code> is the mechanism.
+						</SectionHead>
+
+						<div class="cm-video">
+							<div class="cm-video__id">
+								<span class="cm-video__name">clip-07.mp4</span>
+								<span class="cm-video__meta">12.4s · 1080p</span>
+							</div>
+							<video src="/video-specimen.mp4" controls preload="metadata" poster="/video-poster.svg"
+								aria-label="Video specimen: a short clip."></video>
+						</div>
+
+						<div class="cm-video">
+							<div class="cm-video__id">
+								<span class="cm-video__name">clip-08.mp4</span>
+								<span class="cm-video__meta">rendering…</span>
+							</div>
+							<div class="cm-video__empty">
+								<span class="cm-spinner" role="status" aria-label="Rendering"></span>
+								<span>16 frames on the GPU — the frame stays put so the page does not jump when the clip lands.</span>
+							</div>
+						</div>
+
+						<p class="cm-head__sub">The element default is <strong>bare-element, as with <code>&lt;audio&gt;</code></strong>: <code>video:not([class])</code> takes <code>max-width: 100%</code>, so markup a renderer emits does not overflow the column. The frame is opt-in, and the inner element carries no class, which is also what keeps that default from being tripped by the component's own markup.</p>
+					</section>
+
 
 																<section id="tablelabels" class="cm-section cm-section--pad" data-cm-table-labels>
 																			<SectionHead title="generated table labels">

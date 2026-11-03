@@ -1,3 +1,20 @@
+## Unreleased - batch 45: the video frame, `.cm-video`
+
+**`.cm-video`** is the sibling of `.cm-audio`: identity on top, the platform's
+own `<video controls>` below, and an empty state that keeps the frame while
+there is no clip yet. A generated clip is a record — identity first, then the
+one thing you do with it — so the frame follows the meter's layout: a pinned
+identity row (`__name`, `__meta`) over the element. The element stays **bare
+inside**, for the same reason the audio frame is bare: the base layer's
+`video:not([class])` default is what frames markup a renderer emits, and a
+classed element would trip that default out of the component's own markup.
+No hand-rolled player — the system's rule is platform-first.
+
+The empty state keeps the frame while there is no clip (a render still
+running, or one that failed): swap the `<video>` for `div.cm-video__empty`
+with a `.cm-spinner` and the copy. The box does not collapse, so the page
+does not jump the moment the clip lands.
+
 ## Unreleased - batch 44: <Alert> Astro wrapper
 
 **`.cm-alert` now ships as `src/astro/Alert.astro`**, the Astro component wrapping the status-bearing banner so consumers stop hand-writing the mark + body. Props: `variant` (ok/warn/err/info/loading), `title`, `text`, `role` (defaults to alert for err, status otherwise), plus a slot for extra body content.

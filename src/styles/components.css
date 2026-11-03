@@ -11879,6 +11879,63 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-size: max(var(--min-font), var(--text-sm));
 }
 
+/* ---------- video frame, .cm-video ----------
+
+   `.cm-media` frames a picture; `.cm-audio` is the same shape for a
+   track. `.cm-video` is the same shape for a clip: identity on top, the
+   platform's own <video controls> below, and an empty state that keeps
+   the frame while there is no clip yet. The element stays BARE inside,
+   for the same reason the audio frame is bare: the base layer's
+   `video:not([class])` default is what frames markup a renderer emits,
+   and a classed element would trip that default out of the component's
+   own markup.
+
+   No hand-rolled player — the system's rule is platform-first, and a
+   custom seek control is where focus trapping goes to die. */
+.cm-video {
+	margin: var(--space-4) 0;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg-2);
+}
+.cm-video__id {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	border-bottom: 1px solid var(--line-soft);
+	min-width: 0;
+}
+.cm-video__name {
+	font-size: max(var(--min-font), var(--text-xs));
+	line-height: 1.3;
+	color: var(--ink);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+.cm-video__meta {
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-micro));
+	color: var(--ink-faint);
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	margin-inline-start: auto;
+}
+.cm-video video {
+	display: block;
+	width: 100%;
+}
+.cm-video__empty {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3);
+	color: var(--ink-dim);
+	font-size: max(var(--min-font), var(--text-sm));
+}
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number

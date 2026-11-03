@@ -1535,6 +1535,39 @@ with the scoped `:where([data-cm-theme])` twin beside it. The name clips to
 one line exactly as `.cm-media-grid__name` does — the meta is a separate
 span so a long name does not eat the dimensions.
 
+### The video frame — `.cm-video`, a rendered clip with its identity
+
+`.cm-media` frames a picture, `.cm-audio` is the same shape for a track, and
+`.cm-video` is the same shape for a clip. A generated clip is a record —
+identity first, then the one thing you do with it — so the frame follows the
+meter's layout: a pinned identity row (`__name`, `__meta`) over the platform's
+own `<video controls>`. The element stays **bare inside**, for the same reason
+the audio frame is bare: the base layer's `video:not([class])` default is what
+frames markup a renderer emits, and a classed element would trip that default
+out of the component's own markup. No hand-rolled player — the system's rule is
+platform-first, and a custom seek control is where focus trapping goes to die.
+
+```html
+<div class="cm-video">
+  <div class="cm-video__id">
+    <span class="cm-video__name">clip-07.mp4</span>
+    <span class="cm-video__meta">12.4s · 1080p</span>
+  </div>
+  <video src="/clip.mp4" controls preload="metadata"></video>
+</div>
+```
+
+The **empty state** keeps the frame while there is no clip yet (a render
+still running, or one that failed): swap the `<video>` for
+`div.cm-video__empty` with a `.cm-spinner` and the copy. The box does not
+collapse, so the page does not jump the moment the clip lands.
+
+The element default is the bare-element twin of the audio rule:
+`video:not([class]) { display: block; max-width: 100%; }` in `base.css`,
+with the scoped `:where([data-cm-theme])` twin beside it. The name clips to
+one line exactly as `.cm-media-grid__name` does — the meta is a separate span
+so a long name does not eat the dimensions.
+
 ### Prose tables — `.cm-prose-table` vs `.cm-table`
 
 Two different tables, and picking the wrong one is a real defect in each
