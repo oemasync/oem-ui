@@ -1,3 +1,7 @@
+## Unreleased - <Kbd> Astro wrapper
+
+**`.cm-kbd` now ships as `src/astro/Kbd.astro`**, the Astro component wrapping the keyboard key so consumers stop hand-writing the `<kbd>` markup. Props: `key` (a single key label) or `keys` (a chord: array or space-separated string). A chord renders as a `cm-kbd-group` of individual `<kbd>` elements joined by a readable '+'; a single key renders as one `<kbd>`. The glyph/label stays in the markup, never in CSS, so the chord reads as keys plus a joiner.
+
 ## Unreleased - batch 46: <Chip> Astro wrapper
 
 **`.cm-chip` now ships as `src/astro/Chip.astro`**, the Astro component wrapping the status label so consumers stop hand-writing the variant classes. Props: `variant` (ok/warn/err/set), `action` (interactive control with the tap floor), plus a slot for the label text. The glyph stays generated content, never an aria-hidden span.

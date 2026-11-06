@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19729,6 +19729,15 @@ check('cm-chip: the Astro wrapper ships and renders the library classes', () => 
 	assert(/<slot/.test(c), 'Chip.astro is missing the slot');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Chip'), 'the showcase never renders <Chip>, so the wrapper is unproven');
+});
+
+check('cm-kbd: the Astro wrapper ships and renders the library classes', () => {
+	const k = read('src/astro/Kbd.astro');
+	assert(/cm-kbd/.test(k), 'Kbd.astro does not use the cm-kbd class');
+	assert(/cm-kbd-group/.test(k), 'Kbd.astro is missing the group wrapper for chords');
+	assert(/<slot/.test(k) || /key/.test(k), 'Kbd.astro is missing content rendering');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Kbd'), 'the showcase never renders <Kbd>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

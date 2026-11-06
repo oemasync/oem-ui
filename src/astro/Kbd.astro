@@ -1,0 +1,41 @@
+---
+/**
+ * oem-ui <Kbd> — a keyboard key (or a chord of keys). The glyph lives
+ * in the markup, never in CSS, so a chord reads as keys plus a joiner
+ * and a screen reader says the keys, not a generated separator.
+ *
+ * key: a single key label (e.g. 'Esc', '&#8984;K'). Rendered as one
+ * <kbd>. Pass `keys` (an array or a space-separated string) for a
+ * chord: each entry becomes its own <kbd> inside a cm-kbd-group, joined
+ * by a readable '+'.
+ */
+interface Props {
+	/** A single key label. Ignored when `keys` is given. */
+	key?: string;
+	/** A chord: array of key labels, or a space-separated string. */
+	keys?: string | string[];
+}
+
+const { key, keys } = Astro.props;
+
+const chord: string[] = Array.isArray(keys)
+	? keys
+	: typeof keys === 'string'
+		? keys.split(/\s+/).filter(Boolean)
+		: [];
+---
+
+{chord.length > 0 ? (
+	<span class="cm-kbd-group">
+		{chord.map((k, i) => (
+			<>
+				{i > 0 && <span aria-hidden="true">+</span>}
+				<kbd class="cm-kbd" set:html={k} />
+			</>
+		))}
+	</span>
+) : (
+	<kbd class="cm-kbd">
+		{key ? <span set:html={key} /> : <slot />}
+	</kbd>
+)}

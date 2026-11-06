@@ -16,6 +16,7 @@ import StatusStrip from '../astro/StatusStrip.astro';
 import Alert from '../astro/Alert.astro';
 import Avatar from '../astro/Avatar.astro';
 import Chip from '../astro/Chip.astro';
+import Kbd from '../astro/Kbd.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
@@ -2566,6 +2567,14 @@ Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key,
 						<Avatar initials="om" alt="Omar Minaya" />
 						<Avatar initials="ci" alt="Ciel" size="lg" />
 					</div>
+
+					<h3 class="cm-kicker">kbd component</h3>
+					<p class="cm-hint">the same keys, rendered through the Astro wrapper: a single key and a chord.</p>
+					<p class="cm-row__meta">
+						Open the palette with
+						<Kbd keys="Ctrl K" />,
+						then <Kbd key="Esc" /> to leave.
+					</p>
 
 					<div class="cm-accordion">
 						<details class="cm-disclosure" name="faq" open>
