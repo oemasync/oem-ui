@@ -1,0 +1,31 @@
+---
+/**
+ * oem-ui <Chip> — a status label carrying a glyph for its severity, so
+ * the state survives greyscale, print, and colour-blind readers. The
+ * glyph is generated content, never an aria-hidden span, so the markup
+ * and the visual never drift.
+ *
+ * variant: 'ok' | 'warn' | 'err' | 'set' (default none)
+ * action: when true, the chip is an interactive control with the tap floor.
+ */
+interface Props {
+	/** Severity. Defaults to none (plain label). */
+	variant?: 'ok' | 'warn' | 'err' | 'set';
+	/** When true, the chip is an interactive control with the tap floor. */
+	action?: boolean;
+	/** Accessible label override (defaults to the slot text). */
+	label?: string;
+}
+
+const { variant, action = false } = Astro.props;
+---
+
+<span
+	class:list={[
+		'cm-chip',
+		variant && `cm-chip--${variant}`,
+		action && 'cm-chip--action',
+	]}
+>
+	<slot />
+</span>

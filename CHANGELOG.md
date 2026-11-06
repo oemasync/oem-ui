@@ -1,3 +1,7 @@
+## Unreleased - batch 46: <Chip> Astro wrapper
+
+**`.cm-chip` now ships as `src/astro/Chip.astro`**, the Astro component wrapping the status label so consumers stop hand-writing the variant classes. Props: `variant` (ok/warn/err/set), `action` (interactive control with the tap floor), plus a slot for the label text. The glyph stays generated content, never an aria-hidden span.
+
 ## Unreleased - batch 45: the video frame, `.cm-video`
 
 **`.cm-video`** is the sibling of `.cm-audio`: identity on top, the platform's
