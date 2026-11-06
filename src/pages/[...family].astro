@@ -14,6 +14,7 @@ import Header from '../astro/Header.astro';
 import Footer from '../astro/Footer.astro';
 import StatusStrip from '../astro/StatusStrip.astro';
 import Alert from '../astro/Alert.astro';
+import Avatar from '../astro/Avatar.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
@@ -2547,6 +2548,14 @@ Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key,
 							<span class="cm-avatar" role="img" aria-label="Ciel">ci</span>
 							<span class="cm-avatar" role="img" aria-label="Two more">+2</span>
 						</span>
+					</div>
+
+					<h3 class="cm-kicker">avatar component</h3>
+					<p class="cm-hint">the same tile, rendered through the Astro wrapper.</p>
+					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4)">
+						<Avatar initials="om" size="sm" />
+						<Avatar initials="om" alt="Omar Minaya" />
+						<Avatar initials="ci" alt="Ciel" size="lg" />
 					</div>
 
 					<div class="cm-accordion">

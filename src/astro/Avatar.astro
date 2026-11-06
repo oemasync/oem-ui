@@ -1,0 +1,31 @@
+---
+/**
+ * oem-ui <Avatar> — a square tile: an image when there is one, initials
+ * when there is not. Square because the house has no curves; a circle
+ * here would be the only round thing on the page. Initials are text, so a
+ * missing photo still names its person.
+ *
+ * size: 'sm' | 'md' (default) | 'lg'
+ * src/alt: optional image with alt text; when src is omitted, `initials`
+ * is rendered as the visible label (and `alt` becomes the aria-label).
+ */
+interface Props {
+	/** Initials or short label rendered when no image is supplied. */
+	initials?: string;
+	/** Image URL. When set, an <img> is rendered instead of initials. */
+	src?: string;
+	/** Accessible name. Defaults to `initials` when an image is used. */
+	alt?: string;
+	/** Tile size. Defaults to 'md' (2.5rem). */
+	size?: 'sm' | 'md' | 'lg';
+}
+
+const { initials, src, alt, size = 'md' } = Astro.props;
+const sizeClass = size === 'md' ? '' : `cm-avatar--${size}`;
+const label = alt ?? initials ?? '';
+const role = 'img';
+---
+
+<span class:list={['cm-avatar', sizeClass]} role={role} aria-label={label}>
+	{src ? <img src={src} alt={label} /> : initials}
+</span>

@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19710,6 +19710,15 @@ check('cm-alert: the Astro wrapper ships and renders the library classes', () =>
 		'Alert.astro does not render title/text');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Alert'), 'the showcase never renders <Alert>, so the wrapper is unproven');
+});
+
+check('cm-avatar: the Astro wrapper ships and renders the library classes', () => {
+	const a = read('src/astro/Avatar.astro');
+	assert(/cm-avatar/.test(a), 'Avatar.astro does not use the cm-avatar class');
+	assert(/cm-avatar--\$\{size\}/.test(a) || /cm-avatar--sm/.test(a),
+		'Avatar.astro is missing the size modifiers');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Avatar'), 'the showcase never renders <Avatar>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */
