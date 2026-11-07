@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19760,6 +19760,18 @@ check('cm-progress: the Astro wrapper ships and renders the library classes', ()
 	assert(/data-cm-progress/.test(p), 'Progress.astro is missing the scroll hook');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Progress'), 'the showcase never renders <Progress>, so the wrapper is unproven');
+});
+
+check('cm-pager: the Astro wrapper ships and renders the library classes', () => {
+	const p = read('src/astro/Pager.astro');
+	assert(/cm-pager/.test(p), 'Pager.astro does not use the cm-pager class');
+	assert(/cm-pager__list/.test(p), 'Pager.astro is missing the list element');
+	assert(/cm-pager__link/.test(p), 'Pager.astro is missing the link class');
+	assert(/cm-pager__gap/.test(p), 'Pager.astro is missing the gap element');
+	assert(/aria-current="page"/.test(p), 'Pager.astro is missing aria-current on the current page');
+	assert(/aria-disabled="true"/.test(p), 'Pager.astro is missing aria-disabled on unreachable edges');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Pager'), 'the showcase never renders <Pager>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

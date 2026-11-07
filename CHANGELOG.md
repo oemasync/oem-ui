@@ -1,4 +1,17 @@
-## Unreleased - <Progress> Astro wrapper
+## Unreleased - <Pager> Astro wrapper
+
+**`.cm-pager` now ships as `src/astro/Pager.astro`**, the Astro component
+wrapping the pagination nav so consumers stop hand-writing the link list,
+the current-page marker and the unreachable-edge spans. Props: `current`
+(1-based, default 1), `total` (pages), `href` (a URL template containing
+`{page}`, default `?page={page}`), and `ariaLabel`. The component writes
+the contract the CSS expects: real anchors for every reachable page, a
+`cm-pager__link--off` span with `aria-disabled="true"` for an unreachable
+edge (so the box never widens when state switches), `aria-current="page"`
+on the current page, and an ellipsis `cm-pager__gap` where the window
+collapses. First and last pages are always shown.
+
+## ## Unreleased - <Progress> Astro wrapper
 
 **`.cm-progress` now ships as `src/astro/Progress.astro`**, the Astro
 component wrapping the linear bar so consumers stop hand-writing the

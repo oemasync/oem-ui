@@ -19,6 +19,7 @@ import Chip from '../astro/Chip.astro';
 import Crumbs from '../astro/Crumbs.astro';
 import Kbd from '../astro/Kbd.astro';
 import Progress from '../astro/Progress.astro';
+import Pager from '../astro/Pager.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
@@ -2568,6 +2569,11 @@ Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key,
 							<li><a class="cm-pager__link" href="#keys-pages-people">next &rsaquo;</a></li>
 						</ul>
 					</nav>
+
+					<h3 class="cm-kicker cm-kicker--flush">rendered via &lt;Pager&gt;</h3>
+					<Pager current={2} total={12} href="#keys-pages-people" />
+					<Pager current={1} total={12} href="#keys-pages-people" />
+					<Pager current={12} total={12} href="#keys-pages-people" />
 
 					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4)">
 						<span class="cm-avatar cm-avatar--sm" aria-hidden="true">om</span>

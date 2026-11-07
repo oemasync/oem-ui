@@ -1,0 +1,86 @@
+---
+/**
+ * oem-ui <Pager> — a pagination nav of real links. A page is an
+ * address, so the component renders anchors (or a span when an edge
+ * has nowhere to go), never buttons that script a fetch. The current
+ * page is `aria-current="page"`; an unreachable edge is a span with
+ * `aria-disabled="true"` and the dashed `--off` treatment, so the
+ * box never widens when it switches state.
+ *
+ * current: the current page (1-based). total: total pages. href: a
+ * URL template containing `{page}` (e.g. "/blog/{page}" or
+ * "?page={page}"); defaults to "?page={page}". ariaLabel: nav label.
+ * The first and last pages are always shown; the window around the
+ * current page collapses with an ellipsis gap when it would not be
+ * contiguous.
+ */
+interface Props {
+	/** Current page, 1-based. Clamped to [1, total]. */
+	current?: number;
+	/** Total number of pages. */
+	total: number;
+	/** URL template containing `{page}`. */
+	href?: string;
+	/** Accessible label for the nav. */
+	ariaLabel?: string;
+}
+
+const { current = 1, total, href = '?page={page}', ariaLabel = 'Pagination' } = Astro.props;
+
+const safeTotal = Math.max(1, Math.floor(total));
+const safeCurrent = Math.min(safeTotal, Math.max(1, Math.floor(current)));
+
+const urlFor = (p: number) => href.replace(/\{page\}/g, String(p));
+
+// Page numbers to show: first, last, and a small window around the
+// current page. Gaps are inserted where the numbers are not
+// contiguous.
+const shown = new Set<number>();
+shown.add(1);
+shown.add(safeTotal);
+for (let p = safeCurrent - 1; p <= safeCurrent + 1; p++) {
+	if (p >= 1 && p <= safeTotal) shown.add(p);
+}
+const ordered = [...shown].sort((a, b) => a - b);
+
+type Item = { kind: 'page'; page: number } | { kind: 'gap' };
+const items: Item[] = [];
+let prev = 0;
+for (const p of ordered) {
+	if (p - prev > 1) items.push({ kind: 'gap' });
+	items.push({ kind: 'page', page: p });
+	prev = p;
+}
+---
+
+<nav class="cm-pager" aria-label={ariaLabel}>
+	<ul class="cm-pager__list">
+		<li>
+			{safeCurrent <= 1 ? (
+				<span class="cm-pager__link cm-pager__link--off" aria-disabled="true">&lsaquo; prev</span>
+			) : (
+				<a class="cm-pager__link" href={urlFor(safeCurrent - 1)}>&lsaquo; prev</a>
+			)}
+		</li>
+		{items.map((it) =>
+			it.kind === 'gap' ? (
+				<li><span class="cm-pager__gap" aria-hidden="true">&hellip;</span></li>
+			) : (
+				<li>
+					{it.page === safeCurrent ? (
+						<a class="cm-pager__link" href={urlFor(it.page)} aria-current="page">{it.page}</a>
+					) : (
+						<a class="cm-pager__link" href={urlFor(it.page)}>{it.page}</a>
+					)}
+				</li>
+			)
+		)}
+		<li>
+			{safeCurrent >= safeTotal ? (
+				<span class="cm-pager__link cm-pager__link--off" aria-disabled="true">next &rsaquo;</span>
+			) : (
+				<a class="cm-pager__link" href={urlFor(safeCurrent + 1)}>next &rsaquo;</a>
+			)}
+		</li>
+	</ul>
+</nav>
