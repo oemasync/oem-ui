@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19772,6 +19772,26 @@ check('cm-pager: the Astro wrapper ships and renders the library classes', () =>
 	assert(/aria-disabled="true"/.test(p), 'Pager.astro is missing aria-disabled on unreachable edges');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Pager'), 'the showcase never renders <Pager>, so the wrapper is unproven');
+});
+
+check('cm-dialog: the Astro wrapper ships and renders the library classes', () => {
+	const d = read('src/astro/Dialog.astro');
+	assert(/cm-dialog/.test(d), 'Dialog.astro does not use the cm-dialog class');
+	assert(/cm-dialog__head/.test(d), 'Dialog.astro is missing the head element');
+	assert(/cm-dialog__body/.test(d), 'Dialog.astro is missing the body element');
+	assert(/cm-dialog__foot/.test(d), 'Dialog.astro is missing the foot element');
+	assert(/cm-dialog--\$\{variant\}/.test(d) || /cm-dialog--alert/.test(d),
+		'Dialog.astro does not expose the alert variant');
+	assert(/cm-dialog--\$\{variant\}/.test(d) || /cm-dialog--sheet/.test(d),
+		'Dialog.astro does not expose the sheet variant');
+	assert(/<dialog\s+class/.test(d), 'Dialog.astro does not render a native <dialog>');
+	const dialogTag = d.match(/<dialog\s+class[\s\S]*?>/m)[0];
+	assert(/role="dialog"/.test(dialogTag),
+		'Dialog.astro puts role="dialog" on a child instead of the native element');
+	assert(/aria-label=/.test(dialogTag),
+		'Dialog.astro is missing the accessible name on the native element');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Dialog'), 'the showcase never renders <Dialog>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

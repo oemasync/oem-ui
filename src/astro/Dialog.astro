@@ -1,0 +1,47 @@
+---
+/**
+ * oem-ui <Dialog> — a native <dialog> with the library's frame: a
+ * head (title + optional trailing control), a body, and a foot for
+ * actions. The native element keeps focus trapping, Escape, the top
+ * layer and the inertness of the page behind it; this wrapper only
+ * owns the markup so a consumer does not hand-roll the same skeleton
+ * and lose one of those.
+ *
+ * variant: '' (default modal) | 'alert' (decision dialog) | 'sheet'
+ * (side-anchored). open: renders the dialog open (specimen use).
+ * title: optional title rendered in the head. ariaLabel: accessible name
+ * when there is no visible title.
+ */
+interface Props {
+	/** Dialog variant. Defaults to the centred modal. */
+	variant?: '' | 'alert' | 'sheet';
+	/** Accessible name for the dialog. */
+	title?: string;
+	/** Whether the dialog is open. Use for specimens only; production
+	 *  code calls .showModal() / .show() on the element. */
+	open?: boolean;
+	/** Accessible label when no visible title is rendered. */
+	ariaLabel?: string;
+}
+
+const { variant = '', title, open = false, ariaLabel } = Astro.props;
+const variantClass = variant ? `cm-dialog--${variant}` : '';
+---
+
+<dialog
+	class:list={['cm-dialog', variantClass]}
+	open={open}
+	role="dialog"
+	aria-label={ariaLabel ?? title}
+>
+	<div class="cm-dialog__head">
+		{title && <div class="cm-dialog__title">{title}</div>}
+		<slot name="head" />
+	</div>
+	<div class="cm-dialog__body">
+		<slot />
+	</div>
+	<div class="cm-dialog__foot">
+		<slot name="foot" />
+	</div>
+</dialog>

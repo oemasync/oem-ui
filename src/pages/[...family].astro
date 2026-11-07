@@ -20,6 +20,7 @@ import Crumbs from '../astro/Crumbs.astro';
 import Kbd from '../astro/Kbd.astro';
 import Progress from '../astro/Progress.astro';
 import Pager from '../astro/Pager.astro';
+import Dialog from '../astro/Dialog.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
@@ -2574,6 +2575,21 @@ Four small parts a shadcn user reaches for first. <code>.cm-kbd</code> is a key,
 					<Pager current={2} total={12} href="#keys-pages-people" />
 					<Pager current={1} total={12} href="#keys-pages-people" />
 					<Pager current={12} total={12} href="#keys-pages-people" />
+
+					<h3 class="cm-kicker cm-kicker--flush">dialog component</h3>
+					<p class="cm-hint">the same native &lt;dialog&gt; as the confirm modal, rendered through the Astro wrapper: a centred decision dialog and a right-anchored side sheet. The specimen renders open so the frame is visible; a real dialog is shown by showModal().</p>
+					<div class="cm-stack">
+						<Dialog variant="alert" title="Discard draft?" open ariaLabel="Discard draft">
+							<p class="cm-row__meta">This is a specimen, so it renders open. A real dialog is shown by <code>showModal()</code> on the element - the wrapper only owns the skeleton, not the platform.</p>
+							<Fragment slot="foot">
+								<button type="button" class="cm-btn cm-btn--ghost" data-cm-close="dlg-spec" value="cancel">cancel</button>
+								<button type="button" class="cm-btn cm-btn--primary" data-cm-close="dlg-spec" value="confirm">discard</button>
+							</Fragment>
+						</Dialog>
+						<Dialog variant="sheet" title="app.example.com" open ariaLabel="app.example.com">
+							<p class="cm-row__meta">The sheet variant is full-width and flush on a phone, because a 32rem panel centred on a 390px screen leaves the backdrop doing nothing.</p>
+						</Dialog>
+					</div>
 
 					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4)">
 						<span class="cm-avatar cm-avatar--sm" aria-hidden="true">om</span>
