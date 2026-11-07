@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19792,6 +19792,21 @@ check('cm-dialog: the Astro wrapper ships and renders the library classes', () =
 		'Dialog.astro is missing the accessible name on the native element');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Dialog'), 'the showcase never renders <Dialog>, so the wrapper is unproven');
+});
+
+check('cm-tabs: the Astro wrapper ships and renders the library classes', () => {
+	const t = read('src/astro/Tabs.astro');
+	assert(/cm-tabs/.test(t), 'Tabs.astro does not use the cm-tabs class');
+	assert(/cm-tabs__list/.test(t), 'Tabs.astro is missing the list element');
+	assert(/cm-tabs__tab/.test(t), 'Tabs.astro is missing the tab element');
+	assert(/cm-tabs__panel/.test(t), 'Tabs.astro is missing the panel element');
+	assert(/role="tablist"/.test(t), 'Tabs.astro is missing role="tablist"');
+	assert(/role="tab"/.test(t), 'Tabs.astro is missing role="tab"');
+	assert(/role="tabpanel"/.test(t), 'Tabs.astro is missing role="tabpanel"');
+	assert(/aria-controls/.test(t), 'Tabs.astro is missing aria-controls wiring');
+	assert(/aria-labelledby/.test(t), 'Tabs.astro is missing aria-labelledby wiring');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Tabs'), 'the showcase never renders <Tabs>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

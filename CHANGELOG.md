@@ -1,3 +1,16 @@
+## Unreleased - <Tabs> Astro wrapper
+
+**`.cm-tabs` now ships as `src/astro/Tabs.astro`**, the Astro component
+wrapping the tabbed panel so consumers stop hand-writing the id/aria-controls/
+aria-labelledby wiring and the roving-tabindex initial state. Props: `tabs`
+(array of labels or `{ label, disabled }` objects), `orientation`
+('horizontal' | 'vertical'), and `ariaLabel`. Panel content arrives through
+named slots `panel-0`, `panel-1`, ... in the same order as the tabs. The
+runtime owns the ARIA behaviour (roving tabindex, arrow/Home/End, panel
+show/hide); the wrapper emits the contract both the CSS and the runtime
+expect. The first tab and panel are selected at render; the runtime
+re-normalises on bind, so a markup mismatch cannot ship a silent ARIA lie.
+
 ## Unreleased - <Pager> Astro wrapper
 
 **`.cm-pager` now ships as `src/astro/Pager.astro`**, the Astro component

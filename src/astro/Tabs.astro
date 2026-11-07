@@ -1,0 +1,71 @@
+---
+/**
+ * oem-ui <Tabs> — a tabbed panel. The runtime owns the ARIA: roving
+ * tabindex, arrow/Home/End navigation, and the panel show/hide. The
+ * wrapper's job is to emit the contract the CSS and the runtime both
+ * expect — a `.cm-tabs` root, a `.cm-tabs__list` with role="tablist",
+ * one `.cm-tabs__tab` button per tab with role="tab", and one
+ * `.cm-tabs__panel` per tab with role="tabpanel" — so consumers stop
+ * hand-writing the id/aria-controls/aria-labelledby wiring.
+ *
+ * tabs: an array of labels (strings) or { label, disabled } objects.
+ * orientation: 'horizontal' (default) or 'vertical'.
+ * ariaLabel: accessible name for the tablist.
+ *
+ * Panel content is supplied through named slots `panel-0`, `panel-1`,
+ * ... in the same order as the tabs array. The first tab and panel
+ * are selected at render; the runtime re-normalises on bind.
+ */
+interface TabSpec {
+	/** Tab label. */
+	label: string;
+	/** When true the tab is never selectable. */
+	disabled?: boolean;
+}
+
+interface Props {
+	/** Tab labels, or { label, disabled } objects. */
+	tabs: (string | TabSpec)[];
+	/** Layout axis. Defaults to 'horizontal'. */
+	orientation?: 'horizontal' | 'vertical';
+	/** Accessible name for the tablist. */
+	ariaLabel?: string;
+}
+
+const { tabs: rawTabs, orientation = 'horizontal', ariaLabel = 'Tabs' } = Astro.props;
+
+const tabs: TabSpec[] = (rawTabs as (string | TabSpec)[]).map((t) =>
+	typeof t === 'string' ? { label: t } : t
+);
+
+const vertical = orientation === 'vertical';
+---
+
+<div class="cm-tabs" data-orientation={vertical ? 'vertical' : undefined}>
+	<div class="cm-tabs__list" role="tablist" aria-label={ariaLabel}>
+		{tabs.map((t, i) => (
+			<button
+				type="button"
+				class="cm-tabs__tab"
+				role="tab"
+				id={`tab-${i}`}
+				aria-selected={i === 0 && !t.disabled ? 'true' : 'false'}
+				aria-disabled={t.disabled ? 'true' : undefined}
+				tabindex={i === 0 && !t.disabled ? '0' : '-1'}
+				aria-controls={`panel-${i}`}
+			>{t.label}</button>
+		))}
+	</div>
+	{tabs.map((t, i) => (
+		<div
+			class="cm-tabs__panel"
+			role="tabpanel"
+			id={`panel-${i}`}
+			aria-labelledby={`tab-${i}`}
+			tabindex="0"
+			hidden={i !== 0}
+		>
+			<slot name={`panel-${i}`} />
+		</div>
+	))}
+</div>
