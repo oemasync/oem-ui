@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19749,6 +19749,17 @@ check('cm-crumbs: the Astro wrapper ships and renders the library classes', () =
 	assert(/cm-crumbs__here" aria-current/.test(c), 'Crumbs.astro does not mark the current page');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Crumbs'), 'the showcase never renders <Crumbs>, so the wrapper is unproven');
+});
+
+check('cm-progress: the Astro wrapper ships and renders the library classes', () => {
+	const p = read('src/astro/Progress.astro');
+	assert(/cm-progress/.test(p), 'Progress.astro does not use the cm-progress class');
+	assert(/cm-progress__fill/.test(p), 'Progress.astro is missing the fill element');
+	assert(/role="progressbar"/.test(p), 'Progress.astro is missing the progressbar role');
+	assert(/aria-valuenow/.test(p), 'Progress.astro is missing aria-valuenow');
+	assert(/data-cm-progress/.test(p), 'Progress.astro is missing the scroll hook');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Progress'), 'the showcase never renders <Progress>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

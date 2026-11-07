@@ -1,0 +1,45 @@
+---
+/**
+ * oem-ui <Progress> — a linear progress bar. The fill is driven by the
+ * `--cm-progress` custom property (a percentage), so a caller changes one
+ * value instead of the width, which keeps the transition and keeps the
+ * track full width for the eye to measure against. The element is a real
+ * `progressbar`: `aria-valuenow` is the source of truth, and the fill only
+ * draws it.
+ *
+ * value: current value (default 0). max: maximum (default 100). label:
+ * accessible name (aria-label). scroll: when true, the bar tracks page
+ * scroll via the runtime; when a string, it tracks that selector's own
+ * scroll box. A scroll bar still renders its initial value until the
+ * runtime paints.
+ */
+interface Props {
+	/** Current value. Ignored when `scroll` is set (the runtime drives it). */
+	value?: number;
+	/** Maximum value. Defaults to 100. */
+	max?: number;
+	/** Accessible name for the progressbar. */
+	label?: string;
+	/** Track page scroll (true) or a selector's scroll box (string). */
+	scroll?: boolean | string;
+}
+
+const { value = 0, max = 100, label, scroll = false } = Astro.props;
+const safeMax = max > 0 ? max : 100;
+const pct = Math.max(0, Math.min(100, Math.round((value / safeMax) * 100)));
+const dataProgress =
+	scroll === false ? undefined : scroll === true ? '' : String(scroll);
+---
+
+<div
+	class="cm-progress"
+	style={`--cm-progress:${pct}%`}
+	role="progressbar"
+	aria-valuenow={pct}
+	aria-valuemin="0"
+	aria-valuemax="100"
+	aria-label={label}
+	data-cm-progress={dataProgress}
+>
+	<span class="cm-progress__fill"></span>
+</div>

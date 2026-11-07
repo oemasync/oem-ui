@@ -4333,6 +4333,7 @@ Copy from `src/astro/` and set your identity in `config.ts`:
 | `TimelineItem.astro` | one dated record, with the `now` variant |
 | `Card.astro` | one card inside a `.cm-cards` grid. Slots for head, body and foot |
 | `Meter.astro` | one labelled proportion bar. Throws on a `pct` outside 0-100 |
+| `Progress.astro` | one linear progress bar. `value`/`max`/`label`, and `scroll` (true or a selector) hands the bar to the runtime's reading-progress driver |
 | `CodeBlock.astro` | a `<pre>` with a language label and a copy button. Throws on a missing `id` |
 
 ```astro

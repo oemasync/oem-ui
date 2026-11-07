@@ -1,3 +1,22 @@
+## Unreleased - <Progress> Astro wrapper
+
+**`.cm-progress` now ships as `src/astro/Progress.astro`**, the Astro
+component wrapping the linear bar so consumers stop hand-writing the
+`--cm-progress` knob and the `aria` pair. Props: `value` (default 0),
+`max` (default 100), `label` (the accessible name), and `scroll` (false, or
+`true` for page scroll, or a selector string for that element's own scroll
+box). The component writes the pair the CSS contract demands —
+`--cm-progress` and `aria-valuenow` in lockstep — and when `scroll` is set
+it hands the bar to the runtime's `[data-cm-progress]` driver, which owns
+the same pair and clamps to 0–100 under rubber-band.
+
+The bar itself is unchanged: a full-width track, a 100%-wide fill
+translated by `calc(var(--cm-progress) - 100%)`, so the transition is on
+the compositor and the track is always measurable. This is the wrapper for
+a component that already existed in the library and was already driven by
+the runtime — it had no Astro surface, so no consumer could reach it
+without hand-writing the markup.
+
 ## Unreleased - <Kbd> Astro wrapper
 
 **`.cm-kbd` now ships as `src/astro/Kbd.astro`**, the Astro component wrapping the keyboard key so consumers stop hand-writing the `<kbd>` markup. Props: `key` (a single key label) or `keys` (a chord: array or space-separated string). A chord renders as a `cm-kbd-group` of individual `<kbd>` elements joined by a readable '+'; a single key renders as one `<kbd>`. The glyph/label stays in the markup, never in CSS, so the chord reads as keys plus a joiner.

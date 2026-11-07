@@ -18,6 +18,7 @@ import Avatar from '../astro/Avatar.astro';
 import Chip from '../astro/Chip.astro';
 import Crumbs from '../astro/Crumbs.astro';
 import Kbd from '../astro/Kbd.astro';
+import Progress from '../astro/Progress.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
 import TimelineItem from '../astro/TimelineItem.astro';
@@ -1554,6 +1555,15 @@ Each row is one modifier against its own base, so the difference is the thing be
 						</span>
 						<span class="cm-spec__val"><code>page (live)</code></span>
 					</div>
+				</div>
+
+				<h3 class="cm-kicker">progress component</h3>
+				<p class="cm-hint">the same bar, rendered through the Astro wrapper: determinate values and a scroll-driven bar.</p>
+				<div class="cm-stack">
+					<Progress value={33} label="Loading" />
+					<Progress value={66} label="Saving" />
+					<Progress value={100} label="Done" />
+					<Progress scroll label="Reading progress" />
 				</div>
 
 				<h3 class="cm-kicker">media</h3>
