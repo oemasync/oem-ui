@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19738,6 +19738,17 @@ check('cm-kbd: the Astro wrapper ships and renders the library classes', () => {
 	assert(/<slot/.test(k) || /key/.test(k), 'Kbd.astro is missing content rendering');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Kbd'), 'the showcase never renders <Kbd>, so the wrapper is unproven');
+});
+
+check('cm-crumbs: the Astro wrapper ships and renders the library classes', () => {
+	const c = read('src/astro/Crumbs.astro');
+	assert(/cm-crumbs/.test(c), 'Crumbs.astro does not use the cm-crumbs class');
+	assert(/cm-crumbs__link/.test(c), 'Crumbs.astro is missing the link element');
+	assert(/cm-crumbs__sep/.test(c), 'Crumbs.astro is missing the separator element');
+	assert(/cm-crumbs__here/.test(c), 'Crumbs.astro is missing the current-page element');
+	assert(/aria-current/.test(c), 'Crumbs.astro does not mark the current page');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Crumbs'), 'the showcase never renders <Crumbs>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

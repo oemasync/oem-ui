@@ -1,0 +1,51 @@
+---
+/**
+ * oem-ui <Crumbs> — a breadcrumb trail. The separator is an
+ * aria-hidden element between links (NOT a ::after — generated
+ * content is part of name-from-content, so a ::after would be
+ * spoken), and the last crumb is marked aria-current="page", the
+ * same attribute the header nav uses, so "you are here" survives
+ * greyscale, print, and a screen reader.
+ *
+ * items: array of { label, href? }. The last item without an href
+ * (or the last item overall) is rendered as the current page.
+ */
+interface Crumb {
+	/** Visible label. */
+	label: string;
+	/** When omitted, the crumb is the current page. */
+	href?: string;
+}
+
+interface Props {
+	/** The trail, in order. */
+	items: Crumb[];
+	/** Accessible label for the nav. */
+	ariaLabel?: string;
+}
+
+const { items, ariaLabel = 'Breadcrumb' } = Astro.props;
+---
+
+<nav class="cm-crumbs" aria-label={ariaLabel}>
+	{
+		items.map((item, i) => {
+			const last = i === items.length - 1;
+			if (last || !item.href) {
+				return (
+					<span class="cm-crumbs__here" aria-current="page">
+						{item.label}
+					</span>
+				);
+			}
+			return (
+				<a class="cm-crumbs__link" href={item.href}>
+					{item.label}
+					<span class="cm-crumbs__sep" aria-hidden="true">
+						›
+					</span>
+				</a>
+			);
+		})
+	}
+</nav>

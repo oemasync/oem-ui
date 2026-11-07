@@ -16,6 +16,7 @@ import StatusStrip from '../astro/StatusStrip.astro';
 import Alert from '../astro/Alert.astro';
 import Avatar from '../astro/Avatar.astro';
 import Chip from '../astro/Chip.astro';
+import Crumbs from '../astro/Crumbs.astro';
 import Kbd from '../astro/Kbd.astro';
 import PostRow from '../astro/PostRow.astro';
 import Stat from '../astro/Stat.astro';
@@ -964,6 +965,15 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 					<a class="cm-crumbs__link" href="#lists">terminal<span class="cm-crumbs__sep" aria-hidden="true">&rsaquo;</span></a>
 					<span class="cm-crumbs__here" aria-current="page">cli-mono</span>
 				</nav>
+
+				<h3 class="cm-kicker">rendered via &lt;Crumbs&gt;</h3>
+				<Crumbs
+					items={[
+						{ label: 'plugins', href: '#lists' },
+						{ label: 'terminal', href: '#lists' },
+						{ label: 'cli-mono' },
+					]}
+				/>
 
 				<h3 class="cm-kicker">deep trail, wraps on a phone</h3>
 				<p class="cm-head__sub">
