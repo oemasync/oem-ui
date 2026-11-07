@@ -19742,11 +19742,11 @@ check('cm-kbd: the Astro wrapper ships and renders the library classes', () => {
 
 check('cm-crumbs: the Astro wrapper ships and renders the library classes', () => {
 	const c = read('src/astro/Crumbs.astro');
-	assert(/cm-crumbs/.test(c), 'Crumbs.astro does not use the cm-crumbs class');
+	assert(/class="cm-crumbs"/.test(c), 'Crumbs.astro does not use the cm-crumbs class');
 	assert(/cm-crumbs__link/.test(c), 'Crumbs.astro is missing the link element');
 	assert(/cm-crumbs__sep/.test(c), 'Crumbs.astro is missing the separator element');
 	assert(/cm-crumbs__here/.test(c), 'Crumbs.astro is missing the current-page element');
-	assert(/aria-current/.test(c), 'Crumbs.astro does not mark the current page');
+	assert(/cm-crumbs__here" aria-current/.test(c), 'Crumbs.astro does not mark the current page');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Crumbs'), 'the showcase never renders <Crumbs>, so the wrapper is unproven');
 });
