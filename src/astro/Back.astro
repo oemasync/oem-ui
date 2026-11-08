@@ -1,0 +1,31 @@
+---
+/**
+ * oem-ui <Back> — a "← back" link above a detail page. The library owns
+ * the tap floor (44px on coarse pointers) and the arrow slide on
+ * hover/focus, so a consumer stops hand-writing the same
+ * <a class="cm-back"> skeleton and losing the floor — MEASURED in WebKit
+ * against an isolated control host: `.cm-back` computed to 27.19px tall
+ * at 390px AND at 1440px against a --tap floor of 44px, because the
+ * coarse-pointer rule had never actually existed in the sheet. A back
+ * link is the FIRST thing a thumb touches on a detail page, so the floor
+ * matters most here, the same case `.cm-crumbs` was promoted for.
+ *
+ * href: destination. label: visible text (also accepted via the default
+ * slot). arrow: the glyph, default '←'.
+ */
+interface Props {
+	/** Destination URL. */
+	href: string;
+	/** Visible label. Ignored when the default slot is provided. */
+	label?: string;
+	/** Arrow glyph. Defaults to '←'. */
+	arrow?: string;
+}
+
+const { href, label, arrow = '←' } = Astro.props;
+---
+
+<a class="cm-back" href={href}>
+	<span class="cm-back__arrow" aria-hidden="true">{arrow}</span>
+	{label ? <span>{label}</span> : <slot />}
+</a>

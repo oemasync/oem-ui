@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19807,6 +19807,22 @@ check('cm-tabs: the Astro wrapper ships and renders the library classes', () => 
 	assert(/aria-labelledby/.test(t), 'Tabs.astro is missing aria-labelledby wiring');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Tabs'), 'the showcase never renders <Tabs>, so the wrapper is unproven');
+});
+
+check('cm-back: the Astro wrapper ships and renders the library classes', () => {
+	const b = read('src/astro/Back.astro');
+	assert(/class="cm-back"/.test(b), 'Back.astro does not use the cm-back class');
+	assert(/cm-back__arrow/.test(b), 'Back.astro is missing the arrow element');
+	assert(/<a class="cm-back"/.test(b), 'Back.astro does not render a real <a>');
+	assert(/href=/.test(b), 'Back.astro takes no href');
+	assert(/aria-hidden="true"/.test(b), 'Back.astro marks the arrow aria-hidden');
+	// The wrapper is the ONLY consumer of the coarse-pointer floor, so the
+	// floor has to be measured against the wrapper's own box, not against a
+	// sibling. An isolated control host is the control.
+	const host = 'tests/mutate-back-webkit.py';
+	assert(exists(host), 'the back-link mutation harness does not exist');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Back '), 'the showcase never renders <Back>, so the wrapper is unproven');
 });
 
 /* ---------- video frame, cm-video ---------- */

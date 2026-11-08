@@ -17,6 +17,7 @@ import Alert from '../astro/Alert.astro';
 import Avatar from '../astro/Avatar.astro';
 import Chip from '../astro/Chip.astro';
 import Crumbs from '../astro/Crumbs.astro';
+import Back from '../astro/Back.astro';
 import Kbd from '../astro/Kbd.astro';
 import Progress from '../astro/Progress.astro';
 import Pager from '../astro/Pager.astro';
@@ -971,13 +972,32 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 				</nav>
 
 				<h3 class="cm-kicker">rendered via &lt;Crumbs&gt;</h3>
-				<Crumbs
-					items={[
-						{ label: 'plugins', href: '#lists' },
-						{ label: 'terminal', href: '#lists' },
-						{ label: 'cli-mono' },
-					]}
-				/>
+					<Crumbs
+						items={[
+							{ label: 'plugins', href: '#lists' },
+							{ label: 'terminal', href: '#lists' },
+							{ label: 'cli-mono' },
+						]}
+					/>
+
+										<h3 class="cm-kicker">rendered via &lt;Back&gt;</h3>
+										<p class="cm-head__sub">
+											Back above a detail page. The library owns the
+											<code>--tap</code> floor (44px on a coarse pointer) and
+											the arrow slide on hover/focus, so a consumer stops
+											hand-writing the same
+											<code>&lt;a class="cm-back"&gt;</code> skeleton and
+											losing the floor — MEASURED in WebKit against an
+											isolated control host: <code>.cm-back</code> computed
+											to 27.19px tall at 390px AND at 1440px, because the
+											coarse-pointer rule had never actually existed in the
+											sheet. A back link is the FIRST thing a thumb touches
+											on a detail page, so the floor matters most here.
+										</p>
+										<div class="cm-stack cm-stack--section">
+											<Back href="#lists" label="all projects" />
+											<Back href="#lists" />
+										</div>
 
 				<h3 class="cm-kicker">deep trail, wraps on a phone</h3>
 				<p class="cm-head__sub">
@@ -4892,10 +4912,7 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 							<dt>since</dt><dd>2014</dd>
 							<dt>based</dt><dd>remote</dd>
 						</dl>
-						<a class="cm-back" href="#layout">
-							<span class="cm-back__arrow" aria-hidden="true">&#8592;</span>
-							<span>back to layout</span>
-						</a>
+						<Back href="#layout" label="back to layout" />
 					</aside>
 				</div>
 			</section>

@@ -1,3 +1,17 @@
+## Unreleased - <Back> Astro wrapper
+
+**`.cm-back` now ships as `src/astro/Back.astro`**, the Astro component
+wrapping the "back" link above a detail page so consumers stop
+hand-writing the `<a class="cm-back">` skeleton and losing the tap floor.
+Props: `href` (destination), `label` (visible text, ignored when the
+default slot is provided), and `arrow` (glyph, default '←'). The
+component renders a real `<a class="cm-back">` with an
+`aria-hidden` arrow span, so the library owns the tap floor (44px on a
+coarse pointer) and the arrow slide on hover/focus. MEASURED in WebKit:
+27.19px tall at 1440px (pointer: fine) and 44px at 390px (pointer:
+coarse) — the floor had never actually existed in the sheet until this
+cycle, despite the comment claiming it did.
+
 ## Unreleased - <Tabs> Astro wrapper
 
 **`.cm-tabs` now ships as `src/astro/Tabs.astro`**, the Astro component
