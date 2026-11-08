@@ -2198,7 +2198,7 @@ check('no consumer keeps its FOUC guard inside the body', () => {
 	// <head>, which is the only placement that can be correct.
 	for (const c of [
 		{ name: 'dev-blog', dir: '../dev-blog', body: 'src/components/Header.astro' },
-		{ name: 'oem-portfolio', dir: '../oem-portfolio', body: 'src/components/Header.astro' },
+		{ name: 'oem-portfolio', dir: '../oem-portfolio', body: 'src/astro/Header.astro' },
 	]) {
 		const p = join(root, c.dir, c.body);
 		if (!existsSync(p)) continue;
@@ -2227,7 +2227,7 @@ check('every shipped FOUC guard covers the keys its own <html> declares', () => 
 		// Header.astro, which renders inside <body> — the one placement the
 		// FOUC guard can never occupy.
 		{ name: 'dev-blog', dir: '../dev-blog', guard: 'src/components/BaseHead.astro' },
-		{ name: 'oem-portfolio', dir: '../oem-portfolio', guard: 'src/components/Head.astro' },
+		{ name: 'oem-portfolio', dir: '../oem-portfolio', guard: 'src/astro/Head.astro' },
 	];
 	for (const c of CONSUMERS) {
 		const dir = join(root, c.dir);
@@ -12401,7 +12401,7 @@ console.log('\ngenerated table labels');
 		// matters: deleting the class while one consumer still ships the
 		// markup silently strands its separator, so the migration is only
 		// proven by the EMITTERS being gone, not by the CSS being clean.
-		for (const consumer of ['sullen.sh/index.html', 'oem-portfolio/src/components/Footer.astro']) {
+		for (const consumer of ['sullen.sh/index.html', 'oem-portfolio/src/astro/Footer.astro']) {
 			const p = `/root/projects/${consumer}`;
 			let body = '';
 			try { body = readFileSync(p, 'utf8'); } catch { /* not present on this host */ }
