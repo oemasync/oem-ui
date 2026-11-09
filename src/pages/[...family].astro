@@ -6898,10 +6898,16 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 						<p class="cm-findbar__count cm-findbar__count--none" role="status" aria-live="polite">0 of 0</p>
 						<span class="cm-field__help">no matches: <code>--none</code> drops the count to <code>--ink-faint</code>, so "the room does not contain this" reads differently from a count.</span>
 						<span class="cm-field__help">filled: the right gutter is derived from <code>--search-clear</code>, so the value never runs under the X.</span>
-					</div>
-				</div>
-			</section>
-			)}
+									</div>
+
+									<div class="cm-field">
+										<label class="cm-field__label" for="q-wide">filter</label>
+										<Search id="q-wide" placeholder="search everything…" wide autocomplete="off" />
+										<span class="cm-field__help">wide: <code>.cm-search--wide</code> is a 100% row, not a min-width field. A filter that sits in a header or a toolbar needs the whole width of its container, and without the modifier the field keeps its own width and the row around it is empty.</span>
+									</div>
+								</div>
+							</section>
+							)}
 
 			<!-- ====================================================== auth
 			     Sign-in is not its own design language. It is the card,
