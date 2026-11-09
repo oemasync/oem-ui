@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19824,6 +19824,40 @@ check('cm-back: the Astro wrapper ships and renders the library classes', () => 
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Back '), 'the showcase never renders <Back>, so the wrapper is unproven');
 });
+
+check('cm-search: the Astro wrapper ships and renders the library classes', () => {
+	const s = read('src/astro/Search.astro');
+	assert(/class="cm-search"/.test(s), 'Search.astro does not use the cm-search class');
+	assert(/cm-search__icon/.test(s), 'Search.astro is missing the icon element');
+	assert(/cm-search__input/.test(s), 'Search.astro is missing the input element');
+	assert(/cm-search__clear/.test(s), 'Search.astro is missing the clear button');
+	assert(/type="search"/.test(s), 'Search.astro does not render a search input');
+	// The clear button is CONDITIONAL on a value: a field with no value mounts
+	// nothing to be pressed. The wrapper has to express that, or a consumer
+	// shipping an always-visible X gets a button the runtime never binds.
+	assert(/value !== undefined && value !== ''/.test(s),
+		'Search.astro does not gate the clear button on a value');
+	// The icon is the library's own svg, so the left-gutter arithmetic the
+	// input's padding derives from the glyph's own width cannot drift.
+	assert(/viewBox="0 0 24 24"/.test(s), 'Search.astro does not carry the library search glyph');
+	const show = read('src/pages/[...family].astro');
+		assert(show.includes('<Search'), 'the showcase never renders <Search>, so the wrapper is unproven');
+		assert(show.includes('import Search'), 'the showcase never imports <Search>');
+		// The showcase renders THREE fields. Two are <Search>; the third is the
+		// find bar, which used to be hand-written markup and is the reason this
+		// check exists - a consumer re-typing the svg to a different icon
+		// library silently broke the left-gutter arithmetic. Assert the hand-rolled
+		// copy is GONE, not just that the wrapper is present: a page with both
+		// would pass every assertion above while shipping the drift.
+		assert(!/<div class="cm-search">/.test(show),
+			'the showcase still carries a hand-written .cm-search; migrate it to <Search>');
+		assert(!/<span class="cm-search__icon"/.test(show),
+			'the showcase still carries a hand-written cm-search__icon');
+		// And the find bar has a value, so its clear button must be mounted -
+		// the conditional is the contract the runtime's delegated listener expects.
+		assert(/<Search id="q-find"[^>]*value="receipt"/.test(show),
+			'the find-bar field is not rendered through <Search> with its value');
+	});
 
 /* ---------- video frame, cm-video ---------- */
 

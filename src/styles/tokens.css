@@ -336,7 +336,6 @@
 	   computed-value time, so each theme's own --accent-dim is what a
 	   ring actually paints with. Duplicating the hex here would be a
 	   second value to keep in step with the first. */
-	--focus: var(--accent-dim);
 	/* There is deliberately no `--tap-sm`.
 
 	   One was added here -- `--tap-sm: 44px` -- to say "a small label may

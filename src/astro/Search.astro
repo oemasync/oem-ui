@@ -1,0 +1,81 @@
+---
+/**
+ * oem-ui <Search> — a filter field: leading glyph, text input, clear button.
+ *
+ * This is the third component in the library whose markup a consumer used to
+ * hand-write, and the third where the hand-rolled copy was identical to the
+ * library's on first render and drifted from there. The search field is
+ * unusually well hidden: it is FOUR elements deep (icon span, svg, input,
+ * clear button) and every one of them carries a class that only makes sense
+ * together, so a consumer who re-typed the svg to use a different icon
+ * library silently broke the left-gutter arithmetic the input's padding
+ * derives from the glyph's own width.
+ *
+ * MEASURED in WebKit at 390px on rpm's Certificates: the field's
+ * `padding-inline-start` is `calc(var(--space-3) + 1em + var(--space-2))`,
+ * and that `1em` is the icon's own width. Swap the svg for a lucide glyph
+ * (a replaced element at its default 24px) and the placeholder runs UNDER
+ * the magnifier by the glyph's width. The wrapper keeps the two in the same
+ * rule, so they cannot drift.
+ *
+ * What the wrapper owns is the SHAPE. The clear button is mounted by the
+ * runtime only when there is a value, so `value` is the switch: pass a value
+ * and the X appears, pass none and nothing is mounted to be pressed. The
+ * icon is the library's own four-line svg, because a search field's leading
+ * glyph is not a consumer decision — it is the affordance.
+ *
+ * The runtime binds `.cm-search__clear` once, delegated at the document
+ * (cli-mono.js onSearchClear), so this component needs no JS of its own:
+ * emit the class and the wiring is already there. The clear button empties
+ * the field through the native value setter and fires a bubbling `input`,
+ * which is the only way a React-tracked field notices it was cleared.
+ *
+ * No hardcoded identity: the placeholder, the value and the clear button's
+ * accessible name all arrive as props.
+ */
+interface Props {
+  /** Visible hint. Defaults to 'search…'. */
+  placeholder?: string;
+  /** Initial value. When set, the clear button is mounted. */
+  value?: string;
+  /** When true, the field takes 100% of its row instead of its min-width. */
+  wide?: boolean;
+  /** Element id. Optional here because the find-bar variant is a field with no id. */
+  id?: string;
+  /** Accessible name for the clear button. Defaults to 'clear search'. */
+  clearLabel?: string;
+  /** Forwarded to the input. Defaults to 'off'. */
+  autocomplete?: string;
+}
+
+const { placeholder = 'search…', value, wide = false, id, clearLabel = 'clear search', autocomplete = 'off' } = Astro.props;
+---
+
+<div class="cm-search" class:list={wide && 'cm-search--wide'}>
+  <span class="cm-search__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.5" y1="16.5" x2="21" y2="21" />
+    </svg>
+  </span>
+  <input
+    class="cm-search__input"
+    type="search"
+    {...id && { id }}
+    placeholder={placeholder}
+    {...value !== undefined && { value }}
+    autocomplete={autocomplete}
+  />
+  {value !== undefined && value !== '' && (
+    <button
+      type="button"
+      class="cm-search__clear"
+      aria-label={clearLabel}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+  )}
+</div>

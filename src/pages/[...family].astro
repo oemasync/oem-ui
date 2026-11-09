@@ -32,6 +32,7 @@ import CodeBlock from '../astro/CodeBlock.astro';
 import HeaderLink from '../astro/HeaderLink.astro';
 import SectionHead from '../astro/SectionHead.astro';
 import DataTable from '../astro/DataTable.astro';
+import Search from '../astro/Search.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -6868,53 +6869,17 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 				<div class="cm-spec">
 					<div class="cm-field">
 						<label class="cm-field__label" for="q-empty">filter</label>
-						<div class="cm-search">
-							<span class="cm-search__icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-									<circle cx="11" cy="11" r="7" />
-									<line x1="16.5" y1="16.5" x2="21" y2="21" />
-								</svg>
-							</span>
-							<input id="q-empty" class="cm-search__input" type="search" placeholder="search hosts…" autocomplete="off" />
-						</div>
+						<Search id="q-empty" placeholder="search hosts…" autocomplete="off" />
 						<span class="cm-field__help">empty: no clear button, and nothing is mounted to be pressed.</span>
-					</div>
-
-					<div class="cm-field">
-						<label class="cm-field__label" for="q-filled">filter</label>
-						<div class="cm-search cm-search--wide">
-							<span class="cm-search__icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-									<circle cx="11" cy="11" r="7" />
-									<line x1="16.5" y1="16.5" x2="21" y2="21" />
-								</svg>
-							</span>
-							<input id="q-filled" class="cm-search__input" type="search" placeholder="search hosts…" value="proxy" autocomplete="off" />
-							<button type="button" class="cm-search__clear" aria-label="clear filter">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-									<line x1="6" y1="6" x2="18" y2="18" />
-									<line x1="18" y1="6" x2="6" y2="18" />
-								</svg>
-							</button>
 						</div>
+
+						<div class="cm-field">
+						<label class="cm-field__label" for="q-filled">filter</label>
+						<Search id="q-filled" placeholder="search hosts…" value="proxy" clearLabel="clear filter" autocomplete="off" />
 						<div class="cm-findbar">
-							<label class="cm-sr-only" for="q-find">Find in this room</label>
-							<div class="cm-search">
-								<span class="cm-search__icon" aria-hidden="true">
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-										<circle cx="11" cy="11" r="7" />
-										<line x1="16.5" y1="16.5" x2="21" y2="21" />
-									</svg>
-								</span>
-								<input id="q-find" class="cm-search__input" type="search" placeholder="find in this room…" value="receipt" autocomplete="off" />
-								<button type="button" class="cm-search__clear" aria-label="clear search">
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-										<line x1="6" y1="6" x2="18" y2="18" />
-										<line x1="18" y1="6" x2="6" y2="18" />
-									</svg>
-								</button>
-							</div>
-							<p class="cm-findbar__count" role="status" aria-live="polite">3 of 12</p>
+											<label class="cm-sr-only" for="q-find">Find in this room</label>
+											<Search id="q-find" placeholder="find in this room…" value="receipt" autocomplete="off" />
+											<p class="cm-findbar__count" role="status" aria-live="polite">3 of 12</p>
 							<div class="cm-findbar__steppers">
 								<button type="button" class="cm-icon-btn" aria-label="Previous match">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 15l-6-6-6 6" /></svg>

@@ -1,3 +1,21 @@
+## Unreleased - <Search> Astro wrapper
+
+**`.cm-search` now ships as `src/astro/Search.astro`**, the Astro component
+wrapping the filter field so consumers stop hand-writing the four-element
+skeleton (icon span, svg, input, clear button) and silently breaking the
+left-gutter arithmetic the input's `padding-inline-start` derives from the
+glyph's own width. Props: `placeholder` (default 'search…'), `value`
+(when set, the clear button is mounted), `wide` (100% of the row instead of
+its min-width), `id`, `clearLabel` (default 'clear search') and
+`autocomplete` (default 'off'). The clear button is CONDITIONAL on a value:
+a field with no value mounts nothing to be pressed, which is the contract
+the runtime's delegated `.cm-search__clear` listener expects. The icon is
+the library's own four-line svg, so swapping it for a lucide glyph (a
+replaced element at its default 24px) cannot move the placeholder under the
+magnifier. MEASURED in WebKit at 375/390/402: three fields rendered, the
+wide one at 293/308/320px, the find-bar one at 122/137/149px, and
+`documentElement.scrollWidth == innerWidth` at all three — no overflow.
+
 ## Unreleased - <Back> Astro wrapper
 
 **`.cm-back` now ships as `src/astro/Back.astro`**, the Astro component
