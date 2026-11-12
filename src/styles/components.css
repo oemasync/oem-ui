@@ -2201,6 +2201,26 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 .cm-state__title { color: var(--ink); margin: 0 0 var(--space-2); }
 .cm-state__body { margin: 0 auto; max-width: var(--measure-narrow); color: var(--ink-dim); }
+/* The documented one-liner under the title. The README's empty-state
+   example named it `cm-state__text` from the day the family shipped, and
+   the rule was never written: a consumer that copied the example rendered
+   a bare <p> on UA margins, and one live app drifted on its own
+   `cm-state__hint` for the same gap (17 uses across 9 pages, all
+   unstyled). The documented name is the contract, so the rule lands on
+   it rather than on the drift.
+
+   `__body` is the longer paragraph under the mark, so the one-liner
+   sits one tier fainter in the ramp: title --ink, body --ink-dim, text
+   --ink-faint. A state that carries both then reads title -> body ->
+   hint instead of three same-weight lines, and the tier clears AA
+   against the panel in both themes (MEASURED: #8b8b8b on #111111 =
+   5.54:1 dark, #6d6d6d on #f5f5f5 = 4.75:1 light).
+
+   A link inside a hint line is NOT safe yet: bare `a` resolves to
+   --ink-dim, which sits 1.24:1 (dark) / 1.71:1 (light) against the
+   faint text - invisible in both themes. Keep hint lines link-free
+   until the family owns a link rule. */
+.cm-state__text { margin: 0 auto; max-width: var(--measure-narrow); color: var(--ink-faint); }
 .cm-state__actions {
 	margin-top: var(--space-5);
 	display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap;

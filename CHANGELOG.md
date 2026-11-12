@@ -1,3 +1,50 @@
+## Unreleased - states: the documented `__text` one-liner becomes real
+
+**`.cm-state__text` is now a rule, not a name.** The README's States
+section - the library's own contract for every async surface - has
+shipped its empty-state example on `cm-state__text` since the family
+landed, and the rule behind the name was never written. A consumer that
+copied the example rendered a bare `<p>` on UA margins; one live app hit
+the same gap and drifted on its own `cm-state__hint` (17 uses across 9
+pages in arr-unified, all unstyled). The documented name is the
+contract, so the rule lands on it, and the drift stays a consumer-side
+fix (next cycle: re-vendor arr-unified and rename its 17 usages).
+
+The one-liner sits one tier fainter than the longer `__body` paragraph
+under the mark: title `--ink`, body `--ink-dim`, text `--ink-faint`,
+each at the narrow measure. A state carrying both then reads
+title -> body -> hint instead of three same-weight lines, and the faint
+tier clears AA against the panel in both themes (MEASURED: `#8b8b8b`
+on `#111111` = 5.54:1 dark, `#6d6d6d` on `#f5f5f5` = 4.75:1 light).
+
+The showcase now demonstrates the documented shape twice: the README
+example verbatim (mark + title + `__text`) and the no-mark shape an
+app's queue pages take (title + `__text`). The tier ladder is proven
+by a body specimen beside them. A link inside a hint line is recorded
+as NOT safe yet: bare `a` resolves to `--ink-dim`, which sits 1.24:1
+(dark) / 1.71:1 (light) against the faint text - invisible in both
+themes. The rule's comment says so, and the specimens stay link-free.
+
+Contract: `tests/run.mjs` gains 'the documented empty-state one-liner
+is a real class' - the rule resolves to the `--ink-faint` token and the
+narrow measure (the token, not the property, so a wrong tier is a
+`max-height: none` shape), every `cm-state*` class the README's fenced
+example names needs a rule, and the page demonstrates the verbatim
+mark -> title -> text shape, not just a class token somewhere in the
+section. The demonstration list gains `cm-state__text`.
+`scripts/mutate-state-text.mjs` kills 5/5, each on the assertion that
+owns it: rule deleted, tier flipped to `--ink-dim`, measure dropped,
+specimen class removed, and the README renaming the class (the contract
+pointing at a ghost). `tests/measure-state-text-webkit.py` reads the
+painted page at 375/390/1440 in both themes - colour, measure,
+centreing, the `--space-2` rhythm, zero sideways overflow - and its
+failure path was shown on a tier-flipped build before the restore.
+MEASURED in WebKit: the faint tier reads `rgb(139,139,139)` dark and
+`rgb(109,109,109)` light (the token, not a hex in the probe), the
+34ch measure resolves to 285.7px at phone width and 326.5px at
+desktop, the title->text gap is exactly `--space-2` (8px), and
+`#states` overflows by 0 at every width.
+
 ## Unreleased - <Field> Astro wrapper
 
 **`.cm-field` now ships as `src/astro/Field.astro`**, the Astro component

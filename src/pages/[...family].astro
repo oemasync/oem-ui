@@ -1133,6 +1133,27 @@ What a surface shows before it has data, and after it fails. Status is carried b
 					</div>
 				</div>
 
+				<!-- The documented one-liner: the README's empty-state
+				     example, verbatim. `__text` is the single line under
+				     the title, one tier fainter than `__body`, so a
+				     state that carries both reads title -> body
+				     -> hint instead of three same-weight lines.
+				     Keep the line link-free: a bare <a> inside it
+				     resolves to --ink-dim, 1.24:1 against the
+				     faint text - invisible in both themes. -->
+				<div class="cm-state">
+					<span class="cm-state__mark" aria-hidden="true">Ø</span>
+					<p class="cm-state__title">Nothing here yet</p>
+					<p class="cm-state__text">One line on what would fill this.</p>
+				</div>
+				<!-- The no-mark shape an app's queue pages take: a title
+				     and the line that says what would fill it,
+				     nothing above. -->
+				<div class="cm-state">
+					<p class="cm-state__title">No rows in this state</p>
+					<p class="cm-state__text">States fill as the machine moves rows.</p>
+				</div>
+
 								<!-- Progress is carried by weight and inversion, the two cues
 				     the rest of the system already speaks: done keeps a strong
 				     border, current fills. The connector is a 1px rule that

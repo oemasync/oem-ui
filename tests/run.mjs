@@ -2595,7 +2595,7 @@ check('the showcase demonstrates every new state component', () => {
 	const show = showcase.slice(showcase.indexOf('id="states"'),
 		showcase.indexOf('id="prose"'));
 	for (const cls of ['cm-state', 'cm-state__title', 'cm-state__body',
-		'cm-skeleton', 'cm-skeleton__line', 'cm-spinner',
+		'cm-state__text', 'cm-skeleton', 'cm-skeleton__line', 'cm-spinner',
 		'cm-alert', 'cm-alert--ok', 'cm-alert--warn', 'cm-alert--err',
 		'cm-table', 'cm-table-wrap']) {
 		assert(new RegExp(`class="[^"]*\\b${cls}\\b`).test(show),
@@ -2604,6 +2604,47 @@ check('the showcase demonstrates every new state component', () => {
 	// and a skeleton or spinner must never be the only thing announced
 	assert(/cm-spinner-row[^>]*role="status"/.test(show),
 		'a spinner row needs role="status" so the wait is announced once');
+});
+
+check('the documented empty-state one-liner is a real class', () => {
+	// The README's States example has named the hint line cm-state__text
+	// since the family shipped, with no rule behind the name: a consumer
+	// that copied the example rendered a bare <p> on UA margins, and one
+	// live app drifted on its own cm-state__hint for the same gap (17
+	// uses across 9 pages). The documented name is the contract, so the
+	// contract must resolve.
+	const rule = /\.cm-state__text\s*\{([^}]*)\}/.exec(compSrc);
+	assert(rule,
+		'.cm-state__text has no rule - the README example ships a class that does not exist');
+	// The token, not the property: a colour present at the wrong tier,
+	// or a raw hex, is the max-height:none shape for this family - the
+	// line still renders, so only the tier assertion can see the drift.
+	assert(/color:\s*var\(--ink-faint\)/.test(rule[1]),
+		'.cm-state__text must resolve to the faint tier, one step under __body');
+	assert(/max-width:\s*var\(--measure-narrow\)/.test(rule[1]),
+		'.cm-state__text must take the narrow measure');
+	// The README fence is the contract: every cm-state* class its
+	// empty-state example names needs a rule in the stylesheet. The
+	// fence, not the file - prose elsewhere in the README discusses
+	// classes it never ships.
+	const readme = read('README.md');
+	const fences = readme.match(/```html\n[\s\S]*?```/g) || [];
+	const stateFence = fences.find((f) => f.includes('cm-state')) || '';
+	const named = [...new Set(stateFence.match(/cm-state(?:__[a-z]+)?/g) || [])];
+	assert(named.length >= 4,
+		'the README no longer fences its empty-state example');
+	for (const cls of named) {
+		assert(new RegExp(`(^|\\n)[ \	]*\\.${cls}\\s*\\{`).test(compSrc),
+			`the README's States example names .${cls}, which has no rule`);
+	}
+	// The VERBATIM shape is demonstrated, not just the class token: a
+	// state carrying the mark, the title and the one-liner in the
+	// README's order. A token anywhere in the section would still pass
+	// with the documented configuration removed.
+	const show = showcase.slice(showcase.indexOf('id="states"'),
+		showcase.indexOf('id="prose"'));
+	assert(/class="cm-state">\s*<span class="cm-state__mark"[^>]*>Ø<\/span>\s*<p class="cm-state__title">[^<]*<\/p>\s*<p class="cm-state__text">[^<]*<\/p>/.test(show),
+		'the page does not demonstrate the documented mark -> title -> text shape');
 });
 
 check('the progress bar draws --cm-progress and pairs the aria value with it', () => {
