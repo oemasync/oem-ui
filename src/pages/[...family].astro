@@ -33,6 +33,7 @@ import HeaderLink from '../astro/HeaderLink.astro';
 import SectionHead from '../astro/SectionHead.astro';
 import DataTable from '../astro/DataTable.astro';
 import Search from '../astro/Search.astro';
+import Field from '../astro/Field.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -5219,6 +5220,39 @@ inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-
 						<button type="reset" class="cm-btn">cancel</button>
 						<button type="submit" class="cm-btn cm-btn--primary">save</button>
 					</div>
+				</form>
+				<h3 class="cm-kicker">the wrapper</h3>
+				<p class="cm-head__sub">
+					Everything above is the shape. <code>&lt;Field&gt;</code>
+					emits it: the uppercase dim label (with the faint
+					<code>*</code> for required), the control in a slot, the
+					faint help line, and the error message shipped
+					<code>hidden</code> so a fine value never paints a bare
+					"!". The control is a slot because a field wraps an
+					<code>&lt;input&gt;</code>, an <code>&lt;select&gt;</code>
+					or a <code>&lt;textarea&gt;</code>, and the library
+					styles all of them as element defaults - the wrapper does
+					not pick the element for the consumer.
+				</p>
+				<form class="cm-form" onsubmit="return false">
+					<div class="cm-field-row">
+						<Field label="handle" for="wf-name" required help="lowercase, no spaces.">
+							<input id="wf-name" type="text" placeholder="omiinaya" required />
+						</Field>
+						<Field label="kind" for="wf-kind">
+							<select id="wf-kind" class="cm-select">
+								<option>site</option>
+								<option>repo</option>
+								<option>service</option>
+							</select>
+						</Field>
+					</div>
+					<Field label="url" for="wf-url" required help="the error ships hidden and data-cm-validate un-hides it." error="must include the scheme.">
+						<input id="wf-url" type="url" placeholder="https://" required />
+					</Field>
+					<Field label="notes" for="wf-notes" help="the control is a slot, so a textarea sits as naturally as the input above.">
+						<textarea id="wf-notes" rows="2" placeholder="what is it for?"></textarea>
+					</Field>
 				</form>
 				<h3 class="cm-kicker">validation</h3>
 				<p class="cm-head__sub">

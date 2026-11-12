@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19714,7 +19714,7 @@ check('cm-alert: the Astro wrapper ships and renders the library classes', () =>
 
 check('cm-avatar: the Astro wrapper ships and renders the library classes', () => {
 	const a = read('src/astro/Avatar.astro');
-	assert(/cm-avatar/.test(a), 'Avatar.astro does not use the cm-avatar class');
+	assert(/["']cm-avatar["']/.test(a), 'Avatar.astro does not use the cm-avatar class');
 	assert(/cm-avatar--\$\{size\}/.test(a) || /cm-avatar--sm/.test(a),
 		'Avatar.astro is missing the size modifiers');
 	const show = read('src/pages/[...family].astro');
@@ -19733,8 +19733,8 @@ check('cm-chip: the Astro wrapper ships and renders the library classes', () => 
 
 check('cm-kbd: the Astro wrapper ships and renders the library classes', () => {
 	const k = read('src/astro/Kbd.astro');
-	assert(/cm-kbd/.test(k), 'Kbd.astro does not use the cm-kbd class');
-	assert(/cm-kbd-group/.test(k), 'Kbd.astro is missing the group wrapper for chords');
+	assert(/["']cm-kbd["']/.test(k), 'Kbd.astro does not use the cm-kbd class');
+	assert(/["']cm-kbd-group["']/.test(k), 'Kbd.astro is missing the group wrapper for chords');
 	assert(/<slot/.test(k) || /key/.test(k), 'Kbd.astro is missing content rendering');
 	const show = read('src/pages/[...family].astro');
 	assert(show.includes('<Kbd'), 'the showcase never renders <Kbd>, so the wrapper is unproven');
@@ -19753,8 +19753,8 @@ check('cm-crumbs: the Astro wrapper ships and renders the library classes', () =
 
 check('cm-progress: the Astro wrapper ships and renders the library classes', () => {
 	const p = read('src/astro/Progress.astro');
-	assert(/cm-progress/.test(p), 'Progress.astro does not use the cm-progress class');
-	assert(/cm-progress__fill/.test(p), 'Progress.astro is missing the fill element');
+	assert(/["']cm-progress["']/.test(p), 'Progress.astro does not use the cm-progress class');
+	assert(/["']cm-progress__fill["']/.test(p), 'Progress.astro is missing the fill element');
 	assert(/role="progressbar"/.test(p), 'Progress.astro is missing the progressbar role');
 	assert(/aria-valuenow/.test(p), 'Progress.astro is missing aria-valuenow');
 	assert(/data-cm-progress/.test(p), 'Progress.astro is missing the scroll hook');
@@ -19776,10 +19776,10 @@ check('cm-pager: the Astro wrapper ships and renders the library classes', () =>
 
 check('cm-dialog: the Astro wrapper ships and renders the library classes', () => {
 	const d = read('src/astro/Dialog.astro');
-	assert(/cm-dialog/.test(d), 'Dialog.astro does not use the cm-dialog class');
-	assert(/cm-dialog__head/.test(d), 'Dialog.astro is missing the head element');
-	assert(/cm-dialog__body/.test(d), 'Dialog.astro is missing the body element');
-	assert(/cm-dialog__foot/.test(d), 'Dialog.astro is missing the foot element');
+	assert(/["']cm-dialog["']/.test(d), 'Dialog.astro does not use the cm-dialog class');
+	assert(/["']cm-dialog__head["']/.test(d), 'Dialog.astro is missing the head element');
+	assert(/["']cm-dialog__body["']/.test(d), 'Dialog.astro is missing the body element');
+	assert(/["']cm-dialog__foot["']/.test(d), 'Dialog.astro is missing the foot element');
 	assert(/cm-dialog--\$\{variant\}/.test(d) || /cm-dialog--alert/.test(d),
 		'Dialog.astro does not expose the alert variant');
 	assert(/cm-dialog--\$\{variant\}/.test(d) || /cm-dialog--sheet/.test(d),
@@ -19796,10 +19796,10 @@ check('cm-dialog: the Astro wrapper ships and renders the library classes', () =
 
 check('cm-tabs: the Astro wrapper ships and renders the library classes', () => {
 	const t = read('src/astro/Tabs.astro');
-	assert(/cm-tabs/.test(t), 'Tabs.astro does not use the cm-tabs class');
-	assert(/cm-tabs__list/.test(t), 'Tabs.astro is missing the list element');
-	assert(/cm-tabs__tab/.test(t), 'Tabs.astro is missing the tab element');
-	assert(/cm-tabs__panel/.test(t), 'Tabs.astro is missing the panel element');
+	assert(/["']cm-tabs["']/.test(t), 'Tabs.astro does not use the cm-tabs class');
+	assert(/["']cm-tabs__list["']/.test(t), 'Tabs.astro is missing the list element');
+	assert(/["']cm-tabs__tab["']/.test(t), 'Tabs.astro is missing the tab element');
+	assert(/["']cm-tabs__panel["']/.test(t), 'Tabs.astro is missing the panel element');
 	assert(/role="tablist"/.test(t), 'Tabs.astro is missing role="tablist"');
 	assert(/role="tab"/.test(t), 'Tabs.astro is missing role="tab"');
 	assert(/role="tabpanel"/.test(t), 'Tabs.astro is missing role="tabpanel"');
@@ -19828,9 +19828,9 @@ check('cm-back: the Astro wrapper ships and renders the library classes', () => 
 check('cm-search: the Astro wrapper ships and renders the library classes', () => {
 	const s = read('src/astro/Search.astro');
 	assert(/class="cm-search"/.test(s), 'Search.astro does not use the cm-search class');
-	assert(/cm-search__icon/.test(s), 'Search.astro is missing the icon element');
-	assert(/cm-search__input/.test(s), 'Search.astro is missing the input element');
-	assert(/cm-search__clear/.test(s), 'Search.astro is missing the clear button');
+	assert(/["']cm-search__icon["']/.test(s), 'Search.astro is missing the icon element');
+	assert(/["']cm-search__input["']/.test(s), 'Search.astro is missing the input element');
+	assert(/["']cm-search__clear["']/.test(s), 'Search.astro is missing the clear button');
 	assert(/type="search"/.test(s), 'Search.astro does not render a search input');
 	// The clear button is CONDITIONAL on a value: a field with no value mounts
 	// nothing to be pressed. The wrapper has to express that, or a consumer
@@ -19858,6 +19858,36 @@ check('cm-search: the Astro wrapper ships and renders the library classes', () =
 		assert(/<Search id="q-find"[^>]*value="receipt"/.test(show),
 			'the find-bar field is not rendered through <Search> with its value');
 	});
+
+check('cm-field: the Astro wrapper ships and renders the library classes', () => {
+	const f = read('src/astro/Field.astro');
+	assert(/class="cm-field"/.test(f), 'Field.astro does not emit the cm-field wrapper');
+	// Anchor on the markup position, not the bare class name: the file's own
+	// doc comment names `.cm-field__label` and `.cm-field__req` in prose, so a
+	// bare `cm-field__req` regex stays green when the class is stripped from
+	// the markup (proven: mutant 2 survived on exactly that read).
+	assert(/class="cm-field__label"/.test(f), 'Field.astro is missing the label element');
+	assert(/class="cm-field__req">/.test(f), 'Field.astro is missing the required marker');
+	assert(/cm-field__help/.test(f), 'Field.astro is missing the help line');
+	assert(/cm-field__error/.test(f), 'Field.astro is missing the error slot');
+	// The error must ship hidden: a field that renders its error by default
+	// paints a bare "!" into a value that is fine, which is the defect the
+	// CSS [hidden] re-assertion exists to defeat.
+	assert(/cm-field__error" hidden/.test(f),
+		'Field.astro ships the error visible, so a fine value paints a bare "!"');
+	assert(/<slot/.test(f), 'Field.astro is missing the control slot');
+	// The label must be able to point at the control, or clicking it never
+	// focuses the field.
+	assert(/for: htmlFor/.test(f), 'Field.astro does not wire the label for= to the control');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('<Field'), 'the showcase never renders <Field>, so the wrapper is unproven');
+	assert(show.includes('import Field'), 'the showcase never imports <Field>');
+	// The specimen must exercise all three state branches - required, help
+	// and the (hidden) error - or the two it skips stay unproven.
+	assert(/<Field label="handle"[^>]*required/.test(show), 'the specimen does not demonstrate the required marker');
+	assert(/<Field [^>]*help=/.test(show), 'the specimen does not demonstrate the help line');
+	assert(/<Field [^>]*error=/.test(show), 'the specimen does not demonstrate the hidden error slot');
+});
 
 /* ---------- video frame, cm-video ---------- */
 

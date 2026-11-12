@@ -1,0 +1,65 @@
+---
+/**
+ * oem-ui <Field> — a labeled form field: label, control, help, error.
+ *
+ * This is the shape every form screen re-declares, and the one where the
+ * hand-rolled copy drifts silently. The label is uppercase, letter-spaced
+ * and dim (.cm-field__label); the required marker is a faint `*`
+ * (.cm-field__req); the help line is faint; and the error is the same size
+ * but full ink with a generated `!` — and it must ship HIDDEN, because a
+ * field that renders its error by default paints a bare exclamation mark
+ * into a value that is fine. The runtime (data-cm-validate) un-hides it, or
+ * a consumer's own code does; the wrapper only owns the SHAPE, so the error
+ * is emitted with the `hidden` attribute and nothing else is the consumer's
+ * decision to make.
+ *
+ * The control is a SLOT, not a prop. A field wraps an <input>, a <select>,
+ * a <textarea> or a fieldset of checkboxes, and the library styles ALL of
+ * them as element defaults in base.css — so the wrapper must not pick the
+ * element for the consumer. Emitting a fixed <input> would make <Field> a
+ * text field and hide the select and textarea it also exists to wrap, which
+ * is the dead-class failure wearing a slot's clothes.
+ *
+ * The label's `for` is the only wiring the wrapper does. It is a PROP, not a
+ * slot, because the label is emitted by the wrapper and must point at the
+ * control the caller wrote inside the slot. The consumer passes the same id
+ * to both: `for` here and `id` on the control. Omit `for` and the label is
+ * still styled — just not focusable by clicking it.
+ *
+ * The checkbox/radio case is a different shape (a fieldset + legend +
+ * wrapping labels, where the label IS the tap target) and stays raw markup;
+ * this wrapper is the label + control + help + error shape the text, select
+ * and textarea fields share.
+ *
+ * No hardcoded identity: the label, help, error and the control all arrive
+ * as props or the slot.
+ */
+interface Props {
+	/** The label text. Required. */
+	label: string;
+	/** The id the label points at (the control's id). Optional. */
+	for?: string;
+	/** When true, the required `*` is drawn. Defaults to false. */
+	required?: boolean;
+	/** Optional help line under the control, in --ink-faint. */
+	help?: string;
+	/**
+	 * Optional validation message. Emitted hidden; revealed by
+	 * data-cm-validate or the consumer's own code.
+	 */
+	error?: string;
+}
+
+const { label, required = false, help, error } = Astro.props;
+const htmlFor = Astro.props.for;
+---
+
+<div class="cm-field">
+	<label class="cm-field__label" {...htmlFor && { for: htmlFor }}>
+		{label}
+		{required && <span class="cm-field__req">*</span>}
+	</label>
+	<slot />
+	{help && <span class="cm-field__help">{help}</span>}
+	{error && <span class="cm-field__error" hidden>{error}</span>}
+</div>

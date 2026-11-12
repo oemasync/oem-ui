@@ -1,3 +1,37 @@
+## Unreleased - <Field> Astro wrapper
+
+**`.cm-field` now ships as `src/astro/Field.astro`**, the Astro component
+wrapping the labeled form field so consumers stop hand-writing the
+label/control/help/error skeleton and silently dropping the `hidden` from
+the error slot - a field that renders its error by default paints a bare
+"!" into a value that is fine. Props: `label` (required), `for` (the id
+the label points at - the only wiring the wrapper does), `required`
+(draws the faint `*`), `help` (the faint line) and `error` (emitted with
+the `hidden` attribute; `data-cm-validate` or the consumer's own code
+un-hides it). The control is a SLOT, not a prop: a field wraps an
+`<input>`, a `<select>` or a `<textarea>`, and the library styles all of
+them as element defaults in base.css, so the wrapper must not pick the
+element for the consumer. The checkbox/radio shape (fieldset + legend,
+where the label IS the tap target) is a different shape and stays raw
+markup. MEASURED in WebKit at 375/390/402 and 1440: all four specimen
+fields render (input, select, url input, textarea), clicking the "handle"
+label focuses `#wf-name` at every width, the error ships
+`display: none` / 0px and un-hiding it paints the generated `!` (22.09px
+line), the label resolves to `--ink-dim` and the help line to
+`--ink-faint`, the control holds 44px (the tap floor) at all four widths,
+and `#forms` scrollWidth == clientWidth everywhere - the row's grid
+collapses to one column at 375/390/402 and sits two at 1440, as
+documented. `scripts/mutate-field.mjs` kills 6/6 mutants, each on the
+assertion that owns it.
+
+In the same pass the six earlier wrapper checks (avatar, kbd, progress,
+dialog, tabs, search) had their class regexes re-anchored from a bare
+`cm-x` match to a `class="cm-x"` match: a wrapper's own doc comment names
+the classes in prose, so the bare match stayed green when the markup lost
+the class. The Field check anchors the same way, and its required-marker
+assertion reads the markup position, proven against the doc-comment
+survivor.
+
 ## Unreleased - <Search> Astro wrapper
 
 **`.cm-search` now ships as `src/astro/Search.astro`**, the Astro component
