@@ -1,3 +1,43 @@
+## Unreleased - <Kv> Astro wrapper
+
+**`.cm-kv` now ships as `src/astro/Kv.astro`**, the Astro component
+wrapping the key/value list so consumers stop hand-writing the `<dl>`
+skeleton and the per-row pair wrapper - the structure that breaks the
+two-column grid the moment a row needs a control of its own. Three oem
+consumers carried it by hand and drifted: oem-portfolio's certs and
+project pages, sullen.sh's glossary, oem-cdn's usage readout. Props:
+`entries` (an array of `{ term, value, href? }`), `flush` (the
+`--flush` modifier that drops the block's own margin for a panel
+context) and `link` (the `--link` modifier where the whole row is the
+anchor). The wrapper owns the pair structure (the `display: contents`
+`<div>` that keeps the term/value cells from collapsing into stacked
+blocks), both modifiers, and the value link, so a consumer passes rows
+as data instead of re-typing the tags.
+
+MEASURED in WebKit at 375/390/402 and 1440: all three specimens render
+(base, flush, link) beside the hand-written shapes they replace. The
+pair wrapper computes `display: contents`, so the two-column grid is
+intact - the value column sits 132px right of the term at 1440 and the
+pair stacks to one column (gap 0) at every phone width, exactly as the
+hand-written list does. The base specimen renders 3 pairs / 3 dt / 3 dd
+with one value link; the flush specimen 2 pairs, 0 links,
+`margin-block: 0`; the link specimen 3 whole-row anchors, each a
+two-column grid at its own level (value 128px right of the term at
+1440) with a 44px `min-height` tap floor. The link specimen is
+byte-for-byte the same geometry as the hand-written one it replaces:
+same 8px `scrollWidth` overshoot from the row's negative-margin hover
+pad, same anchor height (76px stacked at 390, 44px at 1440), same left
+edge. The wrapper base reads `margin-bottom: 0` in the showcase only
+because it is a direct child of the padded section, which carries
+`.cm-section--pad > * { margin-block: 0 }`; in a prose context it keeps
+the base rule's `1.4em`, as the hand-written list does.
+`tests/run.mjs` carries a structural check (wrapper class, both
+modifiers, the `entries.map`, the term and value-link markup, and the
+three showcase specimens), and a mutation pass kills 5/5 mutants -
+drop the flush modifier, drop the link modifier, hardcode the value
+href, drop the term interpolation, drop the `entries.map` - each on the
+assertion that owns it.
+
 ## Unreleased - states: the documented `__text` one-liner becomes real
 
 **`.cm-state__text` is now a rule, not a name.** The README's States

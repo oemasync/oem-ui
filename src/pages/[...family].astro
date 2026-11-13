@@ -34,6 +34,7 @@ import SectionHead from '../astro/SectionHead.astro';
 import DataTable from '../astro/DataTable.astro';
 import Search from '../astro/Search.astro';
 import Field from '../astro/Field.astro';
+import Kv from '../astro/Kv.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -4907,6 +4908,32 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 						</a>
 					</div>
 				</dl>
+
+				<h3 class="cm-kicker">key-value, the wrapper</h3>
+				<p class="cm-head__sub">
+					The same three shapes, emitted by <code>&lt;Kv&gt;</code>
+					instead of hand-typed. Three oem consumers carried the
+					<code>&lt;dl&gt;</code> skeleton by hand - oem-portfolio's
+					certs and project pages, sullen.sh's glossary, oem-cdn's
+					usage readout - and drifted from it; the wrapper owns the
+					pair structure, the <code>--flush</code> and <code>--link</code>
+					modifiers and the value link, so a consumer passes rows as
+					data instead of re-typing the tags.
+				</p>
+				<Kv entries={[
+					{ term: 'role', value: 'engineer' },
+					{ term: 'since', value: '2014' },
+					{ term: 'source', value: 'github.com/omiinaya', href: '#forms' },
+				]} />
+				<Kv flush entries={[
+					{ term: 'rows', value: '4' },
+					{ term: 'stack', value: 'v1.12' },
+				]} />
+				<Kv link entries={[
+					{ term: 'role', value: 'engineer', href: '#forms' },
+					{ term: 'since', value: '2014', href: '#forms' },
+					{ term: 'based', value: 'remote', href: '#forms' },
+				]} />
 
 				<h3 class="cm-kicker">split</h3>
 				<p class="cm-head__sub">

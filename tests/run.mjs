@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19928,6 +19928,31 @@ check('cm-field: the Astro wrapper ships and renders the library classes', () =>
 	assert(/<Field label="handle"[^>]*required/.test(show), 'the specimen does not demonstrate the required marker');
 	assert(/<Field [^>]*help=/.test(show), 'the specimen does not demonstrate the help line');
 	assert(/<Field [^>]*error=/.test(show), 'the specimen does not demonstrate the hidden error slot');
+});
+
+check('cm-kv: the Astro wrapper ships and renders the library classes', () => {
+	const k = read('src/astro/Kv.astro');
+	// Anchor on the markup form - the class:list array and the quoted
+	// modifiers - not the bare class name: the doc comment names the classes
+	// in prose, so a bare `cm-kv--link` stays green when the modifier is
+	// stripped from the markup.
+	assert(/class:list=\{\s*\[\s*'cm-kv'/.test(k), 'Kv.astro does not emit the cm-kv wrapper');
+	assert(/'cm-kv--flush'/.test(k), 'Kv.astro does not expose the flush modifier');
+	assert(/'cm-kv--link'/.test(k), 'Kv.astro does not expose the link modifier');
+	// The pair wrapper is what keeps the two-column grid rendering, and the
+	// dt/dd are emitted from the entries data - so the interpolation is the
+	// anchor, which the prose in the comment never writes.
+	assert(/entries\.map/.test(k), 'Kv.astro does not render its rows from the entries list');
+	assert(/<dt>\{e\.term\}<\/dt>/.test(k), 'Kv.astro does not render the term from the entry');
+	assert(/href=\{e\.href\}/.test(k), 'Kv.astro does not render the value link');
+	const show = read('src/pages/[...family].astro');
+	assert(show.includes('import Kv'), 'the showcase never imports <Kv>');
+	assert(show.includes('<Kv'), 'the showcase never renders <Kv>, so the wrapper is unproven');
+	// The specimen must exercise all three branches - base, flush and link -
+	// or the two it skips stay unproven.
+	assert(/<Kv entries/.test(show), 'the specimen does not demonstrate the base list');
+	assert(/<Kv flush/.test(show), 'the specimen does not demonstrate the flush modifier');
+	assert(/<Kv link/.test(show), 'the specimen does not demonstrate the link modifier');
 });
 
 /* ---------- video frame, cm-video ---------- */

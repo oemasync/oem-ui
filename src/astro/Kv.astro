@@ -1,0 +1,82 @@
+---
+/**
+ * oem-ui <Kv> — a definition list: a two-column grid of term/value pairs.
+ *
+ * This is the markup three oem consumers used to hand-write, and in every
+ * one the hand-rolled copy was identical to the library's on first render
+ * and drifted from there. The structure is a <dl> with one wrapper element
+ * per row holding the dt/dd pair, and that wrapper is load-bearing: the
+ * library takes it out of the two-column grid with `display: contents`, so
+ * a consumer who re-typed the rows as bare dt/dd, or dropped the wrapper,
+ * silently turned the two-column list into a grid of stacked blocks. That
+ * defect is invisible on a phone - below 520px the grid already stacks to
+ * one column - so it ships and passes a phone-only check forever.
+ *
+ * MEASURED in WebKit at 1280px on a live consumer (oem-portfolio /certs):
+ * three wrapped pairs laid out two-across with every dt sharing its left
+ * edge with its own dd - the two-column grid the component is built on was
+ * not being rendered at all. The wrapper keeps the pair structure, the
+ * modifier and the value link in one place, so a consumer passes rows as
+ * data instead of re-typing the tags and losing the wrapper.
+ *
+ * entries: a list of { term, value, href? }. `term` is the dt, `value` the
+ * dd, and `href` (when set) makes the value a link. In `link` mode the WHOLE
+ * row becomes the link and owns both columns - that is the tap-target fix:
+ * linking only the dt gives a 14px target against the 44px floor, because
+ * min-height is ignored on an inline dt.
+ *
+ * flush: drops the block's own bottom margin - inside a dialog or a card the
+ * surrounding panel already provides that space.
+ */
+interface Entry {
+	/** The term, rendered as the <dt>. */
+	term: string;
+	/** The value, rendered as the <dd>. */
+	value: string;
+	/** When set, the value renders as a link. */
+	href?: string;
+}
+
+interface Props {
+	/** The rows. */
+	entries: Entry[];
+	/** `.cm-kv--flush`: drop the block's own bottom margin. */
+	flush?: boolean;
+	/** `.cm-kv--link`: the whole row is the link. */
+	link?: boolean;
+	/** The element id, when the row needs one. */
+	id?: string;
+	/** Extra classes. */
+	class?: string;
+}
+
+const { entries, flush = false, link = false, id, class: className } = Astro.props;
+---
+
+<dl
+	class:list={['cm-kv', flush && 'cm-kv--flush', link && 'cm-kv--link', className]}
+	{...id && { id }}
+>
+	{
+		entries.map((e) => {
+			if (link) {
+				return (
+					<div>
+						<a href={e.href}>
+							<dt>{e.term}</dt>
+							<dd>{e.value}</dd>
+						</a>
+					</div>
+				);
+			}
+			return (
+				<div>
+					<dt>{e.term}</dt>
+					<dd>
+						{e.href ? <a href={e.href}>{e.value}</a> : e.value}
+					</dd>
+				</div>
+			);
+		})
+	}
+</dl>
