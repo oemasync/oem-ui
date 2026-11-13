@@ -1,3 +1,59 @@
+## Unreleased - <State> Astro wrapper: the empty state, as a component
+
+The previous cycle made the documented `cm-state__text` one-liner a
+real rule; this cycle makes the skeleton a component. The empty state
+is the most-repeated hand-typed pattern the audit can find in the
+fleet: 11 consumer files in arr-unified, 1 in oem-cdn, and the
+showcase's own states section carried three of them by hand.
+`src/astro/State.astro` owns the parts a hand-typed copy loses:
+
+- the mark's `aria-hidden` (without it a reader hears "circle slash"
+  before the sentence that says what is empty);
+- the title / body / text tiers as three distinct props on the
+  documented classes;
+- the one-liner as a STRING PROP: `{text}` is escaped by Astro, which
+  is the only structural reason a live `<a>` can never land inside it,
+  where it would resolve to `--ink-dim` at 1.24:1 against the faint
+  text - invisible in both themes;
+- the actions row, gated on `Astro.slots.has('actions')`, so a state
+  with no way out does not emit an empty `__actions` div claiming its
+  margin. The row is also where the tap floor lives: on a coarse
+  pointer `.cm-state__actions .cm-btn` takes `min-height: var(--tap)`
+  even when the author wrote `.cm-btn--sm`.
+
+The states section demonstrates all three wrapper shapes (one-liner,
+no-mark, body + actions) beside the hand-typed twins. MEASURED in
+WebKit (375/390 mobile + touch, 1440 fine, both themes): the wrapper's
+full specimen and the hand-typed twin read the same width (310px at
+390, 295px at 375), the same title tier, and the same floor - the
+`--sm` button in the actions row computes `min-height 44px` and paints
+44px under the coarse pointer, and back to a 0 floor / 28px box under
+fine; the no-mark pair sits at the same left edge on the faint tier;
+4 of the 6 states carry no actions row at all (the slot gate); the
+section does not grow sideways. The harness asserts the page PROVES
+the pointer it claims before the floor half is checked - a context
+that silently keeps pointer: fine would let the mutant through.
+`measure-state-text-webkit.py` re-derived its fixture count 2 -> 4
+one-liners, and its per-specimen tier assertions now apply to the
+wrapper's output as well.
+
+Tests: the wrapper source checks anchor on the markup form (the
+`class:list` array, the exact `{text}` rendering, the slot gate), not
+the bare class name the doc comment carries. 7/7 mutants killed by
+`tests/mutate-state.mjs`, 0 no-ops: the deleted `cm-state__text`
+rule, the tier climb to `--ink-dim`, the zeroed tap floor, the mark
+without its flag, the `class:list` degraded to a bare class, the
+one-liner turned into a slot a link can hide in, and the actions
+specimen losing its button.
+
+That run also surfaced a dead harness in the cycle before it:
+`mutate-kv.mjs` pointed its showcase mutations at `src/pages/index.astro`,
+which no longer exists (the page is `[...family].astro`), so its two
+showcase mutants had been no-ops, and the second's deletion pattern
+had additionally gone stale on the h4's retired `cm-kicker--plain`
+class. Both fixed and re-proven: the full kv sweep now runs 8/8
+caught, 0 missed, 0 no-op.
+
 ## Unreleased - arr-unified: the deferred empty-state closure lands
 
 The states entry below left a consumer-side fix queued ("next cycle:

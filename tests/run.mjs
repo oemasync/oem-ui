@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -2645,6 +2645,46 @@ check('the documented empty-state one-liner is a real class', () => {
 		showcase.indexOf('id="prose"'));
 	assert(/class="cm-state">\s*<span class="cm-state__mark"[^>]*>Ø<\/span>\s*<p class="cm-state__title">[^<]*<\/p>\s*<p class="cm-state__text">[^<]*<\/p>/.test(show),
 		'the page does not demonstrate the documented mark -> title -> text shape');
+});
+
+check('the <State> wrapper owns the empty-state skeleton', () => {
+	// The markup shape a consumer used to hand-type, as a component.
+	// Anchor on the markup form - the class:list array and the quoted
+	// element classes - not the bare class name: the doc comment names
+	// the classes in prose, so a bare `cm-state__text` stays green when
+	// the element is stripped from the markup.
+	const s = read('src/astro/State.astro');
+	assert(/class:list=\{\s*\[\s*'cm-state'/.test(s),
+		'State.astro does not emit the cm-state wrapper');
+	assert(/class="cm-state__title"/.test(s),
+		'State.astro is missing the title element');
+	assert(/class="cm-state__mark"[^>]*aria-hidden="true"/.test(s),
+		'State.astro must hide the mark from assistive tech');
+	assert(/class="cm-state__body"/.test(s),
+		'State.astro is missing the body element');
+	// The one-liner is a STRING PROP, asserted as the exact rendering:
+	// {text} is escaped by Astro, which is the only structural reason a
+	// live <a> can never land inside it at 1.24:1 against the faint
+	// text. If `text` ever becomes a slot, this line fails.
+	assert(/<p class="cm-state__text">\{text\}<\/p>/.test(s),
+		'State.astro must render the one-liner from a string prop');
+	assert(/class="cm-state__actions"/.test(s),
+		'State.astro is missing the actions row');
+	// The actions row renders only when the slot carries content: an
+	// empty div would claim its margin-top on a state with no way out.
+	assert(/Astro\.slots\.has\('actions'\)/.test(s),
+		'State.astro must gate the actions row on the slot');
+	// The showcase demonstrates all three wrapper shapes beside the
+	// hand-typed ones: the documented one-liner, the no-mark shape, and
+	// the full state with a body and an actions slot.
+	const show = showcase.slice(showcase.indexOf('id="states"'),
+		showcase.indexOf('id="prose"'));
+	assert(/<State mark="Ø" title="Nothing here yet" text="One line on what would fill this." \/>/.test(show),
+		'the wrapper one-liner specimen is missing from the states section');
+	assert(/<State title="No rows in this state" text="States fill as the machine moves rows." \/>/.test(show),
+		'the wrapper no-mark specimen is missing from the states section');
+	assert(/<State mark="Ø" title="No projects yet" body="[^"]*">\s*<a slot="actions" class="cm-btn cm-btn--sm" href="#states">create the first one<\/a>\s*<\/State>/.test(show),
+		'the wrapper body + actions specimen is missing from the states section');
 });
 
 check('the progress bar draws --cm-progress and pairs the aria value with it', () => {

@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const p = (f) => join(root, f);
 const COMP = 'src/styles/components.css';
-const SHOW = 'src/pages/index.astro';
+const SHOW = 'src/pages/[...family].astro';
 
 const MUTATIONS = [
 	{
@@ -103,10 +103,12 @@ const MUTATIONS = [
 		// The invisible-specimen trap, and the one that matters most: both
 		// lists are removed, so the block still builds and the heading is
 		// still there. Only a check that asserts the specimens exist can
-		// see it.
+		// see it. The h4 used to carry cm-kicker--plain; the pattern went
+		// stale with that class and this mutant has been a NO-OP since,
+		// which is why the showcase path fix above had to come with it.
 		name: 'both kv specimens are removed from the section',
 		file: SHOW,
-		from: /\t\t\t\t<div class="cm-split">\n\t\t\t\t\t<div>\n\t\t\t\t\t\t<h4 class="cm-kicker cm-kicker--plain">direct<\/h4>[\s\S]*?\n\t\t\t\t<\/div>\n/,
+		from: /				<div class="cm-split">\n					<div>\n						<h4 class="cm-kicker">direct<\/h4>[\s\S]*?\n				<\/div>\n/,
 		to: '\n',
 		expectFail: 'kv list',
 		skipBuild: true,

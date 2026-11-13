@@ -1,0 +1,63 @@
+---
+/**
+ * oem-ui <State> — the empty state: the shape a surface shows before it
+ * has data. Status is carried by a glyph and a word, never by hue, so
+ * it reads in greyscale print and to a screen reader.
+ *
+ * The skeleton is load-bearing in three places a hand-typed copy loses:
+ *
+ *   - the mark is `aria-hidden`: the glyph is decoration, and without
+ *     the flag a reader hears "circle slash" before the sentence that
+ *     says what is empty;
+ *   - the title / body / text tiers are three separate rules (--ink,
+ *     --ink-dim, --ink-faint) on the narrow measure, so a state that
+ *     carries a body AND the one-liner reads as three tiers instead of
+ *     three same-weight lines;
+ *   - the actions row is where the tap floor lives: on a coarse pointer
+ *     `.cm-state__actions .cm-btn` takes min-height: var(--tap) even
+ *     when the author wrote `.cm-btn--sm`, because the way out of an
+ *     empty state is usually the only control on the screen.
+ *
+ * `text` (the one-liner) stays link-free by construction: it is a
+ * string prop, so a consumer cannot smuggle a live <a> in - a bare
+ * link inside it resolves to --ink-dim, 1.24:1 against the faint text,
+ * invisible in both themes, and the family owns no link rule for it.
+ *
+ * mark: the glyph (e.g. "Ø"). Omit it for the no-mark shape a queue
+ * page takes. body: the longer paragraph. text: the one-line hint.
+ * The actions row renders only when its slot carries content, so a
+ * state with no way out does not emit an empty actions div claiming
+ * its margin.
+ */
+interface Props {
+	/** The one sentence, rendered as <p class="cm-state__title">. */
+	title: string;
+	/** The glyph above the title, e.g. "Ø". */
+	mark?: string;
+	/** The longer paragraph under the title. */
+	body?: string;
+	/** The one-line hint under the title. Link-free. */
+	text?: string;
+	/** The element id, when the state needs one. */
+	id?: string;
+	/** Extra classes. */
+	class?: string;
+}
+
+const { title, mark, body, text, id, class: className } = Astro.props;
+---
+
+<div
+	class:list={['cm-state', className]}
+	{...id && { id }}
+>
+	{mark && <span class="cm-state__mark" aria-hidden="true">{mark}</span>}
+	<p class="cm-state__title">{title}</p>
+	{body && <p class="cm-state__body">{body}</p>}
+	{text && <p class="cm-state__text">{text}</p>}
+	{Astro.slots.has('actions') && (
+		<div class="cm-state__actions">
+			<slot name="actions" />
+		</div>
+	)}
+</div>

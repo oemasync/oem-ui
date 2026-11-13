@@ -35,6 +35,7 @@ import DataTable from '../astro/DataTable.astro';
 import Search from '../astro/Search.astro';
 import Field from '../astro/Field.astro';
 import Kv from '../astro/Kv.astro';
+import State from '../astro/State.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -1154,6 +1155,22 @@ What a surface shows before it has data, and after it fails. Status is carried b
 					<p class="cm-state__title">No rows in this state</p>
 					<p class="cm-state__text">States fill as the machine moves rows.</p>
 				</div>
+
+				<h3 class="cm-kicker">empty, the wrapper</h3>
+				<p class="cm-head__sub">
+					The three shapes above, emitted by
+					<code>&lt;State&gt;</code> instead of hand-typed. The
+					wrapper owns the mark's <code>aria-hidden</code>, the
+					title / body / text tiers and the actions row, so a
+					consumer passes the sentence as data - and the
+					one-liner stays a string prop, which is the only
+					reason a link can never sneak into it at 1.24:1.
+				</p>
+				<State mark="Ø" title="Nothing here yet" text="One line on what would fill this." />
+				<State title="No rows in this state" text="States fill as the machine moves rows." />
+				<State mark="Ø" title="No projects yet" body="An empty surface still needs a shape. A blank div reads as a broken page; this one says the same thing on purpose.">
+					<a slot="actions" class="cm-btn cm-btn--sm" href="#states">create the first one</a>
+				</State>
 
 								<!-- Progress is carried by weight and inversion, the two cues
 				     the rest of the system already speaks: done keeps a strong

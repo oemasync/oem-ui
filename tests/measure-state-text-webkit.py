@@ -162,7 +162,13 @@ def rgb_eq(a, b):
 
 
 def check_theme(d):
-    assert len(d["texts"]) == 2, f"expected 2 .cm-state__text specimens, got {len(d['texts'])}"
+    # Re-derived after the <State> wrapper specimens landed: the section
+    # now carries the two hand-typed one-liners AND the two wrapper
+    # one-liners (the body + actions specimen carries no text). The
+    # per-specimen tier assertions below apply to all four - that is the
+    # point of the wrapper, that its output holds the same tiers as the
+    # hand-typed shape.
+    assert len(d["texts"]) == 4, f"expected 4 .cm-state__text specimens, got {len(d['texts'])}"
     faint, dim = d["tokens"]["faint"], d["tokens"]["dim"]
     assert faint and dim, "ink tokens did not resolve"
     assert not rgb_eq(faint, dim), "--ink-faint and --ink-dim collapsed to one value"
@@ -200,15 +206,15 @@ def check_theme(d):
             verbatim = t
     assert verbatim, "no specimen carries the documented mark+title+text shape"
     no_mark = [t for t in d["texts"] if not t["markPresent"]]
-    assert len(no_mark) == 1, \
-        f"expected exactly one no-mark specimen, got {len(no_mark)}"
+    assert len(no_mark) == 2, \
+        f"expected exactly two no-mark specimens, got {len(no_mark)}"
     # the tier ladder: body sits between title and text
     lad = d.get("ladder")
     assert lad, "the body specimen is missing - the ladder is unproven"
     assert lad["bodyColor"] == dim, f"body colour {lad['bodyColor']} != --ink-dim {dim}"
     # the section does not grow sideways
     assert d["secOverflow"] <= 1, f"#states overflows sideways by {d['secOverflow']}px"
-    print(f"    2 specimens: faint={faint} body={lad['bodyColor']} "
+    print(f"    4 specimens: faint={faint} body={lad['bodyColor']} "
           f"gap={space2:g}px ch34={ch34:.1f}px overflow={d['secOverflow']}px")
 
 
