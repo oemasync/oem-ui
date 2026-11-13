@@ -1,3 +1,24 @@
+## Unreleased - arr-unified: the deferred empty-state closure lands
+
+The states entry below left a consumer-side fix queued ("next cycle:
+re-vendor arr-unified and rename its 17 usages"). It is done, in
+arr-unified `6457bd5`: the vendored layers re-vendored from this
+library's HEAD (components.css +77 adds `.cm-state__text`, tokens.css
++6/-3; base.css and both runtime files were already in sync) and the
+17 `cm-state__hint` usages across 9 pages renamed to `cm-state__text` -
+the documented class the rule now sits on.
+
+MEASURED in WebKit at 390x844 and 1280x900 on arr-unified's built dist
+(dark theme): `.cm-state__text` resolves to `color rgb(139,139,139)`
+== `--ink-faint` and `max-width 34ch` (285px phone / 326px desktop),
+auto-centred; the old `.cm-state__hint` control resolves to
+`rgb(232,232,232)` (inherits `--ink`) with `max-width none` - the
+pre-fix bare `<p>` at the bright tier. Six real `cm-state__text`
+empty states render on the loaded route, zero `cm-state__hint` remain
+in the live DOM; the dist JS bundle carries 17 `cm-state__text`, 0
+`cm-state__hint`. `check-design-sync.sh` reports arr-unified in sync;
+its `tsc` + `vite` build is green.
+
 ## Unreleased - <Kv> Astro wrapper
 
 **`.cm-kv` now ships as `src/astro/Kv.astro`**, the Astro component
@@ -47,8 +68,8 @@ landed, and the rule behind the name was never written. A consumer that
 copied the example rendered a bare `<p>` on UA margins; one live app hit
 the same gap and drifted on its own `cm-state__hint` (17 uses across 9
 pages in arr-unified, all unstyled). The documented name is the
-contract, so the rule lands on it, and the drift stays a consumer-side
-fix (next cycle: re-vendor arr-unified and rename its 17 usages).
+contract, so the rule lands on it, and the drift was a consumer-side fix - closed in arr-unified `6457bd5`
+(see the arr-unified entry at the top of this file).
 
 The one-liner sits one tier fainter than the longer `__body` paragraph
 under the mark: title `--ink`, body `--ink-dim`, text `--ink-faint`,
