@@ -36,6 +36,7 @@ import Search from '../astro/Search.astro';
 import Field from '../astro/Field.astro';
 import Kv from '../astro/Kv.astro';
 import State from '../astro/State.astro';
+import Project from '../astro/Project.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -3979,54 +3980,17 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 					</div>
 
 					<ul class="cm-projects">
-						<li>
-							<a class="cm-project" href="#projects">
-								<span class="cm-project__top">
-									<span class="cm-project__name">spacetime-rpm</span>
-									<span class="cm-project__period">2024&ndash;now</span>
-								</span>
-								<span class="cm-project__blurb">A reverse proxy with a certificate lifecycle nobody has to think about.</span>
-								<span class="cm-project__stack">
-									<span class="cm-tag">rust</span>
-									<span class="cm-tag">spacetimedb</span>
-									<span class="cm-tag">tls</span>
-								</span>
-							</a>
-						</li>
-						<li>
-							<a class="cm-project" href="#projects">
-								<span class="cm-project__top">
-									<span class="cm-project__name">oem-ui</span>
-									<span class="cm-project__period">2025&ndash;now</span>
-								</span>
-								<span class="cm-project__blurb">The design language every oem site is built on: sharp, flat, mono, high-contrast. It ships tokens, components and a runtime, and it is the reason six sites stopped re-deriving the same button.</span>
-								<span class="cm-project__note">private &mdash; the repo is not public</span>
-								<span class="cm-project__stack">
-									<span class="cm-tag">css</span>
-									<span class="cm-tag">astro</span>
-								</span>
-							</a>
-						</li>
-						<li>
-							<a class="cm-project" href="#projects">
-								<span class="cm-project__top">
-									<span class="cm-project__name">oem-cdn</span>
-									<span class="cm-project__period">2025</span>
-								</span>
-								<span class="cm-project__blurb">Edge config, deployed.</span>
-								<span class="cm-project__stack">
-									<span class="cm-tag">cloudflare</span>
-								</span>
-							</a>
-						</li>
-						<li>
-							<div class="cm-project cm-project--pending" aria-hidden="true">
-								<span class="cm-project__top">
-									<span class="cm-project__name">&mdash;</span>
-								</span>
-								<span class="cm-project__blurb">slot 04</span>
-							</div>
-						</li>
+						<Project href="#projects" name="spacetime-rpm" period="2024–now"
+							blurb="A reverse proxy with a certificate lifecycle nobody has to think about."
+							stack={["rust", "spacetimedb", "tls"]} />
+						<Project href="#projects" name="oem-ui" period="2025–now"
+							blurb="The design language every oem site is built on: sharp, flat, mono, high-contrast. It ships tokens, components and a runtime, and it is the reason six sites stopped re-deriving the same button."
+							note="private — the repo is not public"
+							stack={["css", "astro"]} />
+						<Project href="#projects" name="oem-cdn" period="2025"
+							blurb="Edge config, deployed."
+							stack={["cloudflare"]} />
+						<Project pending blurb="slot 04" />
 					</ul>
 
 					<p class="cm-head__sub" style="margin-top:var(--space-3)">

@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -2685,6 +2685,60 @@ check('the <State> wrapper owns the empty-state skeleton', () => {
 		'the wrapper no-mark specimen is missing from the states section');
 	assert(/<State mark="Ø" title="No projects yet" body="[^"]*">\s*<a slot="actions" class="cm-btn cm-btn--sm" href="#states">create the first one<\/a>\s*<\/State>/.test(show),
 		'the wrapper body + actions specimen is missing from the states section');
+});
+
+check('the <Project> wrapper owns the project-card markup', () => {
+	// The markup a consumer hand-typed on every index page, as a component.
+	// Anchor on the markup form - the quoted element classes and the
+	// conditional branches - not the bare class names: the doc comment
+	// names the classes in prose, so a bare `cm-project__name` stays green
+	// when the element is stripped from the markup.
+	const s = read('src/astro/Project.astro');
+	assert(!/Omar|omiinaya|oem\.|mrx/i.test(s),
+		'Project.astro hardcodes a site identity');
+	assert(/class="cm-project"/.test(s),
+		'Project.astro does not emit the cm-project card');
+	assert(/href=\{href\}/.test(s),
+		'Project.astro does not bind the link target to the href prop');
+	assert(/class="cm-project__name"/.test(s),
+		'Project.astro is missing the name element');
+	assert(/cm-project__period/.test(s),
+		'Project.astro is missing the period element');
+	assert(/<span class="cm-project__blurb">\{blurb\}<\/span>/.test(s),
+		'the blurb must be a bare string prop; the leading em dash is CSS, not a literal');
+	assert(/class="cm-project__stack"/.test(s),
+		'Project.astro is missing the stack element');
+	assert(/class="cm-tag"/.test(s),
+		'Project.astro does not render the stack as cm-tag');
+	// period, note and stack are conditional: a card without one must not
+	// emit an empty span that claims its own layout.
+	assert(/\{period &&/.test(s),
+		'Project.astro renders the period unconditionally');
+	assert(/\{note &&/.test(s),
+		'Project.astro renders the note unconditionally');
+	assert(/\{stack && stack\.length > 0 &&/.test(s),
+		'Project.astro renders an empty stack row when there is nothing to pin');
+	// The reserved slot is a different element, not a modifier on the
+	// link: a <div>, aria-hidden, with no hover and no tab stop. The branch
+	// must read the pending prop, not be a literal. "Not a link" is asserted
+	// first: the div->a mutant trips both this and the aria-hidden assert,
+	// and the one that reports is the first in source order.
+	assert(!/<a[^>]*cm-project--pending/.test(s),
+		'the reserved slot must not be a link');
+	assert(/class="cm-project cm-project--pending" aria-hidden="true"/.test(s),
+		'the reserved slot must be a <div> hidden from assistive tech');
+	assert(/pending\s*\?/.test(s),
+		'the pending slot must branch on the pending prop');
+	// The showcase demonstrates the wrapper on the cards section - the full
+	// card with a note, a card without one, and the reserved slot.
+	const show = showcase.slice(showcase.indexOf('id="cards"'),
+		showcase.indexOf('id="hero"'));
+	assert(/<Project href="#projects" name="spacetime-rpm"/.test(show),
+		'the wrapper full-card specimen is missing from the cards section');
+	assert(/<Project href="#projects" name="oem-ui"[^>]*note=/.test(show),
+		'the wrapper note specimen is missing from the cards section');
+	assert(/<Project pending blurb="slot 04" \/>/.test(show),
+		'the reserved-slot specimen is missing from the cards section');
 });
 
 check('the progress bar draws --cm-progress and pairs the aria value with it', () => {
@@ -12693,15 +12747,17 @@ check('the leading dot is the COMPONENT\'s, so a caller cannot double it', () =>
 		// a card that failed to load. A solid border reads as a broken card.
 		assert(/border-style:\s*dashed/.test(pending),
 			'.cm-project--pending must be dashed; a solid border reads as a broken card');
-		// The markup is a <div> and carries aria-hidden: a focusable
-		// placeholder is a tab stop that goes nowhere.
+		// The slot is now a wrapper prop: `<Project pending/>`. The wrapper
+		// owns the markup shape, and that shape is a `<div>` with
+		// aria-hidden - not an `<a>`. A focusable placeholder is a tab stop
+		// that goes nowhere.
+		const wrap = read('src/astro/Project.astro');
+		assert(/<div class="cm-project cm-project--pending" aria-hidden="true">/.test(wrap),
+			'the reserved slot must be a <div> with aria-hidden in the wrapper');
+		assert(!/<a[^>]*cm-project--pending/.test(wrap),
+			'the reserved project slot is an <a> in the wrapper: a focusable placeholder is a tab stop that goes nowhere');
 		const sec = showcase.slice(showcase.indexOf('id="cards"'), showcase.indexOf('id="tiles"'));
-		const m = /<div class="cm-project cm-project--pending"[^>]*>/.exec(sec);
-		assert(m, 'the showcase renders no reserved project slot');
-		assert(/aria-hidden="true"/.test(m[0]),
-			'the reserved project slot must be aria-hidden - it holds no information');
-		assert(!/<a class="[^"]*cm-project--pending/.test(sec),
-			'the reserved project slot is an <a>: a placeholder that is focusable is a tab stop that goes nowhere');
+		assert(/<Project pending/.test(sec), 'the showcase renders no reserved project slot');
 	});
 
 	check('the project card and the aside tag list are NOT one rule', () => {
@@ -12725,9 +12781,14 @@ check('the leading dot is the COMPONENT\'s, so a caller cannot double it', () =>
 		assert(/<ul class="cm-project-tags">/.test(sec),
 			'the showcase renders no detail-page tag list, so .cm-project-tags is dead CSS');
 		// The grid is a <ul> of <li>, not a div soup: it is a list of works
-		// and a screen reader should be able to say how many.
-		assert(/<ul class="cm-projects">\s*<li>/.test(sec),
-			'the project grid is not a <ul> of <li>');
+		// and a screen reader should be able to say how many. The cards are
+		// now <Project> components, so the <li> lives in the wrapper: the
+		// grid holds <Project> children, and each wrapper renders a <li>.
+		const wrap = read('src/astro/Project.astro');
+		assert(/<li>[\s\S]*?<\/li>/.test(wrap),
+			'Project.astro renders no <li>, so the grid is no longer a list');
+		assert(/<ul class="cm-projects">\s*<Project/.test(sec),
+			'the project grid is not a <ul> of <Project> cards');
 	});
 
 	check('the back link takes the tap floor it claims to take', () => {

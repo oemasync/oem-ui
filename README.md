@@ -4332,6 +4332,7 @@ Copy from `src/astro/` and set your identity in `config.ts`:
 | `Stat.astro` | one metric tile inside a `.cm-stats` list |
 | `TimelineItem.astro` | one dated record, with the `now` variant |
 | `Card.astro` | one card inside a `.cm-cards` grid. Slots for head, body and foot |
+| `Project.astro` | one project card inside a `.cm-projects` grid. `name` / `period` / `blurb` / `note` / `stack` (array of tag strings) / `href`; the blurb is a plain string prop, the em dash is CSS. `pending` renders a non-interactive `aria-hidden` reserved slot instead of a link |
 | `Kv.astro` | a key/value list. `entries` (array of `{ term, value, href? }`), plus `flush` and `link` modifiers; owns the `display: contents` pair wrapper and the value link |
 | `Meter.astro` | one labelled proportion bar. Throws on a `pct` outside 0-100 |
 | `Progress.astro` | one linear progress bar. `value`/`max`/`label`, and `scroll` (true or a selector) hands the bar to the runtime's reading-progress driver |

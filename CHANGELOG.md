@@ -1,3 +1,35 @@
+## Unreleased - <Project> Astro wrapper: the project card, as a component
+
+The cards section of the showcase (and two pages in oem-portfolio) hand
+type the `.cm-project` card: a link with a name/period head, a blurb, a
+note, and a tag row. `src/astro/Project.astro` owns that markup so the
+things a hand-typed copy drifts on are written down once:
+
+- the blurb is a STRING PROP, not a slot. The em dash is painted by
+  `.cm-project__blurb::before`, so the element's own text must not lead
+  with one; a string prop keeps the blurb a bare sentence.
+- the stack is an ARRAY PROP of tag strings, rendered as `.cm-tag`
+  spans, and the row only renders when there is at least one. It is
+  the `margin-top: auto` element that pins it to the card's bottom
+  inside a stretched `<li>`.
+- `pending` renders a different element, not a modifier on the link:
+  a `<div class="cm-project cm-project--pending" aria-hidden="true">`
+  with no hover, no tab stop, and a dashed border. It is the reserved
+  slot, and it must never be an `<a>`.
+- `note` renders the `.cm-project__note` line (the "private" tier) only
+  when given; the card does not emit an empty note span.
+
+The showcase's cards section now imports `<Project>` for all four cards
+(the full card with a note, a card without one, the short card, and the
+reserved slot). MEASURED in WebKit (390 mobile, 1440 fine): the wrapper
+renders 3 links + 1 `aria-hidden` pending div; the two same-row cards
+share one stack bottom (38976.66px at 1440), i.e. `margin-top: auto`
+is doing the pinning; the blurb text does not double the CSS dash; and
+`overflowX` is 0. `tests/mutate-project.mjs`: 8 mutations, 8 caught,
+0 missed, 0 no-op (the `div->a` pending mutant fires "must not be a
+link" before the aria-hidden assert, so the two pending asserts are
+ordered so each mutation reports the message it should).
+
 ## Unreleased - <State> Astro wrapper: the empty state, as a component
 
 The previous cycle made the documented `cm-state__text` one-liner a
