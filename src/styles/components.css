@@ -2479,7 +2479,13 @@ button.cm-row:hover { background: var(--bg-2); }
 	height: 100%;
 	background: var(--ink);
 	transform-origin: start center;
-	transform: scaleX(calc(var(--cm-readbar, 0%) / 100));
+	/* The denominator must be 100%, not 100: calc() keeps a percent
+	   divided by a NUMBER as a percent, and a percent inside scaleX()
+	   then converts AGAIN (x0.01) - MEASURED in WebKit, the shipped
+	   `/ 100` rendered 50% as scaleX(0.005), a sliver 1/100th of the
+	   read. percent / percent is the dimensionless ratio the scale
+	   wants: 50% / 100% = 0.5, 0% -> 0, 100% -> 1. */
+	transform: scaleX(calc(var(--cm-readbar, 0%) / 100%));
 	transition: transform var(--cm-t) var(--cm-ease);
 }
 /* A specimen (or any frozen bar) keeps its authored value: the runtime

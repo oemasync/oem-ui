@@ -2813,9 +2813,14 @@ check('the reading-progress bar is fixed, drives --cm-readbar, and pairs the ari
 	// mode:
 	//
 	//  1. CAUSE: the fill is scaled by the custom property
-	//     (scaleX(calc(var(--cm-readbar) / 100))). Asserting only
-	//     `transform:` would pass a fill pinned at scaleX(1) - a bar that
-	//     always reads 100% while every other check stays green.
+	//     (scaleX(calc(var(--cm-readbar) / 100%))). Asserting only
+	//     `transform:` would pass a fill pinned at scaleX(1) - a bar
+	//     that always reads 100% while every other check stays green.
+	//     The denominator itself is pinned too: shipped as `/ 100`,
+	//     WebKit kept the percent (calc) and converted it a second
+	//     time inside scaleX(), rendering 50% as scaleX(0.005) -
+	//     measured on a consumer page, where the runtime's own writes
+	//     all read correct.
 	//  2. It is CHROME, not a control: pinned to the viewport
 	//     (position: fixed), on --z-readbar (above the header it pierces),
 	//     and pointer-transparent so it never blocks that header.
@@ -2831,9 +2836,11 @@ check('the reading-progress bar is fixed, drives --cm-readbar, and pairs the ari
 	assert(/\.cm-readbar\s*\{[^}]*pointer-events:\s*none/.test(compSrc),
 		'cm-readbar is chrome, not a control: it must not block the header it pierces');
 	// Scope to the rule that OWNS the transform: a bare `transform:` read
-	// would match a fill pinned at scaleX(1).
-	assert(/\.cm-readbar__fill\s*\{[^}]*transform:\s*scaleX\(calc\(var\(--cm-readbar/.test(compSrc),
-		'the readbar fill must be driven by var(--cm-readbar) via scaleX, not a width');
+	// would match a fill pinned at scaleX(1). The denominator is pinned
+	// at the TOKEN level - a source regex that stops at `var(--cm-readbar`
+	// passes both `/ 100` (WebKit double-division) and `/ 100%`.
+	assert(/\.cm-readbar__fill\s*\{[^}]*transform:\s*scaleX\(calc\(var\(--cm-readbar[^;]*?\/\s*100%\)\);/.test(compSrc),
+		'the readbar fill must be driven by var(--cm-readbar) via scaleX with a 100% denominator, not a width');
 	// The token, in tokens.css, in the scale.
 	assert(/--z-readbar:\s*\d+/.test(tokenSrc),
 		'--z-readbar must be declared in the z-index scale');
