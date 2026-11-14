@@ -1,3 +1,41 @@
+## Unreleased - oem-portfolio: the <Project> adoption lands
+
+The entry below built the wrapper over two hand-typed copies: the
+showcase's and oem-portfolio's projects index. The showcase converted;
+the consumer kept typing its card by hand, the second implementation
+the wrapper exists to delete. It is gone, in oem-portfolio `33c43b6`:
+the vendored layers re-vendored from this library's `29bb084`
+(`git archive` + `install.sh --astro --public`: components.css +20,
+tokens.css +3/-3, the two runtime files were already in sync with
+`29bb084`, and the five wrappers that copy predated — Field,
+Kv, Project, Search, State — now in its `src/astro/`), and
+`projects/index.astro` renders both branches from `<Project>`: a
+filled project as `href/name/period/blurb/note/stack` props, a
+reserved slot as `<Project pending>` — the aria-hidden `<div>`, not an
+`<a>`, with the blurb a string prop so the generated `::before` dash
+can never double.
+
+The same commit fixed the consumer's WebKit gate, whose project
+selectors still carried the pre-adoption `.project` names: one check
+failed on correct CSS (expected 12, measured 0) and four others passed
+vacuously — a guard that cannot see the thing it guards is not a
+guard. All five now measure `.cm-project` / `a.cm-project` /
+`.cm-project--pending`, and a new `tests/verify-project-adoption.py`
+measures the wrapper's contract on the rendered page in WebKit at
+390x844 and 1440x900 in both themes (48 checks: 12 aria-hidden divs,
+zero anchors, zero focus stops, em-dash names, `slot 01..12` blurbs in
+order, the generated dash, dashed border, tier colours resolving to
+`--ink-faint` / `--ink-dim`, zero horizontal overflow, single column
+at 390, and the served runtime byte-identical to the vendored copy).
+
+Mutation: flipping the vendored pending card to `<a href="#">` fails
+both gates — "no reserved slot is a link" (12 anchors) and "a
+reserved slot is not a focus stop" (12 focusable) in `verify-webkit.py`,
+plus the div and anchor checks across all four viewport/theme
+combinations in the new harness. Restored byte-identical to the
+library export, re-measured green. `check-design-sync.sh` reports
+oem-portfolio in sync against `29bb084`.
+
 ## Unreleased - <Project> Astro wrapper: the project card, as a component
 
 The cards section of the showcase (and two pages in oem-portfolio) hand
