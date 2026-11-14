@@ -6353,6 +6353,59 @@ button.cm-link:focus-visible {
    and a 17px box next to 15px text sits on the wrong optical line. */
 .cm-check > input[type='checkbox'] { align-self: center; }
 
+/* ---------- radio: the pick-one-of-N row, the choice family's third member ----------
+   `cm-check` covers "include this row" (any number), `cm-switch` covers
+   "this whole behaviour is on or off" (one state). A radio row covers
+   "pick exactly one of N" - the third shape the family is missing, and
+   the one shadcn control (radio-group) the library had no counterpart for.
+
+   The circle is drawn by base.css on the bare `input[type='radio']`, the
+   same way `cm-check` draws its box, so a radio renders correctly with no
+   class at all. What the row owns is the same thing `cm-check` owns: the
+   optical line (the circle centred on the text, not floating above it) and
+   the tap floor (the whole label is the target, not a 17px disc). The group
+   below is the fieldset + legend wrapper: native radios sharing a name
+   already move selection with the arrow keys and announce the group, so this
+   does not re-implement that behaviour - it gives the rows a consistent
+   surface and the caption a home. */
+.cm-radio {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--tap);
+	color: var(--ink-dim);
+	font-size: max(var(--min-font), var(--text-sm));
+	cursor: pointer;
+}
+.cm-radio:hover { color: var(--ink); }
+/* Same as cm-check: the circle is a flex child and a 17px disc next to 15px
+   text sits on the wrong optical line without this. */
+.cm-radio > input[type='radio'] { align-self: center; }
+
+/* The group: a fieldset + legend for an exclusive-choice field. `min-width:
+   0` is the same fieldset trap cm-quiz__item measured - a fieldset defaults
+   to min-inline-size: min-content, and in WebKit min-inline-size: 0 does not
+   override it the way min-width: 0 does, so an over-long caption would run
+   the page sideways. The caption is `display: block` for the same reason the
+   quiz legend is: what WebKit reports and what it lays out with are not the
+   same thing for a legend. */
+.cm-radio__group {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	min-width: 0;
+	display: grid;
+	gap: var(--space-1);
+}
+.cm-radio__group > legend {
+	display: block;
+	padding: 0;
+	margin-block-end: var(--space-2);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--ink);
+}
+
 /* ---------- select: the picker class, and the arrow that had to be rescued ----------
    base.css styles a bare `select` - a consumer needs no class for it, and
    across the fleet 17 selects across two projects rely on that. What the

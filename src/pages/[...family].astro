@@ -1780,6 +1780,26 @@ A selected row takes a left rule and a faint tint rather than an outline: an out
 					<label class="cm-check"><input type="checkbox" /> HSTS preload</label>
 				</div>
 
+				<h3 class="cm-kicker">radio row</h3>
+				<p class="cm-head__sub">
+					The third member of the choice family:
+					<code>cm-check</code> is &ldquo;include this&rdquo;, the
+					switch is &ldquo;on or off&rdquo;, and a radio is
+					&ldquo;pick exactly one&rdquo;. The circle is drawn by the
+					base layer, so the control needs no class; the
+					<strong>row</strong> carries the tap floor, and the
+					<code>cm-radio__group</code> fieldset gives the options a
+					caption and a uniform gap. Native radios sharing a
+					<code>name</code> already move between options with the
+					arrow keys, so nothing is re-implemented for the keyboard.
+				</p>
+				<fieldset class="cm-radio__group" style="max-width:20rem">
+					<legend>deployment target</legend>
+					<label class="cm-radio"><input type="radio" name="radio-target" checked /> production</label>
+					<label class="cm-radio"><input type="radio" name="radio-target" /> staging</label>
+					<label class="cm-radio"><input type="radio" name="radio-target" /> preview</label>
+				</fieldset>
+
 				<h3 class="cm-kicker">action toolbar</h3>
 				<p class="cm-head__sub">
 					The bar that acts on a selection sticks to the

@@ -9875,6 +9875,73 @@ check('the check row is the tap target, not the 17px box', () => {
 		'hover must lighten the LABEL too; highlighting only the box points at the part that is hard to hit');
 });
 
+check('the radio row is the tap target, not the 17px circle', () => {
+	// The base layer already draws input[type='radio'] down to the disc, so
+	// the control is correct with no class at all. The gap this fills is the
+	// ROW, exactly as cm-check fills it for the checkbox: the circle is a
+	// 17px disc and the word beside it is what a person actually aims at.
+	// That only works if the label carries the floor and the pointer, and the
+	// circle is centred on the text's optical line instead of floating above it.
+	const row = (compSrc.match(/\.cm-radio\s*\{([^}]*)\}/) || [, ''])[1];
+	assert(row, '.cm-radio is not defined');
+	assert(/min-height:\s*var\(--tap\)/.test(row),
+		'the row must carry the tap floor; without it the only target is a 17px disc and the word is dead space');
+	assert(/cursor:\s*pointer/.test(row),
+		'the row is the control, so it must advertise that it can be clicked');
+	assert(/display:\s*flex/.test(row) && /align-items:\s*center/.test(row),
+		'the circle and the label must sit on one optical line, or a 17px disc reads as sitting above the text');
+	assert(/gap:\s*var\(--space-/.test(row),
+		'the gap between circle and word is a step on the scale, not a number');
+	// The circle is centred on the text line; the bare disc is a flex child and
+	// would sit on the wrong optical line without this (cm-check needs it for
+	// its box too).
+	const center = (compSrc.match(/\.cm-radio > input\[type='radio'\]\s*\{([^}]*)\}/) || [, ''])[1];
+	assert(center && /align-self:\s*center/.test(center),
+		'the circle must be centred on the label line (align-self: center), or it floats above the text');
+	// A hover that lightens the circle but not the word leaves the affordance
+	// on the part that is not the target.
+	assert(/cm-radio:hover[^{]*\{[^}]*color:\s*var\(--ink\)/.test(compSrc),
+		'hover must lighten the LABEL too; highlighting only the circle points at the part that is hard to hit');
+});
+
+check('the radio group is a fieldset that survives a WebKit over-long caption', () => {
+	// cm-quiz__item measured the fieldset trap: a fieldset defaults to
+	// min-inline-size: min-content, and in WebKit min-inline-size: 0 does not
+	// override it the way min-width: 0 does, so an over-long legend runs the
+	// page sideways. The group must pin the min-width, reset the fieldset
+	// defaults, lay its rows out on the scale, and give the caption a home.
+	const g = (compSrc.match(/\.cm-radio__group\s*\{([^}]*)\}/) || [, ''])[1];
+	assert(g, '.cm-radio__group is not defined');
+	assert(/min-width:\s*0/.test(g),
+		'the group must pin min-width: 0 - the fieldset min-inline-size trap cm-quiz__item measured');
+	assert(/margin:\s*0/.test(g) && /padding:\s*0/.test(g) && /border:\s*0/.test(g),
+		'a fieldset ships default margin, padding and border; the group must reset all three or the caption floats');
+	assert(/display:\s*grid/.test(g) && /gap:\s*var\(--space-/.test(g),
+		'the rows must sit on a uniform gap from the scale, not ad-hoc margins between labels');
+	const legend = (compSrc.match(/\.cm-radio__group > legend\s*\{([^}]*)\}/) || [, ''])[1];
+	assert(legend, 'the group must style its legend');
+	assert(/color:\s*var\(--ink\)/.test(legend) && /font-weight:\s*600/.test(legend),
+		'the caption must read as the field label: ink weight, not the faint row colour');
+	assert(/display:\s*block/.test(legend),
+		'the legend must be display: block - what WebKit reports and what it lays out with differ for a caption');
+});
+
+check('the radio group is demonstrated in the showcase', () => {
+	// A component read only in the CSS is a promise, not a product: the
+	// section that proves it renders in its intended context is the showcase.
+	// The check row and the radio row are siblings, so the radio is
+	// demonstrated beside it - a fieldset, a legend, and a group of options.
+	assert(/class="cm-radio__group"/.test(showcase),
+		'the showcase must render a cm-radio__group fieldset');
+	assert(/<legend>/.test(showcase),
+		'the radio group specimen must carry a legend caption');
+	// Three rows sharing one name prove the exclusive-choice grouping; a lone
+	// radio is a checkbox in a circle.
+	const rows = (showcase.match(/class="cm-radio"/g) || []);
+	assert(rows.length >= 3,
+		'the radio specimen must show a group of options (3+ rows), not a single orphan control');
+});
+
 /* A z-index may be a named layer now (`var(--z-header)`) rather than a
    literal. Resolve it through tokens.css instead of narrowing the
    assertion to digits: a literal-only regex fails on the correct

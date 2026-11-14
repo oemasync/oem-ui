@@ -1,3 +1,42 @@
+## Unreleased - choice family: the `cm-radio` row and its group
+
+`cm-check` answers "include this" (any number), `cm-switch` answers "this
+behaviour is on or off" (one state). A radio answers "pick exactly one of
+N" - the third shape the choice family was missing, and the one shadcn
+control (`radio-group`) the library had no counterpart for. The circle is
+drawn by the base layer on the bare `input[type='radio']` exactly the way
+`cm-check` draws its box, so the control is correct with no class at all;
+the row owns the optical line and the tap floor, and the group is the
+fieldset + legend wrapper.
+
+- `src/styles/components.css` — `.cm-radio` (flex row, `min-height:
+  var(--tap)`, `align-items: center`, `gap: var(--space-2)`) and
+  `.cm-radio > input[type='radio'] { align-self: center }`, so the 17px
+  disc sits on the text's optical line instead of floating above it - the
+  same alignment `cm-check` needs for its box. `.cm-radio:hover` lightens
+  the LABEL, not the circle: the affordance belongs on the part a person
+  aims at. `.cm-radio__group` is a borderless fieldset that resets the
+  default margin/padding/border, pins `min-width: 0` (the fieldset
+  `min-inline-size: min-content` trap `cm-quiz__item` measured, where
+  `min-inline-size: 0` does not override it in WebKit the way `min-width:
+  0` does) and lays the rows out on a `var(--space-1)` grid. The `> legend`
+  is `display: block` at ink weight: what WebKit reports and what it lays
+  out with are not the same thing for a caption.
+- `src/pages/[...family].astro` — the radio group beside the check row in
+  the selection section: a `cm-radio__group` fieldset with a "deployment
+  target" legend and three `cm-radio` options sharing one name.
+- `tests/run.mjs` — three contract checks: the row is the tap target
+  (floor + pointer + optical centre), the group is a fieldset that
+  survives an over-long caption (min-width + reset + grid + label-weight
+  legend), and the group is demonstrated in the showcase.
+- `tests/mutate-radio.mjs` — the mutation sweep that proves each of those
+  checks can fail.
+
+Keyboard navigation is the platform's, not the library's: native radios
+sharing a `name` already move selection with the arrow keys and announce
+the group to assistive tech, so the component gives the rows a consistent
+surface and the caption a home rather than re-implementing the behaviour.
+
 ## Unreleased - reading progress: the `cm-readbar` line
 
 `cm-progress` fills a bar a page drops into its content. `cm-readbar`
