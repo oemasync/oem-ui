@@ -12,9 +12,14 @@ once in its layout.
   (200).
 - `src/styles/components.css` — `.cm-readbar` (fixed, logical insets,
   `pointer-events: none`, `--space-1` thick) and `.cm-readbar__fill`,
-  which scales with `scaleX(calc(var(--cm-readbar, 0%) / 100))` - a
-  transform the runtime drives, never a width, so the fill rides the
-  compositor and shares the progress bar's reduced-motion guard.
+  `.cm-readbar__fill`, which scales with
+    `scaleX(calc(var(--cm-readbar, 0%) / 100%))` - a transform the runtime
+    drives, never a width, so the fill rides the compositor and shares
+    the progress bar's reduced-motion guard. The denominator is a
+    percent, not a bare number: shipped as `/ 100`, WebKit kept the
+    percent from calc() and converted it a second time inside
+    scaleX(), rendering 50% as scaleX(0.005) - a sliver 1/100th of the
+    read, while every runtime write on the same page looked right.
   `.cm-readbar--spec` is static: the modifier the runtime never sets,
   which freezes a bar at its authored value for a specimen. `.cm-readbar`
   joins the print hide list beside `[data-cm-progress]` - a fixed
@@ -38,7 +43,12 @@ Mutation-proven: the sweep kills the clamp, the fixed position, the
 z-index, the pointer transparency, the transform fill, the paint-on
 bind, the scroll and resize wiring, the double-bind, the print hide,
 the reduced-motion silence, the showcase bar and specimen, the specimen
-pair split, and the frozen-specifier bind.
+pair split, and the frozen-specifier bind. The sweep also caught the
+denominator: a `/ 100` shipped broken (WebKit double-division, 50%
+rendered as scaleX(0.005)) and the guard that could not see it, since
+its source regex stopped at `var(--cm-readbar`. The fix pins the
+denominator to `100%`, and the sweep gains a mutant for the exact
+shape that shipped broken.
 
 ## Unreleased - oem-portfolio: the <Project> adoption lands
 
