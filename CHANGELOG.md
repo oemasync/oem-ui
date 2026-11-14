@@ -1,3 +1,45 @@
+## Unreleased - reading progress: the `cm-readbar` line
+
+`cm-progress` fills a bar a page drops into its content. `cm-readbar`
+is its fixed sibling: the same fill, a line pinned to the top of the
+viewport, so it is the one element that stays put while a long article
+scrolls. The runtime drives it from the document scroller only - there
+is no per-bar selector to resolve - and the consumer writes the bar
+once in its layout.
+
+- `src/styles/tokens.css` — `--z-readbar` (120) in the z-index scale:
+  above `--z-header` (100), under `--z-popover` (150) and `--z-toast`
+  (200).
+- `src/styles/components.css` — `.cm-readbar` (fixed, logical insets,
+  `pointer-events: none`, `--space-1` thick) and `.cm-readbar__fill`,
+  which scales with `scaleX(calc(var(--cm-readbar, 0%) / 100))` - a
+  transform the runtime drives, never a width, so the fill rides the
+  compositor and shares the progress bar's reduced-motion guard.
+  `.cm-readbar--spec` is static: the modifier the runtime never sets,
+  which freezes a bar at its authored value for a specimen. `.cm-readbar`
+  joins the print hide list beside `[data-cm-progress]` - a fixed
+  element would otherwise repeat on every printed page.
+- `src/js/cli-mono.js` — `cmInitReadbars(root)` binds
+  `.cm-readbar:not(.cm-readbar--spec)` (a frozen specimen keeps its
+  authored value, or the bind would overwrite its 50% with the
+  document's 0%) and exposes `initReadbars` on the handle. Every write
+  is paired: `--cm-readbar` and `aria-valuenow` always read the same
+  number, so the eye and assistive tech read one value. A page that
+  cannot scroll reads 0, not the 100 the in-content bar uses for a
+  source that holds everything on screen. The late-markup observer
+  arms on `.cm-readbar` as well.
+- `src/pages/[...family].astro` — the live bar at the top of the
+  showcase page (the one that fills as you read it) and a static
+  `cm-readbar--spec` specimen at 50/50 in the surface section.
+- `tests/measure-print-webkit.py` — `.cm-readbar` in the print chrome
+  list.
+
+Mutation-proven: the sweep kills the clamp, the fixed position, the
+z-index, the pointer transparency, the transform fill, the paint-on
+bind, the scroll and resize wiring, the double-bind, the print hide,
+the reduced-motion silence, the showcase bar and specimen, the specimen
+pair split, and the frozen-specifier bind.
+
 ## Unreleased - oem-portfolio: the <Project> adoption lands
 
 The entry below built the wrapper over two hand-typed copies: the

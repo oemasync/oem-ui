@@ -4119,6 +4119,44 @@ poster walls (PLAN-01 Gap 5). Three facts the component guarantees:
 `--artwork-shade` and `--artwork-fade` are the only knobs the overlay
 gradient exposes; the fade stops use `--shade` so they follow the theme.
 
+### Reading progress — `cm-readbar`
+
+The fixed sibling of the progress bar: the same fill, a line pinned to
+the top of the viewport instead of a bar in the content. A consumer
+writes it once in its layout; the runtime drives it from the document
+scroller:
+
+```html
+<div class="cm-readbar" role="progressbar" aria-valuenow="0"
+     aria-valuemin="0" aria-valuemax="100" aria-label="Reading position">
+  <span class="cm-readbar__fill"></span>
+</div>
+```
+
+Three facts the component guarantees:
+
+1. **The track is empty without JS.** `--cm-readbar` starts at 0, so a
+   page that loads with no runtime shows a bare line, not a full bar
+   claiming 100%. A page that cannot scroll reads 0 — there is no
+   distance to read — not the 100 the in-content bar uses for a source
+   that holds everything on screen.
+2. **It is chrome, not a control.** `pointer-events: none` keeps the
+   line from blocking the header it pierces, and `--z-readbar` (120)
+   sits above `--z-header` (100) and under popover (150) and toast
+   (200) chrome. `initReadbars` (in `init()`) pairs every write:
+   `--cm-readbar` and `aria-valuenow` always read the same number.
+3. **The fill is a transform, never a width.** `scaleX` on the custom
+   property rides the compositor, and the one reduced-motion guard
+   silences the transition. On paper the line is chrome, so it joins
+   the print hide list beside `[data-cm-progress]` — a fixed element
+   would otherwise repeat on every page.
+
+The bar finds itself by class, not by a selector attribute: there is
+exactly one scroller a pinned line can track (the document's), so there
+is nothing to resolve per bar. Late markup re-binds through
+`cliMono.init(root)` like everything else; the per-bar guard makes a
+double `init` a no-op.
+
 ### Saved views — filter chips and view toggles
 
 Library-scale lists (Library touches 10k entities, Decisions explodes) need

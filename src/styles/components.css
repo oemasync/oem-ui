@@ -2449,6 +2449,46 @@ button.cm-row:hover { background: var(--bg-2); }
 	transition: transform var(--cm-t) var(--cm-ease);
 }
 
+/* ---------- readbar: the reading-progress indicator ----------
+   The fixed sibling of `.cm-progress`. `cm-progress` is an inline bar a
+   page drops into its content beside a label; `.cm-readbar` is pinned to
+   the top of the viewport so it is the one element that stays put while a
+   long article scrolls. It is chrome, not a control: `pointer-events: none`
+   so the line never blocks the header it sits above, and a z-index that
+   pierces the header (`--z-readbar`, above `--z-header`) but stays under
+   popover and toast chrome.
+
+   Same fill trick as the progress bar - a transform the runtime drives,
+   never a width - so the two share the reduced-motion guard. The track is
+   EMPTY by default: `--cm-readbar` starts at 0, so a page that loads with
+   no runtime shows a bare line, not a full bar claiming 100%.
+
+   Logical insets, per the Direction baseline: the bar hugs the top edge
+   and both side edges, so it survives RTL with no mirroring. */
+.cm-readbar {
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline: 0;
+	height: var(--space-1);
+	z-index: var(--z-readbar);
+	pointer-events: none;
+}
+.cm-readbar__fill {
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: var(--ink);
+	transform-origin: start center;
+	transform: scaleX(calc(var(--cm-readbar, 0%) / 100));
+	transition: transform var(--cm-t) var(--cm-ease);
+}
+/* A specimen (or any frozen bar) keeps its authored value: the runtime
+   binds around this class, so the only thing the CSS must own is the
+   in-flow position - the value itself stays in the markup. */
+.cm-readbar--spec {
+	position: static;
+}
+
 /* ---------- alert ----------
    Status is carried by a glyph and a word, never by hue alone: colour-blind
    users and greyscale print both still read ● and ✕ correctly. */
@@ -11184,6 +11224,9 @@ input.cm-slider:disabled {
 	/* A progress fill sliding to its new value is motion too: under
 	   reduced motion the bar JUMPS to the value it is told. */
 	.cm-progress__fill { transition: none; }
+	/* Same for the reading-progress line: under reduced motion it JUMPS to
+	   the scroll fraction instead of easing to it. */
+	.cm-readbar__fill { transition: none; }
 	/* A server square brightening under the pointer is a fade, and a fade
 	   is motion. The state itself must still read - `transition: none`
 	   makes it APPEAR at its hovered colour instantly. */
@@ -11777,6 +11820,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-keys,
 	.cm-bell,
 	.cm-revert:not([data-cm-revert-resolved]),
+	.cm-readbar,
 	[data-cm-progress] {
 		display: none !important;
 	}

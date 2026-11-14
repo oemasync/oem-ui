@@ -54,7 +54,7 @@ CHROME = [
     '.cm-header', '.cm-nav-toggle', '.cm-nav-scrim', '.cm-drawer',
     '.cm-toast-region', '.cm-scroll-fade', '.cm-pager', '.cm-search',
     '.cm-copy', '.cm-codebar__float', '.cm-term__controls', '.cm-keys',
-    '.cm-bell', '.cm-revert', '[data-cm-progress]',
+    '.cm-bell', '.cm-revert', '[data-cm-progress]', '.cm-readbar',
 ]
 SCROLLERS = ['.cm-scrollarea', '.cm-scroller', '.cm-table-wrap',
              '.cm-code--scroll', '.cm-typeset-scroll', '.cm-term__body',

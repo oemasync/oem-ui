@@ -297,6 +297,8 @@
 	--z-drawer: 99;         /* a left/top/bottom drawer above its scrim */
 	--z-header: 100;        /* the sticky header: covers everything in a
 	                           scrollport except chrome that must pierce it */
+	--z-readbar: 120;       /* the reading-progress bar: a thin line pinned
+	                           above the header, under popover/toast chrome */
 	--z-popover: 150;       /* a popover menu / tooltip: transient chrome,
 	                           under the header so nav is never buried */
 	--z-toast: 200;         /* toasts: the highest transient, above all */

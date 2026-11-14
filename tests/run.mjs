@@ -2808,6 +2808,76 @@ check('the progress bar draws --cm-progress and pairs the aria value with it', (
 		'the reduced-motion guard must silence the progress fill transition');
 });
 
+check('the reading-progress bar is fixed, drives --cm-readbar, and pairs the aria value', () => {
+	// The fixed sibling of cm-progress. Four claims, each a real failure
+	// mode:
+	//
+	//  1. CAUSE: the fill is scaled by the custom property
+	//     (scaleX(calc(var(--cm-readbar) / 100))). Asserting only
+	//     `transform:` would pass a fill pinned at scaleX(1) - a bar that
+	//     always reads 100% while every other check stays green.
+	//  2. It is CHROME, not a control: pinned to the viewport
+	//     (position: fixed), on --z-readbar (above the header it pierces),
+	//     and pointer-transparent so it never blocks that header.
+	//  3. The token: --z-readbar is declared in the z-index scale, not a
+	//     typed number in the rule.
+	//  4. PAIRING + reduced motion: the static specimen's --cm-readbar and
+	//     aria-valuenow are the SAME number, and the ONE guard block
+	//     silences the fill's transition.
+	assert(/\.cm-readbar\s*\{[^}]*position:\s*fixed/.test(compSrc),
+		'cm-readbar must be fixed to the viewport; the in-flow bar is cm-progress');
+	assert(/\.cm-readbar\s*\{[^}]*z-index:\s*var\(--z-readbar\)/.test(compSrc),
+		'cm-readbar must sit on --z-readbar, not a typed z-index');
+	assert(/\.cm-readbar\s*\{[^}]*pointer-events:\s*none/.test(compSrc),
+		'cm-readbar is chrome, not a control: it must not block the header it pierces');
+	// Scope to the rule that OWNS the transform: a bare `transform:` read
+	// would match a fill pinned at scaleX(1).
+	assert(/\.cm-readbar__fill\s*\{[^}]*transform:\s*scaleX\(calc\(var\(--cm-readbar/.test(compSrc),
+		'the readbar fill must be driven by var(--cm-readbar) via scaleX, not a width');
+	// The token, in tokens.css, in the scale.
+	assert(/--z-readbar:\s*\d+/.test(tokenSrc),
+		'--z-readbar must be declared in the z-index scale');
+	// The showcase demonstrates it, with the aria pair.
+	const show = showcase.slice(showcase.indexOf('id="surface"'),
+		showcase.indexOf('id="selection"'));
+	const specimens = show.match(
+		/<div class="cm-readbar(?: cm-readbar--spec)?"[^>]*>/g) || [];
+	assert(specimens.length >= 1,
+		`the showcase must demonstrate cm-readbar; found ${specimens.length}`);
+	for (const bar of specimens) {
+		assert(/role="progressbar"/.test(bar),
+			`a readbar needs role="progressbar": ${bar}`);
+		assert(/aria-valuenow="\d+"/.test(bar),
+			`a readbar needs aria-valuenow: ${bar}`);
+		assert(/aria-valuemin="0"/.test(bar) && /aria-valuemax="100"/.test(bar),
+			`a readbar needs the 0..100 range: ${bar}`);
+		const prop = (bar.match(/--cm-readbar:\s*(\d+)%/) || [])[1];
+		const now = (bar.match(/aria-valuenow="(\d+)"/) || [])[1];
+		assert(prop !== undefined && now !== undefined,
+			`each readbar specimen must set both --cm-readbar and aria-valuenow: ${bar}`);
+		assert(prop === now,
+			`the readbar and its aria value must agree (${prop}% vs ${now})`);
+		// The --spec modifier is what keeps that authored value: the
+		// runtime binds around it. Without it the fill is overwritten
+		// with the document's 0% at bind time and the specimen lies.
+		assert(/class="cm-readbar cm-readbar--spec"/.test(bar),
+			`a static readbar specimen needs cm-readbar--spec, or the runtime owns its value: ${bar}`);
+	}
+	// The frozen modifier is real CSS: a specimen is in-flow, and the
+	// runtime must bind around exactly this class.
+	assert(/\.cm-readbar--spec\s*\{[^}]*position:\s*static/.test(compSrc),
+		'cm-readbar--spec must be static in the CSS, not only in an inline style');
+	assert(/querySelectorAll\(\s*'\.cm-readbar:not\(\.cm-readbar--spec\)'/.test(
+		read('src/js/cli-mono.js')),
+		'the runtime must bind around .cm-readbar--spec, or a frozen specimen loses its value');
+	// reduced motion: inside the ONE guard block, by name.
+	const guardAt = compSrc.indexOf('@media (prefers-reduced-motion: reduce)');
+	const close = compSrc.indexOf('\n}', guardAt);
+	const guard = compSrc.slice(guardAt, close);
+	assert(/\.cm-readbar__fill[^{}]*\{[^}]*transition:\s*none/.test(guard),
+		'the reduced-motion guard must silence the readbar fill transition');
+});
+
 /* ================= the design language is documented ================= */
 console.log('\ndesign language');
 
@@ -8816,7 +8886,7 @@ check('cm-progress: the runtime owns the bar it drives', () => {
 	assert(/\binitProgress\b/.test(js), 'initProgress not exposed on the handle');
 	// the late-markup observer is the SECOND owner of this component: a
 	// SPA that renders a bar after boot is never bound without it
-	assert(/\[data-cm-navmenu\], \[data-cm-progress\], \.cm-prose-table/.test(js),
+	assert(/\[data-cm-navmenu\], \[data-cm-progress\], \.cm-readbar, \.cm-prose-table/.test(js),
 		'the late-markup observer list omits [data-cm-progress]');
 	// ...and the served showcase must SHIP a bar for it to own. A runtime
 	// with no demonstration is a capability nobody can reach - the same
@@ -8965,6 +9035,174 @@ check('cm-progress: --cm-progress and aria-valuenow always read the same number'
 	ctx.window.cliMono.initProgress(doc);
 	assert(listeners.length === before,
 		`initProgress double-bound: ${before} listeners grew to ${listeners.length}`);
+});
+
+check('cm-readbar: the runtime owns the line it drives', () => {
+	const js = read('src/js/cli-mono.js');
+	assert(/function cmInitReadbars\(root\)/.test(js), 'cmInitReadbars missing');
+	assert(/cmInitReadbars\(root\);/.test(js),
+		'cmInitReadbars not registered in init, so a page that ships the line never gets it driven');
+	assert(/initReadbars: cmInitReadbars/.test(js),
+		'initReadbars not exposed on the handle, so a SPA cannot bind a late bar');
+	// ...and the served showcase must SHIP a live line for the runtime to
+	// own, for the same reason the progress check demands its bar.
+	const html = read('dist/index.html');
+	assert(/<div class="cm-readbar"[^>]*role="progressbar"/.test(html),
+		'the served showcase ships no live .cm-readbar line');
+});
+
+check('cm-readbar: --cm-readbar and aria-valuenow always read the same number', () => {
+	// The fixed sibling of the page-mode progress bar, driven by the
+	// document scroller. Same harness shape as the cm-progress test:
+	// run the real runtime in a VM over a fake document, drive the
+	// scroller, and check the pair at every position the arithmetic
+	// can get wrong - the two clamps, the zero-distance page, and the
+	// repaint after a resize.
+	const listeners = [];
+	const bar = {
+		attrs: {},
+		style: { setProperty: (k, v) => { bar.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { bar.attrs[k] = v; },
+		getAttribute(k) { return k in bar.attrs ? bar.attrs[k] : null; },
+		addEventListener() {}, removeEventListener() {},
+	};
+	// A frozen specimen: the runtime must bind AROUND it. If it does not,
+	// the specimen's authored 50% is overwritten with the document's 0%
+	// at bind time - MEASURED in WebKit: the spec read 0% after init,
+	// not the 50% it was told to show.
+	const spec = {
+		attrs: {},
+		classList: { contains: () => true },
+		style: { setProperty: (k, v) => { spec.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { spec.attrs[k] = v; },
+		getAttribute(k) { return k in spec.attrs ? spec.attrs[k] : null; },
+		addEventListener() {}, removeEventListener() {},
+	};
+	const docEl = {
+		scrollTop: 0, scrollHeight: 2000, clientHeight: 800,
+		attrs: {},
+		style: { setProperty() {}, removeProperty() {} },
+		classList: { add() {}, remove() {}, contains: () => false },
+		addEventListener: (t, fn) => { listeners.push(['doc:' + t, fn]); },
+		removeEventListener() {},
+		setAttribute(k, v) { this.attrs[k] = v; },
+		getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+	};
+	const doc = {
+		readyState: 'loading',   // no auto-init: the test calls the entrypoint
+		documentElement: docEl,
+		scrollingElement: docEl,
+		body: { style: {}, appendChild() {} },
+		// Answers the query the runtime ACTUALLY asks: the frozen spec is
+		// out of the live set. A mutant that drops the :not() gets both
+		// bars back, and the spec-write assertion below fails.
+		querySelectorAll: (s) => (s === '.cm-readbar' ? [bar, spec] :
+			(s === '.cm-readbar:not(.cm-readbar--spec)' ? [bar] : [])),
+		querySelector: () => null,
+		getElementById: () => null,
+		addEventListener() {},
+		createElement: () => ({ style: {}, classList: { add() {} },
+			setAttribute() {}, getAttribute() { return null; }, appendChild() {} }),
+	};
+	const ctx = {
+		document: doc,
+		window: {
+			addEventListener: (t, fn) => { listeners.push([t, fn]); },
+			scrollY: 0, innerHeight: 800, requestAnimationFrame() {},
+			matchMedia: () => ({ matches: false, addEventListener() {},
+				removeEventListener() {}, addListener() {}, removeListener() {} }),
+		},
+		localStorage: { getItem: () => null, setItem() {} },
+		navigator: {}, MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; },
+		ResizeObserver: function () { this.observe = () => {}; },
+		module: { exports: {} },
+	};
+	ctx.globalThis = ctx;
+	ctx.self = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+
+	assert(typeof ctx.window.cliMono.initReadbars === 'function',
+		'the handle does not expose initReadbars, so a SPA cannot bind a late bar');
+
+	ctx.window.cliMono.initReadbars(doc);
+
+	const prop = () => bar.attrs['prop:--cm-readbar'];
+	const aria = () => bar.attrs['aria-valuenow'];
+	// Each listener is driven ON its own event: a scroll paint must
+	// come from the scroll listener, so "no scroll listener" cannot be
+	// papered over by the resize one. The listener lives on window, not
+	// the scroller, for the WebKit reason above - so the type is the
+	// bare 'scroll' the window fake records.
+	const paintScroll = () => listeners.filter(([t]) => t === 'scroll')
+		.forEach(([, fn]) => fn());
+	const paintResize = () => listeners.filter(([t]) => t === 'resize')
+		.forEach(([, fn]) => fn());
+	const pair = (where) => assert(prop() === aria() + '%',
+		`the pair split at ${where}: --cm-readbar=${prop()} aria-valuenow=${aria()}`);
+
+	// The pair must be written at BIND time, before any scroll: a line
+	// that waits for the reader's first scroll ships an authored
+	// nothing, and the CSS default (0) is only a coincidence it should
+	// not rely on.
+	assert(prop() !== undefined && aria() !== undefined,
+		'nothing was written at bind time - the line never painted');
+	pair('bind time');
+	assert(prop() === '0%' && aria() === '0',
+		`top of page must read 0, got --cm-readbar=${prop()} aria=${aria()}`);
+
+	// A page that CANNOT scroll has no distance to divide by. An
+	// unguarded ratio writes NaN% into the property and NaN into aria.
+	// It reads 0, not the 100 the in-content bar uses for a source
+	// that holds everything on screen: there is no read to have.
+	docEl.scrollHeight = docEl.clientHeight;
+	paintScroll();
+	pair('a page that cannot scroll');
+	assert(prop() === '0%' && aria() === '0',
+		`a page that fits must read 0, not ${prop()} / ${aria()}`);
+
+	docEl.scrollHeight = 2000;
+	const scrollSpec = (px, want) => {
+		docEl.scrollTop = px;
+		paintScroll();
+		pair(`scrollTop=${px}`);
+		assert(prop() === want && aria() === String(parseInt(want, 10)),
+			`scrollTop=${px} must read ${want}, got --cm-readbar=${prop()} aria=${aria()}`);
+	};
+
+	// halfway through a 1200px range (2000 - 800)
+	scrollSpec(600, '50%');
+	scrollSpec(1200, '100%');
+	// WebKit's rubber-band takes scrollTop PAST the end: the line must
+	// clamp to 100, not report a read past the end of the page.
+	scrollSpec(1500, '100%');
+	// ...and NEGATIVE at the top of an overscrolled page: clamp to 0.
+	scrollSpec(-50, '0%');
+
+	// The resize listener is what re-paints after fonts/images move the
+	// page: without it the line stays where the first paint put it.
+	docEl.scrollHeight = 3000;
+	const resize = listeners.filter(([t]) => t === 'resize');
+	assert(resize.length > 0, 'no resize listener was bound');
+	docEl.scrollTop = 1100;   // 1100 / (3000-800) = 50%
+	paintResize();
+	pair('after a resize');
+	assert(prop() === '50%' && aria() === '50',
+		`resize must repaint, got --cm-readbar=${prop()} aria=${aria()}`);
+
+	// A second bind (SPA re-init) must not double-bind: two listeners
+	// means every scroll paints twice for the life of the page.
+	const before = listeners.length;
+	ctx.window.cliMono.initReadbars(doc);
+	assert(listeners.length === before,
+		`initReadbars double-bound: ${before} listeners grew to ${listeners.length}`);
+
+	// The frozen specimen was in the same bind pass and must have been
+	// skipped: no property, no attribute, nothing that moves its value.
+	assert(spec.attrs['prop:--cm-readbar'] === undefined,
+		`the frozen specimen was written to: ${spec.attrs['prop:--cm-readbar']}`);
+	assert(spec.attrs['aria-valuenow'] === undefined,
+		`a frozen specimen must not announce a value: aria=${spec.attrs['aria-valuenow']}`);
 });
 
 check('cm-progress: a container bar tracks its container, not the page', () => {
@@ -11536,10 +11774,48 @@ for (const [name, fn] of pending.splice(0)) {
 		// is the <Header COMPONENT call, not a literal <header>, so a source
 		// regex reads "the header is not first" on a perfectly correct page.
 		const page = read("src/pages/[...family].astro");
-		const body = page.match(/<body[^>]*>\s*\n?\s*<(\w+)/);
+		// Skip the Astro frontmatter: it is delimited by `---` lines, and
+		// searching the whole file finds the literal `<body>` string in a
+		// frontmatter comment instead of the tag.
+		const fm = page.indexOf('\n---\n');
+		const bodyPart = fm === -1 ? page : page.slice(fm + 5);
+		// Strip block comments: the readbar's own documentation comment
+		// sits above the header, and a regex that stops at `<!--` reads
+		// "no element found" on a correct page.
+		const stripped = bodyPart.replace(/<!--[\s\S]*?-->/g, "");
+		const body = stripped.match(/<body[^>]*>/);
 		if (!body) throw new Error("cannot find <body> in the showcase");
-		if (body[1] !== "Header")
-			throw new Error("<body> starts with <" + body[1] + ">, not <Header>");
+		const after = stripped.slice(body.index + body[0].length);
+		// The first TAG after <body>: walk the matches and take the one
+		// that captured a tag name. A comment-only match has no capture.
+		let firstTag = null;
+		for (const m of after.matchAll(/<!--[\s\S]*?-->|<(\w+)/g)) {
+			if (m[1]) { firstTag = m[1]; break; }
+		}
+		if (!firstTag) throw new Error("nothing after <body> in the showcase");
+		// The reading-progress line is the ONE thing that may sit above the
+		// header, and only because it is inert chrome: no transform, filter,
+		// will-change, overflow or containment on it or its fill, so it
+		// cannot create a containing block or a scroll box. Assert the
+		// properties rather than the presence: a whitelist that says "a
+		// div may be first" would pass a div that broke sticky.
+		if (firstTag !== "Header") {
+			if (firstTag !== "div" || !/class="cm-readbar"/.test(after.slice(0, 600)))
+				throw new Error("<body> starts with <" + firstTag + ">, not <Header>");
+			const rb = compSrc.match(/\.cm-readbar\s*\{([^}]*)\}/)[1];
+			const fill = compSrc.match(/\.cm-readbar__fill\s*\{([^}]*)\}/)[1];
+			// The fill is a scaleX on a custom property, which is a NO-OP
+			// transform: it scales nothing in the viewport, it only paints.
+			// Accept scaleX(var(--cm-readbar) and scaleX(0); reject any
+			// rotate/translate/filter on the bar itself.
+			const inert = /transform:\s*none|transform:\s*scaleX\(0\)|transform:\s*scaleX\(calc\(/;
+			for (const [name, decl] of [["cm-readbar", rb], ["cm-readbar__fill", fill]]) {
+				if (/transform:\s*[^n]/.test(decl) && !inert.test(decl))
+					throw new Error(`${name} must not transform the viewport; it is fixed chrome`);
+				if (/filter:|will-change:|overflow:\s*[^v]|contain:\s*content/.test(decl))
+					throw new Error(`${name} must not create a containing block: ${decl}`);
+			}
+		}
 		// The sticky header itself must not create a scroll container: the
 		// root clip is what keeps the tooltip from widening the document, and
 		// `hidden` there would unpin this bar. See base.css.
@@ -14686,7 +14962,7 @@ check('shadcn-parity: the navmenu indicator is measured, not authored', () => {
 	// (The list gained [data-cm-progress] between navmenu and the prose
 	// table when the reading-progress bar shipped, so this pins navmenu's
 	// presence and the list's tail rather than an adjacent pair.)
-	assert(js.includes("'[data-cm-navmenu], [data-cm-progress], .cm-prose-table'"),
+	assert(js.includes("'[data-cm-navmenu], [data-cm-progress], .cm-readbar, .cm-prose-table'"),
 		'the navmenu hook must arm the late-markup observer');
 	// One re-measure after load: the first pass runs before webfonts swap,
 	// and the sections this bar points at sit below 20,000px of specimens.
@@ -19384,7 +19660,7 @@ console.log('\nprint mode');
 	const HIDE = ['.cm-header', '.cm-nav-toggle', '.cm-nav-scrim', '.cm-drawer',
 		'.cm-toast-region', '.cm-scroll-fade', '.cm-pager', '.cm-search', '.cm-copy',
 		'.cm-codebar__float', '.cm-term__controls', '.cm-keys', '.cm-bell',
-		'.cm-revert:not([data-cm-revert-resolved])', '[data-cm-progress]'];
+		'.cm-revert:not([data-cm-revert-resolved])', '[data-cm-progress]', '.cm-readbar'];
 	check('print: chrome does not print, and each entry wins its specificity argument', () => {
 		const bad = [];
 		for (const sel of HIDE) {

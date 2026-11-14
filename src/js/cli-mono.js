@@ -4918,6 +4918,57 @@
 		}
 	}
 
+	/* ---------- reading progress ----------
+	   The fixed sibling of cmInitProgress. cm-progress fills a bar the page
+	   drops into its content; cm-readbar is a line pinned to the top of the
+	   viewport, so it is driven by the DOCUMENT scroller only - there is no
+	   per-bar selector to resolve. It is chrome, not a control, so the
+	   runtime finds it by class: a consumer writes the bar once in its layout
+	   and the fill tracks the read. No rAF coalescing, same as
+	   cmInitProgress: the write is one custom property and one attribute
+	   per event, and an unproven throttle is exactly the redundancy whose
+	   removal nobody could test. Reduced motion is handled in CSS (the fill
+	   transition is silenced), not here. */
+	function cmInitReadbars(root) {
+		// `.cm-readbar--spec` is a modifier the RUNTIME never sets: it
+		// freezes the bar at the authored value, for a specimen that
+		// shows a mid-read state on a page that has not scrolled. Bind
+		// around it, or the specimen's 50% is overwritten with the
+		// document's 0% before the reader can read it.
+		var bars = (root || document).querySelectorAll(
+			'.cm-readbar:not(.cm-readbar--spec)');
+		for (var i = 0; i < bars.length; i++) {
+			(function (bar) {
+				if (bar.__cmReadbarBound) return;
+				bar.__cmReadbarBound = true;
+				// The geometry is read from the document scroller, but the
+				// LISTENER goes on window, exactly like cmInitProgress's
+				// page mode: in WebKit the scroll event targets the
+				// document, not documentElement, so a listener on
+				// scrollingElement never fires in Safari.
+				var box = document.scrollingElement || document.documentElement;
+				function read() {
+					var max = (box.scrollHeight || 0) - (box.clientHeight || 0);
+					if (max <= 0) return 0;
+					var pct = ((box.scrollTop || 0) / max) * 100;
+					return pct < 0 ? 0 : pct > 100 ? 100 : pct;
+				}
+				function paint() {
+					var r = Math.round(read());
+					// --cm-readbar is a percent, like --cm-progress: the fill
+					// scales it (calc(var(--cm-readbar) / 100)) and the aria
+					// pair is the SAME number, so the eye and assistive tech
+					// read one value. A page that cannot scroll reads 0.
+					bar.style.setProperty('--cm-readbar', r + '%');
+					bar.setAttribute('aria-valuenow', String(r));
+				}
+				window.addEventListener('scroll', paint, { passive: true });
+				window.addEventListener('resize', paint, { passive: true });
+				paint();
+			})(bars[i]);
+		}
+	}
+
 	function cmInitQuiz(root) {
 		var forms = root.querySelectorAll('[data-cm-quiz]');
 		for (var q = 0; q < forms.length; q++) {
@@ -5191,6 +5242,7 @@
 		cmInitQuiz(root);
 		cmInitScroller(root);
 		cmInitProgress(root);
+		cmInitReadbars(root);
 		cmInitDatepickers(root);
 		cmInitSort(root);
 		cmInitTables(root);
@@ -5263,7 +5315,7 @@
 		return !!document.querySelector(
 			'[data-cm-header], [data-cm-nav-toggle], [data-cm-copy], ' +
 			'[data-cm-tabs], [data-cm-toast], [data-cm-quiz], [data-cm-scroller], ' +
-			'[data-cm-navmenu], [data-cm-progress], .cm-prose-table'
+			'[data-cm-navmenu], [data-cm-progress], .cm-readbar, .cm-prose-table'
 		);
 	}
 
@@ -6676,6 +6728,7 @@
 		dismissToast: dismiss,
 		chartMarkup: chartMarkup,
 		initProgress: cmInitProgress,
+		initReadbars: cmInitReadbars,
 		termAppend: function (text, level) {
 			// Find the first armed term body and append to it.
 			var body = document.querySelector('[data-cm-term-body]');
