@@ -4157,6 +4157,43 @@ is nothing to resolve per bar. Late markup re-binds through
 `cliMono.init(root)` like everything else; the per-bar guard makes a
 double `init` a no-op.
 
+### Relative time — `data-cm-ago`
+
+A post head's "3m ago" is a lie by the time the reader finishes the
+post. The library now owns the clock: a `<time>` with a parseable
+`datetime` binds at init, rewrites the visible text to a relative
+form, and keeps aging while the page is open.
+
+```html
+<time datetime="2026-11-15T05:00:00Z" data-cm-ago>3m ago</time>
+```
+
+Four facts the component guarantees:
+
+1. **The static text is the no-JS fallback.** Binding needs a
+   parseable `datetime`; a hand-written date without one is left
+   alone, not clobbered. A page with no runtime shows exactly what
+   the build wrote.
+2. **One clock, one interval.** Every bound time on the page repaints
+   from a single shared clock on a single module-level
+   `setInterval` (30s), armed once. A re-init never arms a second
+   one, and N posts is not N timers. The clock is injectable —
+   `cliMono.setAgoNow(fn)` — so a test pins "now" and asserts exact
+   strings without sleeping real seconds; `cliMono.agoRefresh(root)`
+   repaints on demand.
+3. **The full date rides on `title`.** Hover or focus answers "which
+   day exactly", which the relative form cannot. The title requests
+   `year: 'numeric'`, so every locale carries a 4-digit year — the
+   fingerprint that separates a full date from a relative label that
+   happens to contain a digit.
+4. **A future `datetime` keeps the absolute date.** A scheduled post
+   or a timezone edge is not "in 5m"; the `ts > now` branch prints
+   the date, never an inverted relative read.
+
+The ramp reads the LARGEST unit that still counts ≥ 1 — 40 days is
+"1 mo ago", never the "0 mo ago" a fixed-unit cascade would print.
+Sub-minute is seconds; under 60s reads "now".
+
 ### Saved views — filter chips and view toggles
 
 Library-scale lists (Library touches 10k entities, Decisions explodes) need

@@ -1,3 +1,39 @@
+## Unreleased - relative time: the `data-cm-ago` clock
+
+The post head has carried "3m ago" since day one, and every consumer
+re-implements the same formatter, the same 30-second refresh, and the
+same full-date-on-title affordance. The library now owns it: a
+`<time data-cm-ago>` with a parseable `datetime` binds at init, paints
+a relative label, and ages on one shared clock.
+
+- `src/js/cli-mono.js` — `cmAgoText` (the formatter: sub-minute seconds,
+  then m/h/d/w on a 2x-multiple ramp, with the week unit the naive ramp
+  skips), `cmAgoShort` (the full date for `title`, `year: 'numeric'`
+  so every locale carries it), and `cmInitAgo`. The clock is one
+  module-level variable with a `setAgoNow` swap, so a test pins "now"
+  and the runtime and the interval share the same reading. One
+  module-level `setInterval` for the whole page, armed once and guarded
+  so a re-init never arms a second one - N posts is not N timers. A
+  hand-written date with no parseable `datetime` is left alone, not
+  clobbered; a future `datetime` reads an absolute date, not "in an
+  hour".
+- `src/pages/[...family].astro` — the relative-time section in the
+  showcase: a seven-row specimen from "45s ago" to "3w ago" plus the
+  future branch.
+- `tests/run.mjs` — contract checks that bind two times against an
+  injected clock and assert the full ramp, the re-paint on refresh, and
+  the title. The title's fingerprint is a 4-digit YEAR, not "carries a
+  digit": the relative form "5m ago" contains a digit, so a title that
+  copies the visible text survives a `/\d/` check and answers neither
+  question.
+- `tests/mutate-ago.mjs` — the nine-mutant sweep: sub-minute floor,
+  week unit, future guard, title-vs-visible, hard-coded clock, timer
+  guard, one-shot interval, init wiring, specimen.
+- `tests/measure-ago-webkit.py` — the WebKit probe at 320/390/860/1280:
+  every row bound with a title, the clock live, and the paint following
+  the shared clock (swap it back 40 days and the bound label goes
+  absolute - the only reading a minifier cannot fake).
+
 ## Unreleased - choice family: the `cm-radio` row and its group
 
 `cm-check` answers "include this" (any number), `cm-switch` answers "this

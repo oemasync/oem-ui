@@ -1659,7 +1659,48 @@ Each row is one modifier against its own base, so the difference is the thing be
 					</div>
 				</div>
 
-				<h3 class="cm-kicker">media</h3>
+				<h3 class="cm-kicker">relative time</h3>
+			<p class="cm-head__sub">
+				<code>&lt;time data-cm-ago&gt;</code> reads its <code>datetime</code>
+				and rewrites the visible text to a relative form on one shared
+				clock, so the label keeps aging while the page is open. The
+				machine date stays in <code>datetime</code> and the full date
+				rides on <code>title</code>; a date in the future keeps its
+				absolute date instead of an inverted relative read. The first
+				row is seconds old at build, so it moves while you read the rest.
+			</p>
+			<div class="cm-stack">
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() - 5000).toISOString()}>now</time></span>
+					<span class="cm-row__desc">seconds at build &mdash; ages to minutes as you read</span>
+				</span></div>
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() - 5 * 60000).toISOString()}>5m ago</time></span>
+					<span class="cm-row__desc">five minutes</span>
+				</span></div>
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() - 3 * 3600000).toISOString()}>3h ago</time></span>
+					<span class="cm-row__desc">three hours</span>
+				</span></div>
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() - 2 * 86400000).toISOString()}>2d ago</time></span>
+					<span class="cm-row__desc">two days</span>
+				</span></div>
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() - 40 * 86400000).toISOString()}>1mo ago</time></span>
+					<span class="cm-row__desc">forty days</span>
+				</span></div>
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() - 730 * 86400000).toISOString()}>2y ago</time></span>
+					<span class="cm-row__desc">two years</span>
+				</span></div>
+				<div class="cm-row"><span class="cm-row__body">
+					<span class="cm-row__title"><time data-cm-ago datetime={new Date(Date.now() + 3600000).toISOString()}>in an hour</time></span>
+					<span class="cm-row__desc">a future date keeps its absolute date</span>
+				</span></div>
+			</div>
+
+			<h3 class="cm-kicker">media</h3>
 				<div class="cm-spec">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--media</code></span>

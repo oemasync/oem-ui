@@ -4969,6 +4969,95 @@
 		}
 	}
 
+	/* ---------- relative time: a <time data-cm-ago> that ages on its own ----------
+	   The source project (oem/log) renders post dates as a static string,
+	   so a label that read "3 days ago" is a lie by the time the reader
+	   finishes the post. This binds a <time data-cm-ago> to its datetime
+	   attribute, rewrites the visible text to a relative form, and
+	   re-renders on one shared clock so the label keeps aging while the
+	   page is open.
+
+	   The machine date stays in the datetime attribute and the full local
+	   date rides on title: hover or focus answers "which day exactly",
+	   which the relative form cannot. A date in the future (a timezone
+	   edge, a scheduled post) is not "in 5m", so it keeps the absolute
+	   date instead of an inverted relative read.
+
+	   The clock is injectable (setAgoNow) so a test pins "now" and asserts
+	   exact strings without sleeping real seconds - a wall-clock test is
+	   flaky by construction, and a flaky gate trains nobody. */
+	function cmAgoShort(ts) {
+		var dt = new Date(ts);
+		try {
+			return dt.toLocaleDateString(undefined, {
+				year: 'numeric', month: 'short', day: 'numeric',
+			});
+		} catch (e) {
+			return dt.toISOString().slice(0, 10);
+		}
+	}
+
+	function cmAgoText(ts, now) {
+		if (typeof now !== 'number') now = Date.now();
+		// The LARGEST unit that still reads >= 1: 40 days is "1 mo ago",
+		// never the "0 mo ago" a fixed-unit cascade would print. The year
+		// is 365.25 days and the month 30, so a 300-day gap is "10 mo ago"
+		// and a 730-day gap is "2 y ago", with no unit ever printing 0.
+		var units = [
+			[31557600000, 'y'], [2592000000, 'mo'], [604800000, 'w'],
+			[86400000, 'd'], [3600000, 'h'], [60000, 'm'], [1000, 's'],
+		];
+		if (ts > now) return cmAgoShort(ts);
+		var d = now - ts;
+		if (d < 10000) return 'now';
+		for (var i = 0; i < units.length; i++) {
+			var v = Math.floor(d / units[i][0]);
+			if (v >= 1) return v + units[i][1] + ' ago';
+		}
+		return 'now';
+	}
+
+	// The clock, module-level so the interval and any test share one.
+	// setAgoNow swaps it; the default is the wall clock.
+	var CM_AGNO_NOW = function () { return Date.now(); };
+
+	function cmAgoPaintAll(root) {
+		(root || document).querySelectorAll('time[data-cm-ago]').forEach(function (el) {
+			if (el.__cmAgoPaint) el.__cmAgoPaint();
+		});
+	}
+
+	// One interval for the whole page, armed once. A per-element timer is
+	// the exact redundancy this library deletes, and N posts would be N
+	// timers doing the same 30 seconds of work.
+	var CM_AGNO_TIMER = null;
+	function cmAgoArm() {
+		if (CM_AGNO_TIMER !== null) return;
+		CM_AGNO_TIMER = setInterval(function () {
+			cmAgoPaintAll(document);
+		}, 30000);
+	}
+
+	function cmInitAgo(root) {
+		var els = (root || document).querySelectorAll('time[data-cm-ago]');
+		var bound = 0;
+		for (var i = 0; i < els.length; i++) {
+			(function (el) {
+				if (el.__cmAgoPaint) return;
+				var ts = Date.parse(el.getAttribute('datetime'));
+				if (isNaN(ts)) return; // a hand-written date with no
+				// parseable datetime is left alone, not clobbered
+				el.__cmAgoPaint = function () {
+					el.textContent = cmAgoText(ts, CM_AGNO_NOW());
+					el.setAttribute('title', cmAgoShort(ts));
+				};
+				el.__cmAgoPaint();
+				bound++;
+			})(els[i]);
+		}
+		if (bound > 0) cmAgoArm();
+	}
+
 	function cmInitQuiz(root) {
 		var forms = root.querySelectorAll('[data-cm-quiz]');
 		for (var q = 0; q < forms.length; q++) {
@@ -5243,6 +5332,7 @@
 		cmInitScroller(root);
 		cmInitProgress(root);
 		cmInitReadbars(root);
+		cmInitAgo(root);
 		cmInitDatepickers(root);
 		cmInitSort(root);
 		cmInitTables(root);
@@ -6729,6 +6819,22 @@
 		chartMarkup: chartMarkup,
 		initProgress: cmInitProgress,
 		initReadbars: cmInitReadbars,
+		initAgo: cmInitAgo,
+		setAgoNow: function (fn) {
+			// Swap the clock. A test pins "now" and asserts exact strings
+			// without sleeping; the default is the wall clock.
+			if (typeof fn === 'function') CM_AGNO_NOW = fn;
+		},
+		agoRefresh: function (root) {
+			// Re-paint every bound <time> now. The shared interval calls
+			// this on its own; a consumer can call it after a change.
+			cmAgoPaintAll(root);
+		},
+		agoText: function (ts, now) {
+			// The pure relative form, exposed so a check pins the exact
+			// string a gap should read without a DOM.
+			return cmAgoText(ts, now);
+		},
 		termAppend: function (text, level) {
 			// Find the first armed term body and append to it.
 			var body = document.querySelector('[data-cm-term-body]');

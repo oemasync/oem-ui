@@ -2885,6 +2885,133 @@ check('the reading-progress bar is fixed, drives --cm-readbar, and pairs the ari
 		'the reduced-motion guard must silence the readbar fill transition');
 });
 
+/* ---------- relative time: <time data-cm-ago> that ages on its own ---------- */
+check('relative time: the pure form reads the largest unit that is >= 1', () => {
+	const ctx = {
+		// No global `document`: the module's browser auto-init is gated on
+		// typeof document !== 'undefined', so omitting it keeps the module
+		// from binding the whole page at load. Each check passes its own
+		// fake doc to initAgo/agoRefresh explicitly.
+		module: { exports: {} },
+		localStorage: { getItem: () => null },
+		window: { addEventListener: () => {} },
+		setTimeout, clearTimeout, Date,
+		setInterval: () => 0, clearInterval: () => {},
+	};
+	ctx.globalThis = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	const api = ctx.module.exports;
+	assert(typeof api.agoText === 'function', 'agoText must be exposed on the handle');
+	const now = Date.parse('2026-11-14T12:00:00Z');
+	const cases = [
+		[5000, 'now'],
+		[45 * 1000, '45s ago'],
+		[5 * 60000, '5m ago'],
+		[3 * 3600000, '3h ago'],
+		[2 * 86400000, '2d ago'],
+		[10 * 86400000, '1w ago'],
+		[40 * 86400000, '1mo ago'],
+		[60 * 86400000, '2mo ago'],
+		[400 * 86400000, '1y ago'],
+		[800 * 86400000, '2y ago'],
+	];
+	for (const [gap, want] of cases) {
+		const got = api.agoText(now - gap, now);
+		assert(got === want, `a gap of ${gap / 1000}s must read "${want}", got "${got}"`);
+	}
+});
+
+check('relative time: a future date keeps its absolute form, not an inverted read', () => {
+	const ctx = {
+		// No global `document`: the module's browser auto-init is gated on
+		// typeof document !== 'undefined', so omitting it keeps the module
+		// from binding the whole page at load. Each check passes its own
+		// fake doc to initAgo/agoRefresh explicitly.
+		module: { exports: {} },
+		localStorage: { getItem: () => null },
+		window: { addEventListener: () => {} },
+		setTimeout, clearTimeout, Date,
+		setInterval: () => 0, clearInterval: () => {},
+	};
+	ctx.globalThis = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	const api = ctx.module.exports;
+	const now = Date.parse('2026-11-14T12:00:00Z');
+	const fut = api.agoText(now + 3600000, now);
+	assert(!/ago/.test(fut), `a future date must not read "…ago": ${fut}`);
+	assert(/\d/.test(fut), `the absolute form must carry a digit: ${fut}`);
+});
+
+check('relative time: a <time data-cm-ago> binds, paints, and ages on one clock', () => {
+	const ctx = {
+		// No global `document`: the module's browser auto-init is gated on
+		// typeof document !== 'undefined', so omitting it keeps the module
+		// from binding the whole page at load. Each check passes its own
+		// fake doc to initAgo/agoRefresh explicitly.
+		module: { exports: {} },
+		localStorage: { getItem: () => null },
+		window: { addEventListener: () => {} },
+		setTimeout, clearTimeout, Date,
+		setInterval: () => 0, clearInterval: () => {},
+	};
+	ctx.globalThis = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	const api = ctx.module.exports;
+	const now = Date.parse('2026-11-14T12:00:00Z');
+	const mkTime = (ms) => {
+		const attrs = { datetime: new Date(ms).toISOString(), 'data-cm-ago': '' };
+		return {
+			attrs,
+			getAttribute: (k) => (k in attrs ? String(attrs[k]) : null),
+			setAttribute: (k, v) => { attrs[k] = String(v); },
+		};
+	};
+	const times = [mkTime(now - 5 * 60000), mkTime(now - 2 * 86400000)];
+	const doc = {
+		querySelectorAll: (sel) => (String(sel).includes('data-cm-ago') ? times : []),
+	};
+	let clock = now;
+	api.setAgoNow(() => clock);
+	api.initAgo(doc);
+	assert(times[0].textContent === '5m ago', `the bound time must read "5m ago", got "${times[0].textContent}"`);
+	// The full-date fingerprint is a 4-digit year, not "carries a digit":
+	// the relative form "5m ago" contains a digit, so a title that copies
+	// the visible text would survive a /\d/ check and still answer neither
+	// question. cmAgoShort requests year: 'numeric', so the year is present
+	// in every locale.
+	assert(/\d{4}/.test(String(times[0].attrs.title)), `title must carry the full date (a 4-digit year is the fingerprint): ${times[0].attrs.title}`);
+	assert(times[1].textContent === '2d ago', `the second time must read "2d ago", got "${times[1].textContent}"`);
+	// Age the clock; the shared refresh re-paints the SAME bound element.
+	clock = now + 10 * 60000;
+	api.agoRefresh(doc);
+	assert(times[0].textContent === '15m ago', `after the clock advances the label must age to "15m ago", got "${times[0].textContent}"`);
+	assert(times[1].textContent === '2d ago', `a day is still a day: "${times[1].textContent}"`);
+});
+
+check('relative time: one shared interval, armed once, and init wires it', () => {
+	const src = read('src/js/cli-mono.js');
+	assert(/if\s*\(CM_AGNO_TIMER\s*!==\s*null\)\s*return/.test(src),
+		'the ago timer must be guarded so a re-init never arms a second interval');
+	assert(/CM_AGNO_TIMER\s*=\s*setInterval\s*\(/.test(src),
+		'the ago timer must be one module-level setInterval, not a per-element one');
+	assert(/cmInitAgo\(root\);/.test(src),
+		'init must call cmInitAgo(root) so every consumer page gets it');
+});
+
+check('relative time: the showcase demonstrates a range of ages', () => {
+	const specimens = showcase.match(/<time[^>]*data-cm-ago[^>]*>/g) || [];
+	assert(specimens.length >= 5,
+		`the showcase must show >= 5 relative-time specimens, found ${specimens.length}`);
+	for (const s of specimens) {
+		assert(/datetime=/.test(s), `each specimen must carry a datetime the runtime reads: ${s}`);
+	}
+	assert(showcase.includes('Date.now() + '),
+		'the showcase must include a future-date specimen (the absolute-form branch)');
+});
+
 /* ================= the design language is documented ================= */
 console.log('\ndesign language');
 
