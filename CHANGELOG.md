@@ -1,3 +1,47 @@
+## Unreleased - method badge: `cm-method`
+
+An API docs row starts with its method, and the library had no mark for
+it. The one consumer that draws one - camofox-browser's `docs/api.html`
+- hand-rolls five raw hue tokens (`--method-get: #9B30FF`, `--method-post:
+#2563EB`, `--method-delete: #DC2626`, `--method-put: #D97706`,
+`--method-patch: #0891B2`) and themes them with a JS config object,
+because a hue is the first signal that comes to mind for a method. The
+library's answer is the system's fill vocabulary, not a colour: a hue is
+the one signal that fails in greyscale, so the five methods are five of
+the SAME marks the library already uses elsewhere.
+
+- `src/styles/components.css` — `.cm-method` and its five variants.
+  GET is the outline (a `var(--line)` border at rest), POST is the
+  filled mark (`var(--ink)` on `var(--bg)`), PUT is the raised step
+  (`var(--surface-raised)`), PATCH is the dashed border (the chip's
+  "set" signal), DELETE is the underlined mark at full ink (the
+  destructive pair `cm-status-code--err` already owns: `--err` is
+  `color: var(--ink)` under the line, so DELETE is the same pair). Mono, uppercase, floored at
+  `--min-font`. Inline mark, not a target, so it carries no tap floor -
+  the same exemption `cm-chip` documents.
+- `src/pages/[...family].astro` — the method section in the showcase,
+  demonstrating all five in both contexts a docs page uses: the rail
+  row (badge beside a path) and the endpoint title. The section sits in
+  the `surfaces` group; `SECTION_ORDER` and the rail group sizes are the
+  two ledgers that must stay in step, and both carry it.
+- `tests/run.mjs` — contract checks on the base rule's token
+  vocabulary (mono, uppercase, line border, ink-dim rest, the
+  `--min-font` floor, and no raw colour), on each variant's fill
+  (`POST` on `--ink` with `--bg` text, `PUT` on `--surface-raised`,
+  `PATCH` dashed, `DELETE` underlined at full ink - the WebKit probe
+  caught that the first cut left DELETE inheriting the resting
+  `ink-dim`, which is neither the rest mark nor the destructive one), and on the showcase
+  demonstrating all five beside a path. The raw-colour scan runs FIRST
+  on purpose: the value assertions each name a `var()`, so a raw grey
+  would fail them with their own messages and the discipline scan would
+  never be the assertion to fire.
+- `tests/mutate-method.mjs` — the eleven-mutant sweep with a pre-flight
+  that every pattern matches exactly once before anything is written.
+  Two patterns that looked unique were not: the `POST` ink triple also
+  matches `.cm-btn--primary`, and the `PUT` raised triple also matches
+  a sibling rule, so both carry the selector in the pattern. All eleven
+  are caught, none is a no-op.
+
 ## Unreleased - relative time: the `data-cm-ago` clock
 
 The post head has carried "3m ago" since day one, and every consumer

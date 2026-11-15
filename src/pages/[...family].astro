@@ -75,7 +75,7 @@ import Project from '../astro/Project.astro';
  */
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
-  'selection', 'stack', 'density', 'badge', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
+  'selection', 'stack', 'density', 'badge', 'method', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
 	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'video', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
@@ -95,7 +95,7 @@ const SECTION_ORDER = [
    "utilities". */
 const NAV_GROUP_SIZES: [string, number][] = [
 	["foundation", 5],
-	["surfaces", 7],
+	["surfaces", 8],
 	["tables", 6],
 	["panels", 6],
 	["content", 9],
@@ -2127,9 +2127,57 @@ The title row every page starts with: a square glyph, the name, one line of what
 																<span class="cm-bell__count" data-overflow>99+</span>
 															</button>
 															<span class="cm-head__sub">disconnected — dashed, capped count pins the width</span>
-														</div>
-													</section>
-						)}
+															</div>
+															</section>
+															<section id="method" class="cm-section cm-section--pad">
+						<SectionHead title="method badge">
+An API docs row starts with its method: a badge, then the path. The badge carries the system's fill vocabulary, not a hue - a hue is the one signal that fails in greyscale. Each of the five treatments is a signal the library already uses elsewhere: outline, filled, raised, dashed (the chip's "set"), underlined (the status code's destructive).
+						</SectionHead>
+						<div style="display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap">
+							<span class="cm-method cm-method--get">GET</span>
+							<span class="cm-method cm-method--post">POST</span>
+							<span class="cm-method cm-method--put">PUT</span>
+							<span class="cm-method cm-method--patch">PATCH</span>
+							<span class="cm-method cm-method--delete">DELETE</span>
+						</div>
+						<p class="cm-head__sub" style="margin-top:var(--space-4)">
+							Both contexts a docs page uses: the rail row, and the endpoint title beside the path it labels.
+						</p>
+						<div style="display:grid;gap:var(--space-4);grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));align-items:start">
+							<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+								<h3 class="cm-kicker">foxes</h3>
+								<ul style="list-style:none;padding:0;margin:0;display:grid;gap:var(--space-2)">
+									<li style="display:flex;gap:var(--space-2);align-items:center">
+										<span class="cm-method cm-method--get">GET</span>
+										<code>/v1/foxes</code>
+									</li>
+									<li style="display:flex;gap:var(--space-2);align-items:center">
+										<span class="cm-method cm-method--post">POST</span>
+										<code>/v1/foxes</code>
+									</li>
+									<li style="display:flex;gap:var(--space-2);align-items:center">
+										<span class="cm-method cm-method--patch">PATCH</span>
+										<code>/v1/foxes/&#123;id&#125;</code>
+									</li>
+									<li style="display:flex;gap:var(--space-2);align-items:center">
+										<span class="cm-method cm-method--delete">DELETE</span>
+										<code>/v1/foxes/&#123;id&#125;</code>
+									</li>
+								</ul>
+							</div>
+							<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+								<h3 class="cm-kicker">endpoint</h3>
+								<div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
+									<span class="cm-method cm-method--get">GET</span>
+									<code style="font-weight:600">/v1/foxes/&#123;id&#125;</code>
+								</div>
+								<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">
+									one fox by id - the badge reads at the path's own size, not the section's
+								</p>
+							</div>
+						</div>
+					</section>
+															)}
 												{shows('tables') && (
 												<section id="tblaction" class="cm-section cm-section--pad">
 							<SectionHead title="table action">

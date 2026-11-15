@@ -20597,3 +20597,85 @@ check('cm-video: the empty state keeps the frame, and the specimen demonstrates 
 	assert(shown, 'the README names .cm-video but shows no markup for it');
 	assert(section.includes('cm-video__empty'), 'the README does not document the empty state');
 });
+
+/* ================= method badge (cm-method) =================
+   The HTTP method badge for API docs rows. The treatment is the
+   system's fill vocabulary, not a hue: outline GET, filled POST,
+   raised PUT, dashed PATCH (the chip's "set"), underlined DELETE
+   (the status code's destructive). The mutation sweep is
+   tests/mutate-method.mjs; the WebKit geometry is measured against
+   the built showcase. */
+console.log('\nmethod badge');
+
+const methodRule = (sel) => {
+	const m = new RegExp('(^|[};])\\s*' + sel + '\\s*\\{([^}]*)\\}', 'm').exec(compSrc);
+	return m ? m[2] : null;
+};
+
+check('method badge: the base rule carries the token vocabulary', () => {
+	const b = methodRule('\\.cm-method');
+	assert(b, 'no .cm-method base rule in components.css');
+	// Scanned FIRST on purpose: the colour assertions below each name a
+	// var(), so a raw grey would fail them with their messages and this
+	// scan would never be the one to fire. Every assertion needs its own
+	// kill path, so the discipline check runs before the value checks.
+	assert(!/#[0-9a-fA-F]{3,8}\b/.test(b) && !/\brgb\(/.test(b),
+		'no raw colour in the method badge base: the fill vocabulary is the system\'s, not a palette');
+	assert(/font-family:\s*var\(--font-mono\)/.test(b),
+		'the method badge must take the --font-mono token, so the method reads as code, not prose');
+	assert(/text-transform:\s*uppercase/.test(b),
+		'the method badge must be uppercase - a lowercase method reads as a word, not a verb');
+	assert(/border:\s*1px solid var\(--line\)/.test(b),
+		'the GET outline must carry the line border - without it the resting method has no box at all');
+	assert(/color:\s*var\(--ink-dim\)/.test(b),
+		'the resting method must read at ink-dim, not full ink - it is a mark, not a headline');
+	assert(/font-size:\s*max\(var\(--min-font\),/.test(b),
+		'the badge must floor at --min-font, or the label falls under the legibility floor on a phone');
+});
+
+check('method badge: POST fills on --ink, with the page background as its text', () => {
+	const b = methodRule('\\.cm-method--post');
+	assert(b, 'no .cm-method--post rule');
+	assert(/background:\s*var\(--ink\)/.test(b),
+		'POST must fill on --ink - the primary action is the system\'s one filled mark');
+	assert(/color:\s*var\(--bg\)/.test(b),
+		'the filled POST must read the page background as its text, or the fill is ink on ink');
+});
+
+check('method badge: PUT raises on --surface-raised', () => {
+	const b = methodRule('\\.cm-method--put');
+	assert(b, 'no .cm-method--put rule');
+	assert(/background:\s*var\(--surface-raised\)/.test(b),
+		'PUT must sit on the raised surface - the middle step between the outline and the fill');
+});
+
+check('method badge: PATCH uses the chip\'s dashed set signal', () => {
+	const b = methodRule('\\.cm-method--patch');
+	assert(b, 'no .cm-method--patch rule');
+	assert(/border-style:\s*dashed/.test(b),
+		'PATCH must carry the dashed border - the system\'s "set" signal, the one cm-chip--set already uses');
+});
+
+check('method badge: DELETE carries the destructive underline', () => {
+	const r = methodRule('\\.cm-method--delete');
+	assert(r, 'no .cm-method--delete rule in components.css');
+	assert(/text-decoration:\s*underline/.test(r),
+		'DELETE must carry the underline - the destructive signal the status code already owns');
+	assert(/color:\s*var\(--ink\)/.test(r),
+		'DELETE must read at full ink with the underline - the cm-status-code--err pair, not the resting dim');
+});
+
+check('method badge: the showcase demonstrates all five, in both contexts', () => {
+	const start = showcase.indexOf('<section id="method"');
+	assert(start !== -1, 'no #method section in the showcase');
+	const end = showcase.indexOf('<section id="', start + 1);
+	const sec = showcase.slice(start, end === -1 ? start + 8000 : end);
+	for (const v of ['get', 'post', 'put', 'patch', 'delete']) {
+		assert(sec.includes('cm-method--' + v), `no cm-method--${v} specimen in the method section`);
+	}
+	const railRows = (sec.match(/cm-method--\w+">[A-Z]+<\/span>\s*<code>/g) || []).length;
+	assert(railRows >= 3,
+		'the method section never shows the badge beside a path, so the rail-row context is unproven');
+	assert(showcaseIndex.includes('method'),
+		'the method section is not in the section index, so the rail cannot reach it');
+});

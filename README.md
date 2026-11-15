@@ -3666,6 +3666,42 @@ something that is not a control look tappable. When the chip *is* the
 target, use `.cm-chip--action`, which carries `min-height: var(--tap)` from
 the token.
 
+## Method badge
+
+`.cm-method` is the HTTP method at the head of an endpoint row: a badge,
+then the path. The library is greyscale and a hue is the one signal that
+fails in greyscale, so the badge carries the system's FILL vocabulary
+instead of a colour. The hand-drawn version of this mark (camofox-browser's
+`docs/api.html`) reaches for five hue tokens, one per method, and themes
+them with a JS config object. That is a palette, and a palette is a second
+design system.
+
+The five treatments are five of the same marks the library already uses
+elsewhere, so a reader who knows the system reads the badge without a
+legend:
+
+```html
+<span class="cm-method cm-method--get">GET</span>
+<span class="cm-method cm-method--post">POST</span>
+<span class="cm-method cm-method--put">PUT</span>
+<span class="cm-method cm-method--patch">PATCH</span>
+<span class="cm-method cm-method--delete">DELETE</span>
+```
+
+| method | treatment | the signal it reuses |
+| --- | --- | --- |
+| `GET` | outline, `var(--line)` border, `ink-dim` text | the base: a mark at rest |
+| `POST` | filled, `var(--ink)` on `var(--bg)` | the primary action |
+| `PUT` | raised, `var(--surface-raised)` fill | the "inside a surface" step |
+| `PATCH` | dashed border | the chip's "set" signal |
+| `DELETE` | underlined, full `var(--ink)` | the `cm-status-code--err` destructive pair |
+
+Mono, uppercase, floored at `--min-font`. Inline mark, not a target, so it
+carries no tap floor, the same exemption the chip base documents. Both
+contexts a docs page uses are demonstrated in the showcase: the rail row
+(badge beside a path) and the endpoint title (badge beside the path it
+labels, at the path's own size).
+
 ## Icon buttons
 
 `.cm-icon-btn` is a square button that holds one glyph. On a phone it is
