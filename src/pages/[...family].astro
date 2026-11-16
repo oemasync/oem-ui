@@ -75,7 +75,7 @@ import Project from '../astro/Project.astro';
  */
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
-  'selection', 'stack', 'density', 'badge', 'method', 'param', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
+  'selection', 'stack', 'density', 'badge', 'method', 'endpoint', 'param', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
 	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'video', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
@@ -95,7 +95,7 @@ const SECTION_ORDER = [
    "utilities". */
 const NAV_GROUP_SIZES: [string, number][] = [
 	["foundation", 5],
-	["surfaces", 9],
+	["surfaces", 10],
 	["tables", 6],
 	["panels", 6],
 	["content", 9],
@@ -2174,6 +2174,45 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 								<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">
 									one fox by id - the badge reads at the path's own size, not the section's
 									</p>
+									</div>
+									</div>
+									</section>
+									<section id="endpoint" class="cm-section cm-section--pad">
+									<SectionHead title="endpoint row">
+									The top of an API docs entry, and the line the rest of the family documents: the method badge, then the path it labels. The badge is the method badge (five treatments, no hue); the path is monospace at its own weight, and the path-parameter tokens inside it are the slots the reader fills. Those tokens sit one step down from the path's own ink - the same step the parameter row's type carries - so a path reads as literals with the parts to substitute marked, and each slot links to the row below that documents it. The row is text, not a target, so it carries no tap floor.
+									</SectionHead>
+									<div style="display:grid;gap:var(--space-4);grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));align-items:start">
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">list</h3>
+									<div class="cm-endpoint">
+									<span class="cm-method cm-method--get">GET</span>
+									<span class="cm-endpoint__path">/v1/foxes</span>
+									</div>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">no parameter - the path is all literal</p>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">by id</h3>
+									<div class="cm-endpoint">
+									<span class="cm-method cm-method--get">GET</span>
+									<span class="cm-endpoint__path">/v1/foxes/<span class="cm-endpoint__param">&#123;id&#125;</span></span>
+									</div>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the id slot is dimmed - the part to substitute</p>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">long path</h3>
+									<div class="cm-endpoint">
+									<span class="cm-method cm-method--post">POST</span>
+									<span class="cm-endpoint__path">/v1/organizations/<span class="cm-endpoint__param">&#123;orgId&#125;</span>/projects/<span class="cm-endpoint__param">&#123;projectId&#125;</span>/deploys</span>
+									</div>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">breaks inside its own box on a phone - the badge stays on the first line</p>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">deletion</h3>
+									<div class="cm-endpoint">
+									<span class="cm-method cm-method--delete">DELETE</span>
+									<span class="cm-endpoint__path">/v1/foxes/<span class="cm-endpoint__param">&#123;id&#125;</span></span>
+									</div>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the method's destructive treatment, the path's own slot</p>
 									</div>
 									</div>
 									</section>

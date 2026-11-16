@@ -3078,6 +3078,48 @@ button.cm-row:hover { background: var(--bg-2); }
 	text-underline-offset: 0.2em;
 }
 
+/* ---------- endpoint row (cm-endpoint) ----------
+   The top of an API docs entry: the method badge, then the path it
+   documents. The badge is the existing cm-method (the signal - five
+   treatments, no hue); the path is monospace at the path's own weight,
+   and the {param} tokens inside it are the slots the reader fills.
+   Those tokens sit one step down from the path's own ink - ink-dim,
+   the same step the parameter row's type uses - so a path reads as
+   literals with the parts to substitute marked, without a second,
+   hue-tinted scale. It is the path's counterpart to the cm-param rows
+   below: the slot here is what the row there documents.
+
+   Inline, not a target: the same exemption the method badge owns
+   (WCAG 2.5.8) - the box is constrained by the line-height of the path
+   text around it, so there is no tap floor. The row centers the badge
+   on the path's own line, the way the method section composes it; a
+   long path breaks inside its own item (min-width: 0, overflow-wrap)
+   so the row never overruns the viewport on a phone. */
+.cm-endpoint {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.cm-endpoint__path {
+	font-family: var(--font-mono);
+	font-weight: 600;
+	color: var(--ink);
+	/* A path is one token: no spaces to break on, so a long endpoint
+	   overruns the viewport on a phone unless the item may shrink
+	   below its text and the token may break in it. break-word, not
+	   anywhere - anywhere splits identifiers mid-token AND shrinks the
+	   min-content sizing, the same defect the tag and the data-table
+	   URL cells were written to avoid. */
+	min-width: 0;
+	overflow-wrap: break-word;
+}
+.cm-endpoint__param {
+	/* The slot, not the literal: one step down from the path's own
+	   ink so the {param} reads as the thing to substitute - the mark
+	   the parameter row's type already carries, not a new colour. */
+	color: var(--ink-dim);
+}
+
 /* ---------- parameter row (cm-param) ----------
    The row every API docs page draws under an endpoint: the name,
    the type, where the parameter lives, whether it is required, and

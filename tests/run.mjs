@@ -20680,6 +20680,76 @@ check('method badge: the showcase demonstrates all five, in both contexts', () =
 		'the method section is not in the section index, so the rail cannot reach it');
 });
 
+/* ================= endpoint row (cm-endpoint) =================
+   The top of an API docs entry: the method badge, then the path.
+   The badge is the existing cm-method; the path is mono at full ink,
+   and the {param} tokens are the slots the reader fills - one step
+   down from the path's own ink. The mutation sweep is
+   tests/mutate-endpoint.mjs; the WebKit geometry (a long path breaking
+   inside its own item, the badge centered on the path's line) is
+   measured against the built showcase. */
+console.log('\nendpoint row');
+
+const endpointRule = (sel) => {
+	const m = new RegExp('(^|[};])\\s*' + sel + '\\s*\\{([^}]*)\\}', 'm').exec(compSrc);
+	return m ? m[2] : null;
+};
+
+check('endpoint row: the base rule is a centered flex on the system gap', () => {
+	const b = endpointRule('\\.cm-endpoint');
+	assert(b, 'no .cm-endpoint base rule in components.css');
+	// Scanned FIRST, like the method badge: a raw grey here would be a
+	// second palette, and the discipline check runs before any value.
+	assert(!/#[0-9a-fA-F]{3,8}\b/.test(b) && !/\brgb\(/.test(b),
+		'no raw colour in the endpoint row base: the badge and the path own their own colours');
+	assert(/display:\s*flex/.test(b),
+		'the endpoint row must be flex - the badge and the path sit side by side, not on separate lines');
+	assert(/align-items:\s*center/.test(b),
+		'the endpoint row must center the badge on the path\'s line - the way the method section composes it');
+	assert(/gap:\s*var\(--space-2\)/.test(b),
+		'the endpoint row must keep the system gap between the badge and the path - not a hand-tuned px');
+});
+
+check('endpoint row: the path is mono at full ink, able to break', () => {
+	const p = endpointRule('\\.cm-endpoint__path');
+	assert(p, 'no .cm-endpoint__path rule');
+	assert(!/#[0-9a-fA-F]{3,8}\b/.test(p) && !/\brgb\(/.test(p),
+		'no raw colour in the endpoint path: the ink is the system token, not a palette');
+	assert(/font-family:\s*var\(--font-mono\)/.test(p),
+		'the endpoint path must take the --font-mono token - a path is an identifier, not prose');
+	assert(/font-weight:\s*600/.test(p),
+		'the endpoint path must read at 600 - the identifier\'s own weight, not the plain path');
+	assert(/color:\s*var\(--ink\)/.test(p),
+		'the endpoint path must read at full ink - it is the thing the reader is looking for');
+	assert(/min-width:\s*0/.test(p),
+		'the path needs min-width: 0, or the flex item will not shrink below its text and a long endpoint overruns the viewport');
+	assert(/overflow-wrap:\s*break-word/.test(p),
+		'the path must be able to break (break-word, not anywhere - anywhere splits identifiers mid-token and starves the column) - a path is one token with no spaces, so without a break a long endpoint overruns a phone');
+});
+
+check('endpoint row: the param token is the slot, one step down from the path', () => {
+	const s = endpointRule('\\.cm-endpoint__param');
+	assert(s, 'no .cm-endpoint__param rule');
+	assert(/color:\s*var\(--ink-dim\)/.test(s),
+		'the endpoint param token must read at ink-dim - the slot, not the literal - the same step the parameter row\'s type carries');
+});
+
+check('endpoint row: the showcase demonstrates the slot and both ends', () => {
+	const start = showcase.indexOf('<section id="endpoint"');
+	assert(start !== -1, 'no #endpoint section in the showcase');
+	const end = showcase.indexOf('<section id="', start + 1);
+	const sec = showcase.slice(start, end === -1 ? start + 8000 : end);
+	assert(/cm-endpoint__param/.test(sec),
+		'the endpoint section never shows the path param token, so the slot signal is unproven');
+	const slots = (sec.match(/cm-endpoint__param/g) || []).length;
+	assert(slots >= 3,
+		'the endpoint section shows fewer than three path param tokens - the slot must be demonstrated across more than one path');
+	assert(sec.includes('cm-method--get') && sec.includes('cm-method--delete'),
+		'the endpoint section shows only one method - the badge must be demonstrated beside the path in at least two treatments');
+	assert(showcaseIndex.includes('endpoint'),
+		'the endpoint section is not in the section index, so the rail cannot reach it');
+});
+
 /* ================= parameter row (cm-param) =================
    The API docs parameter row: name, type, in-badge, required mark,
    description. The treatment is the system's existing vocabulary -

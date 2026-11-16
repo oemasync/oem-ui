@@ -1,3 +1,47 @@
+## Unreleased - endpoint row: the `cm-endpoint` line
+
+The top of an API docs entry: the method badge, then the path it
+documents. The library already owned the badge (`cm-method`, five
+treatments, no hue) and the parameter row beneath it (`cm-param`),
+but the line that joins them - the endpoint itself - was the part
+every docs page, including the showcase, still hand-rolled: a bare
+`<code>` path with the `{id}` slot unmarked. The new row owns that
+composition and adds the one signal the hand-rolled version lacked:
+the path-parameter token, set one step down from the path's own ink
+so the slots the reader fills read as slots, and each links to the
+`cm-param` row below that documents it. The path breaks with
+`break-word`, not `anywhere` - anywhere splits identifiers mid-token
+and starves the column, the same defect the tag and the data-table
+URL cells were written to avoid. The row is text, not a target, so it
+carries no tap floor.
+
+- `src/styles/components.css` — `.cm-endpoint` (a centered flex row
+  on `var(--space-2)`), `.cm-endpoint__path` (mono, 600, full ink,
+  `min-width: 0` + `overflow-wrap: break-word`, so a long endpoint
+  breaks inside its own item on a phone) and `.cm-endpoint__param`
+  (the slot at `--ink-dim`, one step down from the path).
+- `src/pages/[...family].astro` — the endpoint section between the
+  method and parameter sections: a literal path, a by-id path with
+  its slot dimmed, a long path with two slots that wraps on a phone,
+  and a deletion carrying the method's destructive treatment.
+  `SECTION_ORDER` and the rail group sizes carry it (surfaces 9 to
+  10).
+- `tests/run.mjs` — four contract checks: the base rule is a centered
+  flex on the system gap with no raw colour, the path is mono at 600
+  full ink with `min-width: 0` and `break-word` (not `anywhere`), the
+  param token is `--ink-dim`, and the showcase demonstrates the slot
+  across multiple paths and at least two method treatments.
+- `tests/mutate-endpoint.mjs` — the ten-mutant sweep (mono token,
+  plain weight, dim-for-ink, no-break, no-shrink, slot-for-ink, no
+  centre, no gap, raw colour, section removal) with the pre-flight
+  that every pattern matches exactly once.
+- `tests/measure-endpoint-webkit.py` — the WebKit probe at
+  320/390/860/1280 in both themes: the badge centers on the path's
+  own line, the path slot computes to the active theme's
+  `--ink-dim` while the path computes to `--ink`, a long path breaks
+  inside its own item without the document growing sideways, and the
+  two theme runs are proven different by attribute and token.
+
 ## Unreleased - parameter row: the `cm-param` line
 
 An API docs page draws one row per parameter under the endpoint it
