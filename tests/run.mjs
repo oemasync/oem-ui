@@ -20679,3 +20679,108 @@ check('method badge: the showcase demonstrates all five, in both contexts', () =
 	assert(showcaseIndex.includes('method'),
 		'the method section is not in the section index, so the rail cannot reach it');
 });
+
+/* ================= parameter row (cm-param) =================
+   The API docs parameter row: name, type, in-badge, required mark,
+   description. The treatment is the system's existing vocabulary -
+   the form's faint required asterisk, the base method's outline for
+   the in badge, the row's own hairline separator - not a new scale.
+   The mutation sweep is tests/mutate-param.mjs; the WebKit geometry
+   (the description wrapping by height, not by splitting the head) is
+   measured against the built showcase. */
+console.log('\nparameter row');
+
+const paramRule = (sel) => {
+	const m = new RegExp('(^|[};])\\s*' + sel + '\\s*\\{([^}]*)\\}', 'm').exec(compSrc);
+	return m ? m[2] : null;
+};
+
+check('parameter row: the base rule is a wrapping row on the system hairline', () => {
+	const b = paramRule('\\.cm-param');
+	assert(b, 'no .cm-param base rule in components.css');
+	// Scanned FIRST on purpose, like the method badge check: the value
+	// assertions below each name a var(), so a raw grey would fail them
+	// with their own messages and this scan would never be the one to
+	// fire.
+	assert(!/#[0-9a-fA-F]{3,8}\b/.test(b) && !/\brgb\(/.test(b),
+		'no raw colour in the parameter row base: the separator is the system line, not a palette');
+	assert(/flex-wrap:\s*wrap/.test(b),
+		'the parameter row must wrap - on a phone the description falls to its own line, and a row that cannot wrap overruns the viewport');
+	assert(/align-items:\s*baseline/.test(b),
+		'the row must align on the text baseline, or the name, type and description read as three unrelated lines');
+	assert(/border-bottom:\s*1px solid var\(--line\)/.test(b),
+		'the separator is the system hairline - a parameter row without its rule is a paragraph, not a row');
+	const last = paramRule('\\.cm-param:last-child');
+	assert(last && /border-bottom:\s*0/.test(last),
+		'the last row\'s rule separates nothing - the :last-child removal the cm-row doctrine owns');
+});
+
+check('parameter row: the name is mono at full ink; the required mark is the form\'s faint asterisk', () => {
+	const n = paramRule('\\.cm-param__name');
+	assert(n, 'no .cm-param__name rule');
+	assert(/font-family:\s*var\(--font-mono\)/.test(n),
+		'the parameter name must take the --font-mono token - it is an identifier, not prose');
+	assert(/color:\s*var\(--ink\)/.test(n),
+		'the parameter name must read at full ink - it is the thing the reader is looking for, not context');
+	const r = paramRule('\\.cm-param__req');
+	assert(r, 'no .cm-param__req rule');
+	assert(/color:\s*var\(--ink-faint\)/.test(r),
+		'the required mark must read at ink-faint - the field label\'s own mark, one required signal across the system');
+});
+
+check('parameter row: the type is mono at ink-dim', () => {
+	const t = paramRule('\\.cm-param__type');
+	assert(t, 'no .cm-param__type rule');
+	assert(/font-family:\s*var\(--font-mono\)/.test(t),
+		'the parameter type must take the --font-mono token - a type name is code, not a word');
+	assert(/color:\s*var\(--ink-dim\)/.test(t),
+		'the type must read at ink-dim - it is the name\'s context, not its rival');
+});
+
+check('parameter row: the in badge is the outline chip, floored at min-font', () => {
+	const i = paramRule('\\.cm-param__in');
+	assert(i, 'no .cm-param__in rule');
+	assert(!/#[0-9a-fA-F]{3,8}\b/.test(i) && !/\brgb\(/.test(i),
+		'no raw colour in the in badge: one location mark, the base method\'s box, not a per-location palette');
+	assert(/border:\s*1px solid var\(--line\)/.test(i),
+		'the in badge must carry the line border - the outline treatment the four locations share');
+	assert(/font-family:\s*var\(--font-mono\)/.test(i),
+		'the in badge must take the --font-mono token - query, path, body and header are identifiers');
+	assert(/text-transform:\s*uppercase/.test(i),
+		'the in badge must be uppercase - a lowercase location reads as a word, not a mark');
+	assert(/font-size:\s*max\(var\(--min-font\),/.test(i),
+		'the in badge must floor at --min-font, or the label falls under the legibility floor on a phone');
+});
+
+check('parameter row: the description takes the rest of the line', () => {
+	const d = paramRule('\\.cm-param__desc');
+	assert(d, 'no .cm-param__desc rule');
+	assert(/flex:\s*1 1 10rem/.test(d),
+		'the description must carry a 10rem flex basis - wide enough to share the line on desktop, narrow enough to fall to its own line on a phone');
+	assert(/min-width:\s*0/.test(d),
+		'the description needs min-width: 0, or the flex item will not shrink below its text and the row overruns the viewport');
+	assert(/color:\s*var\(--ink-dim\)/.test(d),
+		'the description must read at ink-dim - it explains the parameter, it is not the parameter');
+});
+
+check('parameter row: the showcase demonstrates every part, in all four locations', () => {
+	const start = showcase.indexOf('<section id="param"');
+	assert(start !== -1, 'no #param section in the showcase');
+	const end = showcase.indexOf('<section id="', start + 1);
+	const sec = showcase.slice(start, end === -1 ? start + 8000 : end);
+	for (const part of ['name', 'type', 'in', 'desc', 'req']) {
+		assert(sec.includes(`cm-param__${part}`), `no cm-param__${part} specimen in the parameter section`);
+	}
+	for (const loc of ['query', 'path', 'body', 'header']) {
+		assert(new RegExp(`cm-param__in">${loc}<`).test(sec),
+			`no ${loc} specimen in the parameter section - the in badge is demonstrated in only three of the four locations`);
+	}
+	const reqRows = (sec.match(/cm-param__req">\*</g) || []).length;
+	assert(reqRows >= 2,
+		'the required specimen appears once or never - optional and required must both be demonstrated');
+	const optional = sec.includes('cm-param__name">limit</span>');
+	assert(optional,
+		'the optional specimen (limit, no asterisk) is missing - the row without its required mark is unproven');
+	assert(showcaseIndex.includes('param'),
+		'the parameter section is not in the section index, so the rail cannot reach it');
+});

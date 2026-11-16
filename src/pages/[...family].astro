@@ -75,7 +75,7 @@ import Project from '../astro/Project.astro';
  */
 const SECTION_ORDER = [
 	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
-  'selection', 'stack', 'density', 'badge', 'method', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
+  'selection', 'stack', 'density', 'badge', 'method', 'param', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
 	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'video', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
 ] as const;
@@ -95,7 +95,7 @@ const SECTION_ORDER = [
    "utilities". */
 const NAV_GROUP_SIZES: [string, number][] = [
 	["foundation", 5],
-	["surfaces", 8],
+	["surfaces", 9],
 	["tables", 6],
 	["panels", 6],
 	["content", 9],
@@ -2173,12 +2173,84 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 								</div>
 								<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">
 									one fox by id - the badge reads at the path's own size, not the section's
-								</p>
-							</div>
-						</div>
-					</section>
-															)}
-												{shows('tables') && (
+									</p>
+									</div>
+									</div>
+									</section>
+									<section id="param" class="cm-section cm-section--pad">
+									<SectionHead title="parameter row">
+									An API docs page draws one row per parameter under the endpoint it documents: the name, the type, where the parameter lives, whether it is required, and what it means. The required mark is the same faint <code>*</code> the form label owns (<code>.cm-field__req</code>), so a docs reader sees one required signal across the system; the in badge is the outline - a location, not a severity, so all four share the base method's box. The row is text, not a target, so it carries no tap floor.
+									</SectionHead>
+									<div style="display:grid;gap:var(--space-4);grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));align-items:start">
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">list</h3>
+									<div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-2)">
+									<span class="cm-method cm-method--get">GET</span>
+									<code style="font-weight:600">/v1/foxes</code>
+									</div>
+									<div class="cm-param">
+									<span class="cm-param__name">limit</span>
+									<span class="cm-param__type">number</span>
+									<span class="cm-param__in">query</span>
+									<span class="cm-param__desc">Page size, max 100.</span>
+									</div>
+									<div class="cm-param">
+									<span class="cm-param__name">cursor</span>
+									<span class="cm-param__type">string</span>
+									<span class="cm-param__in">query</span>
+									<span class="cm-param__desc">Opaque token from the previous page's response.</span>
+									</div>
+									<div class="cm-param">
+									<span class="cm-param__name">x-trace-id</span>
+									<span class="cm-param__type">string</span>
+									<span class="cm-param__in">header</span>
+									<span class="cm-param__desc">Trace the request through the fleet.</span>
+									</div>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">one fox</h3>
+									<div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-2)">
+									<span class="cm-method cm-method--get">GET</span>
+									<code style="font-weight:600">/v1/foxes/&#123;id&#125;</code>
+									</div>
+									<div class="cm-param">
+									<span class="cm-param__name">id<span class="cm-param__req">*</span></span>
+									<span class="cm-param__type">string</span>
+									<span class="cm-param__in">path</span>
+									<span class="cm-param__desc">The fox's id.</span>
+									</div>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">create</h3>
+									<div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-2)">
+									<span class="cm-method cm-method--post">POST</span>
+									<code style="font-weight:600">/v1/foxes</code>
+									</div>
+									<div class="cm-param">
+									<span class="cm-param__name">body<span class="cm-param__req">*</span></span>
+									<span class="cm-param__type">object</span>
+									<span class="cm-param__in">body</span>
+									<span class="cm-param__desc">The fox to create. name is required; everything else is optional and defaults to the stable release.</span>
+									</div>
+									</div>
+									</div>
+									<p class="cm-head__sub" style="margin-top:var(--space-4)">
+									The response row needs no new class - a status code beside its description
+									composes from what the library already owns.
+									</p>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<div class="cm-param">
+									<span class="cm-status-code cm-status-code--ok">201</span>
+									<span class="cm-param__desc">Created.</span>
+									</div>
+									<div class="cm-param">
+									<span class="cm-status-code cm-status-code--warn">404</span>
+									<span class="cm-param__desc">The id was not found.</span>
+									</div>
+									</div>
+									</section>
+									)}
+									{shows('tables') && (
 												<section id="tblaction" class="cm-section cm-section--pad">
 							<SectionHead title="table action">
 A row's control, in the table's own visual language. A <code>&lt;tr onClick&gt;</code> is not a control - it is not focusable and Enter does nothing - so this is a real button, drawn as text so the grid does not become a stack of chrome. The tap floor is its own padding box. On a coarse pointer the arrow is always visible, because there is no hover to reveal it.

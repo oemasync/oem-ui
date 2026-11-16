@@ -1,3 +1,66 @@
+## Unreleased - parameter row: the `cm-param` line
+
+An API docs page draws one row per parameter under the endpoint it
+documents: the name, the type, where the parameter lives, whether it
+is required, and what it means. Both ends of the row the library
+already owns - the method badge that labels the endpoint
+(`cm-method`) and the status code its responses carry
+(`cm-status-code`) - but the middle, the row itself, was the part
+every docs page still hand-rolled. The row reuses the system's
+existing vocabulary rather than inventing a scale: the required mark
+is the faint asterisk the form label owns, the in badge is the base
+method's outline (a location, not a severity, so path, query, body
+and header share one treatment), and the separator is the row's own
+hairline with the `:last-child` removal `cm-row` owns. The row is
+text, not a target, so it carries no tap floor.
+
+- `src/styles/components.css` — `.cm-param` (a wrapping flex row on
+  the baseline, `gap: 0.35em var(--space-2)`, the system hairline
+  below, the last row's rule removed) and its parts: `.cm-param__name`
+  (mono, 600, full ink), `.cm-param__req` (the form's own
+  `--ink-faint` asterisk, inside the name at the name's own size),
+  `.cm-param__type` (mono, `--ink-dim`, floored at `--min-font`),
+  `.cm-param__in` (the outline chip: `--line` border, mono,
+  uppercase, floored at `--min-font`) and `.cm-param__desc`
+  (`flex: 1 1 10rem` with `min-width: 0`, so the description shares
+  the line when the head leaves room and falls to its own line when
+  it does not - the phone case).
+- `src/pages/[...family].astro` — the parameter-row section in the
+  surfaces group: a list endpoint with query and header parameters,
+  one fox with its required path parameter, a create with its
+  required body, and two response rows that compose from
+  `cm-status-code` beside the row's own description - the response
+  case needs no new class. `SECTION_ORDER` and the rail group sizes
+  carry it (surfaces 8 to 9).
+- `tests/run.mjs` — six contract checks: the base rule wraps on the
+  baseline with the system hairline and no raw colour, the last row
+  drops its orphan rule, the name is mono at full ink with the
+  required mark at `--ink-faint`, the type is mono at `--ink-dim`,
+  the in badge is the outline chip at the `--min-font` floor with no
+  raw colour, the description carries its flex basis and
+  `min-width: 0` at `--ink-dim`, and the showcase demonstrates every
+  part in all four locations with both required and optional
+  specimens.
+- `tests/mutate-param.mjs` — the sixteen-mutant sweep (wrap,
+  hairline, orphan rule, name font, name ink, required mark, type
+  ink, in-badge outline, in-badge case, in-badge floor, in-badge raw
+  colour, description basis, description shrink, description ink,
+  section removal, required specimen) with the pre-flight that every
+  pattern matches exactly once. The description's `min-width: 0`
+  check had no mutant when the sweep was first written - the comment
+  described the shrink mutation and the list carried the colour one
+  instead; the sixteenth closes that gap.
+- `tests/measure-param-webkit.py` — the WebKit probe at
+  320/390/860/1280 in both themes: the wrap decision is derived, not
+  hardcoded (head width + column gap + the 10rem basis against the
+  row's content width), and the sweep refuses a run in which every
+  row made the same decision, so both branches must be measured; the
+  required mark computes to the ACTIVE theme's `--ink-faint` after
+  the theme is set and the frame has settled, with the two theme
+  runs proven different by attribute and token; and nothing
+  overruns - the description stays inside the row's right edge and
+  the document itself does not grow sideways.
+
 ## Unreleased - method badge: `cm-method`
 
 An API docs row starts with its method, and the library had no mark for
