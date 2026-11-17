@@ -3843,6 +3843,49 @@ as plain text with nothing wrapped. The showcase's endpoint-row section
 renders it beside the hand-written specimens, so the two stay provably
 equivalent rather than merely similar.
 
+## Parameter / response row
+
+`.cm-param` is one row of an API docs parameter OR response table - the
+two share the shell because a response is read the same way a
+parameter is: one identifying mark, then what it means.
+
+```html
+<!-- a parameter: name, required mark, type, in-location, description -->
+<div class="cm-param">
+  <span class="cm-param__name">id<span class="cm-param__req">*</span></span>
+  <span class="cm-param__type">string</span>
+  <span class="cm-param__in">path</span>
+  <span class="cm-param__desc">The fox's id.</span>
+</div>
+
+<!-- a response: a status code instead of a name, nothing else -->
+<div class="cm-param">
+  <span class="cm-status-code cm-status-code--err">500</span>
+  <span class="cm-param__desc">Something went wrong on our end.</span>
+</div>
+```
+
+`<Param>` is the wrapper: one component, two mutually-exclusive modes,
+so a docs page never hand-builds either row.
+
+```astro
+---
+import Param from '../astro/Param.astro';
+---
+
+<Param name="id" type="string" in="path" required>The fox's id.</Param>
+
+<Param status={500} tier="err">Something went wrong on our end.</Param>
+```
+
+`name` mode takes `name` (required), `type`, `in`
+(`path`/`query`/`header`/`body`/`cookie`) and `required`. `status` mode
+takes `status` (an HTTP code) and `tier` (`ok`/`warn`/`err`, `cm-status-code`'s
+own treatment). Passing `name` and `status` together, or neither, throws -
+a row is always exactly one or the other. The description is a slot, not a
+string prop, so a parameter whose meaning references another field's name
+in `<code>` renders that reference live instead of as literal angle brackets.
+
 ## Icon buttons
 
 `.cm-icon-btn` is a square button that holds one glyph. On a phone it is

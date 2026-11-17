@@ -1,0 +1,77 @@
+---
+/**
+ * oem-ui <Param> — one row of an API docs parameter OR response table.
+ *
+ * cm-param / __name / __type / __in / __req / __desc were proven in CSS
+ * and demonstrated by hand in the showcase, four times over (a query
+ * param, a path param, a body param, and the response row - which reuses
+ * the same cm-param shell around a cm-status-code mark instead of a
+ * name). Every one of those four was still hand-built markup; this is
+ * the wrapper a docs page actually calls, the same role <Endpoint> plays
+ * for the row above it.
+ *
+ * Two shapes share the one CSS class, so the wrapper has two MODES
+ * rather than two components - a second component would duplicate the
+ * row's flex/wrap/separator rules the moment its showcase specimen drifted
+ * from this one's:
+ *   - name mode:   name (+ required `*`), type, in-location, then desc
+ *   - status mode: an HTTP status in the glyph-only cm-status-code
+ *                  treatment, then desc - the exact composition the
+ *                  response-row specimen already proved by hand
+ * A row is either a parameter or a response, never both and never
+ * neither, so picking the wrong combination throws at build time rather
+ * than silently rendering a row with no identifying mark.
+ *
+ * required's mark is the FORM's own `*` (cm-field__req's colour, reused
+ * here as cm-param__req) - one required signal across the system, not a
+ * second one invented for docs pages.
+ *
+ * desc is a SLOT, not a string prop. A parameter description is exactly
+ * the shape that can carry a live `<code>` reference to another field's
+ * name - the same reasoning that makes <SectionHead>'s sub a slot - and
+ * a string prop would render that reference as literal angle brackets.
+ */
+interface Props {
+	/** The parameter name. Required unless `status` is given. */
+	name?: string;
+	/** The type label, e.g. 'string', 'number'. Name mode only. */
+	type?: string;
+	/** Where the parameter lives. Name mode only. */
+	in?: 'path' | 'query' | 'header' | 'body' | 'cookie';
+	/** Draws the required `*` beside the name. Defaults to false. */
+	required?: boolean;
+	/** An HTTP status code. Switches the row to response (status) mode. */
+	status?: string | number;
+	/** The status's cm-status-code treatment. Required alongside `status`. */
+	tier?: 'ok' | 'warn' | 'err';
+}
+
+const { name, type, required = false, status, tier } = Astro.props;
+const inLoc = Astro.props.in;
+
+if (name && status) {
+	throw new Error(
+		'<Param> takes name OR status, not both - a row is either a parameter or a response, never read as two things at once',
+	);
+}
+if (!name && !status) {
+	throw new Error('<Param> needs either name (a parameter row) or status (a response row)');
+}
+if (status && !tier) {
+	throw new Error('<Param> needs tier alongside status - cm-status-code has no bare treatment, only ok/warn/err');
+}
+---
+
+<div class="cm-param">
+	{status ? (
+		<span class={`cm-status-code cm-status-code--${tier}`}>{status}</span>
+	) : (
+		<span class="cm-param__name">
+			{name}
+			{required && <span class="cm-param__req">*</span>}
+		</span>
+	)}
+	{!status && type && <span class="cm-param__type">{type}</span>}
+	{!status && inLoc && <span class="cm-param__in">{inLoc}</span>}
+	<span class="cm-param__desc"><slot /></span>
+</div>

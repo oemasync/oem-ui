@@ -38,6 +38,7 @@ import Kv from '../astro/Kv.astro';
 import State from '../astro/State.astro';
 import Project from '../astro/Project.astro';
 import Endpoint from '../astro/Endpoint.astro';
+import Param from '../astro/Param.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -2369,6 +2370,15 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 									<span class="cm-param__desc">The fox to create. name is required; everything else is optional and defaults to the stable release.</span>
 									</div>
 									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">rendered via &lt;Param&gt;</h3>
+									<div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-2)">
+									<span class="cm-method cm-method--get">GET</span>
+									<code style="font-weight:600">/v1/foxes/&#123;id&#125;</code>
+									</div>
+									<Param name="id" type="string" in="path" required>The fox's id.</Param>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the wrapper's name mode - name, required mark, type, in badge, all from four props instead of five hand-built spans</p>
+									</div>
 									</div>
 									<p class="cm-head__sub" style="margin-top:var(--space-4)">
 									The response row needs no new class - a status code beside its description
@@ -2383,6 +2393,12 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 									<span class="cm-status-code cm-status-code--warn">404</span>
 									<span class="cm-param__desc">The id was not found.</span>
 									</div>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">rendered via &lt;Param&gt;</h3>
+									<Param status="201" tier="ok">Created.</Param>
+									<Param status={500} tier="err">Something went wrong on our end.</Param>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the wrapper's status mode - the same cm-param shell, a cm-status-code mark instead of a name, including the err tier the hand-built pair above never demonstrated</p>
 									</div>
 									</section>
 									)}

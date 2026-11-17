@@ -67,6 +67,73 @@ which left every other class that declares a `display` open.
 The per-component `[hidden]` rules stay. They are now redundant, and
 removing them is a separate change with its own proof.
 
+## Unreleased - `<Param>`: the parameter/response row wrapper
+
+`cm-param` / `__name` / `__type` / `__in` / `__req` / `__desc` were proven
+in CSS and demonstrated by hand in the showcase, four times over (a query
+param, a path param, a body param, and the response row - which reuses the
+same `cm-param` shell around a `cm-status-code` mark instead of a name).
+Every one of those four was still hand-built markup - the part of the
+component an actual docs page calls over and over, and the part a
+response row is one `{status, tier}` typo away from rendering silently
+wrong. `<Param>` is the wrapper a docs page actually calls: one
+component, two mutually-exclusive modes, rather than five hand-built
+spans per row.
+
+- `src/astro/Param.astro` - a new Astro component. Name mode (`name` +
+  optional `type`/`in`/`required`) renders the parameter shape; status
+  mode (`status` + `tier`) renders the response shape by swapping the
+  name mark for a `cm-status-code cm-status-code--${tier}` mark and
+  gating `type`/`in` off entirely (`!status && type && ...`, same for
+  `in` - a response row must never carry either). Passing `name` AND
+  `status`, or NEITHER, throws at build time rather than rendering a row
+  with an ambiguous or missing identifying mark; passing `status`
+  without `tier` throws too, since `cm-status-code` has no bare
+  treatment. The description is a `<slot />`, not a string prop - the
+  same reasoning that makes `<SectionHead>`'s `sub` a slot, so a
+  parameter description that references another field's name in
+  `<code>` renders that reference live instead of as literal angle
+  brackets.
+- `src/pages/[...family].astro` - imported and rendered twice in the
+  `#param` section: a name-mode specimen (`id`, `string`, `path`,
+  `required`) beside the hand-built "one fox" row it is byte-identical
+  to, and a status-mode pair (`201`/`ok`, beside the hand-built response
+  pair, PLUS a `500`/`err` specimen - the `err` tier the hand-built pair
+  never demonstrated, so this adds real showcase coverage rather than
+  only proving the wrapper).
+- `tests/run.mjs` - six checks: name-mode composition (class, required
+  gate, type/in gated on `!status`), status-mode composition (tier
+  interpolation), the description slot, the three throw guards, showcase
+  import+both-modes-rendered, and a built-dist check that counts TWO
+  rendered "id" parameter rows (the hand-built one and the wrapper's -
+  a unique-substring search cannot tell them apart, which is the point)
+  and finds the unique `err`-tier specimen carrying
+  `cm-status-code--err` beside its `500`.
+- `tests/mutate-param-astro.mjs` - an eleven-mutant sweep (cm-param
+  class, cm-param__name class, the required gate, the type gate's
+  `!status` half, the in-badge gate's `!status` half, the tier
+  interpolation, the slot, each of the three throw guards, and the
+  showcase specimen deletion), with the same pre-flight + `--range=a,b`
+  batching device `mutate-endpoint-astro.mjs` uses. 11/11 caught, 0
+  no-op, each mutant run and verified clean in its own batch after an
+  earlier full-sweep attempt was killed by an external timeout mid-run
+  and left one mutant in the tree - caught by diffing against a saved
+  known-good snapshot before trusting the suite's "all green" again.
+- `README.md` - a new "Parameter / response row" section documenting
+  both modes and the wrapper, inserted after the endpoint-row section
+  it composes with.
+- Measured in real WebKit (webkit, not chromium) at 390x844 and
+  1280x900, both themes: the wrapper's name-mode specimen and the
+  hand-built "one fox" row both appear (`idRowCount: 2`), the required
+  mark reads dimmer than the name (`rgb(109,109,109)` vs `rgb(17,17,17)`
+  light, `rgb(139,139,139)` vs `rgb(232,232,232)` dark), the `err`-tier
+  status mark reads at full ink with an underline and carries neither a
+  type nor an in badge, and `document.documentElement.scrollWidth`
+  equals the viewport width at both sizes - no horizontal overflow from
+  either new specimen.
+
+857 contract tests green (was 850).
+
 ## Unreleased - `<Endpoint>`: the method+path wrapper
 
 `cm-endpoint` / `cm-endpoint__path` / `cm-endpoint__param` were proven

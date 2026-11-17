@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -21410,4 +21410,89 @@ check('chroma: the README documents the switch, the tokens and the limit', () =>
 	assert(/cm-meter__legend/.test(sec), 'the section does not document the legend a stacked meter needs');
 	assert(/off by default|opt-in/i.test(sec), 'the section does not say the hue is off until asked for');
 	assert(/never .*alone|not .*alone/i.test(sec), 'the section does not state that a hue never carries a state alone');
+});
+
+/* ================= <Param> astro wrapper =================
+   The parameter ROW (cm-param / __name / __type / __in / __req / __desc)
+   and the response row's reuse of the same shell around cm-status-code
+   were proven above in CSS and in the showcase's hand-rolled specimens.
+   The wrapper is what a docs page actually calls - one component, two
+   mutually-exclusive modes (name mode for a parameter, status mode for
+   a response), rather than five hand-built spans per row. The mutation
+   sweep is tests/mutate-param-astro.mjs. */
+console.log('\n<Param> wrapper');
+
+const paramAstro = read('src/astro/Param.astro');
+// Scoped to the MARKUP, after the frontmatter fence closes - the same
+// scoping Endpoint.astro's own check uses, for the same reason: the doc
+// comment above the frontmatter names every class in backticks for a
+// reader's benefit, and an unscoped check cannot tell a renamed class in
+// the template from the prose that still describes the original name.
+const paramFenceEnd = paramAstro.indexOf('\n---\n', 3);
+const paramMarkup = paramFenceEnd === -1 ? paramAstro : paramAstro.slice(paramFenceEnd + 5);
+
+check('Param.astro name mode composes cm-param, the name, required mark, type and in badge', () => {
+	assert(/class="cm-param"/.test(paramMarkup),
+		'Param.astro does not use the cm-param class');
+	assert(/class="cm-param__name"/.test(paramMarkup),
+		'Param.astro name mode is missing the name element');
+	assert(/\{required && <span class="cm-param__req">/.test(paramMarkup),
+		'Param.astro does not gate the required mark on the required prop - an unconditional mark would render a literal * on every optional parameter too');
+	assert(/!status && type && <span class="cm-param__type"/.test(paramMarkup),
+		'Param.astro does not gate the type element on both type AND !status - the response row (status mode) must never carry a type badge');
+	assert(/!status && inLoc && <span class="cm-param__in"/.test(paramMarkup),
+		'Param.astro does not gate the in badge on both inLoc AND !status - the response row (status mode) must never carry an in badge');
+});
+
+check('Param.astro status mode composes cm-param and the tier-selected status-code mark', () => {
+	assert(/class=\{`cm-status-code cm-status-code--\$\{tier\}`\}/.test(paramMarkup),
+		'Param.astro status mode does not derive the status-code treatment from the tier prop - a hardcoded tier would ignore whatever the caller passes');
+});
+
+check('Param.astro description is a slot, not a string prop', () => {
+	assert(/class="cm-param__desc"><slot \/><\/span>/.test(paramMarkup),
+		'Param.astro does not emit <slot /> for the description - a string prop would render a live <code> reference in a description as literal angle brackets, the same regression the <SectionHead> sub slot exists to prevent');
+});
+
+check('Param.astro rejects an ambiguous or incomplete name/status combination', () => {
+	assert(/if\s*\(name && status\)/.test(paramAstro) && /throw new Error/.test(paramAstro),
+		'Param.astro does not guard against name AND status both being given - a row would render with no way to tell which mode it meant');
+	assert(/if\s*\(!name && !status\)/.test(paramAstro),
+		'Param.astro does not guard against neither name nor status being given - a row would render with no identifying mark at all');
+	assert(/if\s*\(status && !tier\)/.test(paramAstro),
+		'Param.astro does not guard against status without tier - cm-status-code has no bare treatment, only ok/warn/err');
+});
+
+check('Param.astro is imported and rendered in the showcase, in both modes', () => {
+	assert(/import Param from '\.\.\/astro\/Param\.astro'/.test(showcase),
+		'the showcase does not import Param.astro');
+	const paramUses = showcase.match(/<Param\s/g) || [];
+	assert(paramUses.length >= 2,
+		`the showcase renders <Param> ${paramUses.length} time(s) - expected at least 2 (one name-mode, one status-mode) to prove both modes, not just one`);
+	assert(/<Param\s[^>]*\bstatus=/.test(showcase),
+		'the showcase never renders <Param> in status mode - the response-row shape is unproven');
+	assert(/<Param\s[^>]*\brequired\b/.test(showcase),
+		'the showcase never renders <Param> with required - the required mark through the wrapper is unproven');
+});
+
+check('the built page renders <Param> in both modes with the right marks', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuild and re-run before shipping
+	// Name mode: the wrapper's "id" specimen renders byte-identical markup
+	// to the hand-built "one fox" row it sits beside, so a unique-substring
+	// search cannot tell them apart - which is the point (proving the
+	// wrapper equivalent, not merely similar). Count instead: with the
+	// wrapper specimen present there must be TWO occurrences of the full
+	// id/required/string/path/desc sequence, not one.
+	const idRows = (built.match(/cm-param__name">id<span class="cm-param__req">\*<\/span><\/span><span class="cm-param__type">string<\/span><span class="cm-param__in">path<\/span>/g) || []).length;
+	assert(idRows === 2,
+		`expected 2 rendered "id" parameter rows (the hand-built one and the <Param> wrapper's), got ${idRows} - the wrapper's name-mode specimen never reached the DOM, or no longer matches the hand-built row it is proven equivalent to`);
+	// Status mode: the err-tier specimen's text is unique to the wrapper
+	// (the hand-built response pair above it only ever demonstrates ok and
+	// warn), so a direct substring search is unambiguous here.
+	const errIdx = built.indexOf('Something went wrong on our end.');
+	assert(errIdx !== -1, 'the <Param status={500} tier="err"> specimen never reached the DOM');
+	const errWindow = built.slice(Math.max(0, errIdx - 200), errIdx);
+	assert(/cm-status-code cm-status-code--err">500</.test(errWindow),
+		'the rendered err-tier status specimen does not carry the cm-status-code--err mark beside its code - tier is not reaching the output');
 });
