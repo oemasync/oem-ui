@@ -5,12 +5,12 @@
  * glyph is generated content, never an aria-hidden span, so the markup
  * and the visual never drift.
  *
- * variant: 'ok' | 'warn' | 'err' | 'set' (default none)
+ * variant: 'ok' | 'warn' | 'err' | 'info' | 'set' (default none)
  * action: when true, the chip is an interactive control with the tap floor.
  */
 interface Props {
 	/** Severity. Defaults to none (plain label). */
-	variant?: 'ok' | 'warn' | 'err' | 'set';
+	variant?: 'ok' | 'warn' | 'err' | 'info' | 'set';
 	/** When true, the chip is an interactive control with the tap floor. */
 	action?: boolean;
 	/** Accessible label override (defaults to the slot text). */

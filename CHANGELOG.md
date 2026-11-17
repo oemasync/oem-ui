@@ -211,6 +211,141 @@ others that put the faint tier on a nested panel. Dark was never affected.
   token the suite fails on exactly `--ink-faint #6d6d6d on --panel-nested
   #ececec = 4.38:1`.
 - `src/styles/components.css` - one comment quoted the old value's ratio.
+## Unreleased - status colour, opt-in
+
+The library was zero-chroma: a state is a glyph and a word. That holds
+on a page with a few states and stops holding on a board with dozens,
+where a column of glyphs reads as texture. A consumer dashboard needed
+green, amber and red to be scannable, and the honest place for those is
+the library, not a second palette in one consumer.
+
+Nothing changes for a consumer that does not ask. The hue is gated on
+`data-cm-chroma`, and every rule that reads it falls back to the grey
+the original rule paints.
+
+- `src/styles/tokens.css` - `--chroma-ok|warn|err|info`, each with a
+  `-soft` tint and a `-line` hairline, in both document themes, both
+  `[data-cm-theme]` blocks and the print block (light values).
+- `src/styles/components.css` - the "status chroma" block. Four gated
+  setters resolve `--tone` on the toned element; readers for the chip,
+  the alert edge and mark, the dot, the stat tile's top edge and the
+  meter fill. Every reader hides its modifiers in `:where()`, so it
+  weighs one class and the existing hover and accent rules still win.
+  No existing selector is edited.
+- `.cm-tone--ok|warn|err|info` - a tone for a component that has no
+  severity modifier of its own. It paints nothing on a bare element.
+- `.cm-chip--info` - the fourth severity, with the alert's glyph.
+  `<Chip variant="info">`.
+- `.cm-meter__track--stack` / `.cm-meter__seg` - a stacked meter, with
+  `.cm-meter__legend` / `.cm-meter__count` to name its shares. The first
+  specimen printed the breakdown in `.cm-meter__val` and scrolled a
+  390px viewport 91px sideways (481 against 390, measured in WebKit);
+  the legend wraps instead.
+- `src/pages/[...family].astro` - a "status colour" section: one block
+  of markup drawn twice, with the attribute and without.
+- `tests/run.mjs` - seventeen checks. Contrast is computed from the token
+  values on every surface and on each hue's own tint; the gate, the
+  fallbacks, the specificity and the specimen are each asserted.
+- `tests/mutate-chroma.mjs`, `tests/mutate-hidden.mjs` - one mutant per
+  check, each required to fail the check that names it.
+
+One design change came from the suite. The stat tile's edge was first
+an inset `box-shadow`, and the record components' own check refused it:
+a colour property there is a bare token. It is the tile's existing top
+border, recoloured, which also means the fallback is simply `--line`.
+
+## Unreleased - `hidden` means hidden
+
+A consumer dashboard shipped an empty bordered box at the top of its
+page. The element was `<div class="cm-alert" hidden>`, its `hidden`
+property was `true`, and it measured 1080x61 in WebKit: `.cm-alert`
+declares `display: flex`, and the attribute is implemented by a
+UA-origin `[hidden] { display: none }` that any author `display`
+outranks. The components layer had already closed this for tabs,
+combobox, mention, the composer and the quiz, one class at a time,
+which left every other class that declares a `display` open.
+
+- `src/styles/base.css` - `[hidden]:not([hidden='until-found'])
+  { display: none !important; }`. Importance is the only thing that
+  beats an author `display`, so it is the fix rather than a shortcut.
+- `src/styles/components.css` - the same rule held to elements with a
+  `cm-` class, so a scoped adoption that never loads `base.css` gets it
+  too without touching the consumer's own markup.
+- `tests/run.mjs` - five checks: the rule and its importance, the scoped
+  twin in both class positions, that no other important `display` ships
+  that could out-rank it, that `until-found` is excluded, and the README
+  section.
+- `README.md` - "The `hidden` attribute".
+
+The per-component `[hidden]` rules stay. They are now redundant, and
+removing them is a separate change with its own proof.
+
+## Unreleased - `<Param>`: the parameter/response row wrapper
+
+`cm-param` / `__name` / `__type` / `__in` / `__req` / `__desc` were proven
+in CSS and demonstrated by hand in the showcase, four times over (a query
+param, a path param, a body param, and the response row - which reuses the
+same `cm-param` shell around a `cm-status-code` mark instead of a name).
+Every one of those four was still hand-built markup - the part of the
+component an actual docs page calls over and over, and the part a
+response row is one `{status, tier}` typo away from rendering silently
+wrong. `<Param>` is the wrapper a docs page actually calls: one
+component, two mutually-exclusive modes, rather than five hand-built
+spans per row.
+
+- `src/astro/Param.astro` - a new Astro component. Name mode (`name` +
+  optional `type`/`in`/`required`) renders the parameter shape; status
+  mode (`status` + `tier`) renders the response shape by swapping the
+  name mark for a `cm-status-code cm-status-code--${tier}` mark and
+  gating `type`/`in` off entirely (`!status && type && ...`, same for
+  `in` - a response row must never carry either). Passing `name` AND
+  `status`, or NEITHER, throws at build time rather than rendering a row
+  with an ambiguous or missing identifying mark; passing `status`
+  without `tier` throws too, since `cm-status-code` has no bare
+  treatment. The description is a `<slot />`, not a string prop - the
+  same reasoning that makes `<SectionHead>`'s `sub` a slot, so a
+  parameter description that references another field's name in
+  `<code>` renders that reference live instead of as literal angle
+  brackets.
+- `src/pages/[...family].astro` - imported and rendered twice in the
+  `#param` section: a name-mode specimen (`id`, `string`, `path`,
+  `required`) beside the hand-built "one fox" row it is byte-identical
+  to, and a status-mode pair (`201`/`ok`, beside the hand-built response
+  pair, PLUS a `500`/`err` specimen - the `err` tier the hand-built pair
+  never demonstrated, so this adds real showcase coverage rather than
+  only proving the wrapper).
+- `tests/run.mjs` - six checks: name-mode composition (class, required
+  gate, type/in gated on `!status`), status-mode composition (tier
+  interpolation), the description slot, the three throw guards, showcase
+  import+both-modes-rendered, and a built-dist check that counts TWO
+  rendered "id" parameter rows (the hand-built one and the wrapper's -
+  a unique-substring search cannot tell them apart, which is the point)
+  and finds the unique `err`-tier specimen carrying
+  `cm-status-code--err` beside its `500`.
+- `tests/mutate-param-astro.mjs` - an eleven-mutant sweep (cm-param
+  class, cm-param__name class, the required gate, the type gate's
+  `!status` half, the in-badge gate's `!status` half, the tier
+  interpolation, the slot, each of the three throw guards, and the
+  showcase specimen deletion), with the same pre-flight + `--range=a,b`
+  batching device `mutate-endpoint-astro.mjs` uses. 11/11 caught, 0
+  no-op, each mutant run and verified clean in its own batch after an
+  earlier full-sweep attempt was killed by an external timeout mid-run
+  and left one mutant in the tree - caught by diffing against a saved
+  known-good snapshot before trusting the suite's "all green" again.
+- `README.md` - a new "Parameter / response row" section documenting
+  both modes and the wrapper, inserted after the endpoint-row section
+  it composes with.
+- Measured in real WebKit (webkit, not chromium) at 390x844 and
+  1280x900, both themes: the wrapper's name-mode specimen and the
+  hand-built "one fox" row both appear (`idRowCount: 2`), the required
+  mark reads dimmer than the name (`rgb(109,109,109)` vs `rgb(17,17,17)`
+  light, `rgb(139,139,139)` vs `rgb(232,232,232)` dark), the `err`-tier
+  status mark reads at full ink with an underline and carries neither a
+  type nor an in badge, and `document.documentElement.scrollWidth`
+  equals the viewport width at both sizes - no horizontal overflow from
+  either new specimen.
+
+857 contract tests green (was 850).
 
 ## Unreleased - `<Endpoint>`: the method+path wrapper
 

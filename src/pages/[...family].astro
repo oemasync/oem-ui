@@ -38,6 +38,7 @@ import Kv from '../astro/Kv.astro';
 import State from '../astro/State.astro';
 import Project from '../astro/Project.astro';
 import Endpoint from '../astro/Endpoint.astro';
+import Param from '../astro/Param.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -75,7 +76,7 @@ import Endpoint from '../astro/Endpoint.astro';
  * wrong place fails the suite instead of quietly breaking the spy.
  */
 const SECTION_ORDER = [
-	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'surface',
+	'foundation', 'buttons', 'nav', 'sidebar', 'crumbs', 'lists', 'states', 'chroma', 'surface',
   'selection', 'stack', 'density', 'badge', 'method', 'endpoint', 'param', 'tblaction', 'table', 'data-table', 'json', 'rowon', 'switch', 'sheet', 'drawer', 'choice', 'keys-pages-people',
 	'code', 'overlays', 'records', 'trace', 'diff', 'guide', 'term', 'artwork', 'cards', 'hero', 'tiles', 'prose', 'proselists', 'proselists-order', 'prosetap', 'prosetable', 'typeset', 'mediablocks', 'audio', 'video', 'tablelabels', 'layout', 'surface-paint',
 	'forms', 'datepicker', 'scrollarea', 'charts', 'utilities', 'chat', 'guildrail', 'composer', 'dropdown-depth', 'navmenu', 'scroller', 'msglist', 'attachment', 'dropzone', 'shortcuts', 'quiz', 'search', 'auth', 'readme',
@@ -96,7 +97,7 @@ const SECTION_ORDER = [
    "utilities". */
 const NAV_GROUP_SIZES: [string, number][] = [
 	["foundation", 5],
-	["surfaces", 10],
+	["surfaces", 11],
 	["tables", 6],
 	["panels", 6],
 	["content", 9],
@@ -1129,7 +1130,7 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 			{shows('surfaces') && (
 			<section id="states" class="cm-section cm-section--pad">
 				<SectionHead title="states">
-What a surface shows before it has data, and after it fails. Status is carried by a glyph and a word, never by hue: this system has no chroma to carry it, and greyscale print still reads correctly.
+What a surface shows before it has data, and after it fails. Status is carried by a glyph and a word, never by hue alone, so greyscale print still reads correctly. A hue can be switched on over both: see status colour, the next section.
 				</SectionHead>
 
 				<h3 class="cm-kicker cm-kicker--flush">empty</h3>
@@ -1324,6 +1325,97 @@ What a surface shows before it has data, and after it fails. Status is carried b
 							<tr><td>runtime</td><td>cli-mono.js</td><td class="cm-table__num">196</td><td class="cm-table__num">3</td></tr>
 						</tbody>
 					</table>
+				</div>
+			</section>
+			)}
+
+			<!-- ==================================================== chroma
+			     Status colour, opt-in. Two columns of the SAME markup: the
+			     first sits inside data-cm-chroma, the second does not. The
+			     second column is the proof that the attribute is the only
+			     switch - every class in it is also in the first, and it
+			     renders in the greys the library has always used. -->
+			{shows('surfaces') && (
+			<section id="chroma" class="cm-section cm-section--pad">
+				<SectionHead title="status colour">
+A hue on top of the glyph and the word, never instead of them. It is off until a page or a subtree carries data-cm-chroma, so nothing changes for a consumer that does not ask. Both columns are the same markup, and only the first has the attribute.
+				</SectionHead>
+				<div style="display:grid;gap:var(--space-4);grid-template-columns:repeat(auto-fit,minmax(min(18rem,100%),1fr));align-items:start">
+					{[true, false].map((on) => (
+					<div class="cm-surface cm-surface--flat cm-stack" style="padding:var(--space-4)" data-cm-chroma={on ? '' : undefined}>
+						<h3 class="cm-kicker cm-kicker--flush">{on ? 'with data-cm-chroma' : 'without it'}</h3>
+						<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
+							<span class="cm-chip cm-chip--ok">passing</span>
+							<span class="cm-chip cm-chip--warn">degraded</span>
+							<span class="cm-chip cm-chip--err">failing</span>
+							<span class="cm-chip cm-chip--info">queued</span>
+							<span class="cm-chip cm-tone--warn">in progress</span>
+							<span class="cm-chip">idle</span>
+						</div>
+						<div class="cm-alert cm-alert--err" role="status">
+							<span class="cm-alert__mark" aria-hidden="true"></span>
+							<div class="cm-alert__body">
+								<p class="cm-alert__title">2 hosts unreachable</p>
+								<p class="cm-alert__text">The edge and the mark take the hue. The words stay ink, because grey text on a tint drops under AA.</p>
+							</div>
+						</div>
+						<div class="cm-alert cm-alert--warn" role="status">
+							<span class="cm-alert__mark" aria-hidden="true"></span>
+							<div class="cm-alert__body"><p class="cm-alert__title">certificate expires in 9 days</p></div>
+						</div>
+						<div class="cm-alert cm-alert--ok" role="status">
+							<span class="cm-alert__mark" aria-hidden="true"></span>
+							<div class="cm-alert__body"><p class="cm-alert__title">backup verified</p></div>
+						</div>
+						<div class="cm-alert cm-alert--info" role="status">
+							<span class="cm-alert__mark" aria-hidden="true"></span>
+							<div class="cm-alert__body"><p class="cm-alert__title">a new build is ready</p></div>
+						</div>
+						<ul class="cm-stats">
+							<li class="cm-stat cm-tone--ok">
+								<span class="cm-stat__val">137</span>
+								<span class="cm-stat__label"><span class="cm-dot cm-tone--ok" aria-hidden="true"></span>done</span>
+							</li>
+							<li class="cm-stat cm-tone--info">
+								<span class="cm-stat__val">1</span>
+								<span class="cm-stat__label"><span class="cm-dot cm-tone--info" aria-hidden="true"></span>in review</span>
+							</li>
+							<li class="cm-stat cm-tone--warn">
+								<span class="cm-stat__val">10</span>
+								<span class="cm-stat__label"><span class="cm-dot cm-tone--warn" aria-hidden="true"></span>in progress</span>
+							</li>
+							<li class="cm-stat cm-tone--err">
+								<span class="cm-stat__val">2</span>
+								<span class="cm-stat__label"><span class="cm-dot cm-tone--err" aria-hidden="true"></span>blocked</span>
+							</li>
+						</ul>
+						<div class="cm-meter cm-tone--ok">
+							<div class="cm-meter__top">
+								<span class="cm-meter__label">checks passing</span>
+								<span class="cm-meter__val">82%</span>
+							</div>
+							<div class="cm-meter__track" aria-hidden="true"><span class="cm-meter__fill" style="--cm-meter-fill: 82%"></span></div>
+						</div>
+						<div class="cm-meter">
+							<div class="cm-meter__top">
+								<span class="cm-meter__label">150 tasks</span>
+								<span class="cm-meter__val">60% done</span>
+							</div>
+							<div class="cm-meter__track cm-meter__track--stack" aria-hidden="true">
+								<span class="cm-meter__seg cm-tone--ok" style="--cm-meter-fill: 60%"></span>
+								<span class="cm-meter__seg cm-tone--info" style="--cm-meter-fill: 10%"></span>
+								<span class="cm-meter__seg cm-tone--warn" style="--cm-meter-fill: 20%"></span>
+								<span class="cm-meter__seg" style="--cm-meter-fill: 10%"></span>
+							</div>
+							<ul class="cm-meter__legend">
+								<li><span class="cm-dot cm-tone--ok" aria-hidden="true"></span>done <span class="cm-meter__count">90</span></li>
+								<li><span class="cm-dot cm-tone--info" aria-hidden="true"></span>in review <span class="cm-meter__count">15</span></li>
+								<li><span class="cm-dot cm-tone--warn" aria-hidden="true"></span>in progress <span class="cm-meter__count">30</span></li>
+								<li><span class="cm-dot" aria-hidden="true"></span>not started <span class="cm-meter__count">15</span></li>
+							</ul>
+						</div>
+					</div>
+					))}
 				</div>
 			</section>
 			)}
@@ -2279,6 +2371,15 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 									<span class="cm-param__desc">The fox to create. name is required; everything else is optional and defaults to the stable release.</span>
 									</div>
 									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">rendered via &lt;Param&gt;</h3>
+									<div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-2)">
+									<span class="cm-method cm-method--get">GET</span>
+									<code style="font-weight:600">/v1/foxes/&#123;id&#125;</code>
+									</div>
+									<Param name="id" type="string" in="path" required>The fox's id.</Param>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the wrapper's name mode - name, required mark, type, in badge, all from four props instead of five hand-built spans</p>
+									</div>
 									</div>
 									<p class="cm-head__sub" style="margin-top:var(--space-4)">
 									The response row needs no new class - a status code beside its description
@@ -2293,6 +2394,12 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 									<span class="cm-status-code cm-status-code--warn">404</span>
 									<span class="cm-param__desc">The id was not found.</span>
 									</div>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">rendered via &lt;Param&gt;</h3>
+									<Param status="201" tier="ok">Created.</Param>
+									<Param status={500} tier="err">Something went wrong on our end.</Param>
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the wrapper's status mode - the same cm-param shell, a cm-status-code mark instead of a name, including the err tier the hand-built pair above never demonstrated</p>
 									</div>
 									</section>
 									)}

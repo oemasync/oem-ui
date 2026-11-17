@@ -3645,14 +3645,15 @@ use `.cm-chip` and one modifier.
 <span class="cm-chip cm-chip--ok">scored</span>
 <span class="cm-chip cm-chip--warn">warming</span>
 <span class="cm-chip cm-chip--err">error</span>
+<span class="cm-chip cm-chip--info">queued</span>
 <span class="cm-chip cm-chip--set">set</span>
 <button class="cm-chip cm-chip--err cm-chip--action">retry</button>
 ```
 
 The palette is greyscale, so **a modifier may never be the only thing
 carrying the state**. Each one adds a non-hue cue on top of the contrast
-step: `--ok` / `--warn` / `--err` hang a `::before` glyph (●, ▲, ✕) the
-way `.cm-status` and `.cm-toast` already do, and `--set` goes dashed for
+step: `--ok` / `--warn` / `--err` / `--info` hang a `::before` glyph
+(●, ▲, ✕, ℹ) the way `.cm-status` and `.cm-toast` already do, and `--set` goes dashed for
 "this is not the default", which the value itself cannot say. A contract
 test fails the build if two states share a glyph, so the shapes cannot
 collapse into each other.
@@ -3665,6 +3666,107 @@ floor on the base inflates the row from **39.6px to 60.5px** to make
 something that is not a control look tappable. When the chip *is* the
 target, use `.cm-chip--action`, which carries `min-height: var(--tap)` from
 the token.
+
+## Status colour
+
+The palette is grey, and it stays grey until a page asks for more. The
+hue is opt-in: put `data-cm-chroma` on `<html>`, or on any subtree, and
+the four severities the library already has pick up a colour.
+
+```html
+<html data-cm-chroma>
+```
+
+| severity | token | dark | light |
+| --- | --- | --- | --- |
+| ok | `--chroma-ok` | `#4ade80` | `#166534` |
+| warn | `--chroma-warn` | `#facc15` | `#854d0e` |
+| err | `--chroma-err` | `#ff7b72` | `#a4161a` |
+| info | `--chroma-info` | `#79b8ff` | `#1d4ed8` |
+
+Each one also has a `-soft` (the tint behind a chip) and a `-line` (the
+hairline around it). They live in `tokens.css` beside the greys, in both
+themes, in the `[data-cm-theme]` blocks, and in the print block, which
+uses the light set because the dark-theme green is 1.74:1 on white.
+Retune them the way you would retune any token.
+
+What takes the hue:
+
+| markup | with `data-cm-chroma` |
+| --- | --- |
+| `.cm-chip--ok` `--warn` `--err` `--info` | text, glyph, tint and hairline |
+| `.cm-alert--ok` `--warn` `--err` `--info` | the left edge and the mark. The title and the text stay ink |
+| `.cm-chip.cm-tone--ok` `cm-tone--warn` `cm-tone--err` `cm-tone--info` | the same chip colours without a glyph, for a chip whose word already is the state ("in progress") |
+| `.cm-dot.cm-tone--*` | a filled square in the hue |
+| `.cm-stat.cm-tone--*` | the tile's top edge |
+| `.cm-meter.cm-tone--*` | the fill |
+| `.cm-meter__seg.cm-tone--*` | one share of a stacked meter |
+
+Without the attribute every row above renders in the grey it always
+had. That is checked, not assumed: each rule is written
+`var(--tone, <grey>)`, and the suite compares every fallback with the
+rule it shadows.
+
+**A hue is never the state alone.** It sits on top of a glyph or a
+word. `.cm-tone--*` on a bare element does nothing, on purpose, because
+a colour with no other cue says nothing in greyscale, on a one-ink
+printout, or to a reader who cannot tell red from green.
+
+Contrast, lowest case per hue, computed by the suite from the token
+values (4.5:1 is the floor):
+
+| | as text on a surface | on its own tint |
+| --- | --- | --- |
+| dark ok / warn / err / info | 9.13 / 10.39 / 6.31 / 7.66 | 6.78 / 7.44 / 5.04 / 5.82 |
+| light ok / warn / err / info | 6.04 / 5.80 / 6.56 / 5.67 | 5.25 / 5.04 / 5.55 / 4.89 |
+
+The tint goes only behind text set in the same hue. Grey text on a tint
+does not hold (`--ink-dim` on the dark ok tint is 4.3:1), which is why
+an alert keeps its panel background and colours only its edge and mark.
+
+### Stacked meter
+
+Several shares of one total on one track. Each segment takes its width
+from `--cm-meter-fill`, the same property the single fill reads, so the
+bar is drawn from the numbers printed beside it.
+
+```html
+<div class="cm-meter">
+  <div class="cm-meter__top">
+    <span class="cm-meter__label">150 tasks</span>
+    <span class="cm-meter__val">60% done</span>
+  </div>
+  <div class="cm-meter__track cm-meter__track--stack" aria-hidden="true">
+    <span class="cm-meter__seg cm-tone--ok" style="--cm-meter-fill: 60%"></span>
+    <span class="cm-meter__seg cm-tone--info" style="--cm-meter-fill: 10%"></span>
+    <span class="cm-meter__seg cm-tone--warn" style="--cm-meter-fill: 20%"></span>
+    <span class="cm-meter__seg" style="--cm-meter-fill: 10%"></span>
+  </div>
+  <ul class="cm-meter__legend">
+    <li><span class="cm-dot cm-tone--ok" aria-hidden="true"></span>done <span class="cm-meter__count">90</span></li>
+    <li><span class="cm-dot cm-tone--info" aria-hidden="true"></span>in review <span class="cm-meter__count">15</span></li>
+    <li><span class="cm-dot cm-tone--warn" aria-hidden="true"></span>in progress <span class="cm-meter__count">30</span></li>
+    <li><span class="cm-dot" aria-hidden="true"></span>not started <span class="cm-meter__count">15</span></li>
+  </ul>
+</div>
+```
+
+Segments are parted by a 1px gap in the track colour. Without chroma the
+first three step down the grey ramp, and a segment with no tone class is
+grey in both modes, which is the right look for "not started".
+
+A stacked meter needs `.cm-meter__legend`. The track is `aria-hidden`
+and a segment is only a colour and a width, so the legend is where the
+names and the counts are printed. Keep its entries in the order the
+segments are drawn: with the hues off, order is what ties an entry to
+its share. Do not put the breakdown in `.cm-meter__val`. That element
+does not shrink, and a long value there scrolled a 390px page 91px
+sideways before the legend existed.
+
+Two limits. The attribute is presence only, so there is no way to turn
+the hue back off inside a subtree that has it. And a tone loses to a
+variant that already sets the same property with more weight, such as
+`.cm-meter--accent`.
 
 ## Method badge
 
@@ -3740,6 +3842,49 @@ becomes a `cm-endpoint__param` slot, and a path with no `{...}` renders
 as plain text with nothing wrapped. The showcase's endpoint-row section
 renders it beside the hand-written specimens, so the two stay provably
 equivalent rather than merely similar.
+
+## Parameter / response row
+
+`.cm-param` is one row of an API docs parameter OR response table - the
+two share the shell because a response is read the same way a
+parameter is: one identifying mark, then what it means.
+
+```html
+<!-- a parameter: name, required mark, type, in-location, description -->
+<div class="cm-param">
+  <span class="cm-param__name">id<span class="cm-param__req">*</span></span>
+  <span class="cm-param__type">string</span>
+  <span class="cm-param__in">path</span>
+  <span class="cm-param__desc">The fox's id.</span>
+</div>
+
+<!-- a response: a status code instead of a name, nothing else -->
+<div class="cm-param">
+  <span class="cm-status-code cm-status-code--err">500</span>
+  <span class="cm-param__desc">Something went wrong on our end.</span>
+</div>
+```
+
+`<Param>` is the wrapper: one component, two mutually-exclusive modes,
+so a docs page never hand-builds either row.
+
+```astro
+---
+import Param from '../astro/Param.astro';
+---
+
+<Param name="id" type="string" in="path" required>The fox's id.</Param>
+
+<Param status={500} tier="err">Something went wrong on our end.</Param>
+```
+
+`name` mode takes `name` (required), `type`, `in`
+(`path`/`query`/`header`/`body`/`cookie`) and `required`. `status` mode
+takes `status` (an HTTP code) and `tier` (`ok`/`warn`/`err`, `cm-status-code`'s
+own treatment). Passing `name` and `status` together, or neither, throws -
+a row is always exactly one or the other. The description is a slot, not a
+string prop, so a parameter whose meaning references another field's name
+in `<code>` renders that reference live instead of as literal angle brackets.
 
 ## Icon buttons
 
@@ -4581,6 +4726,23 @@ props, so one library serves many projects.
   to change, and measures every piece of text on a selected surface against
   what is behind it. The second removes each rule in turn and requires a
   named check to fail.
+
+### The `hidden` attribute
+
+`hidden` always hides, on any element, whatever the component declares.
+The browser implements the attribute with a low-priority
+`[hidden] { display: none }`, which any `display` in a stylesheet
+overrides, so a `<div class="cm-alert" hidden>` used to paint an empty
+bordered box. The base layer now carries
+
+```css
+[hidden]:not([hidden='until-found']) { display: none !important; }
+```
+
+and the components layer carries the same rule for elements with a
+`cm-` class, for a scoped adoption that does not load `base.css`. A
+consumer only flips the attribute. `hidden="until-found"` is left to the
+platform, because it has to stay findable.
 
 ## Development
 

@@ -12233,6 +12233,153 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-size: max(var(--min-font), var(--text-sm));
 }
 
+/* ============ status chroma (opt-in) ============
+   The palette is grey and a state is carried by a glyph and a word.
+   That stays true. This block adds a HUE on top of both, for the
+   surfaces where a reader scans dozens of states at once (a task board,
+   a fleet table) and a column of glyphs alone reads as texture.
+
+   It is opt-in. Nothing below resolves a hue until an ancestor, or the
+   element itself, carries `data-cm-chroma`, so a consumer that never
+   sets the attribute computes the values it always did. Every reader is
+   written `var(--tone, <the grey it shadows>)`, and the suite compares
+   each fallback with the rule it shadows, so the two cannot drift.
+
+   `--tone` is resolved ON the toned element from its own theme's
+   `--chroma-*`. That is why a `[data-cm-theme]` subtree inside a chroma
+   page gets its own theme's hues with no second rule.
+
+   Every reader is `<block>:where(<modifiers>)`: one class of
+   specificity, so a state rule with two (`.cm-chip--action:hover`,
+   `.cm-meter--accent .cm-meter__fill`) still wins, and no existing
+   selector is restated - the checks and mutation harnesses that anchor
+   on the original rules keep reading the original rules.
+
+   A hue never stands alone. `.cm-tone--*` by itself says nothing in
+   greyscale, on paper with one ink, or to a reader who cannot tell red
+   from green, so it goes on something that already names its state. */
+[data-cm-chroma] :where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok),
+[data-cm-chroma]:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok) {
+	--tone: var(--chroma-ok);
+	--tone-soft: var(--chroma-ok-soft);
+	--tone-line: var(--chroma-ok-line);
+}
+[data-cm-chroma] :where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn),
+[data-cm-chroma]:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn) {
+	--tone: var(--chroma-warn);
+	--tone-soft: var(--chroma-warn-soft);
+	--tone-line: var(--chroma-warn-line);
+}
+[data-cm-chroma] :where(.cm-tone--err, .cm-chip--err, .cm-alert--err),
+[data-cm-chroma]:where(.cm-tone--err, .cm-chip--err, .cm-alert--err) {
+	--tone: var(--chroma-err);
+	--tone-soft: var(--chroma-err-soft);
+	--tone-line: var(--chroma-err-line);
+}
+[data-cm-chroma] :where(.cm-tone--info, .cm-chip--info, .cm-alert--info),
+[data-cm-chroma]:where(.cm-tone--info, .cm-chip--info, .cm-alert--info) {
+	--tone: var(--chroma-info);
+	--tone-soft: var(--chroma-info-soft);
+	--tone-line: var(--chroma-info-line);
+}
+
+/* A chip: the tone as text, its soft tint behind, a hairline between.
+   The tint sits ONLY behind text set in the same tone. Grey text on it
+   does not hold: --ink-dim on the dark ok tint over --surface-raised
+   computes 4.3:1, under AA. */
+.cm-chip:where(.cm-tone--ok, .cm-tone--warn, .cm-tone--err, .cm-tone--info, .cm-chip--ok, .cm-chip--warn, .cm-chip--err, .cm-chip--info) {
+	border-color: var(--tone-line, var(--line));
+	background-color: var(--tone-soft, var(--surface-raised));
+	color: var(--tone, var(--ink-dim));
+}
+.cm-chip:where(.cm-chip--ok, .cm-chip--warn, .cm-chip--info)::before { color: var(--tone, var(--ink-dim)); }
+.cm-chip:where(.cm-chip--err)::before { color: var(--tone, var(--ink)); }
+/* The fourth severity. ok, warn and err had a glyph each and info had
+   none, so an "info" chip was a plain chip with a different class name. */
+.cm-chip--info::before { content: '\2139\00a0'; }
+
+/* An alert: the edge and the mark take the tone. The panel keeps its
+   own background, because the title and the text stay ink and ink-dim
+   and neither holds AA on a tint. */
+.cm-alert:where(.cm-alert--ok) { border-inline-start-color: var(--tone, var(--ink-dim)); }
+.cm-alert:where(.cm-alert--warn, .cm-alert--info) { border-inline-start-color: var(--tone, var(--ink-faint)); }
+.cm-alert:where(.cm-alert--err) { border-inline-start-color: var(--tone, var(--ink)); }
+:where(.cm-alert--ok, .cm-alert--warn, .cm-alert--err, .cm-alert--info) > .cm-alert__mark { color: var(--tone, var(--ink-faint)); }
+
+/* A toned dot is a LIT dot. Without chroma it is `.cm-dot--on`; with it,
+   the same square in the tone. A hollow dot that changed hue and nothing
+   else would be the one mark here with no greyscale reading. */
+.cm-dot:where(.cm-tone--ok, .cm-tone--warn, .cm-tone--err, .cm-tone--info) {
+	border-color: var(--tone, var(--ink));
+	background: var(--tone, var(--ink));
+}
+
+/* A stat tile: its top edge takes the tone. The border the tile
+   already has, recoloured, so the box is the same size with and without
+   it and a row of mixed tiles keeps one baseline. A drawn rule (an
+   inset shadow) was the first attempt and the record components' own
+   check refused it: a colour property there is a bare token or nothing. */
+.cm-stat:where(.cm-tone--ok, .cm-tone--warn, .cm-tone--err, .cm-tone--info) { border-block-start-color: var(--tone, var(--line)); }
+
+/* A meter's fill, when the bar itself is the state. */
+:where(.cm-meter.cm-tone--ok, .cm-meter.cm-tone--warn, .cm-meter.cm-tone--err, .cm-meter.cm-tone--info) .cm-meter__fill { background: var(--tone, var(--ink-dim)); }
+
+/* A stacked meter: several shares of one whole on one track. Each
+   segment takes its width from the number its caller printed, the way
+   the single fill does. Neighbours are parted by a 1px gap in the track
+   colour, which is what keeps two shares from reading as one bar, with
+   or without a hue. The first three also step down the grey ramp (ink,
+   ink-dim, ink-faint), a step that holds in both themes; a fourth and
+   later share one grey and rely on the gap.
+
+   The grey is a property rather than a background per position, so the
+   toned reader below can fall back to the grey THIS position would have
+   had. And the reader asks for a tone class on the segment itself:
+   `--tone` inherits, and a segment that read it unconditionally would
+   take the hue of any toned ancestor it happened to sit in. */
+.cm-meter__track--stack { display: flex; }
+.cm-meter__seg {
+	display: block;
+	flex: 0 1 var(--cm-meter-fill, 0%);
+	min-width: 0;
+	height: 100%;
+	background: var(--cm-seg-grey, var(--ink));
+}
+.cm-meter__seg + .cm-meter__seg { border-inline-start: 1px solid var(--bg-3); }
+.cm-meter__seg:nth-child(2) { --cm-seg-grey: var(--ink-dim); }
+.cm-meter__seg:nth-child(3) { --cm-seg-grey: var(--ink-faint); }
+.cm-meter__seg:nth-child(n + 4) { --cm-seg-grey: var(--accent-dim); }
+.cm-meter__seg:where(.cm-tone--ok, .cm-tone--warn, .cm-tone--err, .cm-tone--info) { background: var(--tone, var(--cm-seg-grey, var(--ink))); }
+
+/* The legend a stacked meter needs. The track is aria-hidden and a
+   segment is a colour and a width, so the names and the numbers have to
+   be printed somewhere: here, one entry per segment, IN THE SAME ORDER,
+   which is the only mapping left when the hues are off. It wraps, so a
+   long legend adds a line instead of widening the page: the first
+   specimen printed its numbers in .cm-meter__val, which does not
+   shrink, and scrolled a 390px viewport 91px sideways. */
+.cm-meter__legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: max(var(--min-font), var(--text-xs));
+	color: var(--ink-dim);
+}
+.cm-meter__legend > li { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; min-width: 0; }
+.cm-meter__count { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ============ hidden means hidden (scoped twin) ============
+   base.css carries `[hidden] { display: none !important }` for a full
+   adoption. A SCOPED adoption never loads base.css, and it is the same
+   defect there: every component that declares a `display` un-hides
+   itself. This is the same rule, held to elements that carry a library
+   class, so a scoped consumer's own markup is left alone. */
+[class^='cm-'][hidden]:not([hidden='until-found']),
+[class*=' cm-'][hidden]:not([hidden='until-found']) { display: none !important; }
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number

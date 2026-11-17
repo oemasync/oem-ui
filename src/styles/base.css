@@ -6,6 +6,18 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* `hidden` means hidden. The attribute is implemented by a UA-origin
+   `[hidden] { display: none }`, so ANY author `display` outranks it. A
+   consumer's `.cm-alert` (display: flex) carrying `hidden` painted an
+   empty 1080x61 bordered box at the top of its page - measured in
+   WebKit, with `el.hidden === true` the whole time, so every check
+   that read the property passed. The components layer had been closing
+   this one class at a time (tabs, combobox, mention, composer, quiz),
+   which left every class nobody had tripped over yet still open.
+   `until-found` is excluded: it hides through content-visibility so
+   find-in-page can reveal it, and `display: none` would defeat that. */
+[hidden]:not([hidden='until-found']) { display: none !important; }
+
 html {
 	overflow-y: scroll;
 	/* `clip`, not `hidden`. An absolutely-positioned overlay that escapes
