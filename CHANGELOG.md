@@ -1,3 +1,22 @@
+## Unreleased - the video specimen ships its clip and poster
+
+The showcase's video section loads `/video-specimen.mp4` with
+`/video-poster.svg` as its poster, and neither file was ever committed.
+Both answered 404 on ui.mrx.sh from the day the section landed, so the one
+specimen meant to show a frame with a clip in it showed an empty frame.
+
+- `public/video-specimen.mp4` - a 2 second, 640x360, 12 fps greyscale
+  sweep (H.264 constrained baseline, no audio, 5.9 KB).
+- `public/video-poster.svg` - the matching first frame, 461 bytes.
+- `tests/run.mjs` - one new check reads the BUILT pages and requires every
+  root-relative file an element loads (`src`, `poster`, a `<link href>`) to
+  exist in `dist`. Anchors are not scanned: the header-link specimens point
+  at pages that do not exist on purpose. Proven red first: before the two
+  files existed it failed naming exactly them.
+
+Measured on the built page at 390px: the clip reaches `readyState 4` at
+640x360 in WebKit and Chromium, no request fails, the page does not widen.
+
 ## Unreleased - light `--ink-faint` clears AA on every surface
 
 Light `--ink-faint` was `#6d6d6d`, which reads 4.38:1 on `--panel-nested`

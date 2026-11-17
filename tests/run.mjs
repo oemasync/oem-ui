@@ -20965,3 +20965,48 @@ check('parameter row: the showcase demonstrates every part, in all four location
 	assert(showcaseIndex.includes('param'),
 		'the parameter section is not in the section index, so the rail cannot reach it');
 });
+
+/* ================= built pages: every local asset resolves =================
+   The video section shipped with src="/video-specimen.mp4" and
+   poster="/video-poster.svg", and neither file was ever committed. Both
+   answered 404 on the published site from the day the section landed, under
+   a check whose own failure message warned about "a dead src". That check
+   reads the MARKUP. This one reads the BUILD: every root-relative file a
+   built page LOADS must be in dist.
+
+   Only loading elements are scanned. An anchor is navigation, and the
+   showcase links to pages that do not exist on purpose (the header-link
+   specimens), so an <a href> is not a claim that a file ships. */
+console.log('\nbuilt pages: local assets');
+
+check('every local file a built page loads exists in dist', () => {
+	const dist = join(root, 'dist');
+	const pages = [];
+	const stack = [dist];
+	while (stack.length) {
+		const d = stack.pop();
+		for (const e of readdirSync(d, { withFileTypes: true })) {
+			const p = join(d, e.name);
+			if (e.isDirectory()) stack.push(p);
+			else if (e.name.endsWith('.html')) pages.push(p);
+		}
+	}
+	assert(pages.length >= 2, `only ${pages.length} built page(s) found; run the build first`);
+	const missing = new Map();
+	let seen = 0;
+	for (const page of pages) {
+		const html = readFileSync(page, 'utf8');
+		for (const tag of html.matchAll(/<(?:img|video|audio|source|track|script|link|iframe|embed)\b[^>]*>/g)) {
+			for (const m of tag[0].matchAll(/\s(?:src|poster|href)="(\/(?!\/)[^"#?]*)/g)) {
+				seen++;
+				const url = decodeURIComponent(m[1]);
+				const target = url.endsWith('/') ? join(dist, url, 'index.html') : join(dist, url);
+				if (!existsSync(target)) missing.set(url, page.slice(dist.length));
+			}
+		}
+	}
+	assert(seen >= 20, `only ${seen} local reference(s) scanned; the scan is not reading the pages`);
+	assert(missing.size === 0,
+		`built pages load ${missing.size} local file(s) that are not in dist: ` +
+		[...missing].map(([u, p]) => `${u} (from ${p})`).join(', '));
+});
