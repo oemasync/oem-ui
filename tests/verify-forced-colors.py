@@ -110,10 +110,15 @@ MARK = [
 	('burger bar', '.cm-nav-toggle__bar'),
 	('terminal cursor', '.cm-cursor'),
 	('guide now line', '.cm-guide__now-line'),
-	# 40 of its 64 px, not the default floor. Unpainted, this dot still
-	# changed 13 px when hidden: it sits on the corner of its item and was a
-	# canvas-coloured notch in the item's border. A notch is not a dot.
-	('guild rail unread dot', '.cm-guildrail__unread', 40),
+	# A floor of its own, set between two measurements. Unpainted, this dot
+	# still changed 13 px when hidden: it sits on the corner of its item and
+	# was a canvas-coloured notch in the item's border, and a notch is not a
+	# dot. Painted, it changes 36 to 43 px of its 64, not all of them: it
+	# hangs 1px outside the item that frames the picture, it covers a border
+	# of its own colour, and which pixel row that costs moves with the
+	# sub-pixel position of the section (43 before a merge added a section
+	# above it, 36 after; a first floor of 40 failed a correctly painted dot).
+	('guild rail unread dot', '.cm-guildrail__unread', 24),
 	('spacing specimen bar', '.cm-spec__bar'),
 ]
 # A mark's OWN paint, with its children hidden first. The switch track holds
