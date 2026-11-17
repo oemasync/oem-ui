@@ -21286,7 +21286,11 @@ check('chroma: a tone class paints nothing by itself', () => {
 		for (const s of splitSelectors(r.sel)) {
 			if (!s.includes('.cm-tone--')) continue;
 			if (s.startsWith('[data-cm-chroma]')) continue; // a setter; proven to only set above
-			assert(/\.cm-[a-z]/.test(stripWhere(s)), `"${s}" paints from the tone class alone, with no component beside it`);
+			// The tone class is itself a `.cm-` class, so it has to come out
+			// before looking for a component. Left in, `.cm-tone--err { ... }`
+			// satisfied the test with its own name and this check could not fail.
+			const beside = stripWhere(s).replace(/\.cm-tone--[a-z]+/g, '');
+			assert(/\.cm-[a-z]/.test(beside), `"${s}" paints from the tone class alone, with no component beside it`);
 		}
 	}
 });
