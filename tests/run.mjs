@@ -256,9 +256,47 @@ for (const theme of ['dark', 'light']) {
 	}
 }
 
+/* The focus ring. A ring is a user-interface component, and WCAG 1.4.11
+   asks 3:1 of it against what it is drawn beside. --focus was an alias of
+   --accent-dim, a DECORATIVE tone (a blockquote rule, a tag border) that owes
+   nobody 3:1, and base.css did not use --focus at all: it painted the
+   default ring with --accent-dim directly. MEASURED in Chromium on the built
+   showcase, dark theme: 94 of 616 focus rings sat between 2.60:1 and 2.96:1,
+   every text field, checkbox and radio among them. */
+const focusColour = (theme) => {
+	const bare = tokens.replace(/\/\*[\s\S]*?\*\//g, '');
+	let name = 'focus';
+	for (let hop = 0; hop < 4; hop++) {
+		const alias = new RegExp(`--${name}:\\s*var\\(--([a-z0-9-]+)\\)`).exec(bare);
+		if (!alias) return varOf(name, theme);
+		name = alias[1];
+	}
+	throw new Error('--focus is an alias chain more than four deep');
+};
+for (const theme of ['dark', 'light']) {
+	check(`${theme} focus ring clears 3:1 on every surface`, () => {
+		const c = focusColour(theme);
+		for (const name of TEXT_SURFACES) {
+			const s = varOf(name, theme);
+			const r = contrast(c, s);
+			assert(r >= 3, `--focus ${c} on --${name} ${s} = ${r.toFixed(2)}:1 (need 3)`);
+		}
+	});
+}
+
 /* ================= base.css ================= */
 console.log('\nbase.css');
 const base = read('src/styles/base.css');
+check('the default focus ring is painted with --focus, on fine and coarse pointers', () => {
+	// The token existed and the base layer walked past it, so the one place
+	// that draws most rings could not be fixed by fixing the token.
+	const rules = [...base.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|[\s{}]):focus-visible\s*\{([^}]*)\}/g)].map((m) => m[1]);
+	assert(rules.length === 2, `expected the bare :focus-visible rule twice (fine and coarse), found ${rules.length}`);
+	for (const body of rules) {
+		assert(/outline:\s*[12]px solid var\(--focus\)/.test(body),
+			`a bare :focus-visible rule does not paint with --focus: ${body.trim()}`);
+	}
+});
 check('reserves the scrollbar gutter on every page', () => {
 	assert(/html\s*\{[^}]*overflow-y:\s*scroll/.test(base), 'html must set overflow-y:scroll');
 });

@@ -335,10 +335,22 @@
 	   text scan reads that line as perfectly well-formed.
 
 	   It is an alias, not a copy, on purpose: `var()` is substituted at
-	   computed-value time, so each theme's own --accent-dim is what a
-	   ring actually paints with. Duplicating the hex here would be a
-	      second value to keep in step with the first. */
-	   --focus: var(--accent-dim);
+	   computed-value time, so each theme's own value is what a ring
+	   actually paints with. Duplicating a hex here would be a second
+	   value to keep in step with the first.
+
+	   An alias of --ink-faint, and no longer of --accent-dim. A focus
+	   ring has to read at 3:1 against what it sits beside, and
+	   --accent-dim is a decorative tone that never promised that: dark
+	   #5c5c5c is 2.96:1 on --bg and 2.38:1 on --surface-raised.
+	   MEASURED in Chromium on the showcase, 94 of 616 focus rings in the
+	   dark theme were under 3:1, every text field among them.
+	   --ink-faint is already held to 4.5:1 on every surface in both
+	   themes, so the ring inherits a guarantee instead of needing one of
+	   its own. It is still the dimmest of the three ink tiers, and links
+	   and buttons still brighten theirs to --ink-dim: dim by default,
+	   brighter on what you can press. */
+	--focus: var(--ink-faint);
 	   /* There is deliberately no `--tap-sm`.
 
 	   One was added here -- `--tap-sm: 44px` -- to say "a small label may

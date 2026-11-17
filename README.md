@@ -4554,7 +4554,9 @@ props, so one library serves many projects.
   on, in both themes. The test suite computes this from the real hex values,
   so a future tweak that breaks it fails `npm test`.
 - Focus is always visible. The house style is a dim 1px outline that
-  brightens on interaction; never remove it without replacing it.
+  brightens on interaction; never remove it without replacing it. The ring
+  is `--focus`, an alias of `--ink-faint`, so it clears 3:1 against every
+  surface in both themes and `npm test` computes that from the token values.
 - `prefers-reduced-motion` disables the cursor blink and all transitions.
 - Decorative glyphs (`▸`, `●`, the cursor) are `aria-hidden`.
 - **Forced colors** (Windows High Contrast) keeps every state and every

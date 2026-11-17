@@ -1,3 +1,34 @@
+## Unreleased - the focus ring clears 3:1 in the dark theme
+
+Measured in Chromium on the built showcase, dark theme: 94 of 616 focus
+rings were under the 3:1 that WCAG 1.4.11 asks of a focus indicator, at
+2.60:1 to 2.96:1. Every text, email, password and search field was among
+them, with every checkbox, radio, textarea and `<summary>`. Links and
+buttons were fine, and so was the whole light theme.
+
+Two causes, one in each layer. `--focus` was an alias of `--accent-dim`, a
+decorative tone (a blockquote rule, a tag border) that is `#5c5c5c` in the
+dark theme. And `base.css` did not use `--focus` at all: the bare
+`:focus-visible` rule painted with `--accent-dim` directly, so fixing the
+token alone would have fixed seven component rules and missed the one that
+draws most rings.
+
+- `src/styles/tokens.css` - `--focus` is an alias of `--ink-faint`. That
+  tier is already held to 4.5:1 on every surface in both themes, so the
+  ring inherits a guarantee. Dark rings go from `#5c5c5c` to `#8b8b8b`;
+  light rings from `#666666` to `#6a6a6a`, which nobody will see. It is
+  still the dimmest ink tier, and links and buttons still brighten theirs
+  to `--ink-dim`.
+- `src/styles/base.css` - the bare `:focus-visible` rule and its
+  coarse-pointer twin paint with `var(--focus)`.
+- `tests/run.mjs` - three checks: the ring's resolved colour against all
+  ten surface tokens at 3:1 in each theme, and that both bare
+  `:focus-visible` rules paint with `--focus`. Red first: the dark check
+  failed at `#5c5c5c on --bg = 2.96:1`, and the base check on
+  `var(--accent-dim)`.
+
+Measured after, same probe: 0 of 616 under 3:1 in either theme.
+
 ## Unreleased - `init()` binds once, and lets go of what it bound
 
 `init()` runs again on every `astro:page-load`, and a SPA calls it after a
