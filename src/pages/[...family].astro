@@ -39,6 +39,7 @@ import State from '../astro/State.astro';
 import Project from '../astro/Project.astro';
 import Endpoint from '../astro/Endpoint.astro';
 import Param from '../astro/Param.astro';
+import Tree from '../astro/Tree.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -1112,6 +1113,40 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 						</details>
 					</li>
 				</ul>
+				<div class="cm-list-head">Tree, from data &mdash; the &lt;Tree&gt; wrapper</div>
+				<p class="cm-head__sub">
+					Hand-nesting <code>&lt;ul&gt;</code>/<code>&lt;li&gt;</code>/<code>&lt;details&gt;</code>
+					three levels deep is exactly the markup a docs-nav page keeps retyping.
+					<code>&lt;Tree&gt;</code> takes the same shape as data and recurses into
+					itself for every branch, so a consumer's tree is proven equivalent to
+					the one above rather than merely similar. This specimen mirrors it with
+					one deliberate difference: <code>LICENSE</code> carries no <code>href</code>,
+					proving a leaf with none still renders as a real link rather than a dead span.
+				</p>
+				<Tree
+					label="repository (wrapper)"
+					nodes={[
+						{
+							label: 'oem-ui/',
+							open: true,
+							children: [
+								{
+									label: 'src/',
+									open: true,
+									children: [
+										{ label: 'tokens.css', href: '#tree' },
+										{ label: 'components.css', href: '#tree' },
+									],
+								},
+								{
+									label: 'tests/',
+									children: [{ label: 'run.mjs', href: '#tree' }],
+								},
+								{ label: 'LICENSE' },
+							],
+						},
+					]}
+				/>
 				<div class="cm-list-head">Index / compact</div>
 				<ul class="cm-rows cm-rows--inline">
 					<PostRow href="#1" index={3} title="Extract components from a design" description="separate tokens, base, components and runtime." date={new Date('2025-09-26')} />

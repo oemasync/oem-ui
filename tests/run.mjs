@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -21495,4 +21495,108 @@ check('the built page renders <Param> in both modes with the right marks', () =>
 	const errWindow = built.slice(Math.max(0, errIdx - 200), errIdx);
 	assert(/cm-status-code cm-status-code--err">500</.test(errWindow),
 		'the rendered err-tier status specimen does not carry the cm-status-code--err mark beside its code - tier is not reaching the output');
+});
+
+/* ================= <Tree> astro wrapper =================
+   .cm-tree / .cm-tree--root / .cm-disclosure / .cm-tree__row were proven
+   in CSS and demonstrated by hand in the showcase's three-level nested
+   <ul>/<li>/<details> tree. The wrapper is what a file-browser or
+   docs-nav page actually calls: data in, the same markup shape out, by
+   recursing into itself once per branch. The mutation sweep is
+   tests/mutate-tree-astro.mjs. */
+console.log('\n<Tree> wrapper');
+
+const treeAstro = read('src/astro/Tree.astro');
+// Scoped to the MARKUP, after the frontmatter fence closes - the same
+// scoping Param.astro's own check uses, for the same reason: the doc
+// comment above the frontmatter names several classes in backticks for a
+// reader's benefit, and an unscoped check cannot tell a renamed class in
+// the template from the prose that still describes the original name.
+const treeFenceEnd = treeAstro.indexOf('\n---\n', 3);
+const treeMarkup = treeFenceEnd === -1 ? treeAstro : treeAstro.slice(treeFenceEnd + 5);
+
+check('Tree.astro gates cm-tree--root, data-cm-tree and aria-label to the root call only', () => {
+	assert(/class:list=\{\['cm-tree', root && 'cm-tree--root'\]\}/.test(treeMarkup),
+		'Tree.astro does not conditionally add cm-tree--root on root - every nested <ul> would carry it too');
+	assert(/\{\.\.\.root && \{ 'data-cm-tree': true, 'aria-label': label \}\}/.test(treeMarkup),
+		"Tree.astro does not gate data-cm-tree/aria-label on root - a naive recursive render would repeat the root's own binding attribute and label on every nested <ul>, which is exactly the bug this wrapper exists to prevent");
+});
+
+check('Tree.astro renders a branch as a disclosure and recurses into itself for its children', () => {
+	assert(/node\.children \?/.test(treeMarkup),
+		'Tree.astro does not branch on node.children to decide branch vs leaf');
+	assert(/<details class="cm-disclosure" open=\{node\.open\}>/.test(treeMarkup),
+		'Tree.astro does not render a branch as a cm-disclosure, or does not pass node.open through - a branch missing this defaults to open and strands the tree expanded by surprise');
+	assert(/<summary class="cm-disclosure__summary cm-tree__row">/.test(treeMarkup),
+		"Tree.astro's branch summary does not carry both cm-disclosure__summary and cm-tree__row");
+	assert(/<span class="cm-disclosure__mark" aria-hidden="true">/.test(treeMarkup),
+		'Tree.astro does not render the disclosure mark glyph, or does not hide it from assistive tech');
+	assert(/<Tree nodes=\{node\.children\} root=\{false\}\s*\/>/.test(treeMarkup),
+		"Tree.astro does not recurse into itself with root={false} for a branch's children - a branch would have to hand-nest its own markup instead of composing the wrapper");
+});
+
+check('Tree.astro renders a leaf with no children as a real link, defaulting href to #', () => {
+	assert(/<a class="cm-tree__row" href=\{node\.href \?\? '#'\}>/.test(treeMarkup),
+		'Tree.astro does not fall back href to "#" for a leaf with none - a leaf given no href would render a dead, unfocusable, untappable row instead of a real link');
+});
+
+check('Tree.astro throws when the root call is given no label', () => {
+	assert(/if\s*\(root && !label\)/.test(treeAstro) && /throw new Error/.test(treeAstro),
+		'Tree.astro does not guard the root call against a missing label - the root list would read as an anonymous nested list to a screen reader');
+});
+
+check('Tree.astro is imported and rendered in the showcase', () => {
+	assert(/import Tree from '\.\.\/astro\/Tree\.astro'/.test(showcase),
+		'the showcase does not import Tree.astro');
+	const treeUses = showcase.match(/<Tree\s/g) || [];
+	assert(treeUses.length >= 1,
+		`the showcase renders <Tree> ${treeUses.length} time(s) - expected at least 1`);
+});
+
+check("the showcase's <Tree> specimen exercises a closed branch and an href-less leaf", () => {
+	const treeCallIdx = showcase.indexOf('<Tree\n');
+	assert(treeCallIdx !== -1, 'could not locate the <Tree> call in the showcase');
+	const treeCallEnd = showcase.indexOf('\n\t\t\t\t/>', treeCallIdx);
+	assert(treeCallEnd !== -1, 'could not find the end of the <Tree> call in the showcase');
+	const treeCall = showcase.slice(treeCallIdx, treeCallEnd);
+	assert(/label: 'tests\/',/.test(treeCall),
+		"the showcase specimen does not include a \"tests/\" branch to exercise a closed branch");
+	assert(!/label: 'tests\/',\s*\n\s*open: true/.test(treeCall),
+		'the showcase specimen gives its "tests/" branch open: true - without a closed branch, the wrapper never proves a <details> with no open attribute');
+	assert(/\{ label: 'LICENSE' \}/.test(treeCall),
+		'the showcase specimen gives every leaf an href - without one, the href-fallback-to-# path is unproven');
+});
+
+check('the built page renders <Tree> with root attrs on only the outer ul, and the href fallback on its href-less leaf', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuild and re-run before shipping
+	const wrapIdx = built.indexOf('repository (wrapper)');
+	assert(wrapIdx !== -1, 'the <Tree label="repository (wrapper)"> specimen never reached the DOM');
+	// The whole rendered subtree, from the wrapper's own root <ul> to its closing tag.
+	// aria-label="repository (wrapper)" is an ATTRIBUTE of that <ul>, so the
+	// tag itself starts BEFORE wrapIdx - search backward, not forward.
+	const treeStart = built.lastIndexOf('<ul class="cm-tree cm-tree--root"', wrapIdx);
+	assert(treeStart !== -1, 'the wrapper specimen has no root <ul class="cm-tree cm-tree--root">');
+	const treeEnd = built.indexOf('<div class="cm-list-head">Index / compact</div>', treeStart);
+	assert(treeEnd !== -1, 'could not bound the end of the wrapper specimen in the built page');
+	const rendered = built.slice(treeStart, treeEnd);
+	// Exactly one data-cm-tree and one aria-label in the whole subtree - every
+	// nested <ul> the recursion produced must be the bare class, nothing else.
+	const dataCmTreeCount = (rendered.match(/data-cm-tree=/g) || []).length;
+	assert(dataCmTreeCount === 1,
+		`expected exactly 1 data-cm-tree attribute in the wrapper's rendered subtree, got ${dataCmTreeCount} - a nested <ul> is repeating the root's own binding attribute`);
+	const ariaLabelCount = (rendered.match(/aria-label="repository \(wrapper\)"/g) || []).length;
+	assert(ariaLabelCount === 1,
+		`expected exactly 1 aria-label in the wrapper's rendered subtree, got ${ariaLabelCount} - a nested <ul> is repeating the root's own label`);
+	// The closed "tests/" branch must carry no `open` attribute at all.
+	const testsIdx = rendered.indexOf('tests/</summary>');
+	assert(testsIdx !== -1, 'the wrapper specimen never rendered its "tests/" branch');
+	const testsDetailsStart = rendered.lastIndexOf('<details class="cm-disclosure"', testsIdx);
+	const betweenTestsDetailsAndSummary = rendered.slice(testsDetailsStart, testsIdx);
+	assert(/^<details class="cm-disclosure">/.test(betweenTestsDetailsAndSummary),
+		'the wrapper\'s closed "tests/" branch carries an open attribute - a branch given no open prop must default to closed, matching the platform default');
+	// The href-less "LICENSE" leaf must fall back to href="#", not render
+	// without an href (which would be a dead, unfocusable row).
+	assert(/<a class="cm-tree__row" href="#">LICENSE<\/a>/.test(rendered),
+		'the wrapper\'s href-less "LICENSE" leaf did not fall back to href="#" - it rendered either with no href at all, or with the wrong one');
 });

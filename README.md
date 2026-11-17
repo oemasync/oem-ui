@@ -3886,6 +3886,65 @@ a row is always exactly one or the other. The description is a slot, not a
 string prop, so a parameter whose meaning references another field's name
 in `<code>` renders that reference live instead of as literal angle brackets.
 
+## Tree
+
+`.cm-tree` is a nested file/record tree built on `<details>`/`<summary>`,
+so a branch opens with no JavaScript and a summary is already focusable.
+The runtime only walks an open tree with the arrow keys (`data-cm-tree`);
+expansion itself is never JS-owned.
+
+```html
+<ul class="cm-tree cm-tree--root" data-cm-tree aria-label="repository">
+  <li>
+    <details class="cm-disclosure" open>
+      <summary class="cm-disclosure__summary cm-tree__row">
+        <span class="cm-disclosure__mark" aria-hidden="true">&#9656;</span>
+        src/
+      </summary>
+      <ul class="cm-tree">
+        <li><a class="cm-tree__row" href="#">index.ts</a></li>
+      </ul>
+    </details>
+  </li>
+</ul>
+```
+
+Hand-nesting that three levels deep is exactly the markup a file-browser or
+docs-nav page keeps retyping. `<Tree>` takes the same shape as data and
+recurses into itself for every branch, so a consumer's tree is proven
+equivalent to the hand-built one rather than merely similar.
+
+```astro
+---
+import Tree from '../astro/Tree.astro';
+---
+
+<Tree
+  label="repository"
+  nodes={[
+    {
+      label: 'src/',
+      open: true,
+      children: [{ label: 'index.ts', href: '/src/index.ts' }],
+    },
+    { label: 'LICENSE', href: '/LICENSE' },
+  ]}
+/>
+```
+
+`nodes` is a list of `{ label, href?, open?, children? }`. A node carrying
+`children` (even an empty array) renders as a `<details>` branch; a node
+with no `children` key renders as a plain `cm-tree__row` link. `open` only
+matters on a branch and defaults to closed, matching the platform default
+for an unmarked `<details>`. `href` only matters on a leaf; a leaf given no
+`href` still renders as a real, focusable, tappable row (`href="#"`)
+rather than a dead span. `label` is the root's `aria-label` and is required
+on the outermost call - an unlabelled tree reads as an anonymous nested
+list to a screen reader. The wrapper recurses into itself for a branch's
+children, gating `cm-tree--root`, `data-cm-tree` and the `aria-label` to
+the outermost call only, so no nested `<ul>` repeats the root's own
+binding attribute or label.
+
 ## Icon buttons
 
 `.cm-icon-btn` is a square button that holds one glyph. On a phone it is
@@ -4632,6 +4691,7 @@ Copy from `src/astro/` and set your identity in `config.ts`:
 | `Meter.astro` | one labelled proportion bar. Throws on a `pct` outside 0-100 |
 | `Progress.astro` | one linear progress bar. `value`/`max`/`label`, and `scroll` (true or a selector) hands the bar to the runtime's reading-progress driver |
 | `CodeBlock.astro` | a `<pre>` with a language label and a copy button. Throws on a missing `id` |
+| `Tree.astro` | a nested file/record tree. `nodes` (array of `{ label, href?, open?, children? }`), `label` required on the root call; recurses into itself for a branch's children |
 
 ```astro
 ---

@@ -1,0 +1,91 @@
+---
+/**
+ * oem-ui <Tree> — a nested file/record tree, built on `<details>`/
+ * `<summary>` so a branch opens with no JavaScript and a summary is
+ * already focusable. The runtime only walks an open tree with the
+ * arrow keys (`data-cm-tree`); expansion itself is never JS-owned.
+ *
+ * The showcase's own tree section hand-nested three levels of
+ * `<ul>`/`<li>`/`<details>` to prove `.cm-tree` in CSS. This is the
+ * wrapper a file-browser or docs-nav page actually calls — the same
+ * role `<Endpoint>` and `<Param>` play for their own rows: data in,
+ * the exact markup shape out, so a consumer's tree can never drift
+ * from the one the library proved.
+ *
+ * `nodes` is a list of `{ label, href?, open?, children? }`. A node
+ * carrying `children` (even an empty array) renders as a `<details>`
+ * branch; a node with no `children` key renders as a plain
+ * `cm-tree__row` link. `open` only matters on a branch and defaults to
+ * closed, matching the platform default for an unmarked `<details>`.
+ * `href` only matters on a leaf; a leaf given no `href` still renders
+ * as a real, focusable, tappable row (`href="#"`) rather than a dead
+ * span — the same reasoning `<Pager>` and `<Crumbs>` already use for
+ * an inert row.
+ *
+ * `label` is the ROOT's `aria-label` — required on the outermost call,
+ * because an unlabelled tree reads as an anonymous nested list to a
+ * screen reader. `root` is internal plumbing for the recursive calls
+ * this component makes into itself for every branch's children; it is
+ * never set by a caller, and it is what keeps `data-cm-tree` and the
+ * `aria-label` from being repeated on every nested `<ul>` the way a
+ * naive recursive render would.
+ */
+import Tree from './Tree.astro';
+
+interface TreeNode {
+	/** The row's visible text. */
+	label: string;
+	/** Makes a leaf row a link. Ignored on a branch (one with `children`). */
+	href?: string;
+	/** Starts this branch open. Ignored on a leaf. Defaults to closed. */
+	open?: boolean;
+	/** Child rows. Presence (even `[]`) is what makes a row a branch. */
+	children?: TreeNode[];
+}
+
+interface Props {
+	/** The rows at this level. */
+	nodes: TreeNode[];
+	/** The root's `aria-label`. Required on the outermost call only. */
+	label?: string;
+	/** Internal: false on every recursive (non-root) call. Do not set. */
+	root?: boolean;
+}
+
+const { nodes, label, root = true } = Astro.props;
+
+if (root && !label) {
+	throw new Error(
+		'<Tree> needs a label: the root list reads as an anonymous nested list to a screen reader without one',
+	);
+}
+---
+
+<ul
+	class:list={['cm-tree', root && 'cm-tree--root']}
+	{...root && { 'data-cm-tree': true, 'aria-label': label }}
+>
+	{
+		nodes.map((node) =>
+			node.children ? (
+				<li>
+					<details class="cm-disclosure" open={node.open}>
+						<summary class="cm-disclosure__summary cm-tree__row">
+							<span class="cm-disclosure__mark" aria-hidden="true">
+								&#9656;
+							</span>
+							{node.label}
+						</summary>
+						<Tree nodes={node.children} root={false} />
+					</details>
+				</li>
+			) : (
+				<li>
+					<a class="cm-tree__row" href={node.href ?? '#'}>
+						{node.label}
+					</a>
+				</li>
+			),
+		)
+	}
+</ul>

@@ -1,3 +1,43 @@
+## Unreleased - `<Tree>`: the nested file/record tree wrapper
+
+The showcase's tree section proved `.cm-tree` in CSS by hand-nesting three
+levels of `<ul>`/`<li>`/`<details>` - exactly the markup a file-browser or
+docs-nav page would have to retype for every tree it renders. Every other
+hand-built row in the showcase already had its own wrapper (`<Endpoint>`,
+`<Param>`, `<Kv>`, `<PostRow>`); the tree was the one still unwrapped.
+
+`<Tree>` takes a `nodes` list shaped like the data it describes and
+recurses into itself once per branch, so a consumer's tree is proven
+equivalent to the hand-built one rather than merely similar.
+
+- `src/astro/Tree.astro` - a new Astro component. `nodes` is
+  `{ label, href?, open?, children? }[]`; a node carrying `children`
+  renders as a `<details>` branch, a node with none renders as a plain
+  `cm-tree__row` link, falling back to `href="#"` so an href-less leaf is
+  still a real, focusable, tappable row. `label` is the root's
+  `aria-label`, required on the outermost call and never repeated on a
+  nested `<ul>` - the recursive call passes `root={false}`, which gates
+  `cm-tree--root`, `data-cm-tree` and the label to the outermost call only.
+  Throws when the root call is given no label.
+- `src/pages/[...family].astro` - a second tree specimen beside the
+  hand-built one, rendered through the wrapper from the same data shape,
+  with a closed branch (`tests/`, no `open`) and an href-less leaf
+  (`LICENSE`) deliberately exercised rather than an all-defaults happy path.
+- `README.md` - a new "Tree" section documenting both the CSS shape and
+  the wrapper, plus a row in the Astro components table.
+- `tests/run.mjs` - eight checks: the root-only attribute gating, the
+  branch/leaf decision and its recursive call, the href fallback, the
+  missing-label guard, the showcase import and specimen shape, and the
+  built page's rendered subtree (exactly one `data-cm-tree` and one
+  `aria-label` in the whole wrapper subtree, the closed branch carrying no
+  `open` attribute, the href-less leaf resolving to `href="#"`).
+- `tests/mutate-tree-astro.mjs` - ten mutants, each required to fail the
+  check that names it. Verified in real WebKit (390x844 and 1280x900):
+  the wrapper's root `<ul>` carries the `aria-label`, no nested `<ul>`
+  repeats it, the closed branch renders no `open` attribute, the
+  href-less leaf is a real tappable link, and `scrollWidth` overflow is 0
+  at both widths.
+
 ## Unreleased - status colour, opt-in
 
 The library was zero-chroma: a state is a glyph and a word. That holds
