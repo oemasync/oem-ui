@@ -192,14 +192,41 @@ check('light theme is explicit opt-in via [data-theme=light]', () => {
 	assert(/:root\[data-theme='light'\]/.test(tokens), "missing :root[data-theme='light']");
 });
 
+/* The surfaces text is drawn on, BY TOKEN NAME, read from each theme block.
+   This list was three hex literals per theme (#fafafa, #f5f5f5, #ffffff for
+   light), so the check graded three of ten surfaces while its title said
+   "every surface". Light --ink-faint read 4.38:1 on --panel-nested the whole
+   time: axe measured it on the built showcase (29 nodes, six pages) with
+   this check green. Names instead of values, so a re-tuned surface is
+   re-graded, and the guard below fails when the theme block grows a surface
+   this list does not name. */
+const TEXT_SURFACES = ['bg', 'bg-2', 'bg-3', 'panel', 'panel-nested', 'surface-raised',
+	'header-bg', 'footer-bg', 'sidebar-background', 'sidebar-accent'];
+/* What a surface token is called. --selection-bg is absent on purpose: it is
+   translucent, painted over another surface, and carries --selection-color,
+   never an ink tier. */
+const SURFACE_NAME = /^(bg(-\d+)?|panel(-[a-z]+)?|surface-[a-z]+|header-bg|footer-bg|sidebar-background|sidebar-accent)$/;
+
+check('the contrast check names every surface token the themes declare', () => {
+	const dark = tokens.match(/:root,\s*:root\[data-theme='dark'\]\s*\{([\s\S]*?)\n\}/);
+	assert(dark, 'cannot find the dark theme block');
+	const declared = [...dark[1].replace(/\/\*[\s\S]*?\*\//g, ' ').matchAll(/--([a-z0-9-]+):\s*#[0-9a-fA-F]{3,8}\s*;/g)]
+		.map((m) => m[1]).filter((n) => SURFACE_NAME.test(n));
+	assert(declared.length >= 6, `only ${declared.length} surface tokens found in the dark block; the scan is not reading it`);
+	const ungraded = declared.filter((n) => !TEXT_SURFACES.includes(n));
+	assert(ungraded.length === 0, `surface token(s) no contrast check grades: ${ungraded.map((n) => '--' + n).join(', ')}`);
+	const gone = TEXT_SURFACES.filter((n) => !declared.includes(n));
+	assert(gone.length === 0, `the contrast check names surface(s) the theme no longer declares: ${gone.map((n) => '--' + n).join(', ')}`);
+});
+
 for (const theme of ['dark', 'light']) {
 	for (const t of ['ink', 'ink-dim', 'ink-faint']) {
 		check(`${theme} --${t} passes WCAG AA on every surface`, () => {
 			const c = varOf(t, theme);
-			const surfaces = theme === 'dark' ? ['#0a0a0a', '#111111', '#161616'] : ['#fafafa', '#f5f5f5', '#ffffff'];
-			for (const s of surfaces) {
+			for (const name of TEXT_SURFACES) {
+				const s = varOf(name, theme);
 				const r = contrast(c, s);
-				assert(r >= 4.5, `--${t} ${c} on ${s} = ${r.toFixed(2)}:1 (need 4.5)`);
+				assert(r >= 4.5, `--${t} ${c} on --${name} ${s} = ${r.toFixed(2)}:1 (need 4.5)`);
 			}
 		});
 	}

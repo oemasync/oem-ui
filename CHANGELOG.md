@@ -1,3 +1,24 @@
+## Unreleased - light `--ink-faint` clears AA on every surface
+
+Light `--ink-faint` was `#6d6d6d`, which reads 4.38:1 on `--panel-nested`
+(`#ececec`) and on `--sidebar-accent` (the same value). axe measured it on
+the built showcase in the light theme: 29 nodes across six pages, on
+`.cm-tile__note`, `.cm-card__sub`, `.cm-head__sub`, `.cm-row__meta` and the
+others that put the faint tier on a nested panel. Dark was never affected.
+
+- `src/styles/tokens.css` - light `--ink-faint` is `#6a6a6a` in all three
+  places it is declared (the document theme, the scoped `[data-cm-theme]`
+  theme and the print palette). 4.58:1 on `--panel-nested`, 4.75:1 or
+  better on the other nine surfaces. Three levels of grey; no layout moves.
+- `tests/run.mjs` - the check that let this through was titled "passes
+  WCAG AA on every surface" and graded three hex literals per theme. It now
+  reads ten surface tokens BY NAME from each theme block, so a re-tuned
+  surface is re-graded, and a second check fails when a theme declares a
+  surface token the list does not name. Proven red first: with the old
+  token the suite fails on exactly `--ink-faint #6d6d6d on --panel-nested
+  #ececec = 4.38:1`.
+- `src/styles/components.css` - one comment quoted the old value's ratio.
+
 ## Unreleased - `<Endpoint>`: the method+path wrapper
 
 `cm-endpoint` / `cm-endpoint__path` / `cm-endpoint__param` were proven

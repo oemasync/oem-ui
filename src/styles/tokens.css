@@ -498,7 +498,11 @@
 
 	--ink: #111111;
 	--ink-dim: #4a4a4a;
-	--ink-faint: #6d6d6d;
+	/* #6a6a6a, not the #6d6d6d it was: the faint tier has to clear AA on
+	   the DARKEST light surface, and that is --panel-nested (#ececec),
+	   where #6d6d6d read 4.38:1. Three levels darker reads 4.58:1 there
+	   and 4.75:1 or better on the other nine surfaces. */
+	--ink-faint: #6a6a6a;
 
 	--accent: #111111;
 	--accent-bright: #000000;
@@ -655,7 +659,7 @@
 	--line-soft: #e2e2e2;
 	--ink: #111111;
 	--ink-dim: #4a4a4a;
-	--ink-faint: #6d6d6d;
+	--ink-faint: #6a6a6a;
 	--accent: #111111;
 	--accent-bright: #000000;
 	--accent-dim: #666666;
@@ -730,7 +734,7 @@
 		--line-soft: #e2e2e2;
 		--ink: #111111;
 		--ink-dim: #4a4a4a;
-		--ink-faint: #6d6d6d;
+		--ink-faint: #6a6a6a;
 		--accent: #111111;
 		--accent-bright: #000000;
 		--accent-dim: #666666;
