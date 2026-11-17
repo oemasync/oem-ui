@@ -7802,8 +7802,11 @@ check('rotating to a desktop width clears the open state', () => {
 	if (!handler) throw new Error('no onChange handler for the breakpoint');
 	if (!/setOpen\(false\)/.test(handler[0]))
 		throw new Error(`the breakpoint handler does not close the panel: ${handler[0].trim()}`);
-	// And it must be the handler that is actually subscribed.
-	if (!/addEventListener\('change',\s*onChange\)/.test(MC_NAV_JS))
+	// And it must be the handler that is actually subscribed. Through
+	// cmWhileConnected, so the subscription ends when the burger leaves the
+	// page; a bare mq.addEventListener here outlived every header it was
+	// bound for.
+	if (!/cmWhileConnected\(btn,\s*mq,\s*'change',\s*onChange\)/.test(MC_NAV_JS))
 		throw new Error('onChange is defined but not the listener that is bound');
 });
 check('the panel starts closed even if markup is reused', () => {
@@ -21015,6 +21018,114 @@ check('parameter row: the showcase demonstrates every part, in all four location
 		'the optional specimen (limit, no asterisk) is missing - the row without its required mark is unproven');
 	assert(showcaseIndex.includes('param'),
 		'the parameter section is not in the section index, so the rail cannot reach it');
+});
+
+/* ================= window listeners that belong to an element =================
+   init() runs again on every astro:page-load and on every call a SPA makes.
+   MEASURED in WebKit and Chromium on the showcase: each extra init() added 7
+   listeners to `window` and one ResizeObserver, and after a client-side
+   navigation every listener bound for the old page was still attached. The
+   engine-level proof is tests/verify-init-idempotent.py. These two run here,
+   offline, because this file is what CI runs. */
+console.log('\nwindow listeners owned by an element');
+
+check('a window listener bound for an element lets go when the element leaves the page', () => {
+	// The REAL runtime, through an exported binder, against a window that
+	// records what is attached and what is taken back off.
+	const attached = [];
+	const docEl = { scrollTop: 0, scrollHeight: 2000, clientHeight: 1000,
+		style: { setProperty() {}, removeProperty() {} },
+		attrs: {}, classList: { add() {}, remove() {}, contains: () => false },
+		setAttribute(k, v) { this.attrs[k] = v; },
+		getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; } };
+	const bar = { attrs: { 'data-cm-progress': '' },
+		style: { setProperty(k, v) { bar.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { bar.attrs[k] = v; },
+		getAttribute(k) { return k in bar.attrs ? bar.attrs[k] : null; } };
+	const doc = { readyState: 'loading', documentElement: docEl, scrollingElement: docEl,
+		body: { style: {}, appendChild() {} },
+		querySelectorAll: (sel) => (sel === '[data-cm-progress]' ? [bar] : []),
+		querySelector: () => null, getElementById: () => null, addEventListener() {},
+		createElement: () => ({ style: {}, classList: { add() {} },
+			setAttribute() {}, getAttribute() { return null; }, appendChild() {} }) };
+	const ctx = { document: doc,
+		window: {
+			addEventListener: (t, fn) => { attached.push([t, fn]); },
+			removeEventListener: (t, fn) => {
+				const i = attached.findIndex(([a, b]) => a === t && b === fn);
+				if (i !== -1) attached.splice(i, 1);
+			},
+			scrollY: 0, innerHeight: 800, requestAnimationFrame() {},
+			matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+		},
+		localStorage: { getItem: () => null, setItem() {} }, navigator: {},
+		MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; },
+		ResizeObserver: function () { this.observe = () => {}; },
+		module: { exports: {} } };
+	ctx.globalThis = ctx;
+	ctx.self = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	const api = ctx.window.cliMono;
+	const mine = () => attached.filter(([t]) => t === 'scroll' || t === 'resize');
+	const fire = (type) => attached.filter(([t]) => t === type).forEach(([, fn]) => fn({}));
+
+	api.initProgress(doc);
+	assert(mine().length === 2, `one bar should bind one scroll and one resize listener, found ${mine().length}`);
+	api.initProgress(doc);
+	api.initProgress(doc);
+	assert(mine().length === 2, `binding the same bar again stacked listeners: ${mine().length}`);
+
+	// In the page (this fake has no isConnected at all, which must read as
+	// "still here", never as "gone"): the listener does its job.
+	docEl.scrollTop = 500;
+	fire('scroll');
+	assert(bar.attrs['aria-valuenow'] === '50', `a live bar did not repaint on scroll: aria-valuenow=${bar.attrs['aria-valuenow']}`);
+
+	// Out of the page: it must not paint a node nobody can see, and it must
+	// take itself off the window.
+	bar.isConnected = false;
+	docEl.scrollTop = 1000;
+	fire('scroll');
+	assert(bar.attrs['aria-valuenow'] === '50', `a removed bar was still repainted: aria-valuenow=${bar.attrs['aria-valuenow']}`);
+	assert(attached.filter(([t]) => t === 'scroll').length === 0, 'the scroll listener outlived its element');
+	fire('resize');
+	assert(attached.filter(([t]) => t === 'resize').length === 0, 'the resize listener outlived its element');
+
+	// The other way out: init() lets go of everything whose owner is gone,
+	// without waiting for an event that may never come.
+	const next = { attrs: { 'data-cm-progress': '' },
+		style: { setProperty() {} }, setAttribute() {}, getAttribute(k) { return k in next.attrs ? next.attrs[k] : null; } };
+	doc.querySelectorAll = (sel) => (sel === '[data-cm-progress]' ? [next] : []);
+	api.initProgress(doc);
+	const bound = mine().map(([, fn]) => fn);
+	assert(bound.length === 2, `the second bar did not bind: ${bound.length} listeners`);
+	next.isConnected = false;
+	doc.querySelectorAll = () => [];
+	api.init(doc);
+	// By identity: init() binds a page-level listener or two of its own
+	// (the hovercard clamp), and those are not this bar's to lose.
+	const left = attached.filter(([, fn]) => bound.includes(fn)).length;
+	assert(left === 0, `init() left ${left} listener(s) attached for an element that is gone`);
+});
+
+check('no binder attaches a scroll or resize listener to window on its own', () => {
+	// The structural half. Every scroll/resize listener on `window` is
+	// either routed through cmWhileConnected or is one of the five below,
+	// each of which already has an end: the two popover pins are removed
+	// when the popover closes, and the hovercard clamp is bound once per
+	// page behind a window flag. A new raw one fails here by name.
+	const KNOWN = ["scroll:fn", "resize:fn", "scroll:closeOn", "resize:closeOn", "resize:run"];
+	const raw = [...rt.matchAll(/(?:\bwindow|\(src \|\| window\))\.addEventListener\(\s*'(scroll|resize)',\s*([A-Za-z_$][\w$]*|function)/g)]
+		.map((m) => `${m[1]}:${m[2]}`);
+	assert(raw.length >= 3, `only ${raw.length} raw window listeners found; the scan is not reading the runtime`);
+	const extra = raw.filter((r) => !KNOWN.includes(r));
+	assert(extra.length === 0,
+		`window listener(s) bound outside cmWhileConnected: ${extra.join(', ')}. One bound for an element must end when the element leaves the page`);
+	const gone = KNOWN.filter((k) => !raw.includes(k));
+	assert(gone.length === 0, `this check lists window listener(s) the runtime no longer has: ${gone.join(', ')}`);
+	const routed = (rt.match(/cmWhileConnected\(/g) || []).length;
+	assert(routed >= 15, `only ${routed} cmWhileConnected call sites; binders have gone back to raw listeners`);
 });
 
 /* ================= built pages: every local asset resolves =================

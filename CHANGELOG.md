@@ -1,3 +1,53 @@
+## Unreleased - `init()` binds once, and lets go of what it bound
+
+`init()` runs again on every `astro:page-load`, and a SPA calls it after a
+route change. The README said it was idempotent. Measured on the showcase,
+in WebKit and Chromium alike, it was not: each extra call added 7 listeners
+to `window` (4 scroll, 3 resize) and constructed one more `ResizeObserver`.
+And after the body was replaced, the way a client-side navigation replaces
+it, every long-lived listener bound for the page that left was still
+attached: 35 resize and 23 scroll listeners on `window`, 3 click and 1
+keydown on `document`, each one holding its old element.
+
+No project in the fleet re-runs `init()` today, so nobody has met this yet.
+It is the first thing a consumer with Astro's client router would meet.
+
+- `src/js/cli-mono.js` - four binders had no guard and now bind once per
+  element: the header, the scroll spy, the navigation menu's section spy and
+  the measure readout. The scroll spy re-reads its sections on a later call
+  and binds nothing, so a nav that survives a navigation stops highlighting
+  against the previous page. The navigation menu no longer forgets the bars
+  outside the subtree it was called on.
+- `src/js/cli-mono.js` - `cmWhileConnected(owner, target, type, fn, opts)`.
+  Every listener the runtime attaches to `window`, `document` or a media
+  query on behalf of one element goes through it, 19 call sites. `init()`
+  first drops each one whose owner has left the document, and one that fires
+  with its owner gone removes itself. Both are needed: a media query's
+  `change` may never fire again, and it was the one listener still attached
+  after a body swap when only the second existed.
+- `tests/verify-init-idempotent.py` - new. Counts long-lived listeners,
+  observers and intervals from before the page's own scripts run. Three more
+  `init()` calls and an `astro:page-load` must add none; a full body swap
+  followed by `init()` must end on the boot count, with a control that the
+  new header is live. 8 checks failed on the old runtime, 4 in each engine;
+  18 of 18 now.
+- `tests/mutate-init-idempotent.py` - new. Drops each guard, each of the two
+  ways out, and puts each of the 19 call sites back to a bare
+  `addEventListener`, in memory: 25 mutants, 22 killed by a named check. The
+  other 3 cannot be reached in an engine (two are fallbacks for a browser
+  with no `ResizeObserver`, one is hidden by the sweep) and each is killed
+  by `npm test` instead.
+- `tests/run.mjs` - two checks, because this file is what CI runs. One
+  drives the real runtime through `initProgress` against a window that
+  records what is attached and what is taken back off. The other fails by
+  name when a binder attaches a scroll or resize listener to `window`
+  without going through `cmWhileConnected`.
+- `README.md` - the JS API section says what a repeated `init()` does.
+
+Checked on the new build: the 11 built pages load in WebKit and Chromium
+with no page error and no failed request, and on each the header still
+reacts to scroll after a second `init()`.
+
 ## Unreleased - forced colors keeps every state and every drawn mark
 
 Windows High Contrast, and every other `forced-colors: active` mode,

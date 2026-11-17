@@ -4464,6 +4464,20 @@ cliMono.toggleTheme();
 cliMono.init(rootEl);    // re-bind after client-side navigation
 ```
 
+`init()` can be called as often as a page likes. It binds each element once,
+and it lets go of what it bound for elements that have since left the
+document: a listener on `window`, `document` or a media query that was
+attached on behalf of an element is removed the next time `init()` runs, or
+the first time it fires, whichever comes first. So a client-side navigation
+that swaps the body and calls `init()` ends with the same number of
+listeners it started with.
+
+```bash
+npm run build && npm run preview &
+OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/verify-init-idempotent.py
+OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/mutate-init-idempotent.py
+```
+
 ## Astro components
 
 Copy from `src/astro/` and set your identity in `config.ts`:
