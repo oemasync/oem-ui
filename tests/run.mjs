@@ -95,6 +95,30 @@ const compSrc = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '
 // every base-layer class as unstyled, which is the same false negative
 // as a check that reads only the showcase source.
 const baseSrc = read('src/styles/base.css').replace(/\/\*[\s\S]*?\*\//g, '');
+/* The palette scans below hold the house rule: a colour comes from a token.
+   One place cannot obey it. Inside `@media (forced-colors: active)` the
+   browser discards every author colour, a token's included, and keeps only
+   the system colour keywords, so a rule there that used a token would paint
+   nothing. Those blocks are cut out of what the palette scans read, and held
+   to their own rule instead, which is stricter: system colours and nothing
+   else ('forced colors: the blocks paint with system colours only'). */
+const forcedColorsBlocks = (css) => {
+	const out = [];
+	const open = /@media\s*\(forced-colors:\s*active\)\s*\{/g;
+	for (let m; (m = open.exec(css));) {
+		let depth = 1, i = m.index + m[0].length;
+		while (depth && i < css.length) {
+			if (css[i] === '{') depth++;
+			else if (css[i] === '}') depth--;
+			i++;
+		}
+		out.push({ start: m.index, end: i, body: css.slice(m.index + m[0].length, i - 1) });
+	}
+	return out;
+};
+const withoutForcedColors = (css) =>
+	forcedColorsBlocks(css).reverse().reduce((acc, b) => acc.slice(0, b.start) + acc.slice(b.end), css);
+const paletteSrc = withoutForcedColors(compSrc);
 const allCss = compSrc + '\n' + baseSrc;
 const showcase = read('src/pages/[...family].astro');
 
@@ -2516,7 +2540,7 @@ check('the state components carry no chroma', () => {
 	// rules by selector instead: those exist whatever the comments say.
 	const STATE = ['.cm-skeleton', '.cm-spinner', '.cm-alert', '.cm-table'];
 	const blocks = STATE.flatMap(sel =>
-		[...compSrc.matchAll(new RegExp(
+		[...paletteSrc.matchAll(new RegExp(
 			`(^|[};])\\s*([^;{}@]*\\b${sel.slice(1)}\\b[^{}]*?)\\s*\\{([^{}]*)\\}`, 'gm'))]
 			.filter(m => {
 				const s = m[2];
@@ -2549,6 +2573,33 @@ check('the state components carry no chroma', () => {
 		.filter(m => !/^var\(|^currentColor$|^inherit$|^none$|^transparent$/.test(m[2].trim()))
 		.map(m => `${m[1]}: ${m[2].trim()}`);
 	assert(raw.length === 0, `colour must come from a token, found: ${raw.join(', ')}`);
+});
+
+check('forced colors: the blocks paint with system colours only', () => {
+	// The other half of the exemption above. A token inside this media
+	// block is not a style, it is a bug that looks like one: the mode throws
+	// the colour away and the element paints as if the rule were absent.
+	const SYSTEM = /^(canvas|canvastext|highlight|highlighttext|linktext|visitedtext|buttonface|buttontext|buttonborder|graytext|field|fieldtext|mark|marktext|selecteditem|selecteditemtext|transparent|currentcolor)$/i;
+	const blocks = [...forcedColorsBlocks(compSrc), ...forcedColorsBlocks(baseSrc)];
+	assert(blocks.length >= 2, `expected a forced-colors block in components.css and in base.css, found ${blocks.length}`);
+	const bad = [];
+	let seen = 0;
+	for (const { body } of blocks) {
+		assert(!/var\(/.test(body), 'a forced-colors block references a token; the mode discards it, so the rule paints nothing');
+		assert(!/#[0-9a-f]{3,8}\b/i.test(body), 'a forced-colors block carries a hex colour; the mode discards it');
+		for (const m of body.matchAll(/(?:^|[;{])\s*((?:background|border|outline|text-decoration)(?:-[a-z]+)*-color|color|background|fill|stroke)\s*:\s*([^;}]+)/g)) {
+			seen++;
+			const value = m[2].replace(/!important/, '').trim();
+			if (!SYSTEM.test(value)) bad.push(`${m[1]}: ${value}`);
+		}
+		for (const m of body.matchAll(/(?:^|[;{])\s*(outline|border(?:-[a-z]+)*)\s*:\s*([^;}]+)/g)) {
+			seen++;
+			const colour = m[2].replace(/!important/, '').trim().split(/\s+/).filter((w) => !/^(\d|solid|dashed|dotted|double|none|thin|medium|thick)/.test(w));
+			if (colour.length !== 1 || !SYSTEM.test(colour[0])) bad.push(`${m[1]}: ${m[2].trim()}`);
+		}
+	}
+	assert(seen >= 5, `only ${seen} colour declarations read from the forced-colors blocks; the scan is not reading them`);
+	assert(bad.length === 0, `forced-colors rules must use system colours, found: ${bad.join(', ')}`);
 });
 
 check('status is never carried by colour alone', () => {
@@ -6330,7 +6381,7 @@ check('cm-timeline: the record components carry no colour of their own', () => {
 		`(^|[};])\\s*([^;{}@]*\\b${b}(?:__[a-z0-9-]+)?\\b[^{}]*?)\\s*\\{([^{}]*)\\}`, 'gm',
 	);
 	const blocks = ['cm-stats', 'cm-stat', 'cm-timeline']
-		.flatMap((b) => [...compSrc.matchAll(partOf(b))].map((m) => m[2] + ' {' + m[3] + '}'));
+		.flatMap((b) => [...paletteSrc.matchAll(partOf(b))].map((m) => m[2] + ' {' + m[3] + '}'));
 	assert(blocks.length > 0, 'no rules found for the record components — is the parse stale?');
 	// A three-block parse means the BEM parts are being skipped, which is
 	// exactly the silent-pass this check exists to prevent.

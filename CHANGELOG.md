@@ -1,3 +1,58 @@
+## Unreleased - forced colors keeps every state and every drawn mark
+
+Windows High Contrast, and every other `forced-colors: active` mode,
+repaints each `background-color` to the system canvas and drops each
+`box-shadow`. This library says "selected" with a fill and draws a meter as
+a filled box, so in that mode both said nothing. Measured on the showcase in
+Chromium with forced colors active: 86 elements whose paint is the whole of
+their information rendered as nothing (every meter and progress fill, the
+reading bar, the burger's bars), and the selected tab, the pressed segment,
+the current pager link, the selected table row, the selected calendar day
+and a checked radio were the same pixels as their unselected neighbours.
+
+- `src/styles/components.css` - one `@media (forced-colors: active)` block
+  at the end of the sheet, in system colours, because those are the only
+  colours the mode keeps: `CanvasText` for 14 drawn marks, `Highlight` with
+  `HighlightText` for 10 selected surfaces, the same pair for whatever sits
+  on a selected surface (a `:where()` rule, so a meter inside a selected row
+  keeps its fill), and an outline that frames the switch track. The colour
+  rules carry `!important` for the reason the reduced-motion block does. The
+  mode forces whichever declaration wins the cascade, so a longer normal
+  selector does not lose to the block, it wins and is repainted to nothing:
+  without the flag the selected list row stayed invisible, and the selected
+  calendar day lost its fill to its own hover rule while keeping the
+  selection text colour.
+- `src/styles/base.css` - a checked radio takes `Highlight`. Its disc and
+  punch-out were a background and a box-shadow. The checkbox needed nothing:
+  its tick is a border.
+- `tests/verify-forced-colors.py` - new. 98 cases in each of two system
+  schemes. It flips each state on a live specimen and requires the picture
+  to change, at rest, under the pointer and with keyboard focus; hides each
+  mark and requires the same; and measures every piece of text on a selected
+  surface against what is behind it, as rendered and again with a coloured
+  span and a `<code>` added. Each case is refused unless it also changes the
+  picture with forced colors off, and unless two pictures of the untouched
+  specimen agree. 10 of 50 passed on the first draft against the old sheet;
+  196 of 196 now.
+- `tests/mutate-forced-colors.py` - new. Removes every selector, every
+  declaration and every `!important` from the forced-colors blocks, one at a
+  time, in memory, and requires a named check to fail for each: 49 mutants,
+  49 killed. Three survived the first sweep and each was a hole in the
+  harness, not in the sheet: one burger bar still passed with the other
+  gone, and text contrast was only measured at rest.
+- `tests/run.mjs` - two palette scans ("colour must come from a token") now
+  read the sheet without its forced-colors blocks, since a token there
+  paints nothing, and a new check holds those blocks to system colours only.
+- `README.md` - the Accessibility section documents the mode and what it
+  does not cover.
+
+Not covered, and said so in the block: a chart tells its series apart by
+grey level alone, so every series is one colour in this mode, and the
+slider's filled portion is a gradient, which the mode also drops.
+
+Nothing changes outside forced colors: the built stylesheet differs only by
+the two added media blocks.
+
 ## Unreleased - the video specimen ships its clip and poster
 
 The showcase's video section loads `/video-specimen.mp4` with

@@ -852,6 +852,16 @@ input[type='checkbox'] { position: relative; }
 input[type='radio']:checked {
 	box-shadow: inset 0 0 0 3.5px var(--bg-2);
 }
+/* Forced colors repaints every background to the system canvas and drops
+   every box-shadow, and those two are the whole of a checked radio: the
+   disc and its punch-out. MEASURED in Chromium with forced colors active,
+   a checked radio and an unchecked one were the same pixels. A system
+   colour is the one value the mode leaves alone, so the disc takes the
+   system's own selection colour. The checkbox needs nothing: its tick is
+   a border, and borders survive. */
+@media (forced-colors: active) {
+	input[type='radio']:checked { background-color: Highlight; }
+}
 
 /* the label is the tap target, so a phone-sized hit area is the text row */
 label { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; }

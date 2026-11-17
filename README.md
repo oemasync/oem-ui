@@ -4543,6 +4543,28 @@ props, so one library serves many projects.
   brightens on interaction; never remove it without replacing it.
 - `prefers-reduced-motion` disables the cursor blink and all transitions.
 - Decorative glyphs (`▸`, `●`, the cursor) are `aria-hidden`.
+- **Forced colors** (Windows High Contrast) keeps every state and every
+  drawn mark. That mode repaints each background to the system canvas and
+  drops each box-shadow, which is how this library says "selected" and how
+  it draws a meter. One block at the end of `components.css` answers it
+  with system colours: `CanvasText` for a mark that is drawn (a meter or
+  progress fill, the reading bar, the burger's bars), `Highlight` and
+  `HighlightText` for the one that is selected (tab, segment, pager link,
+  calendar day, list row, table row). Text and chips on a selected surface
+  take the same pair. Not covered: a chart's series are told apart by grey
+  level alone, so they are one colour in this mode, and the slider's filled
+  portion is a gradient, which the mode drops.
+
+  ```bash
+  npm run build && { npm run preview & }
+  OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/verify-forced-colors.py
+  OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/mutate-forced-colors.py
+  ```
+
+  The first flips each state on a live specimen and requires the picture
+  to change, and measures every piece of text on a selected surface against
+  what is behind it. The second removes each rule in turn and requires a
+  named check to fail.
 
 ## Development
 
