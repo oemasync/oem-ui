@@ -616,7 +616,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -909,7 +909,17 @@ check('the guard file is the one the installer and the drift checker ship', () =
    styles nothing when it is the element. The subject must be followed by
    its own declaration block. */
 check('every class a shipped component emits is defined in the CSS', () => {
-	const sheets = comp + '\n' + read('src/styles/base.css');
+	// Comments stripped FIRST: a CSS comment that mentions a literal
+	// `{token}` example (the endpoint param rule's own doc comment
+	// does exactly this) plants an unbalanced brace inside the rule
+	// body, which desyncs the brace-matching regex below and makes a
+	// real, present rule read as absent - the same trap the .cm-btn
+	// min-height check documents elsewhere in this file. Comments are
+	// stripped to a single space, never deleted outright, so a
+	// comment that happens to abut a selector cannot fuse two tokens
+	// into one.
+	const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, ' ');
+	const sheets = stripComments(comp + '\n' + read('src/styles/base.css'));
 	const defined = new Set();
 	for (const m of sheets.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
 		const body = m[2].trim();
@@ -20748,6 +20758,80 @@ check('endpoint row: the showcase demonstrates the slot and both ends', () => {
 		'the endpoint section shows only one method - the badge must be demonstrated beside the path in at least two treatments');
 	assert(showcaseIndex.includes('endpoint'),
 		'the endpoint section is not in the section index, so the rail cannot reach it');
+});
+
+/* ================= <Endpoint> astro wrapper =================
+   The endpoint ROW (cm-endpoint / cm-endpoint__path / cm-endpoint__param)
+   was proven above in CSS and in the showcase's hand-rolled specimens.
+   The wrapper is what a consumer actually calls: one method prop and
+   one path STRING, with the {token} split done once inside the
+   component rather than by every docs page that needs it - the same
+   reason <Crumbs> exists instead of every consumer hand-building a
+   <nav>. The mutation sweep is tests/mutate-endpoint-astro.mjs. */
+console.log('\n<Endpoint> wrapper');
+
+const endpointAstro = read('src/astro/Endpoint.astro');
+// Scoped to the MARKUP, after the frontmatter fence closes. The doc
+// comment above the frontmatter names every class in backticks for a
+// reader's benefit, and a check against the whole file is blind to a
+// mutation that renames the class in the template while the prose
+// still describes the original name - exactly the "--tap-sm" trap
+// (a comment that explains a fix satisfies a check for the fix).
+// Proven by tests/mutate-endpoint-astro.mjs mutant 4: scoped to the
+// whole file this check stayed green against a renamed slot class.
+const fenceEnd = endpointAstro.indexOf('\n---\n', 3);
+const endpointMarkup = fenceEnd === -1 ? endpointAstro : endpointAstro.slice(fenceEnd + 5);
+
+check('Endpoint.astro composes cm-endpoint, the method badge and the path', () => {
+	assert(/class="cm-endpoint"/.test(endpointMarkup),
+		'Endpoint.astro does not use the cm-endpoint class');
+	assert(/cm-method cm-method--\$\{method\}/.test(endpointMarkup),
+		'Endpoint.astro does not derive the method badge class from the method prop - a hardcoded treatment would ignore whatever the caller passes');
+	assert(/cm-endpoint__path/.test(endpointMarkup),
+		'Endpoint.astro is missing the path element');
+	assert(/cm-endpoint__param/.test(endpointMarkup),
+		'Endpoint.astro is missing the param-slot element');
+});
+
+check('Endpoint.astro splits the path on {token}, keeping the braces inside the slot', () => {
+	assert(/\\\{\[\^\}\]\+\\\}/.test(endpointAstro),
+		'Endpoint.astro does not split the path on a {token} pattern');
+	assert(/startsWith\('\{'\)/.test(endpointAstro) && /endsWith\('\}'\)/.test(endpointAstro),
+		'Endpoint.astro does not test each part for being a {token} before wrapping it as a slot - without both ends checked a literal segment that merely starts or ends with a brace would be mis-wrapped');
+});
+
+check('Endpoint.astro uppercases the method label', () => {
+	assert(/method\.toUpperCase\(\)/.test(endpointAstro),
+		'Endpoint.astro does not uppercase the method label - a lowercase prop would render lowercase text beside the uppercase treatment every other method specimen in the family uses');
+});
+
+check('Endpoint.astro is imported and rendered in the showcase', () => {
+	assert(/import Endpoint from '\.\.\/astro\/Endpoint\.astro'/.test(showcase),
+		'the showcase does not import Endpoint.astro');
+	assert(/<Endpoint\s/.test(showcase),
+		'the showcase imports Endpoint.astro but never renders it - a component used nowhere is unproven');
+});
+
+check('the built page renders <Endpoint> with every {token} wrapped and the right method', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuilt and re-run before shipping
+	// cm-method--patch also appears in the bare "method badge" section above
+	// (plain <code>, no cm-endpoint__path), so the search walks every match
+	// and keeps the one actually paired with the endpoint-row markup -
+	// an unscoped indexOf would silently grab that unrelated specimen.
+	const re = /cm-method--patch/g;
+	let hit = null, mm;
+	while ((mm = re.exec(built))) {
+		const window = built.slice(mm.index, mm.index + 500);
+		if (window.includes('cm-endpoint__path')) { hit = window; break; }
+	}
+	assert(hit, 'no rendered <Endpoint method="patch"> specimen found (a patch badge paired with cm-endpoint__path) - the wrapper never reached the DOM');
+	assert(/>PATCH</.test(hit), 'the method label was not uppercased in the rendered output');
+	const slots = (hit.match(/cm-endpoint__param/g) || []).length;
+	assert(slots === 2,
+		`the <Endpoint> specimen passes a path with two {token}s; expected two rendered param slots, got ${slots} - the split must wrap every token, not just the first`);
+	assert(hit.includes('{id}') && hit.includes('{commentId}'),
+		'the rendered slots lost the literal {token} text - a reader needs to see the name of the thing to substitute, not just that something is a slot');
 });
 
 /* ================= parameter row (cm-param) =================

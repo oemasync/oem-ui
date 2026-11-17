@@ -3702,6 +3702,45 @@ contexts a docs page uses are demonstrated in the showcase: the rail row
 (badge beside a path) and the endpoint title (badge beside the path it
 labels, at the path's own size).
 
+## Endpoint row
+
+`.cm-endpoint` is the line every API docs entry starts with: the method
+badge, then the path it labels. `.cm-endpoint__path` is the path itself
+(mono, full ink, able to break inside its own box on a phone instead of
+pushing the whole row off the edge), and `.cm-endpoint__param` marks each
+`{token}` inside it one step down in ink - the slot a reader fills, not a
+literal part of the path.
+
+```html
+<div class="cm-endpoint">
+  <span class="cm-method cm-method--get">GET</span>
+  <span class="cm-endpoint__path">
+    /v1/foxes/<span class="cm-endpoint__param">{id}</span>
+  </span>
+</div>
+```
+
+Hand-building that markup means every docs page re-implements the same
+`{token}` split. The `<Endpoint>` wrapper does it once: pass the method
+and the path as a plain string, and every `{token}` segment is wrapped
+as a slot automatically.
+
+```astro
+---
+import Endpoint from '../astro/Endpoint.astro';
+---
+
+<Endpoint method="patch" path="/v1/foxes/{id}/comments/{commentId}" />
+```
+
+`method` is one of the five `cm-method` treatments (`get` / `post` /
+`put` / `patch` / `delete`), rendered uppercase regardless of the case
+it is passed in. `path` is the literal path; every `{...}` segment
+becomes a `cm-endpoint__param` slot, and a path with no `{...}` renders
+as plain text with nothing wrapped. The showcase's endpoint-row section
+renders it beside the hand-written specimens, so the two stay provably
+equivalent rather than merely similar.
+
 ## Icon buttons
 
 `.cm-icon-btn` is a square button that holds one glyph. On a phone it is

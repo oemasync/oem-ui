@@ -1,3 +1,64 @@
+## Unreleased - `<Endpoint>`: the method+path wrapper
+
+`cm-endpoint` / `cm-endpoint__path` / `cm-endpoint__param` were proven
+in CSS and demonstrated by hand in the showcase (four specimens: a
+plain path, a path with one slot, a long path that breaks on a phone,
+and the destructive method's treatment). What every one of those
+specimens still did was hand-build the `{token}` split in markup - the
+part of the component an actual docs page calls over and over, and
+the part most likely to be copied wrong. `<Endpoint>` is the wrapper
+that does the split once: one method prop, one path string, and every
+`{token}` segment in it becomes a `cm-endpoint__param` slot without
+the caller touching a span.
+
+- `src/astro/Endpoint.astro` - a new Astro component. `method` is one
+  of the five `cm-method` treatments; `path` is split on
+  `/(\{[^}]+\})/g` (a capturing group keeps the delimiter IN the
+  result, so literal and slot segments alternate without a second
+  pass), each part tested with `startsWith('{') && endsWith('}')`
+  before being wrapped, and the method label is forced through
+  `.toUpperCase()` so a lowercase prop still reads beside the other
+  four uppercase treatments.
+- `src/pages/[...family].astro` - imported and rendered in the
+  endpoint-row section, as a fifth specimen beside the four hand-built
+  ones (`patch`, two `{token}`s), so the wrapper is proven equivalent
+  to the markup it replaces rather than merely similar to it.
+- `tests/run.mjs` - six checks (list carried in `astroFiles`, the four
+  classes it must compose, scoped to the MARKUP half of the file - the
+  whole-file version of this assertion stayed green against a renamed
+  slot class because the doc comment above the frontmatter names every
+  class in backticks, the same `--tap-sm` trap one level down), the
+  `{token}` split and its both-ends test, the uppercase call, the
+  showcase import+render, and a built-dist check that the rendered
+  specimen carries exactly two wrapped slots with their literal
+  `{id}`/`{commentId}` text intact. One PRE-EXISTING fix landed in the
+  same commit: `every class a shipped component emits is defined in
+  the CSS` matched CSS rule bodies without stripping comments first,
+  and `.cm-endpoint__param`'s own doc comment contains a literal
+  `{param}` example - an unbalanced brace inside a rule body that
+  desynced the brace-matching regex and made a real, present rule
+  read as absent. Comments are now stripped before that check runs,
+  the same discipline several other regex checks in this file already
+  use.
+- `tests/mutate-endpoint-astro.mjs` - an eight-mutant sweep (method
+  class hardcoded, cm-endpoint/cm-endpoint__path/cm-endpoint__param
+  each renamed, the split pattern broken, the end-of-token check
+  dropped, the uppercase call dropped, the showcase specimen deleted),
+  with a pre-flight that every pattern matches exactly once and a
+  `--range=a,b` flag so the sweep can run in batches without a long
+  single process risking a kill mid-mutation. 8/8 caught, 0 no-op.
+- `README.md` - a new "Endpoint row" section documenting both the CSS
+  primitive and the wrapper, inserted after the method badge section
+  it composes with.
+- Measured in real WebKit (webkit, not chromium) at 390x844 and
+  1280x900: the rendered specimen's two slots read `{id}` and
+  `{commentId}` verbatim, the slot colour (`rgb(156,156,156)`,
+  `--ink-dim`) differs from the path colour (`rgb(232,232,232)`,
+  `--ink` on the dark theme), the row is a flex row, and
+  `document.documentElement.scrollWidth` equals `window.innerWidth`
+  at both viewports - the new specimen introduces no horizontal
+  overflow.
+
 ## Unreleased - endpoint row: the `cm-endpoint` line
 
 The top of an API docs entry: the method badge, then the path it

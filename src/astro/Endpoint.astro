@@ -1,0 +1,45 @@
+---
+/**
+ * oem-ui <Endpoint> — the method badge + path row that heads an API
+ * docs entry. `{param}` tokens inside `path` render as the slot the
+ * reader fills (`cm-endpoint__param`, one step down from the path's
+ * own ink) — the same split the parameter row below it documents,
+ * so the markup and the parameter table can never drift apart: both
+ * read the same `{token}` spelling out of the same path string.
+ *
+ * method: one of the five cm-method treatments (no hue — a line
+ * border, a fill, a raised surface, a dash, or an underline).
+ * path: the literal path, with `{token}` segments marking each
+ * substitutable part. A path with no `{...}` renders as plain mono
+ * text and nothing is wrapped.
+ */
+interface Props {
+	/** One of the five method treatments cm-method owns. */
+	method: 'get' | 'post' | 'put' | 'patch' | 'delete';
+	/** The path, with `{token}` segments marked as slots. */
+	path: string;
+}
+
+const { method, path } = Astro.props;
+
+/* Split on {token} while keeping the delimiter: a capturing group in
+   split() keeps the matched token IN the result array, so literal
+   and slot segments can alternate without a second pass or a regex
+   replace that would have to re-inject markup as a string. Empty
+   strings appear at the boundaries when the path starts or ends on
+   a token; filtered out so there is nothing empty to render. */
+const parts = path.split(/(\{[^}]+\})/g).filter((part) => part !== '');
+---
+
+<div class="cm-endpoint">
+	<span class={`cm-method cm-method--${method}`}>{method.toUpperCase()}</span>
+	<span class="cm-endpoint__path">
+		{parts.map((part) =>
+			part.startsWith('{') && part.endsWith('}') ? (
+				<span class="cm-endpoint__param">{part}</span>
+			) : (
+				part
+			)
+		)}
+	</span>
+</div>

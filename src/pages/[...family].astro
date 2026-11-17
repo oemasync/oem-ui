@@ -37,6 +37,7 @@ import Field from '../astro/Field.astro';
 import Kv from '../astro/Kv.astro';
 import State from '../astro/State.astro';
 import Project from '../astro/Project.astro';
+import Endpoint from '../astro/Endpoint.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -2213,6 +2214,11 @@ An API docs row starts with its method: a badge, then the path. The badge carrie
 									<span class="cm-endpoint__path">/v1/foxes/<span class="cm-endpoint__param">&#123;id&#125;</span></span>
 									</div>
 									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the method's destructive treatment, the path's own slot</p>
+									</div>
+									<div class="cm-surface cm-surface--flat" style="padding:var(--space-4)">
+									<h3 class="cm-kicker">rendered via &lt;Endpoint&gt;</h3>
+									<Endpoint method="patch" path="/v1/foxes/{id}/comments/{commentId}" />
+									<p style="margin:var(--space-3) 0 0;color:var(--ink-dim);font-size:var(--text-xs)">the wrapper that splits the path string on &#123;token&#125; itself - two slots, so a docs page passes one string instead of hand-building the spans</p>
 									</div>
 									</div>
 									</section>
