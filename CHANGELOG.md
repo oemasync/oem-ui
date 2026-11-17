@@ -1,3 +1,46 @@
+## Unreleased - status colour, opt-in
+
+The library was zero-chroma: a state is a glyph and a word. That holds
+on a page with a few states and stops holding on a board with dozens,
+where a column of glyphs reads as texture. A consumer dashboard needed
+green, amber and red to be scannable, and the honest place for those is
+the library, not a second palette in one consumer.
+
+Nothing changes for a consumer that does not ask. The hue is gated on
+`data-cm-chroma`, and every rule that reads it falls back to the grey
+the original rule paints.
+
+- `src/styles/tokens.css` - `--chroma-ok|warn|err|info`, each with a
+  `-soft` tint and a `-line` hairline, in both document themes, both
+  `[data-cm-theme]` blocks and the print block (light values).
+- `src/styles/components.css` - the "status chroma" block. Four gated
+  setters resolve `--tone` on the toned element; readers for the chip,
+  the alert edge and mark, the dot, the stat tile's top edge and the
+  meter fill. Every reader hides its modifiers in `:where()`, so it
+  weighs one class and the existing hover and accent rules still win.
+  No existing selector is edited.
+- `.cm-tone--ok|warn|err|info` - a tone for a component that has no
+  severity modifier of its own. It paints nothing on a bare element.
+- `.cm-chip--info` - the fourth severity, with the alert's glyph.
+  `<Chip variant="info">`.
+- `.cm-meter__track--stack` / `.cm-meter__seg` - a stacked meter, with
+  `.cm-meter__legend` / `.cm-meter__count` to name its shares. The first
+  specimen printed the breakdown in `.cm-meter__val` and scrolled a
+  390px viewport 91px sideways (481 against 390, measured in WebKit);
+  the legend wraps instead.
+- `src/pages/[...family].astro` - a "status colour" section: one block
+  of markup drawn twice, with the attribute and without.
+- `tests/run.mjs` - seventeen checks. Contrast is computed from the token
+  values on every surface and on each hue's own tint; the gate, the
+  fallbacks, the specificity and the specimen are each asserted.
+- `tests/mutate-chroma.mjs`, `tests/mutate-hidden.mjs` - one mutant per
+  check, each required to fail the check that names it.
+
+One design change came from the suite. The stat tile's edge was first
+an inset `box-shadow`, and the record components' own check refused it:
+a colour property there is a bare token. It is the tile's existing top
+border, recoloured, which also means the fallback is simply `--line`.
+
 ## Unreleased - `hidden` means hidden
 
 A consumer dashboard shipped an empty bordered box at the top of its

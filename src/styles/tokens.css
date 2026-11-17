@@ -431,6 +431,25 @@
 	--accent-dim: #5c5c5c;
 	--accent-glow: rgba(255, 255, 255, 0.06);
 
+	/* Status chroma: the only hues in the palette. Nothing reads them
+	   until an ancestor carries `data-cm-chroma` (components.css, "status
+	   chroma"), so a page that never asks stays grey. Each hue is AA as
+	   text on every surface of this theme AND on its own -soft tint; the
+	   suite computes both from these values, so a retune that breaks
+	   either fails. -line is the hairline between the tint and the page. */
+	--chroma-ok: #4ade80;
+	--chroma-ok-soft: rgba(74, 222, 128, 0.14);
+	--chroma-ok-line: rgba(74, 222, 128, 0.4);
+	--chroma-warn: #facc15;
+	--chroma-warn-soft: rgba(250, 204, 21, 0.14);
+	--chroma-warn-line: rgba(250, 204, 21, 0.4);
+	--chroma-err: #ff7b72;
+	--chroma-err-soft: rgba(255, 123, 114, 0.14);
+	--chroma-err-line: rgba(255, 123, 114, 0.4);
+	--chroma-info: #79b8ff;
+	--chroma-info-soft: rgba(121, 184, 255, 0.14);
+	--chroma-info-line: rgba(121, 184, 255, 0.4);
+
 	/* secondary — muted greys, kept for component compat */
 	--cyan: #b3b3b3;
 	--green: #b3b3b3;
@@ -504,6 +523,25 @@
 	--accent-bright: #000000;
 	--accent-dim: #666666;
 	--accent-glow: rgba(0, 0, 0, 0.06);
+
+	/* Status chroma: the only hues in the palette. Nothing reads them
+	   until an ancestor carries `data-cm-chroma` (components.css, "status
+	   chroma"), so a page that never asks stays grey. Each hue is AA as
+	   text on every surface of this theme AND on its own -soft tint; the
+	   suite computes both from these values, so a retune that breaks
+	   either fails. -line is the hairline between the tint and the page. */
+	--chroma-ok: #166534;
+	--chroma-ok-soft: rgba(22, 101, 52, 0.1);
+	--chroma-ok-line: rgba(22, 101, 52, 0.35);
+	--chroma-warn: #854d0e;
+	--chroma-warn-soft: rgba(133, 77, 14, 0.1);
+	--chroma-warn-line: rgba(133, 77, 14, 0.35);
+	--chroma-err: #a4161a;
+	--chroma-err-soft: rgba(164, 22, 26, 0.1);
+	--chroma-err-line: rgba(164, 22, 26, 0.35);
+	--chroma-info: #1d4ed8;
+	--chroma-info-soft: rgba(29, 78, 216, 0.1);
+	--chroma-info-line: rgba(29, 78, 216, 0.35);
 
 	--cyan: #333333;
 	--green: #333333;
@@ -591,6 +629,20 @@
 	--accent-bright: #ffffff;
 	--accent-dim: #5c5c5c;
 	--accent-glow: rgba(255, 255, 255, 0.06);
+
+	/* Status chroma - the same values as the document theme above. */
+	--chroma-ok: #4ade80;
+	--chroma-ok-soft: rgba(74, 222, 128, 0.14);
+	--chroma-ok-line: rgba(74, 222, 128, 0.4);
+	--chroma-warn: #facc15;
+	--chroma-warn-soft: rgba(250, 204, 21, 0.14);
+	--chroma-warn-line: rgba(250, 204, 21, 0.4);
+	--chroma-err: #ff7b72;
+	--chroma-err-soft: rgba(255, 123, 114, 0.14);
+	--chroma-err-line: rgba(255, 123, 114, 0.4);
+	--chroma-info: #79b8ff;
+	--chroma-info-soft: rgba(121, 184, 255, 0.14);
+	--chroma-info-line: rgba(121, 184, 255, 0.4);
 	--header-bg: #0a0a0a;
 	--footer-bg: #080808;
 	--shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
@@ -660,6 +712,20 @@
 	--accent-bright: #000000;
 	--accent-dim: #666666;
 	--accent-glow: rgba(0, 0, 0, 0.06);
+
+	/* Status chroma - the same values as the document theme above. */
+	--chroma-ok: #166534;
+	--chroma-ok-soft: rgba(22, 101, 52, 0.1);
+	--chroma-ok-line: rgba(22, 101, 52, 0.35);
+	--chroma-warn: #854d0e;
+	--chroma-warn-soft: rgba(133, 77, 14, 0.1);
+	--chroma-warn-line: rgba(133, 77, 14, 0.35);
+	--chroma-err: #a4161a;
+	--chroma-err-soft: rgba(164, 22, 26, 0.1);
+	--chroma-err-line: rgba(164, 22, 26, 0.35);
+	--chroma-info: #1d4ed8;
+	--chroma-info-soft: rgba(29, 78, 216, 0.1);
+	--chroma-info-line: rgba(29, 78, 216, 0.35);
 	--header-bg: #fafafa;
 	--footer-bg: #f0f0f0;
 	--shadow-1: 0 1px 0 rgba(0, 0, 0, 0.04) inset;
@@ -734,6 +800,20 @@
 		--accent: #111111;
 		--accent-bright: #000000;
 		--accent-dim: #666666;
+		/* Paper gets the light hues: the dark-theme green is 1.74:1 on white
+		   and the yellow 1.53:1. */
+		--chroma-ok: #166534;
+		--chroma-ok-soft: rgba(22, 101, 52, 0.1);
+		--chroma-ok-line: rgba(22, 101, 52, 0.35);
+		--chroma-warn: #854d0e;
+		--chroma-warn-soft: rgba(133, 77, 14, 0.1);
+		--chroma-warn-line: rgba(133, 77, 14, 0.35);
+		--chroma-err: #a4161a;
+		--chroma-err-soft: rgba(164, 22, 26, 0.1);
+		--chroma-err-line: rgba(164, 22, 26, 0.35);
+		--chroma-info: #1d4ed8;
+		--chroma-info-soft: rgba(29, 78, 216, 0.1);
+		--chroma-info-line: rgba(29, 78, 216, 0.35);
 		--header-bg: #fafafa;
 		--footer-bg: #f0f0f0;
 		/* Declared because this block paints surfaces, and a block that

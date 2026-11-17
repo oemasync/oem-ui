@@ -21001,3 +21001,409 @@ check('hidden: the README says the attribute is enough', () => {
 	assert(/until-found/.test(readme.slice(readme.indexOf('### The `hidden` attribute'))),
 		'the README section does not name the until-found exclusion');
 });
+
+/* ================= status chroma (opt-in) ================= */
+console.log('\nstatus chroma');
+
+// The library is grey by default and stays grey by default. These checks
+// hold the one place a hue is allowed: `data-cm-chroma`. They read VALUES
+// (the contrast is computed from the hex in tokens.css, the fallbacks are
+// compared with the rules they shadow), because a hue that is merely
+// present proves nothing about whether it can be read.
+const CHROMA_ROLES = ['ok', 'warn', 'err', 'info'];
+const CHROMA_SURFACES = ['bg', 'bg-2', 'bg-3', 'panel', 'panel-nested', 'surface-raised'];
+
+// The five blocks of tokens.css that declare a palette, keyed by what they
+// are. Position decides `print`: its selector is the document one again.
+const chromaBlocks = (() => {
+	const printAt = tokenSrc.indexOf('@media print');
+	const out = {};
+	for (const m of tokenSrc.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+		if (!/--bg:/.test(m[2])) continue;
+		const sel = m[1].replace(/\s+/g, ' ').trim();
+		let key;
+		if (printAt !== -1 && m.index > printAt) key = 'print';
+		else if (/^\[data-cm-theme='dark'\]/.test(sel)) key = 'scoped-dark';
+		else if (/^\[data-cm-theme='light'\]/.test(sel)) key = 'scoped-light';
+		else if (/data-theme='light'/.test(sel)) key = 'light';
+		else key = 'dark';
+		out[key] = m[2];
+	}
+	return out;
+})();
+const chromaOf = (body, name) => {
+	const m = new RegExp(`--chroma-${name}:\\s*([^;]+);`).exec(body || '');
+	return m ? m[1].trim() : null;
+};
+const chromaSurfaces = (body) => CHROMA_SURFACES.map((n) => {
+	const m = new RegExp(`--${n}:\\s*(#[0-9a-fA-F]{6})\\b`).exec(body);
+	assert(m, `the palette block declares no --${n}, so there is nothing to measure against`);
+	return [n, m[1]];
+});
+const rgbaOf = (v) => {
+	const m = /^rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\s*\)$/.exec(v || '');
+	return m ? { r: +m[1], g: +m[2], b: +m[3], a: +m[4] } : null;
+};
+// A translucent colour painted over an opaque one, as the hex it lands on.
+const paintedOver = (fg, bgHex) => {
+	const b = srgb(bgHex).map((v) => v * 255);
+	const mix = [fg.r, fg.g, fg.b].map((v, i) => Math.round(v * fg.a + b[i] * (1 - fg.a)));
+	return '#' + mix.map((v) => v.toString(16).padStart(2, '0')).join('');
+};
+const hueOf = (hex) => {
+	const [r, g, b] = srgb(hex);
+	const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+	if (d === 0) return null;
+	const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+	return (h * 60 + 360) % 360;
+};
+
+// `:where(a, b)` carries commas, so a selector list cannot be split on
+// every comma. Split only at depth zero.
+const splitSelectors = (sel) => {
+	const out = []; let depth = 0, cur = '';
+	for (const ch of sel) {
+		if (ch === '(') depth++;
+		if (ch === ')') depth--;
+		if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; } else cur += ch;
+	}
+	if (cur.trim()) out.push(cur.trim());
+	return out;
+};
+const stripWhere = (sel) => {
+	let out = '', i = 0;
+	while (i < sel.length) {
+		if (sel.startsWith(':where(', i)) {
+			let depth = 0; i += 6;
+			do { if (sel[i] === '(') depth++; if (sel[i] === ')') depth--; i++; } while (depth > 0 && i < sel.length);
+		} else out += sel[i++];
+	}
+	return out;
+};
+const allCompRules = [...compSrc.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+	.map((m) => ({ sel: m[1].replace(/\s+/g, ' ').trim(), body: m[2] }));
+const toneReaders = allCompRules.filter((r) => /var\(--tone\b/.test(r.body));
+const toneSetters = allCompRules.filter((r) => /(^|[;\s])--tone(-soft|-line)?\s*:/.test(r.body));
+const propIn = (body, prop) => {
+	const m = new RegExp(`(?:^|[;\\s])${prop}\\s*:\\s*([^;]+)`).exec(body || '');
+	return m ? m[1].trim() : null;
+};
+const plainToken = (v) => { const m = /var\(--([a-z0-9-]+)\)/.exec(v || ''); return m ? m[1] : null; };
+const toneFallback = (v) => {
+	const m = /var\(--tone(?:-soft|-line)?,\s*var\(--([a-z0-9-]+)[,)]/.exec(v || '');
+	return m ? m[1] : null;
+};
+const readerWhere = (pred, what) => {
+	const r = toneReaders.find((x) => pred(x.sel));
+	assert(r, `no chroma reader found for ${what}`);
+	return r;
+};
+
+check('chroma: every palette block declares all twelve tokens', () => {
+	for (const key of ['dark', 'light', 'scoped-dark', 'scoped-light', 'print']) {
+		assert(chromaBlocks[key], `the ${key} palette block was not found in tokens.css, so its hues were never checked`);
+		for (const role of CHROMA_ROLES) {
+			for (const suffix of ['', '-soft', '-line']) {
+				assert(chromaOf(chromaBlocks[key], role + suffix),
+					`the ${key} block declares no --chroma-${role}${suffix}: a toned element there resolves to nothing and falls back to grey in one theme only`);
+			}
+		}
+	}
+});
+
+check('chroma: the scoped and print blocks carry the theme they mirror', () => {
+	// A [data-cm-theme] subtree is the same theme as the document one, and
+	// paper is light. The dark green is 1.74:1 on white, so `print` mirroring
+	// dark would print an unreadable status.
+	for (const [copy, of] of [['scoped-dark', 'dark'], ['scoped-light', 'light'], ['print', 'light']]) {
+		for (const role of CHROMA_ROLES) {
+			for (const suffix of ['', '-soft', '-line']) {
+				const a = chromaOf(chromaBlocks[copy], role + suffix), b = chromaOf(chromaBlocks[of], role + suffix);
+				assert(a === b, `--chroma-${role}${suffix} is ${a} in the ${copy} block and ${b} in ${of}: the two would paint one state in two colours`);
+			}
+		}
+	}
+});
+
+check('chroma: every hue is AA as text on every surface of its theme', () => {
+	for (const theme of ['dark', 'light']) {
+		const surfaces = chromaSurfaces(chromaBlocks[theme]);
+		for (const role of CHROMA_ROLES) {
+			const hex = chromaOf(chromaBlocks[theme], role);
+			assert(/^#[0-9a-fA-F]{6}$/.test(hex || ''), `${theme} --chroma-${role} is not a 6-digit hex (${hex}), so its contrast cannot be computed`);
+			for (const [name, s] of surfaces) {
+				const r = contrast(hex, s);
+				assert(r >= 4.5, `${theme} --chroma-${role} ${hex} on --${name} ${s} = ${r.toFixed(2)}:1 (need 4.5)`);
+			}
+		}
+	}
+});
+
+check('chroma: every hue is AA on its own tint, over every surface', () => {
+	// The chip sets its text in the hue and paints the -soft tint behind
+	// it. The tint is translucent, so what the text sits on depends on the
+	// surface underneath: composite it over each one and measure that.
+	for (const theme of ['dark', 'light']) {
+		const surfaces = chromaSurfaces(chromaBlocks[theme]);
+		for (const role of CHROMA_ROLES) {
+			const hex = chromaOf(chromaBlocks[theme], role);
+			const soft = rgbaOf(chromaOf(chromaBlocks[theme], role + '-soft'));
+			assert(soft, `${theme} --chroma-${role}-soft is not an rgba() value`);
+			assert(soft.a > 0 && soft.a < 1, `${theme} --chroma-${role}-soft has alpha ${soft.a}: a tint is translucent or it is not a tint`);
+			for (const [name, s] of surfaces) {
+				const under = paintedOver(soft, s);
+				const r = contrast(hex, under);
+				assert(r >= 4.5, `${theme} --chroma-${role} ${hex} on its tint over --${name} (${under}) = ${r.toFixed(2)}:1 (need 4.5)`);
+			}
+		}
+	}
+});
+
+check('chroma: a tint and its hairline are the hue of their text', () => {
+	for (const theme of ['dark', 'light']) {
+		for (const role of CHROMA_ROLES) {
+			const hex = chromaOf(chromaBlocks[theme], role);
+			const want = srgb(hex).map((v) => Math.round(v * 255)).join(',');
+			const soft = rgbaOf(chromaOf(chromaBlocks[theme], role + '-soft'));
+			const line = rgbaOf(chromaOf(chromaBlocks[theme], role + '-line'));
+			assert(soft && line, `${theme} --chroma-${role}-soft/-line must both be rgba()`);
+			assert(`${soft.r},${soft.g},${soft.b}` === want, `${theme} --chroma-${role}-soft is rgb(${soft.r},${soft.g},${soft.b}) but the hue is rgb(${want}): the tint drifted from its text`);
+			assert(`${line.r},${line.g},${line.b}` === want, `${theme} --chroma-${role}-line is rgb(${line.r},${line.g},${line.b}) but the hue is rgb(${want}): the hairline drifted from its text`);
+			assert(line.a > soft.a, `${theme} --chroma-${role}-line (alpha ${line.a}) is no stronger than the tint (alpha ${soft.a}), so the hairline disappears into the fill`);
+		}
+	}
+});
+
+check('chroma: the four hues are hues, and no two are neighbours', () => {
+	// A retune toward grey passes every contrast check above while taking
+	// the colour out. And two states 20 degrees apart are one state to a
+	// reader glancing at a column of chips.
+	for (const theme of ['dark', 'light']) {
+		const hues = CHROMA_ROLES.map((role) => {
+			const hex = chromaOf(chromaBlocks[theme], role);
+			const ch = srgb(hex).map((v) => v * 255);
+			assert(Math.max(...ch) - Math.min(...ch) >= 60, `${theme} --chroma-${role} ${hex} is nearly grey, so it reports no state by hue`);
+			return [role, hueOf(hex)];
+		});
+		for (let i = 0; i < hues.length; i++) {
+			for (let j = i + 1; j < hues.length; j++) {
+				const d = Math.abs(hues[i][1] - hues[j][1]);
+				const apart = Math.min(d, 360 - d);
+				assert(apart >= 30, `${theme}: ${hues[i][0]} and ${hues[j][0]} are ${apart.toFixed(0)} degrees apart, too close to tell apart at a glance`);
+			}
+		}
+	}
+});
+
+check('chroma: nothing resolves a hue without data-cm-chroma', () => {
+	// The opt-in is the whole promise to every existing consumer. A setter
+	// that is not gated turns the hue on for all of them at once.
+	assert(toneSetters.length >= 4, `only ${toneSetters.length} rule(s) set --tone; one per severity was expected, so the scan is reading too little`);
+	const gated = (r) => splitSelectors(r.sel).every((s) => s.startsWith('[data-cm-chroma]'));
+	for (const r of toneSetters) {
+		assert(gated(r), `"${r.sel}" sets --tone without a data-cm-chroma gate on every selector`);
+	}
+	for (const r of allCompRules.filter((x) => /var\(--chroma-/.test(x.body))) {
+		assert(gated(r), `"${r.sel}" reads a --chroma-* token outside the data-cm-chroma gate`);
+	}
+	assert(!/--chroma-|--tone\b/.test(baseSrc), 'base.css names a chroma token: element defaults must stay grey');
+});
+
+check('chroma: a setter only sets, and a reader always has a grey to fall back to', () => {
+	for (const r of toneSetters) {
+		const decls = r.body.split(';').map((d) => d.trim()).filter(Boolean);
+		const painted = decls.filter((d) => !d.startsWith('--'));
+		assert(painted.length === 0, `"${r.sel}" paints (${painted.join('; ')}) as well as setting the tone, so it also applies where no reader asked`);
+	}
+	assert(toneReaders.length >= 10, `only ${toneReaders.length} rule(s) read --tone, so the scan is reading too little`);
+	// `var(--tone)` with no fallback is INVALID wherever chroma is off, and
+	// an invalid colour drops the whole declaration: the element goes
+	// transparent rather than grey.
+	const bare = compSrc.match(/var\(--tone(?:-soft|-line)?\s*\)/g) || [];
+	assert(bare.length === 0, `${bare.length} read(s) of --tone have no fallback (${bare.join(', ')}); without chroma that declaration is invalid and paints nothing`);
+});
+
+check('chroma: each fallback is the grey of the rule it shadows', () => {
+	// The claim "nothing changes without the attribute" is exactly this:
+	// the value a reader falls back to is the value the original rule set.
+	// Read both sides from the sheet so neither can be restated here.
+	const pairs = [];
+	const chip = readerWhere((s) => s.startsWith('.cm-chip:where(.cm-tone--ok') && !s.includes('::before'), 'the chip');
+	pairs.push(['chip border', toneFallback(propIn(chip.body, 'border-color')), plainToken(owningDecl('.cm-chip', 'border'))]);
+	pairs.push(['chip background', toneFallback(propIn(chip.body, 'background-color')), plainToken(owningDecl('.cm-chip', 'background'))]);
+	pairs.push(['chip text', toneFallback(propIn(chip.body, 'color')), plainToken(owningDecl('.cm-chip', 'color'))]);
+	for (const v of ['ok', 'warn', 'err']) {
+		const g = readerWhere((s) => s.startsWith('.cm-chip:where(') && s.endsWith('::before') && new RegExp(`\\.cm-chip--${v}[,)]`).test(s), `the ${v} chip glyph`);
+		pairs.push([`chip ${v} glyph`, toneFallback(propIn(g.body, 'color')), plainToken(owningDecl(`.cm-chip--${v}::before`, 'color'))]);
+	}
+	for (const v of ['ok', 'warn', 'err', 'info']) {
+		const a = readerWhere((s) => s.startsWith('.cm-alert:where(') && new RegExp(`\\.cm-alert--${v}[,)]`).test(s), `the ${v} alert edge`);
+		pairs.push([`alert ${v} edge`, toneFallback(propIn(a.body, 'border-inline-start-color')), plainToken(owningDecl(`.cm-alert--${v}`, 'border-inline-start-color'))]);
+	}
+	const mark = readerWhere((s) => s.endsWith('> .cm-alert__mark'), 'the alert mark');
+	pairs.push(['alert mark', toneFallback(propIn(mark.body, 'color')), plainToken(owningDecl('.cm-alert__mark', 'color'))]);
+	const fill = readerWhere((s) => s.endsWith(' .cm-meter__fill') && s.includes('.cm-tone--'), 'the meter fill');
+	pairs.push(['meter fill', toneFallback(propIn(fill.body, 'background')), plainToken(owningDecl('.cm-meter__fill', 'background'))]);
+	const stat = readerWhere((s) => s.startsWith('.cm-stat:where('), 'the stat tile');
+	pairs.push(['stat edge', toneFallback(propIn(stat.body, 'border-block-start-color')), plainToken(owningDecl('.cm-stat', 'border'))]);
+	const dot = readerWhere((s) => s.startsWith('.cm-dot:where('), 'the dot');
+	pairs.push(['dot fill', toneFallback(propIn(dot.body, 'background')), plainToken(owningDecl('.cm-dot--on', 'background'))]);
+	pairs.push(['dot edge', toneFallback(propIn(dot.body, 'border-color')), plainToken(owningDecl('.cm-dot--on', 'border-color'))]);
+	assert(pairs.length === 15, `${pairs.length} reader/rule pairs were compared, 15 expected`);
+	for (const [what, got, want] of pairs) {
+		assert(want, `${what}: the rule it shadows declares no token to compare with, so the parse is stale`);
+		assert(got === want, `${what} falls back to --${got} but the rule it shadows paints --${want}: without chroma the element changes colour`);
+	}
+});
+
+check('chroma: a reader never out-ranks a state rule', () => {
+	// Every reader hides its modifiers in :where(), which is worth nothing,
+	// so it weighs one class. That is what lets `.cm-chip--action:hover`
+	// and `.cm-meter--accent .cm-meter__fill` (two each) keep winning.
+	const weight = (sel) => {
+		const s = stripWhere(sel).replace(/::[a-z-]+/g, '');
+		return (s.match(/\.[a-zA-Z]|\[[^\]]+\]|:[a-z-]+/g) || []).length;
+	};
+	for (const r of toneReaders) {
+		for (const s of splitSelectors(r.sel)) {
+			assert(weight(s) <= 1, `"${s}" weighs ${weight(s)} classes; a reader must weigh one, or it beats the hover and accent rules it sits beside`);
+		}
+	}
+	for (const [sel, n] of [['.cm-chip--action:hover', 2], ['.cm-meter--accent .cm-meter__fill', 2]]) {
+		assert(allCompRules.some((r) => splitSelectors(r.sel).includes(sel)), `${sel} is gone, so this check no longer proves what it says`);
+		assert(weight(sel) === n, `${sel} was expected to weigh ${n}, got ${weight(sel)}`);
+	}
+});
+
+check('chroma: a tone class paints nothing by itself', () => {
+	// `.cm-tone--err` on a bare span would be a state carried by hue alone:
+	// nothing in greyscale, on paper, or to a red-green reader. So no rule
+	// may paint from the tone class without a component that already says
+	// its state another way.
+	const toned = allCompRules.filter((r) => r.sel.includes('.cm-tone--'));
+	assert(toned.length >= 8, `only ${toned.length} rule(s) name a tone class, so the scan is reading too little`);
+	for (const r of toned) {
+		for (const s of splitSelectors(r.sel)) {
+			if (!s.includes('.cm-tone--')) continue;
+			if (s.startsWith('[data-cm-chroma]')) continue; // a setter; proven to only set above
+			assert(/\.cm-[a-z]/.test(stripWhere(s)), `"${s}" paints from the tone class alone, with no component beside it`);
+		}
+	}
+});
+
+check('chroma: the chip has four severities, each with its own glyph', () => {
+	const glyphs = new Map();
+	for (const v of ['ok', 'warn', 'err', 'info']) {
+		const g = chipGlyphOf(`.cm-chip--${v}::before`);
+		assert(g, `.cm-chip--${v} has no ::before content, so with chroma off it is a plain chip with a different class name`);
+		glyphs.set(v, g);
+	}
+	assert(new Set(glyphs.values()).size === 4, `the four severities share ${new Set(glyphs.values()).size} glyph(s): ${[...glyphs].map(([k, g]) => k + '=' + g).join(' ')}`);
+	// One vocabulary: the chip's info mark is the alert's.
+	const alertInfo = /content:\s*'([^']+)'/.exec(declForSelector('.cm-alert--info .cm-alert__mark::before') || '');
+	assert(alertInfo && alertInfo[1] === glyphs.get('info'), `the info chip's glyph (${glyphs.get('info')}) is not the info alert's (${alertInfo && alertInfo[1]})`);
+	const chipAstro = read('src/astro/Chip.astro');
+	assert(/variant\?:\s*'ok' \| 'warn' \| 'err' \| 'info' \| 'set'/.test(chipAstro), "<Chip> does not accept variant=\"info\", so the fourth severity cannot be reached through the component");
+});
+
+check('chroma: a stacked segment draws its width from the number it prints', () => {
+	const seg = owningDecl('.cm-meter__seg', 'flex');
+	assert(seg && /^0 1 var\(--cm-meter-fill,\s*0%\)$/.test(seg), `.cm-meter__seg must be flex: 0 1 var(--cm-meter-fill, 0%), got: ${seg}. A share that grows to fill the track is a chart that lies`);
+	assert(owningDecl('.cm-meter__track--stack', 'display') === 'flex', 'the stacked track is not a flex row, so its segments stack vertically inside a 0.5rem bar');
+	// Neighbours are parted in the TRACK colour, read from the track rule.
+	const track = plainToken(owningDecl('.cm-meter__track', 'background'));
+	const gap = owningDecl('.cm-meter__seg + .cm-meter__seg', 'border-inline-start');
+	assert(track && gap && plainToken(gap) === track, `two shares must be parted by a rule in the track colour (--${track}), got: ${gap}`);
+});
+
+check('chroma: a stacked meter is labelled in the order it is drawn', () => {
+	// A segment is a colour and a width, and the track is aria-hidden. The
+	// legend is where the names and numbers are printed, and with the hues
+	// off its ORDER is the only thing tying an entry to a segment.
+	assert(owningDecl('.cm-meter__legend', 'flex-wrap') === 'wrap',
+		'.cm-meter__legend must wrap: an unwrapping legend widens the page at phone width, which is the defect it was added to fix');
+	assert(owningDecl('.cm-meter__legend', 'list-style') === 'none', '.cm-meter__legend must drop the list marker; each entry already starts with its dot');
+	assert(/tabular-nums/.test(owningDecl('.cm-meter__count', 'font-variant-numeric') || ''), '.cm-meter__count must be tabular, or the counts jitter as they change');
+	const page = exists('dist/f/surfaces/index.html') ? read('dist/f/surfaces/index.html') : '';
+	const at = page.indexOf('<section id="chroma"');
+	assert(at !== -1, 'the built surfaces page has no #chroma section');
+	const end = page.indexOf('<section id="', at + 1);
+	const sec = page.slice(at, end === -1 ? undefined : end);
+	const toneOf = (cls) => (/cm-tone--([a-z]+)/.exec(cls) || [, 'none'])[1];
+	const meters = sec.split('cm-meter__track cm-meter__track--stack').slice(1);
+	assert(meters.length === 2, `${meters.length} stacked meter(s) in the specimen, two expected (one per column)`);
+	for (const m of meters) {
+		const body = m.slice(0, m.indexOf('</ul>'));
+		const segs = [...body.matchAll(/class="(cm-meter__seg[^"]*)"/g)].map((x) => toneOf(x[1]));
+		const legend = body.slice(body.indexOf('cm-meter__legend'));
+		assert(body.includes('cm-meter__legend'), 'a stacked meter in the specimen has no legend, so its segments are named by nothing');
+		const dots = [...legend.matchAll(/<li><span class="(cm-dot[^"]*)"/g)].map((x) => toneOf(x[1]));
+		assert(segs.length >= 3, `only ${segs.length} segment(s) parsed`);
+		assert(segs.join(',') === dots.join(','), `the segments are drawn ${segs.join(', ')} and the legend reads ${dots.join(', ')}: without the hues an entry points at the wrong share`);
+		const counts = [...legend.matchAll(/class="cm-meter__count">(\d+)</g)].map((x) => +x[1]);
+		const fills = [...body.matchAll(/--cm-meter-fill:\s*([0-9.]+)%/g)].map((x) => +x[1]);
+		assert(counts.length === segs.length && fills.length === segs.length, 'every segment needs a printed count and a width');
+		const total = counts.reduce((a, b) => a + b, 0);
+		counts.forEach((c, i) => {
+			const want = c / total * 100;
+			assert(Math.abs(want - fills[i]) < 0.5, `the ${segs[i]} share prints ${c} of ${total} (${want.toFixed(1)}%) and is drawn at ${fills[i]}%: the bar disagrees with its own numbers`);
+		});
+	}
+});
+
+check('chroma: an untoned segment cannot inherit a hue', () => {
+	// --tone inherits. A segment that read it unconditionally would take
+	// the hue of any toned ancestor, so only a segment carrying a tone
+	// class of its own may read it.
+	const readsTone = allCompRules.filter((r) => /\.cm-meter__seg/.test(r.sel) && /var\(--tone\b/.test(r.body));
+	assert(readsTone.length === 1, `${readsTone.length} segment rule(s) read --tone, exactly one expected`);
+	assert(/^\.cm-meter__seg:where\(\.cm-tone--ok, \.cm-tone--warn, \.cm-tone--err, \.cm-tone--info\)$/.test(readsTone[0].sel),
+		`the segment rule that reads --tone is "${readsTone[0].sel}": it must require a tone class on the segment itself`);
+	assert(/var\(--tone,\s*var\(--cm-seg-grey,\s*var\(--ink\)\)\)/.test(readsTone[0].body),
+		'the toned segment must fall back to the grey its position would have had (--cm-seg-grey), then to --ink');
+});
+
+check('chroma: the showcase draws the same markup with and without it', () => {
+	assert(showcaseIndex.includes('chroma'), 'the status colour section is not in the section index, so the rail cannot reach it');
+	const page = exists('dist/f/surfaces/index.html') ? read('dist/f/surfaces/index.html') : '';
+	const at = page.indexOf('<section id="chroma"');
+	assert(at !== -1, 'the built surfaces page has no #chroma section');
+	const end = page.indexOf('<section id="', at + 1);
+	const sec = page.slice(at, end === -1 ? undefined : end);
+	const cols = sec.split('<div class="cm-surface cm-surface--flat cm-stack"').slice(1);
+	assert(cols.length === 2, `the section renders ${cols.length} column(s), two expected: one with the attribute and one without`);
+	const gatedCols = cols.filter((c) => /^[^>]*\sdata-cm-chroma[\s>=]/.test(c));
+	assert(gatedCols.length === 1, `${gatedCols.length} of the two columns carry data-cm-chroma; exactly one must, or the grey column proves nothing`);
+	// Same markup: the list of class attributes, in order, is identical.
+	const classes = (c) => [...c.matchAll(/class="([^"]*)"/g)].map((m) => m[1]).join('|');
+	assert(classes(cols[0]) === classes(cols[1]), 'the two columns differ in markup, so the second is not a control for the first');
+	for (const cls of [
+		...CHROMA_ROLES.map((r) => `cm-chip cm-chip--${r}`), 'cm-chip cm-tone--warn',
+		...CHROMA_ROLES.map((r) => `cm-alert cm-alert--${r}`),
+		...CHROMA_ROLES.map((r) => `cm-stat cm-tone--${r}`), ...CHROMA_ROLES.map((r) => `cm-dot cm-tone--${r}`),
+		'cm-meter cm-tone--ok', 'cm-meter__track cm-meter__track--stack', 'cm-meter__seg cm-tone--ok', 'class="cm-meter__seg"', 'cm-meter__legend', 'cm-meter__count',
+	]) {
+		assert(cols[1].includes(cls), `the specimen never renders ${cls}`);
+	}
+	// Nothing ABOVE the section may carry the attribute, or the whole page
+	// becomes the chroma column and the library's grey reference is gone.
+	const tags = [...page.matchAll(/<[a-z][^>]*\sdata-cm-chroma[\s>=][^>]*>|<[a-z][^>]*\sdata-cm-chroma>/g)];
+	assert(tags.length === 1, `${tags.length} element(s) on the built page carry data-cm-chroma, one expected (the specimen column)`);
+});
+
+check('chroma: the README documents the switch, the tokens and the limit', () => {
+	const readme = read('README.md');
+	const at = readme.indexOf('## Status colour');
+	assert(at !== -1, 'the README has no "Status colour" section');
+	const next = readme.indexOf('\n## ', at + 1);
+	const sec = readme.slice(at, next === -1 ? undefined : next);
+	assert(/data-cm-chroma/.test(sec), 'the section never names the attribute that turns it on');
+	for (const role of CHROMA_ROLES) {
+		assert(sec.includes(`--chroma-${role}`), `the section does not list --chroma-${role}`);
+		assert(sec.includes(`cm-tone--${role}`), `the section does not list .cm-tone--${role}`);
+	}
+	assert(/cm-meter__seg/.test(sec), 'the section does not document the stacked meter');
+	assert(/cm-meter__legend/.test(sec), 'the section does not document the legend a stacked meter needs');
+	assert(/off by default|opt-in/i.test(sec), 'the section does not say the hue is off until asked for');
+	assert(/never .*alone|not .*alone/i.test(sec), 'the section does not state that a hue never carries a state alone');
+});
