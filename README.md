@@ -4544,6 +4544,23 @@ props, so one library serves many projects.
 - `prefers-reduced-motion` disables the cursor blink and all transitions.
 - Decorative glyphs (`▸`, `●`, the cursor) are `aria-hidden`.
 
+### The `hidden` attribute
+
+`hidden` always hides, on any element, whatever the component declares.
+The browser implements the attribute with a low-priority
+`[hidden] { display: none }`, which any `display` in a stylesheet
+overrides, so a `<div class="cm-alert" hidden>` used to paint an empty
+bordered box. The base layer now carries
+
+```css
+[hidden]:not([hidden='until-found']) { display: none !important; }
+```
+
+and the components layer carries the same rule for elements with a
+`cm-` class, for a scoped adoption that does not load `base.css`. A
+consumer only flips the attribute. `hidden="until-found"` is left to the
+platform, because it has to stay findable.
+
 ## Development
 
 ```bash

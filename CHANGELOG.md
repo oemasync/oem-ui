@@ -1,3 +1,29 @@
+## Unreleased - `hidden` means hidden
+
+A consumer dashboard shipped an empty bordered box at the top of its
+page. The element was `<div class="cm-alert" hidden>`, its `hidden`
+property was `true`, and it measured 1080x61 in WebKit: `.cm-alert`
+declares `display: flex`, and the attribute is implemented by a
+UA-origin `[hidden] { display: none }` that any author `display`
+outranks. The components layer had already closed this for tabs,
+combobox, mention, the composer and the quiz, one class at a time,
+which left every other class that declares a `display` open.
+
+- `src/styles/base.css` - `[hidden]:not([hidden='until-found'])
+  { display: none !important; }`. Importance is the only thing that
+  beats an author `display`, so it is the fix rather than a shortcut.
+- `src/styles/components.css` - the same rule held to elements with a
+  `cm-` class, so a scoped adoption that never loads `base.css` gets it
+  too without touching the consumer's own markup.
+- `tests/run.mjs` - five checks: the rule and its importance, the scoped
+  twin in both class positions, that no other important `display` ships
+  that could out-rank it, that `until-found` is excluded, and the README
+  section.
+- `README.md` - "The `hidden` attribute".
+
+The per-component `[hidden]` rules stay. They are now redundant, and
+removing them is a separate change with its own proof.
+
 ## Unreleased - `<Endpoint>`: the method+path wrapper
 
 `cm-endpoint` / `cm-endpoint__path` / `cm-endpoint__param` were proven

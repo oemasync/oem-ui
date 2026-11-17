@@ -20938,3 +20938,66 @@ check('parameter row: the showcase demonstrates every part, in all four location
 	assert(showcaseIndex.includes('param'),
 		'the parameter section is not in the section index, so the rail cannot reach it');
 });
+
+/* ================= hidden means hidden ================= */
+console.log('\nhidden means hidden');
+
+// The exact defect: a consumer's `<div class="cm-alert" hidden>` painted an
+// empty 1080x61 bordered box, because `.cm-alert { display: flex }` is an
+// author rule and the attribute is implemented at UA origin. `el.hidden`
+// was true throughout, so a check that reads the property cannot see it.
+// These checks read the CASCADE: importance is the only thing that outranks
+// an author `display`, so the rule must carry it, and nothing else may.
+const hiddenRuleOf = (src) => {
+	const m = /(^|\n)\[hidden\]:not\(\[hidden='until-found'\]\)\s*\{([^}]*)\}/.exec(src);
+	return m ? m[2] : null;
+};
+
+check('hidden: the base layer hides every [hidden] element, with importance', () => {
+	const body = hiddenRuleOf(baseSrc);
+	assert(body !== null,
+		"base.css has no `[hidden]:not([hidden='until-found'])` rule, so any component that declares a display un-hides itself");
+	assert(/display:\s*none\s*!important/.test(body),
+		'the [hidden] rule must be `display: none !important` - without importance every author `display` in the components layer outranks it');
+});
+
+check('hidden: a scoped adoption gets the same rule, held to library classes', () => {
+	// A scoped consumer never loads base.css. The twin must match an element
+	// whose class list STARTS with a cm- class and one where it comes later.
+	const m = /\[class\^='cm-'\]\[hidden\]:not\(\[hidden='until-found'\]\),\s*\[class\*=' cm-'\]\[hidden\]:not\(\[hidden='until-found'\]\)\s*\{([^}]*)\}/.exec(compSrc);
+	assert(m, 'components.css has no scoped twin of the [hidden] rule covering both class positions');
+	assert(/display:\s*none\s*!important/.test(m[1]),
+		'the scoped [hidden] twin must be `display: none !important`');
+});
+
+check('hidden: nothing in the library can out-rank it', () => {
+	// `!important` loses only to another `!important`. So the claim "hidden
+	// always hides" is exactly the claim that no rule ships an important
+	// display with any other value.
+	const offenders = [];
+	for (const [name, src] of [['base.css', baseSrc], ['components.css', compSrc]]) {
+		for (const m of src.matchAll(/display:\s*([a-z-]+)\s*!important/g)) {
+			if (m[1] !== 'none') offenders.push(`${name}: display: ${m[1]} !important`);
+		}
+	}
+	assert(offenders.length === 0,
+		`an important display other than none can re-show a [hidden] element: ${offenders.join('; ')}`);
+});
+
+check('hidden: until-found is left to the platform', () => {
+	// `hidden="until-found"` hides with content-visibility so find-in-page
+	// can reveal it. A bare `[hidden]` selector would turn it into
+	// display:none and the feature would silently stop working.
+	for (const [name, src] of [['base.css', baseSrc], ['components.css', compSrc]]) {
+		const bare = /(^|[\n,])\s*\[hidden\]\s*\{[^}]*display:\s*none\s*!important/.test(src);
+		assert(!bare, `${name} hides a bare [hidden] with importance, which breaks hidden="until-found"`);
+	}
+});
+
+check('hidden: the README says the attribute is enough', () => {
+	const readme = read('README.md');
+	assert(/### The `hidden` attribute/.test(readme),
+		'the README has no section on the hidden attribute, so a consumer cannot know the library owns it');
+	assert(/until-found/.test(readme.slice(readme.indexOf('### The `hidden` attribute'))),
+		'the README section does not name the until-found exclusion');
+});

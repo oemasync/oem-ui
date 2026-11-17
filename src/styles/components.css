@@ -12226,6 +12226,15 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-size: max(var(--min-font), var(--text-sm));
 }
 
+/* ============ hidden means hidden (scoped twin) ============
+   base.css carries `[hidden] { display: none !important }` for a full
+   adoption. A SCOPED adoption never loads base.css, and it is the same
+   defect there: every component that declares a `display` un-hides
+   itself. This is the same rule, held to elements that carry a library
+   class, so a scoped consumer's own markup is left alone. */
+[class^='cm-'][hidden]:not([hidden='until-found']),
+[class*=' cm-'][hidden]:not([hidden='until-found']) { display: none !important; }
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number
