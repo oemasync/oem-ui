@@ -20598,6 +20598,29 @@ check('cm-back: the Astro wrapper ships and renders the library classes', () => 
 	assert(show.includes('<Back '), 'the showcase never renders <Back>, so the wrapper is unproven');
 });
 
+check('cm-back: every back link on the built pages has a name', () => {
+	// <Back href="…" /> with no label and no slot rendered a link whose only
+	// content was the aria-hidden arrow: nothing for a screen reader to say,
+	// and axe reports it as a link with no discernible text. The showcase
+	// rendered exactly that as a specimen. Read from the BUILT pages, since
+	// the name is whatever the component emits, not what its source intends.
+	const html = builtHtml();
+	const links = [...html.matchAll(/<a class="cm-back"[^>]*>([\s\S]*?)<\/a>/g)];
+	assert(links.length >= 3, `only ${links.length} back link(s) on the built page; the scan is not reading it`);
+	const nameless = links.filter((m) => {
+		if (/\baria-label="[^"]+"/.test(m[0])) return false;
+		const text = m[1].replace(/<span class="cm-back__arrow"[^>]*>[\s\S]*?<\/span>/g, '').replace(/<[^>]+>/g, '').trim();
+		return text === '';
+	});
+	assert(nameless.length === 0, `${nameless.length} back link(s) have no accessible name: ${nameless.map((m) => m[0].slice(0, 120)).join(' | ')}`);
+	// All three ways to name it are rendered, so none is an unproven branch:
+	// the label prop, the default slot (markup and all), and neither.
+	const bodies = links.map((m) => m[1].replace(/<span class="cm-back__arrow"[^>]*>[\s\S]*?<\/span>/g, ''));
+	assert(bodies.some((b) => /^<span>all projects<\/span>$/.test(b.trim())), 'no specimen names the link with the label prop');
+	assert(bodies.some((b) => /<em>records<\/em>/.test(b)), 'no specimen names the link through the default slot');
+	assert(bodies.some((b) => /^<span>back<\/span>$/.test(b.trim())), 'no specimen shows the default name');
+});
+
 check('cm-search: the Astro wrapper ships and renders the library classes', () => {
 	const s = read('src/astro/Search.astro');
 	assert(/class="cm-search"/.test(s), 'Search.astro does not use the cm-search class');

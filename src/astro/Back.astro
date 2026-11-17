@@ -12,11 +12,17 @@
  *
  * href: destination. label: visible text (also accepted via the default
  * slot). arrow: the glyph, default '←'.
+ *
+ * With neither a label nor a slot the link says "back". It used to say
+ * nothing: the arrow is aria-hidden, so the link's whole content was
+ * hidden from a screen reader, and the showcase rendered that as a
+ * specimen. A back link with no name is a link to nowhere a reader can
+ * tell, so the default is the word the component is named for.
  */
 interface Props {
 	/** Destination URL. */
 	href: string;
-	/** Visible label. Ignored when the default slot is provided. */
+	/** Visible label. Without it the default slot is used, and with neither, "back". */
 	label?: string;
 	/** Arrow glyph. Defaults to '←'. */
 	arrow?: string;
@@ -27,5 +33,5 @@ const { href, label, arrow = '←' } = Astro.props;
 
 <a class="cm-back" href={href}>
 	<span class="cm-back__arrow" aria-hidden="true">{arrow}</span>
-	{label ? <span>{label}</span> : <slot />}
+	{label ? <span>{label}</span> : Astro.slots.has('default') ? <slot /> : <span>back</span>}
 </a>

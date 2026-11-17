@@ -1,3 +1,21 @@
+## Unreleased - `<Back>` always has a name
+
+`<Back href="…" />` with no `label` and no slot rendered a link whose only
+content was the arrow, and the arrow is `aria-hidden`. A screen reader had
+nothing to say for it, and axe reports it as a link with no discernible
+text. The showcase rendered exactly that as one of its two specimens.
+
+- `src/astro/Back.astro` - with neither a label nor a slot, the link says
+  "back". The label prop and the default slot behave as before.
+- `src/pages/[...family].astro` - a third specimen names the link through
+  the default slot, which no specimen did, so that path was unproven.
+- `tests/run.mjs` - one check over the built page: every `a.cm-back` has a
+  name once the hidden arrow is set aside, and all three ways to give it one
+  are rendered. It failed naming the bare specimen before the change.
+
+The bare specimen in the showcase now reads "← back" where it read "←".
+axe `link-name` on the built pages: 1 node before, 0 after.
+
 ## Unreleased - the dropzone has a focus ring
 
 `.cm-dropzone:focus-visible` read `outline: var(--focus)`. That is the
