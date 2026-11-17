@@ -1,3 +1,23 @@
+## Unreleased - the dropzone has a focus ring
+
+`.cm-dropzone:focus-visible` read `outline: var(--focus)`. That is the
+shorthand, so it reset `outline-style` to `none`, and being more specific
+than the bare `:focus-visible` rule it also removed the ring that rule
+draws. The zone is `role="button" tabindex="0"` because a keyboard user
+cannot drag, so the one user it was made focusable for could not see where
+focus was. Measured in Chromium: a focused dropzone changed 0 pixels, and a
+text field on the same page changed 14,080.
+
+- `src/styles/components.css` - `outline-color: var(--focus)`. Width and
+  style come from the base rule, so the zone gets the same 1px ring as
+  everything else, and 2px on a coarse pointer.
+- `tests/run.mjs` - one check over both sheets: an `outline` shorthand must
+  carry a line style, or be `none`. It failed naming this rule, the only
+  one in either sheet.
+
+Measured after: the focused zone changes 2,192 pixels, and all 621
+focusable elements on the showcase draw a ring, in both themes.
+
 ## Unreleased - the focus ring clears 3:1 in the dark theme
 
 Measured in Chromium on the built showcase, dark theme: 94 of 616 focus

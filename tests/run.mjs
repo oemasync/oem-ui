@@ -287,6 +287,31 @@ for (const theme of ['dark', 'light']) {
 /* ================= base.css ================= */
 console.log('\nbase.css');
 const base = read('src/styles/base.css');
+check('no outline shorthand is a bare colour', () => {
+	// `outline: var(--focus)` reads like "make the ring this colour". It is
+	// the SHORTHAND, so it also resets outline-style to its initial value,
+	// which is `none`: the rule draws nothing, and because it is more
+	// specific than the bare :focus-visible rule it also takes away the
+	// ring that rule would have drawn. `.cm-dropzone:focus-visible` shipped
+	// exactly that. MEASURED in Chromium: a focused dropzone changed 0
+	// pixels, against 14,080 for a text field on the same page. The colour
+	// alone is `outline-color`.
+	const STYLE = /\b(solid|dashed|dotted|double|groove|ridge|inset|outset|auto)\b/;
+	const bad = [];
+	let seen = 0;
+	for (const [file, css] of [['base.css', baseSrc], ['components.css', compSrc]]) {
+		for (const m of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+			for (const d of m[2].matchAll(/(?:^|;)\s*outline\s*:\s*([^;]+)/g)) {
+				seen++;
+				const v = d[1].replace(/!important/, '').trim();
+				if (STYLE.test(v) || /^(none|0|inherit|initial|unset|revert)$/.test(v)) continue;
+				bad.push(`${file}: ${m[1].trim().split('\n').pop().trim()} { outline: ${v} }`);
+			}
+		}
+	}
+	assert(seen >= 20, `only ${seen} outline shorthands read; the scan is not reading the sheets`);
+	assert(bad.length === 0, `outline shorthand with no line style paints nothing: ${bad.join('; ')}`);
+});
 check('the default focus ring is painted with --focus, on fine and coarse pointers', () => {
 	// The token existed and the base layer walked past it, so the one place
 	// that draws most rings could not be fixed by fixing the token.

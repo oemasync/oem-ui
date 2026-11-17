@@ -2266,9 +2266,16 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 /* The zone is a control, so it takes the focus ring. It is focusable in the
    markup (role="button" + tabindex="0") because a keyboard user cannot drag:
-   the same element has to accept Enter and Space. */
+   the same element has to accept Enter and Space.
+
+   `outline-color`, not `outline`. This rule read `outline: var(--focus)`,
+   which is the shorthand: it reset outline-style to `none`, and being more
+   specific than the bare :focus-visible rule it removed the ring that rule
+   draws. MEASURED in Chromium, a focused zone changed 0 pixels. Naming only
+   the colour leaves the width and style to the base rule, so the zone gets
+   the same 1px ring as everything else, and 2px on a coarse pointer. */
 .cm-dropzone:focus-visible {
-	outline: var(--focus);
+	outline-color: var(--focus);
 	outline-offset: 2px;
 }
 .cm-dropzone[aria-disabled='true'] { opacity: 0.5; }
