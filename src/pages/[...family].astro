@@ -4274,6 +4274,49 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">Untitled draft</span>
 					</li>
 				</ul>
+							<h3 class="cm-kicker">pick one</h3>
+				<p class="cm-head__sub">
+					Wrap the tile in <code>label.cm-artwork__pick</code> with a
+					<code>.cm-artwork__radio</code> first inside it, and the grid is a
+					radio group: arrows move, the form submits the value, the whole
+					picture is the target. Chosen is a ring AND a corner check;
+					keyboard focus is the outline outside the tile.
+				</p>
+				<ul class="cm-artwork" role="radiogroup" aria-label="generated variants">
+					<li>
+						<label class="cm-artwork__pick">
+							<input class="cm-artwork__radio" type="radio" name="art-pick" value="1" />
+							<span class="cm-artwork__item">
+								<span class="cm-artwork__frame cm-artwork__frame--poster">
+									<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20280'%3E%3Crect%20width='200'%20height='280'%20fill='%232a2a2a'/%3E%3Ccircle%20cx='100'%20cy='120'%20r='46'%20fill='%23555555'/%3E%3C/svg%3E" alt="variant 1" loading="lazy" />
+								</span>
+							</span>
+						</label>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">variant 1</span>
+					</li>
+					<li>
+						<label class="cm-artwork__pick">
+							<input class="cm-artwork__radio" type="radio" name="art-pick" value="2" checked />
+							<span class="cm-artwork__item">
+								<span class="cm-artwork__frame cm-artwork__frame--poster">
+									<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20280'%3E%3Crect%20width='200'%20height='280'%20fill='%231e1e1e'/%3E%3Ccircle%20cx='100'%20cy='120'%20r='46'%20fill='%236a6a6a'/%3E%3C/svg%3E" alt="variant 2" loading="lazy" />
+								</span>
+							</span>
+						</label>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">variant 2</span>
+					</li>
+					<li>
+						<label class="cm-artwork__pick">
+							<input class="cm-artwork__radio" type="radio" name="art-pick" value="3" />
+							<span class="cm-artwork__item">
+								<span class="cm-artwork__frame cm-artwork__frame--poster">
+									<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20280'%3E%3Crect%20width='200'%20height='280'%20fill='%23262626'/%3E%3Ccircle%20cx='100'%20cy='120'%20r='46'%20fill='%23444444'/%3E%3C/svg%3E" alt="variant 3" loading="lazy" />
+								</span>
+							</span>
+						</label>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">variant 3</span>
+					</li>
+				</ul>
 			</section>
 			)}
 
@@ -5727,6 +5770,212 @@ inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-
 						<button type="submit" class="cm-btn cm-btn--primary">save</button>
 					</div>
 				</form>
+							<h3 class="cm-kicker">number stepper</h3>
+				<p class="cm-head__sub">
+					One frame, one focus ring, and a minus and plus that go
+					<code>disabled</code> at the field's own <code>min</code> and
+					<code>max</code>. A step goes through the native value setter and
+					fires <code>input</code> and <code>change</code>, so a framework sees it
+					exactly as it sees typing.
+				</p>
+				<div class="cm-row">
+					<span class="cm-number" data-cm-number>
+						<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="decrease cost">&minus;</button>
+						<input id="num-cost" class="cm-number__input" type="number" inputmode="numeric" min="0" max="10" value="0" aria-label="cost" />
+						<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="increase cost">+</button>
+					</span>
+					<span class="cm-number cm-number--wide" data-cm-number>
+						<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="decrease weight">&minus;</button>
+						<input id="num-weight" class="cm-number__input" type="number" inputmode="decimal" min="0" max="1" step="0.1" value="0.5" aria-label="weight" />
+						<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="increase weight">+</button>
+					</span>
+				</div>
+
+				<h3 class="cm-kicker">repeater</h3>
+				<p class="cm-head__sub">
+					An ordered list the reader edits: add, remove, move up and down,
+					and a row may hold another repeater. Each change is first offered
+					as a cancelable <code>cm:repeater-add</code> / <code>-remove</code> /
+					<code>-move</code>; left alone, the runtime writes the DOM, renumbers,
+					recounts, disables the ends and keeps focus off <code>&lt;body&gt;</code>.
+				</p>
+				<div id="rep-demo" class="cm-repeater" data-cm-repeater data-min="1">
+					<div class="cm-repeater__head"><span class="cm-repeater__title">actions</span><span class="cm-repeater__count" data-cm-repeater-count>2</span></div>
+					<ol class="cm-repeater__list" data-cm-repeater-list>
+						<li class="cm-repeater__item" data-cm-repeater-item>
+							<div class="cm-repeater__bar">
+								<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+								<span class="cm-repeater__label">strike</span>
+								<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move action 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move action 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove action 1">&times;</button>
+											</span>
+							</div>
+							<div class="cm-repeater__body cm-stack">
+								<div class="cm-field">
+									<span class="cm-field__label">value</span>
+									<span class="cm-number" data-cm-number>
+										<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="lower value">&minus;</button>
+										<input class="cm-number__input" type="number" inputmode="numeric" min="0" max="20" value="3" aria-label="value" />
+										<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="raise value">+</button>
+									</span>
+								</div>
+								<div class="cm-repeater" data-cm-repeater data-max="3">
+									<div class="cm-repeater__head"><span class="cm-repeater__title">effects</span><span class="cm-repeater__count" data-cm-repeater-count>1</span></div>
+									<ol class="cm-repeater__list" data-cm-repeater-list>
+										<li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">bleed</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="2" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li>
+									</ol>
+									<p class="cm-repeater__empty">no effects.</p>
+									<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">new effect</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="1" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li></template>
+									<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ effect</button>
+								</div>
+							</div>
+						</li>
+						<li class="cm-repeater__item" data-cm-repeater-item>
+							<div class="cm-repeater__bar">
+								<span class="cm-repeater__index" data-cm-repeater-index>2</span>
+								<span class="cm-repeater__label">guard</span>
+								<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move action 2 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move action 2 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove action 2">&times;</button>
+											</span>
+							</div>
+							<div class="cm-repeater__body cm-stack">
+								<div class="cm-field">
+									<span class="cm-field__label">value</span>
+									<span class="cm-number" data-cm-number>
+										<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="lower value">&minus;</button>
+										<input class="cm-number__input" type="number" inputmode="numeric" min="0" max="20" value="2" aria-label="value" />
+										<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="raise value">+</button>
+									</span>
+								</div>
+								<div class="cm-repeater" data-cm-repeater data-max="3">
+									<div class="cm-repeater__head"><span class="cm-repeater__title">effects</span><span class="cm-repeater__count" data-cm-repeater-count>0</span></div>
+									<ol class="cm-repeater__list" data-cm-repeater-list>
+										
+									</ol>
+									<p class="cm-repeater__empty">no effects.</p>
+									<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">new effect</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="1" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li></template>
+									<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ effect</button>
+								</div>
+							</div>
+						</li>
+					</ol>
+					<p class="cm-repeater__empty">no actions.</p>
+					<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+							<div class="cm-repeater__bar">
+								<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+								<span class="cm-repeater__label">new action</span>
+								<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move action 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move action 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove action 1">&times;</button>
+											</span>
+							</div>
+							<div class="cm-repeater__body cm-stack">
+								<div class="cm-field">
+									<span class="cm-field__label">value</span>
+									<span class="cm-number" data-cm-number>
+										<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="lower value">&minus;</button>
+										<input class="cm-number__input" type="number" inputmode="numeric" min="0" max="20" value="1" aria-label="value" />
+										<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="raise value">+</button>
+									</span>
+								</div>
+								<div class="cm-repeater" data-cm-repeater data-max="3">
+									<div class="cm-repeater__head"><span class="cm-repeater__title">effects</span><span class="cm-repeater__count" data-cm-repeater-count>0</span></div>
+									<ol class="cm-repeater__list" data-cm-repeater-list>
+										
+									</ol>
+									<p class="cm-repeater__empty">no effects.</p>
+									<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">new effect</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="1" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li></template>
+									<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ effect</button>
+								</div>
+							</div>
+						</li></template>
+					<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ action</button>
+				</div>
 			</section>
 			)}
 

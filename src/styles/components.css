@@ -12373,6 +12373,297 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 [class^='cm-'][hidden]:not([hidden='until-found']),
 [class*=' cm-'][hidden]:not([hidden='until-found']) { display: none !important; }
 
+/* ============ number stepper ============
+   A number field with its own minus and plus, in one frame.
+
+   Composed first and refused, on two states. `.cm-input-group` with two
+   `.cm-btn` addons draws the three parts, but it has no way to stop: the
+   minus stays live at the minimum and the plus at the maximum, so a press
+   does nothing and says nothing - the control lies about what it can do.
+   And it draws three frames with three focus rings, so the keyboard ring
+   lands on whichever piece has focus instead of on the control. So the
+   stepper owns one frame and one ring (`:focus-within`), and the runtime
+   disables each button at its own bound.
+
+   The native spin buttons are hidden: two sets of steppers on one field is
+   two answers to one question, and the native pair is 9px wide on a phone. */
+.cm-number {
+	display: inline-flex;
+	align-items: stretch;
+	max-width: 100%;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background-color: var(--bg-2);
+	vertical-align: middle;
+}
+.cm-number:focus-within {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+/* The selector repeats the element default's exclusions on purpose. The
+   field block is `input:not(...)x4` at (0,4,1) and the full-width rule is
+   (0,5,1); a plain `.cm-number__input` is (0,1,0) and lost both, so the
+   input drew its own border inside the frame and stretched to 100%. The
+   README's specificity note is the same trap; this rule matches it. */
+.cm-number > input.cm-number__input:not([type='checkbox']):not([type='radio']):not([type='range']):not(.cm-inline__input):not(.cm-search__input) {
+	width: calc(4ch + 2 * var(--space-2));
+	min-width: 0;
+	min-height: var(--tap);
+	margin: 0;
+	padding: 0 var(--space-2);
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+.cm-number--wide > input.cm-number__input:not([type='checkbox']):not([type='radio']):not([type='range']):not(.cm-inline__input):not(.cm-search__input) {
+	width: calc(7ch + 2 * var(--space-2));
+}
+.cm-number > .cm-number__input::-webkit-inner-spin-button,
+.cm-number > .cm-number__input::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+/* The frame carries the focus ring; a second ring on the input itself
+   would draw a box inside the box. */
+.cm-number > .cm-number__input:focus-visible { outline: 0; }
+.cm-number__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: var(--space-7);
+	min-height: var(--tap);
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--ink-dim);
+	font-family: var(--font-mono);
+	font-size: var(--text-md);
+	line-height: 1;
+	cursor: pointer;
+	transition: color var(--cm-t) var(--cm-ease), background-color var(--cm-t) var(--cm-ease);
+}
+.cm-number__btn:first-child { border-inline-end: 1px solid var(--line-soft); }
+.cm-number__btn:last-child { border-inline-start: 1px solid var(--line-soft); }
+.cm-number__btn:hover:not(:disabled) { color: var(--ink); background-color: var(--bg-3); }
+/* A bound is a state, not a colour: the glyph fades AND the cursor says no. */
+.cm-number__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.cm-number:has(> .cm-number__input:disabled) { opacity: 0.55; }
+/* Invalid reads like every other field in the library: weight, not hue. */
+.cm-number:has(> .cm-number__input[aria-invalid='true']) {
+	border-color: var(--ink-dim);
+	box-shadow: inset 0 0 0 1px var(--ink-dim);
+}
+@media (pointer: coarse) {
+	.cm-number__btn { width: var(--tap); }
+}
+
+/* ============ repeater ============
+   An ordered list the reader edits: add a row, remove one, move one up or
+   down, and every row holds its own fields - which may include another
+   repeater.
+
+   Composed first and refused. `.cm-rows` is a row SHAPE for reading, with
+   no body for fields; a list of `.cm-card`s draws the bodies but has
+   nothing that keeps the numbering, the count, the first row's disabled
+   "up" and the last row's disabled "down" true after a change, and nothing
+   that puts focus somewhere sensible when the row holding it is removed
+   (it falls to <body>, and a keyboard user starts again from the top).
+
+   The runtime owns those, and only those. Every change is offered to the
+   consumer first as a cancelable event, so an app that keeps the list in
+   its own state takes the change and redraws, and a static page gets the
+   DOM write for free. */
+.cm-repeater {
+	display: grid;
+	gap: 0;
+	min-width: 0;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--panel);
+}
+.cm-repeater__head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	border-bottom: 1px solid var(--line-soft);
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--ink-dim);
+}
+.cm-repeater__title { flex: 1 1 auto; min-width: 0; }
+.cm-repeater__count {
+	flex: 0 0 auto;
+	min-width: var(--space-5);
+	padding: 0 var(--space-1);
+	border: 1px solid var(--line);
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+	color: var(--ink);
+}
+.cm-repeater__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	min-width: 0;
+}
+.cm-repeater__item { min-width: 0; }
+.cm-repeater__item + .cm-repeater__item { border-top: 1px solid var(--line-soft); }
+.cm-repeater__bar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+	background: var(--bg-2);
+}
+.cm-repeater__index {
+	flex: 0 0 auto;
+	min-width: var(--space-5);
+	font-family: var(--font-mono);
+	font-size: max(var(--min-font), var(--text-xs));
+	font-variant-numeric: tabular-nums;
+	color: var(--ink-faint);
+}
+/* The label gives way, never the tools: at 390px a long label pushed the
+   remove button out of the row in the first draft. */
+.cm-repeater__label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--ink);
+}
+.cm-repeater__tools {
+	display: inline-flex;
+	flex: 0 0 auto;
+	gap: var(--space-0);
+}
+.cm-repeater__tools > :disabled { opacity: 0.3; cursor: not-allowed; }
+.cm-repeater__body {
+	min-width: 0;
+	padding: var(--space-4) var(--space-3);
+}
+/* Shown only while the list holds no item. `:has()` reads the live list,
+   so a consumer that empties it by any route gets the state without
+   telling anyone. `display: none` at rest, so `[hidden]` stays true too. */
+.cm-repeater__empty {
+	display: none;
+	margin: 0;
+	padding: var(--space-3);
+	color: var(--ink-faint);
+	font-size: max(var(--min-font), var(--text-sm));
+}
+.cm-repeater__list:not(:has(> .cm-repeater__item)) ~ .cm-repeater__empty { display: block; }
+.cm-repeater__add {
+	justify-self: start;
+	margin: var(--space-2) var(--space-3) var(--space-3);
+}
+.cm-repeater__add:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Nested: the inner list is part of the row it sits in, not a second
+   panel on top of it. Box inside box inside box read as three unrelated
+   cards at the third level; a rule down the side reads as "belongs to". */
+.cm-repeater .cm-repeater {
+	border-color: var(--line-soft);
+	background: transparent;
+}
+.cm-repeater .cm-repeater .cm-repeater {
+	border-width: 0;
+	border-inline-start-width: 2px;
+	border-radius: 0;
+}
+.cm-repeater .cm-repeater .cm-repeater__bar { background: transparent; }
+
+/* ============ artwork pick ============
+   A grid of artwork tiles the reader chooses ONE of: candidate covers,
+   generated variants. The control is a real radio, so the arrow keys, the
+   form value and the focus come from the platform; the tile is its label,
+   so the whole picture is the target.
+
+   Chosen is drawn twice - an inset ring AND a check mark in the corner -
+   because the palette is greyscale and a ring alone is a thin difference
+   between two pictures. Keyboard focus is a third, separate signal (the
+   library's outline, offset outside the tile), so a reader can tell "this
+   one is chosen" from "you are here". */
+.cm-artwork__pick {
+	position: relative;
+	display: block;
+	cursor: pointer;
+}
+/* Covers the tile, invisible: a click anywhere on the picture lands on the
+   radio itself. The base radio is drawn (appearance none, a 1.05rem box),
+   so each of those properties is reset here, at (0,2,0) over its (0,1,1). */
+.cm-artwork__pick > .cm-artwork__radio {
+	position: absolute;
+	inset: 0;
+	z-index: var(--z-raised);
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	margin: 0;
+	border: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.cm-artwork__pick > .cm-artwork__item { transition: border-color var(--cm-t) var(--cm-ease); }
+@media (hover: hover) {
+	.cm-artwork__pick:hover > .cm-artwork__item { border-color: var(--ink-faint); }
+}
+/* The ring is an overlay, not the tile's own inset shadow: an inset
+   box-shadow paints UNDER the children, and the frame and its picture
+   cover the whole tile, so the first draft's ring was never visible. */
+.cm-artwork__pick > .cm-artwork__item::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: var(--z-raised);
+	pointer-events: none;
+}
+.cm-artwork__pick:has(> .cm-artwork__radio:checked) > .cm-artwork__item { border-color: var(--ink); }
+.cm-artwork__pick:has(> .cm-artwork__radio:checked) > .cm-artwork__item::before {
+	box-shadow: inset 0 0 0 3px var(--ink);
+}
+.cm-artwork__pick > .cm-artwork__item::after {
+	content: '';
+	position: absolute;
+	inset-block-start: var(--space-2);
+	inset-inline-end: var(--space-2);
+	z-index: var(--z-raised);
+	display: none;
+	align-items: center;
+	justify-content: center;
+	width: var(--space-6);
+	height: var(--space-6);
+	border: 1px solid var(--bg);
+	background: var(--ink);
+	color: var(--bg);
+	font-family: var(--font-mono);
+	font-size: var(--text-sm);
+	line-height: 1;
+	pointer-events: none;
+}
+.cm-artwork__pick:has(> .cm-artwork__radio:checked) > .cm-artwork__item::after {
+	content: '\2713';
+	display: inline-flex;
+}
+.cm-artwork__pick:has(> .cm-artwork__radio:focus-visible) > .cm-artwork__item {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+.cm-artwork__pick:has(> .cm-artwork__radio:disabled) {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number
