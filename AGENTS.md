@@ -5,8 +5,9 @@ Guidance for AI coding agents working in this repository.
 ## What this is
 
 A zero-dependency mono/terminal design system: 3 CSS layers, 1 JS runtime,
-7 optional Astro components, and a contract test suite. There is no build
-step required to *use* it. `npm run build` only builds the showcase.
+optional Astro components (everything in `src/astro/`), and a contract test
+suite. There is no build step required to *use* it. `npm run build` only
+builds the showcase.
 
 ## Orientation
 
@@ -14,8 +15,8 @@ step required to *use* it. `npm run build` only builds the showcase.
 src/styles/tokens.css       the contract — all values, both themes
 src/styles/base.css         element defaults, a11y, prose rhythm
 src/styles/components.css   all .cm-* components
-src/js/cli-mono.js          runtime: theme, scroll-spy, copy, year,
-                            tabs, dialogs, toasts
+src/js/cli-mono.js          runtime: one IIFE on `window.cliMono`. `init()`
+                            binds every component that needs script
 src/astro/                  optional Astro components + config.ts
 src/pages/[...family].astro  the showcase — renders everything
 tests/run.mjs               contract tests
@@ -32,8 +33,13 @@ tests/run.mjs               contract tests
    frontmatter `import` compiles fine and silently does nothing at runtime —
    this is the single most likely way to "verify" a broken integration.
 4. **The FOUC guard must come before any stylesheet** in `<head>`, inline.
-5. **`init()` must stay idempotent.** It is called again on every
-   `astro:page-load`. Guard with `data-cm-*-bound`.
+5. **`init()` must stay idempotent, and must let go.** It is called again
+   on every `astro:page-load`. Guard each binder per element. A listener on
+   `window`, `document` or a media query that is bound for one element goes
+   through `cmWhileConnected(owner, …)`, never a bare `addEventListener`, so
+   it ends when the element leaves the page. `npm test` fails by name on a
+   bare scroll or resize listener, and
+   `tests/verify-init-idempotent.py` counts the real thing in two engines.
 6. **The title never truncates in a list row; the description does.** Do not
    "fix" this the other way.
 7. **No component hardcodes site identity.** It comes from
@@ -46,11 +52,31 @@ tests/run.mjs               contract tests
    the platform ships no tab widget. If you add JS, it must be
    progressive-enhancement-only and guarded with `data-cm-*-bound`.
 
+9. **A state is never a fill alone in forced colors.** Windows High
+   Contrast repaints every background and drops every box-shadow. A new
+   selected state, or a new mark whose paint is its whole meaning (a fill, a
+   bar, a dot), goes in the `@media (forced-colors: active)` block at the end
+   of `components.css`, in system colours only, and gets a case in
+   `tests/verify-forced-colors.py`.
+10. **`outline: <colour>` draws nothing.** It is the shorthand and resets the
+    style to `none`. To recolour a ring, set `outline-color`.
+
 ## Verifying your change
 
 ```bash
+npm run build   # must compile the showcase; the suite reads dist/
 npm test        # must be green
-npm run build   # must compile the showcase
+```
+
+CI runs those two and nothing else. The checks that need a browser are run
+by hand against a served build, and a change to the runtime or to a state
+needs them:
+
+```bash
+npm run preview &
+export OEM_UI_URL=http://127.0.0.1:4321/
+python3 tests/verify-init-idempotent.py    # init() binds once and lets go
+python3 tests/verify-forced-colors.py      # every state survives High Contrast
 ```
 
 `npm test` is a real contract suite, not a smoke test. It computes WCAG
