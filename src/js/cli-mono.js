@@ -3142,9 +3142,13 @@
 			var isSel = mode === 'range'
 				? (day === start || day === end)
 				: (mode === 'multiple' ? picked.indexOf(day) !== -1 : day === sel);
-			if (isSel) attrs += ' aria-selected="true"';
+			// The selection is the CELL's state, not the button's: ARIA
+			// allows aria-selected on a gridcell and not on a button (axe
+			// aria-allowed-attr, critical). The button is what takes focus
+			// and the click; the cell around it is what is selected.
+			var cell = isSel ? ' aria-selected="true"' : '';
 			if (start && end && start < day && day < end) attrs += ' data-in-range="true"';
-			cells.push('<td role="gridcell"><button type="button" class="cm-cal__day"' +
+			cells.push('<td role="gridcell"' + cell + '><button type="button" class="cm-cal__day"' +
 				attrs + ' tabindex="' + (active === day ? 0 : -1) + '">' +
 				+day.slice(8) + '</button></td>');
 		});
@@ -6689,7 +6693,12 @@
 		if (!rows.length) return null;
 		return { x: xkey, series: ser, data: rows };
 	}
-	function chConfig(box, w) {
+	/* The chart's RENDERED direction, read once per render pass and handed
+	   to chConfig, so the render itself never asks for style mid-write. */
+	function chReadDir(box) {
+		return chDir(box.getAttribute('dir'), box) ? 'rtl' : 'ltr';
+	}
+	function chConfig(box, w, dir) {
 		var d = chData(box);
 		if (!d) return null;
 		return {
@@ -6706,7 +6715,10 @@
 			ticks: 4,
 			w: w,
 			h: Math.round(chNum(box.getAttribute('data-cm-chart-h')) || 240),
-			rtl: box.getAttribute('dir'),
+			// The chart's own `dir` wins; without one, the direction read
+			// before the render (chReadDir), and only without THAT does
+			// chDir fall back to asking getComputedStyle itself.
+			rtl: box.getAttribute('dir') || dir || null,
 			box: box,
 			/* the tooltip/legend prop surface, all defaulted OFF */
 			indicator: box.getAttribute('data-cm-chart-indicator'),
@@ -6717,9 +6729,9 @@
 			description: box.getAttribute('data-cm-chart-desc') || 'chart'
 		};
 	}
-	function chRender(box, w) {
+	function chRender(box, w, dir) {
 		var plot = box.querySelector('.cm-chart__plot');
-		var cfg = chConfig(box, w);
+		var cfg = chConfig(box, w, dir);
 		if (!plot || !cfg) return false;
 		var hadFocus = plot.contains(document.activeElement);
 		plot.innerHTML = chartPlot(cfg);
@@ -6795,32 +6807,65 @@
 	}
 
 	function cmInitCharts(root) {
+		/* Read every chart (width AND rendered direction), THEN render
+		   every chart. A chart's render asks for its direction through
+		   getComputedStyle when it carries no `dir` of its own, and asked
+		   right after the previous chart wrote its markup, that read waits
+		   on a style recalc of the whole document. Measured in WebKit on the
+		   showcase (15 charts, 8k nodes): 11.3s of init, ~700ms per
+		   cartesian/pie chart, the build step itself ~1ms. Reading both
+		   before any write pays for one recalc, not one per chart. */
+		var boxes = [];
 		Array.prototype.forEach.call(
 			(root || document).querySelectorAll('[data-cm-chart]'),
 			function (box) {
 				if (box.getAttribute('data-cm-chart-bound')) return;
 				box.setAttribute('data-cm-chart-bound', '1');
-				chBind(box);
+				boxes.push(box);
 			}
 		);
+		var widths = boxes.map(function (box) {
+			var plot = box.querySelector('.cm-chart__plot');
+			return plot ? Math.round(plot.getBoundingClientRect().width) : 0;
+		});
+		var dirs = boxes.map(chReadDir);
+		boxes.forEach(function (box, i) { chBind(box, widths[i], dirs[i]); });
 	}
 
-	function chBind(box) {
+	function chBind(box, w0, dir0) {
 		var plot = box.querySelector('.cm-chart__plot');
 		if (!plot) return;
 		var width = 0;
-		var paint = function () {
-			var w = Math.round(plot.getBoundingClientRect().width);
+		var draw = function (w, dir) {
 			if (!(w > 0) || w === width) return;
 			width = w;
-			chRender(box, w);
+			chRender(box, w, dir);
 		};
-		paint();
+		var paint = function () {
+			// Both reads before the write, same as the first pass.
+			draw(Math.round(plot.getBoundingClientRect().width), chReadDir(box));
+		};
+		draw(w0, dir0);
 		if (typeof ResizeObserver === 'function') {
 			/* Width only. Re-rendering changes the plot's HEIGHT, so an
 			   observer that re-rendered on any resize would write the
-			   markup it is being measured against and loop forever. */
-			new ResizeObserver(function () { paint(); }).observe(plot);
+			   markup it is being measured against and loop forever.
+			   And not from inside the callback: a render there resizes the
+			   observed plot in the same frame, and the browser reports
+			   "ResizeObserver loop completed with undelivered
+			   notifications" as a window error (measured in WebKit on a
+			   chart whose container narrowed, every run). The paint waits
+			   for the next frame, one per frame however many fire. */
+			var queued = false;
+			var later = function (fn) {
+				return typeof requestAnimationFrame === 'function'
+					? requestAnimationFrame(fn) : setTimeout(fn, 16);
+			};
+			new ResizeObserver(function () {
+				if (queued) return;
+				queued = true;
+				later(function () { queued = false; paint(); });
+			}).observe(plot);
 		} else if (typeof window !== 'undefined') {
 			cmWhileConnected(box, window, 'resize', paint);
 		}

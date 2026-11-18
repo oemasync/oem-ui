@@ -2449,7 +2449,12 @@ code path for a thing the platform gives away.
 
 Selection reports itself three ways - `aria-selected`, the `data-*` the
 markup reads back, and the inverted cell the eye sees - because those three
-disagreeing is how a dead calendar and a live one look identical. The
+disagreeing is how a dead calendar and a live one look identical.
+`aria-selected` sits on the **`<td role="gridcell">`**, not on the button:
+ARIA allows it on a gridcell and not on a button, so a button that carries
+it is an invalid attribute a screen reader may ignore. A hand-written day is
+`<td role="gridcell" aria-selected="true"><button class="cm-cal__day" ...>`,
+and the CSS paints it through `[aria-selected='true'] > .cm-cal__day`. The
 range has exactly three transitions, the ones DayPicker has: a pick on a
 COMPLETE range starts a new one (the finished range is not editable), a
 pick after an open start stretches the end, and a pick BEFORE that start

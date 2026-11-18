@@ -8559,13 +8559,13 @@ input.cm-slider:disabled {
 	border-color: var(--ink-dim);
 	color: var(--ink);
 }
-.cm-cal__day[aria-selected='true'] {
+[aria-selected='true'] > .cm-cal__day {
 	border-color: var(--ink);
 	background: var(--ink);
 	color: var(--bg);
 }
-.cm-cal__day[aria-selected='true']:hover,
-.cm-cal__day[aria-selected='true']:focus-visible {
+[aria-selected='true'] > .cm-cal__day:hover,
+[aria-selected='true'] > .cm-cal__day:focus-visible {
 	background: var(--ink);
 	color: var(--bg);
 }
@@ -12066,7 +12066,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-btn--primary,
 	.cm-term__jump-tail,
 	.cm-bubble,
-	.cm-cal__day[aria-selected='true'] {
+	[aria-selected='true'] > .cm-cal__day {
 		print-color-adjust: exact;
 		-webkit-print-color-adjust: exact;
 	}
@@ -12528,7 +12528,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-tabs__tab[aria-selected='true'],
 	.cm-seg__opt[aria-pressed='true'],
 	.cm-pager__link[aria-current='page'],
-	.cm-cal__day[aria-selected='true'],
+	[aria-selected='true'] > .cm-cal__day,
 	.cm-guide__program--now,
 	.cm-guildrail__item[aria-current='true'],
 	.cm-term__follow-toggle[aria-pressed='true'],
@@ -12549,7 +12549,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 		.cm-tabs__tab[aria-selected='true'],
 		.cm-seg__opt[aria-pressed='true'],
 		.cm-pager__link[aria-current='page'],
-		.cm-cal__day[aria-selected='true'],
+		[aria-selected='true'] > .cm-cal__day,
 		.cm-guide__program--now,
 		.cm-guildrail__item[aria-current='true'],
 		.cm-term__follow-toggle[aria-pressed='true'],

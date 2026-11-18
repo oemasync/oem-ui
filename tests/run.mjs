@@ -14606,7 +14606,7 @@ check("the input group collapses to one hairline", () => {
 			const heads = (t.match(/role="columnheader"/g) || []).length;
 			assert(heads === 7, `seven weekday columns per month, found ${heads}`);
 		}
-		const rows = page.match(/<tr role="row">(<td role="gridcell">.*?<\/td>){7}<\/tr>/g) || [];
+		const rows = page.match(/<tr role="row">(<td role="gridcell"(?: aria-selected="true")?>.*?<\/td>){7}<\/tr>/g) || [];
 		assert(rows.length >= 5, `five whole weeks of seven cells, found ${rows.length}`);
 		assert(/<button type="button" class="cm-cal__day"/.test(page),
 			'a day is a button: the platform supplies focus and click');
@@ -14627,6 +14627,68 @@ check("the input group collapses to one hairline", () => {
 		assert(/setAttribute\('data-cm-cal-selected'/.test(js) &&
 			/setAttribute\('data-cm-cal-start'/.test(js),
 			'the runtime must report back what it painted');
+	});
+
+	check('a picked day is selected on its gridcell, never on its button', () => {
+		// ARIA allows aria-selected on a gridcell and not on a button: axe
+		// aria-allowed-attr, critical, on every picked day. The button keeps
+		// focus and the click; the cell around it carries the state.
+		const render = js.slice(js.indexOf('function calRender'), js.indexOf('function calFocus'));
+		assert(/var cell = isSel \? ' aria-selected="true"' : '';/.test(render),
+			'the renderer must derive the cell\'s selection from isSel');
+		assert(/'<td role="gridcell"' \+ cell \+ '><button type="button" class="cm-cal__day"'/.test(render),
+			'the selection must be written on the <td>, ahead of the button');
+		assert(!/attrs \+= ' aria-selected/.test(render),
+			'the button\'s own attrs must not carry aria-selected');
+		assert(!/class="cm-cal__day"[^>]*aria-selected/.test(page),
+			'a showcase day button carries aria-selected; it belongs on its <td>');
+		const cells = (page.match(/<td role="gridcell" aria-selected="true"><button type="button" class="cm-cal__day"/g) || []).length;
+		assert(cells === 5, `the specimens pick 5 days (one single, two multiple, a range's two ends), found ${cells} selected cells`);
+		assert(!/\.cm-cal__day\[aria-selected/.test(css),
+			'a rule still keys selection off the button, which never carries it now');
+		const keyed = (css.match(/\[aria-selected='true'\] > \.cm-cal__day/g) || []).length;
+		assert(keyed === 6, `selection paint, hover/focus, print and forced colors key off the cell: want 6 selectors, found ${keyed}`);
+	});
+
+	check('charts are read first and rendered after, so no render waits on a style recalc', () => {
+		// A render asks for the chart's direction through getComputedStyle when
+		// it carries no dir; asked after the previous chart wrote its markup,
+		// that read waited on a recalc of the whole document. WebKit, showcase,
+		// 15 charts: cmInitCharts 11.3s before, 28ms after.
+		const init = js.slice(js.indexOf('function cmInitCharts('), js.indexOf('function chBind('));
+		const reads = init.indexOf('var dirs = boxes.map(chReadDir);');
+		const widths = init.indexOf('var widths = boxes.map(');
+		const writes = init.indexOf('boxes.forEach(function (box, i) { chBind(box, widths[i], dirs[i]); });');
+		assert(widths > 0 && reads > 0 && writes > 0,
+			'cmInitCharts must measure widths, read directions, then bind with both');
+		assert(widths < writes && reads < writes, 'every read must come before the first render');
+		assert(!/chBind\(box\)/.test(init), 'a chart is bound without its pre-read width and direction');
+		const bind = js.slice(js.indexOf('function chBind('), js.indexOf('var active = -1;', js.indexOf('function chBind(')));
+		assert(/draw\(Math\.round\(plot\.getBoundingClientRect\(\)\.width\), chReadDir\(box\)\);/.test(bind),
+			'a resize re-render must read width and direction before it writes');
+		assert(/chRender\(box, w, dir\);/.test(bind), 'the pre-read direction must reach chRender');
+		assert(/var cfg = chConfig\(box, w, dir\);/.test(js), 'chRender must hand the direction to chConfig');
+		assert(/rtl: box\.getAttribute\('dir'\) \|\| dir \|\| null,/.test(js),
+			'chConfig must prefer the chart\'s own dir, then the pre-read one');
+		assert(/function chReadDir\(box\) \{\n\t\treturn chDir\(box\.getAttribute\('dir'\), box\) \? 'rtl' : 'ltr';/.test(js),
+			'chReadDir must resolve to an explicit rtl/ltr, so chDir never reads style during a render');
+	});
+
+	check('a chart re-renders on the frame after a resize, never inside the ResizeObserver callback', () => {
+		// Rendering inside the callback resizes the observed plot in the same
+		// frame; WebKit then raises "ResizeObserver loop completed with
+		// undelivered notifications" as a window error, every run, on a chart
+		// whose container narrowed (tests/verify-chart-inherited-dir.py).
+		const bind = js.slice(js.indexOf('function chBind('), js.indexOf('var active = -1;', js.indexOf('function chBind(')));
+		const ro = bind.slice(bind.indexOf('new ResizeObserver('), bind.indexOf('.observe(plot);'));
+		assert(ro.length > 0, 'chBind must observe the plot');
+		assert(!/\bpaint\(\)/.test(ro.slice(0, ro.indexOf('later('))),
+			'the observer callback calls paint() itself, so the render lands inside the callback');
+		assert(/later\(function \(\) \{ queued = false; paint\(\); \}\);/.test(ro),
+			'the observer callback must hand paint() to the next frame');
+		assert(/if \(queued\) return;\s*queued = true;/.test(ro),
+			'a burst of notifications must queue one paint, not one per notification');
+		assert(/requestAnimationFrame\(fn\)/.test(bind), 'the next frame is requestAnimationFrame');
 	});
 
 	check('the grid walks with the keys and the month with PageUp', () => {
@@ -20064,7 +20126,7 @@ console.log('\nprint mode');
 		const rule = printRules.find((r) => r.body.includes('print-color-adjust: exact'));
 		assert(rule, 'no print rule forces print-color-adjust: exact');
 		const measured = ['.cm-btn--primary', '.cm-term__jump-tail', '.cm-bubble',
-			".cm-cal__day[aria-selected='true']"];
+			"[aria-selected='true'] > .cm-cal__day"];
 		const listed = rule.sels.slice().sort();
 		assert(JSON.stringify(listed) === JSON.stringify(measured.slice().sort()),
 			`the exact-fill list is ${JSON.stringify(listed)}, want exactly the measured ${JSON.stringify(measured)}`);

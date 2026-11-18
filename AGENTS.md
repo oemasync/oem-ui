@@ -69,15 +69,19 @@ npm test        # must be green
 ```
 
 CI runs those two and nothing else. The checks that need a browser are run
-by hand against a served build, and a change to the runtime or to a state
-needs them:
+by hand, and a change to the runtime or to a state needs them:
 
 ```bash
-npm run preview &
-export OEM_UI_URL=http://127.0.0.1:4321/
-python3 tests/verify-init-idempotent.py    # init() binds once and lets go
-python3 tests/verify-forced-colors.py      # every state survives High Contrast
+OEM_UI_PY=/path/to/python-with-playwright npm run test:browser
+npm run test:browser -- --no-build verify-calendar   # one harness, current dist/
 ```
+
+That builds, serves this checkout's `dist/` on a free loopback port, and runs
+every harness listed in `tests/browser-harnesses.txt` against it (WebKit,
+headless). A harness goes on that list only once it reads `OEM_UI_URL`; one
+that falls back to its own default URL measures some other build. The other
+`tests/*.py` harnesses still run by hand against `npm run preview` with
+`OEM_UI_URL` set.
 
 `npm test` is a real contract suite, not a smoke test. It computes WCAG
 contrast from the actual hex values, parses the actual CSS rules, and

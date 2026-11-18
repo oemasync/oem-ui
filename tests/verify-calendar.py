@@ -1,9 +1,14 @@
 #!/root/.venvs/mau/bin/python
 """WebKit proof for batch 11: the calendar (single + range)."""
+import os
+import datetime
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
+# A fixed day inside the specimens' month: not the picked 15th, not inside
+# the 12-16 range, not the disabled 22nd.
+TODAY = datetime.datetime(2026, 10, 20, 12, 0, 0)
+URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('OEM_UI_URL', 'http://192.168.1.68:4321/')
 results = []
 
 
@@ -39,7 +44,7 @@ def grid_state(page, sel):
                 perRow: rows.map(r => r.children.length),
                 first: days[0] && days[0].dataset.cmDay,
                 last: days[days.length - 1] && days[days.length - 1].dataset.cmDay,
-                selected: [...days].filter(d => d.getAttribute('aria-selected') === 'true')
+                selected: [...days].filter(d => d.closest('td').getAttribute('aria-selected') === 'true')
                                     .map(d => d.dataset.cmDay),
                 inRange: [...days].filter(d => d.hasAttribute('data-in-range'))
                                    .map(d => d.dataset.cmDay),
@@ -73,6 +78,12 @@ def kill_smooth(page):
 with sync_playwright() as pw:
     browser = pw.webkit.launch()
     page = browser.new_page(viewport={'width': 1280, 'height': 900})
+    # The specimens show october 2026 and "today" comes from the clock, so
+    # on any real date outside that month there is no today to measure and
+    # the today checks fail (or, for the ring colour, pass on None). Pin the
+    # clock inside the month, on a day that is neither picked nor disabled.
+    # set_fixed_time freezes Date only; timers keep running.
+    page.clock.set_fixed_time(TODAY)
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(URL, wait_until='load')
@@ -117,14 +128,14 @@ with sync_playwright() as pw:
           metrics['radius'] == '0px' and metrics['nav'] == '44px', metrics)
 
     check('today, the selection and the roving stop sit where the markup said',
-          st['today'] and st['selected'] == ['2026-10-15'] and
+          st['today'] == ['2026-10-20'] and st['selected'] == ['2026-10-15'] and
           st['roving'] == ['2026-10-15'],
           {'today': st['today'], 'selected': st['selected'], 'roving': st['roving']})
     # today is whatever the page marks aria-current=date, not a date
 
     paint = page.evaluate("""() => {
         const c = document.querySelector('#cal-single');
-        const sel = c.querySelector('.cm-cal__day[aria-selected="true"]');
+        const sel = c.querySelector('[aria-selected="true"] > .cm-cal__day');
         const today = c.querySelector('.cm-cal__day[aria-current="date"]');
         const out = c.querySelector('.cm-cal__day[data-outside]');
         const plain = c.querySelector('.cm-cal__day:not([data-outside])');
@@ -150,6 +161,7 @@ with sync_playwright() as pw:
     check('selection is inversion, today wears a ring, outside days read faint',
           paint['selBg'] == 'rgb(232, 232, 232)' and
           paint['selInk'] != paint['plainInk'] and
+          paint['todayRing'] is not None and
           paint['todayRing'] not in ('rgba(0, 0, 0, 0)', 'transparent') and
           paint['outsideInk'] == paint['faint'] and
           paint['plainInk'] == paint['dim'], paint)

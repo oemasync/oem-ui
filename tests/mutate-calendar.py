@@ -12,16 +12,19 @@ that dies for its own reasons is never mistaken for a proof.
 Logs to stdout AND the scratch file, so a run that outlives this session
 still reports its numbers.
 """
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-ROOT = Path('/root/projects/oem-ui')
+# The checkout this file lives in, never a fixed path: a fixed path mutates
+# whichever checkout happens to sit there, which is someone else's tree.
+ROOT = Path(__file__).resolve().parent.parent
 JS = ROOT / 'src/js/cli-mono.js'
 CSS = ROOT / 'src/styles/components.css'
 HARNESS = ROOT / 'tests/verify-calendar.py'
-LOG = Path('/root/.hermes/cache/scratch/mut11.txt')
+LOG = Path(os.environ.get('OEM_UI_MUT_LOG', '/tmp/oem-ui-mutate-calendar.txt'))
 
 MUTANTS = [
     # ---- js: the keys ------------------------------------------------
@@ -59,14 +62,14 @@ MUTANTS = [
     ('js', "\t\t// The picked button just got REPLACED by the re-render, so without\n\t\t// this the click leaves focus on <body> and the next arrow key\n\t\t// lands nowhere. Focus follows the pick.\n\t\tcalFocus(cal, iso);",
      "\t\t// The picked button just got REPLACED by the re-render, so without\n\t\t// this the click leaves focus on <body> and the next arrow key\n\t\t// lands nowhere. Focus follows the pick.\n\t\tvoid 0;",
      'focus is dropped to <body> after a pick'),
-    ('js', "\t\telse if (e.key === 'Escape') {",
-     "\t\telse if (false) {",
+    ('js', "\t\telse if (e.key === 'Escape') {\n\t\t\te.preventDefault();\n\t\t\tif (calMode(cal) === 'single')",
+     "\t\telse if (false) {\n\t\t\te.preventDefault();\n\t\t\tif (calMode(cal) === 'single')",
      'Escape clears nothing'),
     # ---- js: the render ----------------------------------------------
-    ('js', "\t\t\tif (isSel) attrs += ' aria-selected=\"true\"';",
-     "\t\t\tif (false) attrs += ' aria-selected=\"true\"';",
+    ('js', "\t\t\tvar cell = isSel ? ' aria-selected=\"true\"' : '';",
+     "\t\t\tvar cell = '';",
      'the render stops writing aria-selected'),
-    ('js', "\t\t\t\tattrs + ' tabindex=\"' + (day === active ? 0 : -1) + '\">' +",
+    ('js', "\t\t\t\tattrs + ' tabindex=\"' + (active === day ? 0 : -1) + '\">' +",
      "\t\t\t\tattrs + ' tabindex=\"' + (-1) + '\">' +",
      'no day is ever the roving tab stop'),
     ('js', "\t\t\tif (d > lo && d < hi) b.setAttribute('data-preview', 'true');",
@@ -86,8 +89,8 @@ MUTANTS = [
     ('css', "\t.cm-cal__day { width: min(var(--tap), 100%); }\n",
      "",
      'the tiny viewport days stop following their columns'),
-    ('css', ".cm-cal__day[aria-selected='true'] {\n\tborder-color: var(--ink);\n\tbackground: var(--ink);\n\tcolor: var(--bg);\n}",
-     ".cm-cal__day[aria-selected='true'] {\n\tborder-color: var(--ink);\n\tbackground: transparent;\n\tcolor: var(--bg);\n}",
+    ('css', "[aria-selected='true'] > .cm-cal__day {\n\tborder-color: var(--ink);\n\tbackground: var(--ink);\n\tcolor: var(--bg);\n}",
+     "[aria-selected='true'] > .cm-cal__day {\n\tborder-color: var(--ink);\n\tbackground: transparent;\n\tcolor: var(--bg);\n}",
      'selection stops being inversion'),
     ('css', ".cm-cal__day[aria-current='date'] {\n\tborder-color: var(--ink-dim);",
      ".cm-cal__day[aria-current='date'] {\n\tborder-color: transparent;",
@@ -130,7 +133,10 @@ def build():
 def run_harness():
     t0 = time.time()
     try:
-        r = subprocess.run(['/root/.venvs/mau/bin/python', str(HARNESS)],
+        # The URL is passed through, never left to the harness default: the
+        # default is another server, and a sweep that measures another
+        # server's build reports every mutant SURVIVED (or KILLED) on nothing.
+        r = subprocess.run(['/root/.venvs/mau/bin/python', str(HARNESS), os.environ['OEM_UI_URL']],
                            cwd=ROOT, capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired as e:
         out = (e.stdout or b'')
@@ -145,12 +151,34 @@ def run_harness():
 
 
 def main():
+    if not os.environ.get('OEM_UI_URL'):
+        sys.exit('set OEM_UI_URL to a server that serves THIS checkout\'s dist/')
     js0, css0 = JS.read_bytes(), CSS.read_bytes()
     LOG.write_text('')
     log(f'snapshot js={len(js0)} css={len(css0)}')
+    # Every pattern is checked against the clean source BEFORE the first
+    # build. A pattern that has drifted (the code was reworded under it)
+    # matches nothing, or matches twice, and the sweep used to find that
+    # out 35 minutes in. Now it refuses in a second and names the mutant.
+    stale = []
+    for i, (kind, old, new, name) in enumerate(MUTANTS, 1):
+        n = (js0 if kind == 'js' else css0).decode('utf-8').count(old)
+        if n != 1:
+            stale.append(f'{i:2d} pattern matches {n}x, needs exactly 1 - {name}')
+    if stale:
+        for s in stale:
+            log(s)
+        log('MUTATION PROOF FAIL (stale patterns; nothing was mutated)')
+        sys.exit(1)
+    # OEM_UI_MUT_ONLY=12,14 re-runs just those mutants (numbers as logged).
+    only = {int(x) for x in os.environ.get('OEM_UI_MUT_ONLY', '').split(',') if x.strip()}
+    if only - set(range(1, len(MUTANTS) + 1)):
+        sys.exit(f'OEM_UI_MUT_ONLY names mutants that do not exist: {sorted(only)}')
     killed = survived = absent = ambiguous = nofail = 0
     try:
         for i, (kind, old, new, name) in enumerate(MUTANTS, 1):
+            if only and i not in only:
+                continue
             JS.write_bytes(js0)
             CSS.write_bytes(css0)
             src, err = apply(kind, old, new)

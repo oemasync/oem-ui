@@ -1,3 +1,98 @@
+## Unreleased - one command runs the browser harnesses
+
+The WebKit harnesses in `tests/*.py` each found their page their own way (a
+LAN address, a fixed port, `BASE_URL`, or nothing), so running them meant
+starting a preview by hand and trusting that each one measured it.
+
+- `scripts/run-browser-harnesses.mjs` - new, `npm run test:browser`. Builds,
+  serves this checkout's `dist/` on a free loopback port (with range
+  requests, for the video specimens), passes that URL as `OEM_UI_URL` to
+  every listed harness, and exits non-zero if any fails. `--no-build` reuses
+  `dist/`; naming harnesses runs only those. Python comes from `OEM_UI_PY`.
+- `tests/browser-harnesses.txt` - new. The harnesses the runner runs. A
+  harness is listed only once it reads `OEM_UI_URL`, so nothing on the list
+  can fall back to measuring another server's build. Seven to start.
+- `AGENTS.md` - the verify section uses the runner.
+
+CI still runs build and `npm test` only.
+
+## Unreleased - charts no longer stall `init()`
+
+In WebKit on the showcase, `init()` spent 11.3s in `cmInitCharts`. That is
+most of a DOMContentLoaded that took 18 to 25s, long enough that every
+browser harness with a 30s `goto` timed out on a loaded host. The chart build
+itself was about 1ms. The time went into `chDir()`: a chart with no `dir` of
+its own asks `getComputedStyle()` for its direction while it renders, and
+asked right after the previous chart wrote its markup, that read waited on a
+style recalc of the whole document (8k nodes), about 700ms per cartesian or
+pie chart.
+
+- `src/js/cli-mono.js` - `cmInitCharts` reads every chart's width and
+  rendered direction first (`chReadDir`), then renders them all. The
+  direction reaches `chConfig` as an explicit `ltr`/`rtl`, so `chDir` returns
+  before it touches style. A chart's own `dir` still wins. The
+  ResizeObserver re-render also reads both before it writes.
+- `tests/run.mjs` - one check that pins the read-then-render order and the
+  path the direction takes. Four mutants each fail it.
+- `tests/verify-chart-inherited-dir.py` - new. The path this moved was not
+  tested anywhere: the showcase's RTL chart carries `dir="rtl"` itself. The
+  harness clones the LTR chart, with no `dir`, into an RTL wrapper and an LTR
+  one, and requires the first to mirror and the second not to, at init and
+  after a resize. It passes on the commit before this change too. Two
+  mutants (inherited RTL ignored at init, and on resize) each fail it.
+
+Measured at the same host load: `cmInitCharts` 11,300ms to 28ms, all of
+`init()` 12.7 to 17.4s down to 3.2 to 4.9s, WebKit DOMContentLoaded 18.6 to
+25.7s down to 6.1 to 12.0s. Four binders still cost about one forced recalc
+each (scroller, scroll spy, header, hovercard clamp).
+
+A chart whose container narrowed raised "ResizeObserver loop completed with
+undelivered notifications" as a window error, every run in WebKit, on this
+branch and on the commit before it. The re-render ran inside the observer
+callback and resized the plot it was observing in the same frame. It now
+waits for the next animation frame, and a burst of notifications queues one
+paint. `tests/run.mjs` pins that. Three mutants (paint back in the callback,
+no coalescing, no requestAnimationFrame) each fail it.
+
+## Unreleased - a picked calendar day is selected on its cell
+
+The runtime and the showcase wrote `aria-selected="true"` on the day's
+`<button>`. ARIA allows `aria-selected` on a `gridcell` and not on a button,
+so every picked day was an invalid attribute (axe `aria-allowed-attr`,
+critical) that a screen reader is free to ignore. The state now sits on the
+`<td role="gridcell">` around the button. The button still takes focus and
+the click.
+
+- `src/js/cli-mono.js` - `calRender` writes the selection on the cell.
+- `src/styles/components.css` - the six selectors that painted a picked day
+  (fill, hover/focus, print, forced colors) key off
+  `[aria-selected='true'] > .cm-cal__day`.
+- `src/pages/[...family].astro` - the five statically picked days in the
+  three specimens carry the state on their cell.
+- `README.md` - the hand-written markup for a picked day.
+- `tests/run.mjs` - one check over the renderer, the showcase and the CSS.
+  Three mutants (runtime, CSS, showcase back on the button) each fail it by
+  its own message.
+- `tests/verify-calendar.py`, `verify-calendar-multiple.py`,
+  `verify-datepicker.py`, `verify-forced-colors.py`, `mutate-calendar.py`,
+  `measure-print-webkit.py`, `screenshot-cal-cells.py` read the state off the
+  cell. The three verify harnesses also take `OEM_UI_URL`, and
+  `mutate-calendar.py` now mutates the checkout it lives in and passes the URL
+  to its harness. It had a fixed `/root/projects/oem-ui` path and let the
+  harness fall back to a LAN default, so it could mutate one tree and measure
+  another.
+
+`tests/verify-calendar.py` had also been failing since November 1, for a
+reason unrelated to this change. The specimens show october 2026 and today
+comes from the clock, so outside that month there is no today, and the
+"today sits where the markup said" check failed. The ring-colour check next
+to it passed on `None`. The harness now pins the page clock to 2026-10-20
+(`page.clock.set_fixed_time`, timers still run), expects exactly that day as
+today, and requires a measured ring. 34 passed, 0 failed.
+
+A consumer with a hand-written static calendar has to move the attribute too.
+A runtime-rendered calendar needs nothing.
+
 ## Unreleased - `<Back>` always has a name
 
 `<Back href="…" />` with no `label` and no slot rendered a link whose only
