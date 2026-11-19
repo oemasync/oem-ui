@@ -1814,6 +1814,51 @@ value-shaped test:
   the first number describes whether a reader sees the link, and an
   AA-against-the-background check cannot see this at all.
 
+### Callout — an in-prose admonition
+
+`.cm-alert` is a dismissible app banner; a callout is the opposite shape —
+a static admonition that sits *inside* `.cm-prose`'s reading flow, the way
+GitHub-flavoured markdown's `> [!NOTE]` reaches for one. Note / Tip /
+Warning / Important, written the way an article or an API doc actually
+needs them.
+
+```html
+<div class="cm-prose">
+  <p>Some paragraph of running text.</p>
+
+  <div class="cm-callout cm-callout--info">
+    <p class="cm-callout__title"><span class="cm-callout__mark" aria-hidden="true"></span>Note</p>
+    <div class="cm-callout__body">
+      <p>Body content — one paragraph or several.</p>
+    </div>
+  </div>
+
+  <p>The paragraph after it keeps the same rhythm as the one before.</p>
+</div>
+```
+
+Four variants, same tone vocabulary as the rest of the library:
+`--ok` (Tip), `--warn` (Warning), `--err` (Important), `--info` (Note).
+`data-cm-chroma` colours the edge and the mark exactly the way it colours
+`.cm-alert`'s — the four selectors are listed beside `.cm-alert`'s in the
+chroma gate, so no new token was needed.
+
+Two things make it fit *reading flow* specifically, where `.cm-alert` does
+not:
+
+- **`.cm-prose .cm-callout` carries `margin: 0 0 1.1em`** — the same
+  bottom-margin-only rhythm `base.css` gives `p`. A callout dropped between
+  two paragraphs needs no spacing rule at the call site; outside `.cm-prose`
+  it carries no margin of its own, same as `.cm-alert`.
+- **`.cm-callout__body > :first-child` / `:last-child` reset their own
+  margin.** The body is free-form prose — often more than one paragraph —
+  and without the reset a `p`'s own `1.1em` bottom margin would add a second
+  gap on top of the box's own padding.
+
+It is not dismissible and carries no `role="alert"`: a static admonition in
+an article is not a live region announcing a change, so it is a plain
+`<div>`, read in document order like the paragraph beside it.
+
 ### Small native components: keys, pages, people, disclosure
 
 ```html

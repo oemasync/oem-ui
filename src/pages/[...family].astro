@@ -4605,6 +4605,32 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 						<p>oem-ui is the design language: sharp, flat, mono, high-contrast, dark by default. Transitions are <code>0.12s</code>, corners stay square, and borders do the lifting.</p>
 						<blockquote>Only touch a line if you can explain why it moved. The layout must be stable between scrolling and non-scrolling pages.</blockquote>
 						<pre><code>{`:root { --maxw: 860px; --gutter: 1.25rem; }`}</code></pre>
+
+						<div class="cm-callout cm-callout--info">
+							<p class="cm-callout__title"><span class="cm-callout__mark" aria-hidden="true"></span>Note</p>
+							<div class="cm-callout__body">
+								<p>A callout sits IN the reading flow, not above it like <code>.cm-alert</code>: it takes the same bottom-margin-only rhythm as the paragraph before and after it, so dropping one into an article needs no spacing rule at the call site.</p>
+							</div>
+						</div>
+						<div class="cm-callout cm-callout--ok">
+							<p class="cm-callout__title"><span class="cm-callout__mark" aria-hidden="true"></span>Tip</p>
+							<div class="cm-callout__body">
+								<p>The body is free-form: more than one paragraph is normal, and the box's own padding is the only space above the first line and below the last.</p>
+								<p>This second paragraph proves the first/last-child margin reset: there is no doubled gap between it and the one above.</p>
+							</div>
+						</div>
+						<div class="cm-callout cm-callout--warn">
+							<p class="cm-callout__title"><span class="cm-callout__mark" aria-hidden="true"></span>Warning</p>
+							<div class="cm-callout__body">
+								<p>Same tone vocabulary as every other status-bearing component - <code>data-cm-chroma</code> colours the edge and the mark for free, with zero new tokens.</p>
+							</div>
+						</div>
+						<div class="cm-callout cm-callout--err">
+							<p class="cm-callout__title"><span class="cm-callout__mark" aria-hidden="true"></span>Important</p>
+							<div class="cm-callout__body">
+								<p>Not dismissible and carries no <code>role="alert"</code>: a static admonition in an article is not a live region, so it is a plain <code>&lt;div&gt;</code>, read in document order like the paragraph beside it.</p>
+							</div>
+						</div>
 						</div>
 
 						<!-- The specimen is a .cm-lede, NOT a .cm-prose paragraph,

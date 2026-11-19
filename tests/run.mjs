@@ -21600,3 +21600,100 @@ check('the built page renders <Tree> with root attrs on only the outer ul, and t
 	assert(/<a class="cm-tree__row" href="#">LICENSE<\/a>/.test(rendered),
 		'the wrapper\'s href-less "LICENSE" leaf did not fall back to href="#" - it rendered either with no href at all, or with the wrong one');
 });
+
+// ---------- callout: an in-prose admonition (Note / Tip / Warning / Important) ----------
+// `.cm-alert` is a dismissible app banner; `.cm-callout` sits INSIDE `.cm-prose`'s
+// reading flow instead, so it owns its own vertical rhythm and its body's own
+// child-margin reset - neither of which `.cm-alert` needs. These checks pin
+// the shape, the chroma wiring (reused, not restated - zero new tokens) and
+// the prose-specific margin discipline.
+
+check('callout: the base rule, title and body carry the documented shape', () => {
+	const base = owningDecl('.cm-callout', 'display');
+	assert(base === 'flex', `.cm-callout declares display: ${base}, expected flex`);
+	assert(owningDecl('.cm-callout', 'flex-direction') === 'column', '.cm-callout is not a column, so title and body would sit side by side');
+	assert(owningDecl('.cm-callout', 'border-inline-start-width') === '3px', '.cm-callout lost its 3px accent edge - the same weight .cm-alert uses');
+	const firstChild = owningDecl('.cm-callout__body > :first-child', 'margin-top');
+	assert(firstChild === '0', `.cm-callout__body > :first-child sets margin-top: ${firstChild}, expected 0 - a multi-paragraph body would gain a second gap above its first line`);
+	const lastChild = owningDecl('.cm-callout__body > :last-child', 'margin-bottom');
+	assert(lastChild === '0', `.cm-callout__body > :last-child sets margin-bottom: ${lastChild}, expected 0 - a multi-paragraph body would gain a second gap below its last line`);
+});
+
+check('callout: each variant glyph matches the one the rest of the library already uses for that tone', () => {
+	for (const v of ['ok', 'warn', 'err', 'info']) {
+		const calloutGlyph = owningDecl(`.cm-callout--${v} .cm-callout__mark::before`, 'content');
+		const alertGlyph = owningDecl(`.cm-alert--${v} .cm-alert__mark::before`, 'content');
+		assert(alertGlyph, `.cm-alert--${v}'s own glyph rule is gone, so there is nothing to compare against`);
+		assert(calloutGlyph === alertGlyph, `the ${v} callout glyph is "${calloutGlyph}" but the ${v} alert glyph (the one it is supposed to reuse) is "${alertGlyph}"`);
+	}
+});
+
+check('callout: every variant falls back to the exact grey the README documents for that tone', () => {
+	// Written in fallback form from the start (var(--tone, <grey>)), so there is
+	// no separate pre-chroma rule to compare against - the claim here is that
+	// the FALLBACK matches the tone-to-grey mapping the README states.
+	const expect = { ok: 'ink-dim', warn: 'ink-faint', err: 'ink', info: 'ink-faint' };
+	for (const [v, want] of Object.entries(expect)) {
+		const decl = owningDecl(`.cm-callout--${v}`, 'border-inline-start-color');
+		assert(decl, `.cm-callout--${v} declares no border-inline-start-color at all`);
+		const got = toneFallback(decl);
+		assert(got === want, `.cm-callout--${v} falls back to --${got}, expected --${want}`);
+	}
+});
+
+check('callout: the chroma gate lists all four callout selectors beside the alert ones', () => {
+	for (const v of ['ok', 'warn', 'err', 'info']) {
+		const listed = toneSetters.some((r) => splitSelectors(r.sel).some((s) => s.includes(`.cm-callout--${v}`)));
+		assert(listed, `no [data-cm-chroma] setter rule lists .cm-callout--${v} - the gate was extended for the other components but not this one`);
+	}
+	// And the mark's own tone reader is gated the generic way too (picked up by
+	// the suite's existing toneReaders scan - this just proves OUR rule is one
+	// of them, not merely that the mechanism exists in the abstract).
+	const markReader = allCompRules.find((r) => r.sel.includes('.cm-callout--ok') && r.sel.includes('.cm-callout__mark') && /var\(--tone\b/.test(r.body));
+	assert(markReader, 'no rule reading --tone colours .cm-callout__mark for the toned variants');
+});
+
+check('callout: outside .cm-prose it carries no margin of its own, matching .cm-alert', () => {
+	assert(owningDecl('.cm-callout', 'margin') === null, '.cm-callout declares its own margin - it should be marginless outside .cm-prose, same as .cm-alert');
+	const pMargin = owningDecl('p', 'margin', baseSrc);
+	assert(pMargin, "base.css's own p { margin } rule is gone, so there is nothing to match");
+	const calloutProseMargin = owningDecl('.cm-prose .cm-callout', 'margin');
+	assert(calloutProseMargin === pMargin, `.cm-prose .cm-callout margins (${calloutProseMargin}) do not match .cm-prose's own paragraph rhythm (${pMargin}) - interleaving one with text would need an extra spacing rule`);
+});
+
+check('callout: the showcase demonstrates all four variants inside .cm-prose, one with a multi-paragraph body', () => {
+	const proseStart = showcase.indexOf('<div class="cm-prose">');
+	assert(proseStart !== -1, "could not locate the showcase's .cm-prose specimen");
+	const proseEnd = showcase.indexOf('<!-- The specimen is a .cm-lede', proseStart);
+	assert(proseEnd !== -1, 'could not bound the end of the .cm-prose specimen');
+	const prose = showcase.slice(proseStart, proseEnd);
+	for (const v of ['info', 'ok', 'warn', 'err']) {
+		assert(prose.includes(`cm-callout cm-callout--${v}`), `the .cm-prose specimen never demonstrates cm-callout--${v}`);
+	}
+	const bodies = [...prose.matchAll(/<div class="cm-callout__body">([\s\S]*?)<\/div>/g)];
+	assert(bodies.length === 4, `expected 4 cm-callout__body specimens, found ${bodies.length}`);
+	const multiPara = bodies.some((b) => (b[1].match(/<p>/g) || []).length >= 2);
+	assert(multiPara, 'no callout specimen has a multi-paragraph body, so the first/last-child margin reset is never exercised in the showcase');
+});
+
+check('callout: the built page renders all four variants exactly once, each with its mark', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuild and re-run before shipping
+	for (const v of ['info', 'ok', 'warn', 'err']) {
+		const count = (built.match(new RegExp(`class="cm-callout cm-callout--${v}"`, 'g')) || []).length;
+		assert(count === 1, `expected exactly 1 rendered cm-callout--${v}, found ${count}`);
+	}
+	const markCount = (built.match(/<span class="cm-callout__mark" aria-hidden="true"><\/span>/g) || []).length;
+	assert(markCount === 4, `expected 4 cm-callout__mark elements on the built page, found ${markCount}`);
+});
+
+check('callout: the README documents the prose margin, the body reset and the chroma participation', () => {
+	const readme = read('README.md');
+	const at = readme.indexOf('### Callout');
+	assert(at !== -1, 'the README has no Callout section');
+	const next = readme.indexOf('\n### ', at + 1);
+	const sec = readme.slice(at, next === -1 ? undefined : next);
+	assert(/margin:\s*0\s+0\s+1\.1em/.test(sec), 'the section does not state the exact prose margin value');
+	assert(/first-child/.test(sec) && /last-child/.test(sec), "the section never documents the body's first/last-child margin reset");
+	assert(/data-cm-chroma/.test(sec), 'the section never names the attribute that colours it');
+});
