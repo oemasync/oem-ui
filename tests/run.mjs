@@ -21632,6 +21632,10 @@ const STATE_HUES = [
 	['.cm-trace__item.is-error', 'err', '.cm-trace__item.is-error .cm-trace__icon', 'background', 'var(--ink)'],
 	[".cm-diff__row[data-op='create']", 'ok', ".cm-diff__row[data-op='create']::before", 'color', 'var(--ink)'],
 	[".cm-diff__row[data-op='delete']", 'err', ".cm-diff__row[data-op='delete']::before", 'color', 'var(--ink)'],
+	[".cm-diff__row[data-op='create']", 'ok', ".cm-diff__row[data-op='create'] .cm-diff__val", 'text-decoration-color', 'var(--ink-faint)'],
+	[".cm-diff__row[data-op='delete']", 'err', ".cm-diff__row[data-op='delete'] .cm-diff__val", 'text-decoration-color', 'var(--ink-dim)'],
+	['.cm-attach--error', 'err', '.cm-attach--error .cm-attach__desc', 'color', 'var(--ink)'],
+	['.cm-dropdown__item--danger', 'err', '.cm-dropdown__item--danger .cm-dropdown__icon', 'color', 'var(--ink)'],
 	['.cm-term__line--info', 'info', '.cm-term__line--info', 'border-inline-start', 'var(--accent)'],
 	['.cm-term__line--warn', 'warn', '.cm-term__line--warn', 'border-inline-start', 'var(--ink-faint)'],
 	['.cm-term__line--error', 'err', '.cm-term__line--error', 'border-inline-start', 'var(--ink)'],
@@ -21724,15 +21728,21 @@ check('chroma: a reader never out-ranks a state rule', () => {
 		return (s.match(/\.[a-zA-Z]|\[[^\]]+\]|:[a-z-]+/g) || []).length;
 	};
 	// A reader that IS the state rule (`.cm-status--ok .cm-status__value::before`)
-	// keeps the weight it always had. A reader written BESIDE a rule names
-	// its modifiers in :where(), and that one must weigh one class.
-	const beside = toneReaders.filter((r) => r.sel.includes(':where('));
+	// keeps the weight it always had; those are exactly the readers pinned in
+	// STATE_HUES. Every other reader sits BESIDE a rule and must weigh one class.
+	// The exemption is named, not sniffed from the text: filtering on
+	// ':where(' let a reader rewritten with :is() fall out of the check.
+	const pinned = new Set(STATE_HUES.flatMap(([, , readSel]) => splitSelectors(readSel)));
+	const isStateRule = (r) => splitSelectors(r.sel).some((s) => pinned.has(s));
+	const beside = toneReaders.filter((r) => !isStateRule(r));
 	assert(beside.length >= 8, `only ${beside.length} reader(s) are written beside a rule, so the scan is reading too little`);
+	const heavy = [];
 	for (const r of beside) {
 		for (const s of splitSelectors(r.sel)) {
-			assert(weight(s) <= 1, `"${s}" weighs ${weight(s)} classes; a reader must weigh one, or it beats the hover and accent rules it sits beside`);
+			if (weight(s) > 1) heavy.push(`"${s}" (${weight(s)})`);
 		}
 	}
+	assert(heavy.length === 0, `${heavy.length} reader(s) out-weigh one class and are not a state rule pinned in STATE_HUES, so they beat the hover and accent rules they sit beside: ${heavy.join(', ')}`);
 	for (const [sel, n] of [['.cm-chip--action:hover', 2], ['.cm-meter--accent .cm-meter__fill', 2]]) {
 		assert(allCompRules.some((r) => splitSelectors(r.sel).includes(sel)), `${sel} is gone, so this check no longer proves what it says`);
 		assert(weight(sel) === n, `${sel} was expected to weigh ${n}, got ${weight(sel)}`);
