@@ -1043,9 +1043,9 @@
    the first line). Indent the run instead, so continuation lines align under
    the text and not under the marker. */
 .cm-status__value { padding-inline-start: 1.15em; text-indent: -1.15em; }
-.cm-status--ok .cm-status__value::before { content: '\25cf\00a0'; color: var(--ink-dim); }
-.cm-status--warn .cm-status__value::before { content: '\25b2\00a0'; color: var(--ink-dim); }
-.cm-status--err .cm-status__value::before { content: '\2715\00a0'; color: var(--ink); }
+.cm-status--ok .cm-status__value::before { content: '\25cf\00a0'; color: var(--tone, var(--ink-dim)); }
+.cm-status--warn .cm-status__value::before { content: '\25b2\00a0'; color: var(--tone, var(--ink-dim)); }
+.cm-status--err .cm-status__value::before { content: '\2715\00a0'; color: var(--tone, var(--ink)); }
 
 /* ---------- sticky-header anchor offset ----------
    The header is position:sticky above the content, so a nav link would
@@ -1957,9 +1957,9 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-term__line--out { color: var(--ink-dim); }
 /* Log levels — prefix + text decoration, not colour alone (a11y). */
 .cm-term__line--debug { border-inline-start: 2px solid var(--ink-faint); padding-inline-start: var(--space-2); }
-.cm-term__line--info { border-inline-start: 2px solid var(--accent); padding-inline-start: var(--space-2); }
-.cm-term__line--warn { border-inline-start: 2px solid #f59e0b; padding-inline-start: var(--space-2); }
-.cm-term__line--error { border-inline-start: 2px solid #ef4444; padding-inline-start: var(--space-2); font-weight: 600; }
+.cm-term__line--info { border-inline-start: 2px solid var(--tone, var(--accent)); padding-inline-start: var(--space-2); }
+.cm-term__line--warn { border-inline-start: 2px solid var(--tone, var(--ink-faint)); padding-inline-start: var(--space-2); }
+.cm-term__line--error { border-inline-start: 2px solid var(--tone, var(--ink)); padding-inline-start: var(--space-2); font-weight: 600; }
 /* Follow mode controls — a second bar below the title bar. */
 .cm-term__controls {
 	display: flex; align-items: center; justify-content: space-between;
@@ -2336,8 +2336,8 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-dropzone--busy { border-style: solid; }
 .cm-dropzone--err {
 	border-style: solid;
-	border-color: var(--ink);
-	color: var(--ink);
+	border-color: var(--tone, var(--ink));
+	color: var(--tone, var(--ink));
 }
 .cm-dropzone--picked {
 	border-style: solid;
@@ -3137,7 +3137,7 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 .cm-method--patch { border-style: dashed; }
 .cm-method--delete {
-	color: var(--ink);
+	color: var(--tone, var(--ink));
 	text-decoration: underline;
 	text-underline-offset: 0.2em;
 }
@@ -3891,7 +3891,7 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 .cm-field__error {
 	font-size: max(var(--min-font), var(--text-xs));
-	color: var(--ink);
+	color: var(--tone, var(--ink));
 	display: flex;
 	align-items: baseline;
 	gap: var(--space-1);
@@ -4244,9 +4244,9 @@ dialog.cm-dialog--spec:not([open]) {
 	cursor: pointer;
 }
 .cm-toast__close:hover { color: var(--ink); }
-.cm-toast--ok { border-inline-start-color: var(--ink-dim); }
-.cm-toast--warn { border-inline-start-color: var(--ink-faint); }
-.cm-toast--err { border-inline-start-color: var(--ink); }
+.cm-toast--ok { border-inline-start-color: var(--tone, var(--ink-dim)); }
+.cm-toast--warn { border-inline-start-color: var(--tone, var(--ink-faint)); }
+.cm-toast--err { border-inline-start-color: var(--tone, var(--ink)); }
 /* Same glyphs as .cm-alert, from CSS, so a greyscale print and a
    colour-blind read both get the state without relying on hue. */
 .cm-toast--ok .cm-toast__mark::before { content: '\25cf\00a0'; }
@@ -4267,8 +4267,11 @@ dialog.cm-dialog--spec:not([open]) {
    rides the toast's flex row: margin-left auto is the handshake that
    pushes it to the far edge, align-self lifts it off the top-aligned
    body, and flex-shrink:0 stops a long message squeezing the label. */
-.cm-toast--info { border-inline-start-color: var(--ink-faint); }
+.cm-toast--info { border-inline-start-color: var(--tone, var(--ink-faint)); }
 .cm-toast--info .cm-toast__mark::before { content: '\2139\00a0'; }
+/* The mark takes the hue the edge does. Written beside the base mark
+   rule, at its weight, so a loading toast (no tone) keeps its grey. */
+:where(.cm-toast--ok, .cm-toast--warn, .cm-toast--err, .cm-toast--info) > .cm-toast__mark { color: var(--tone, var(--ink-faint)); }
 .cm-toast--loading { border-inline-start-color: var(--ink-dim); }
 .cm-alert--loading .cm-alert__mark::before,
 .cm-alert--loading .cm-toast__mark::before,
@@ -5017,11 +5020,11 @@ dialog.cm-dialog--spec:not([open]) {
    that is heavier than the neighbouring buttons. The second rule is an
    inset shadow, not a wider border, so the box does not change size. */
 .cm-btn--danger {
-	border-color: var(--ink);
-	box-shadow: inset 0 0 0 1px var(--ink);
+	border-color: var(--tone, var(--ink));
+	box-shadow: inset 0 0 0 1px var(--tone, var(--ink));
 }
 .cm-btn--danger::before { content: '\2715\00a0'; }
-.cm-btn--danger:hover { background: var(--ink); color: var(--bg); }
+.cm-btn--danger:hover { background: var(--tone, var(--ink)); color: var(--bg); }
 
 /* Joined: the group reads as ONE control. Neighbouring borders collapse
    onto a single 1px rule: every member after the first drops its left
@@ -6093,10 +6096,12 @@ button.cm-row > span > svg {
 .cm-tile--warn .cm-tile__label::before,
 .cm-tile--err .cm-tile__label::before {
 	margin-inline-end: 0.3em;
+	color: var(--tone, var(--ink-dim));
 }
 .cm-tile--warn .cm-tile__val,
 .cm-tile--err .cm-tile__val {
 	text-decoration: underline;
+	text-decoration-color: var(--tone, currentColor);
 	text-underline-offset: 0.18em;
 	text-decoration-thickness: 2px;
 }
@@ -7246,8 +7251,8 @@ textarea.cm-code {
    What the reader needs is to know WHICH control to look at, so it is
    marked with a heavier ink rule under the same box. */
 .cm-code[aria-invalid='true'] {
-	border-color: var(--ink);
-	box-shadow: inset 0 -2px 0 var(--ink);
+	border-color: var(--tone, var(--ink));
+	box-shadow: inset 0 -2px 0 var(--tone, var(--ink));
 }
 .cm-code[aria-invalid='true']:focus-visible {
 	outline: 2px solid var(--ink);
@@ -7266,10 +7271,10 @@ textarea.cm-code {
 	font-variant-numeric: tabular-nums;
 	font-weight: 700;
 }
-.cm-status-code--ok { color: var(--ink); }
-.cm-status-code--warn { color: var(--ink-dim); }
+.cm-status-code--ok { color: var(--tone, var(--ink)); }
+.cm-status-code--warn { color: var(--tone, var(--ink-dim)); }
 .cm-status-code--err {
-	color: var(--ink);
+	color: var(--tone, var(--ink));
 	text-decoration: underline;
 	text-underline-offset: 0.2em;
 }
@@ -8851,7 +8856,7 @@ input.cm-slider:disabled {
 .cm-bubble--muted { background: transparent; color: var(--ink-dim); border-color: var(--line-soft); }
 .cm-bubble--tinted { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: var(--ink); border-color: var(--line); }
 .cm-bubble--outline { background: transparent; color: var(--ink); border-color: var(--ink); }
-.cm-bubble--danger { background: transparent; color: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.cm-bubble--danger { background: transparent; color: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); box-shadow: inset 0 0 0 1px var(--tone, var(--ink)); }
 .cm-bubble--ghost { background: transparent; border-color: transparent; color: var(--ink); max-width: none; width: 100%; padding-inline: 0; }
 .cm-bubble--end { align-self: flex-end; }
 /* consecutive bubbles from one sender: a tighter gap than the library
@@ -9318,12 +9323,12 @@ input.cm-slider:disabled {
 .cm-attach--uploading .cm-attach__title,
 .cm-attach--processing .cm-attach__title { color: var(--ink-faint); }
 .cm-attach--error {
-	border-color: var(--ink);
-	outline: 1px solid var(--ink);
+	border-color: var(--tone, var(--ink));
+	outline: 1px solid var(--tone, var(--ink));
 	outline-offset: -4px;
 }
-.cm-attach--error .cm-attach__desc { color: var(--ink); }
-.cm-attach--done .cm-attach__media { color: var(--ink); border-color: var(--ink); }
+.cm-attach--error .cm-attach__desc { color: var(--tone, var(--ink)); }
+.cm-attach--done .cm-attach__media { color: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); }
 .cm-attach-group {
 	display: flex;
 	gap: var(--space-2);
@@ -9596,8 +9601,8 @@ input.cm-slider:disabled {
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 }
-.cm-dropdown__item--danger { color: var(--ink); text-decoration: underline; }
-.cm-dropdown__item--danger .cm-dropdown__icon { color: var(--ink); }
+.cm-dropdown__item--danger { color: var(--tone, var(--ink)); text-decoration: underline; }
+.cm-dropdown__item--danger .cm-dropdown__icon { color: var(--tone, var(--ink)); }
 /* A submenu is a menu inside a menu: it opens BESIDE its host panel, never
    under it. anchorPopover()'s submenu branch places it (fixed, viewport
    coordinates - the SAME mechanism as every other panel, pin included);
@@ -11831,8 +11836,8 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 .cm-trace__icon > * { position: relative; background: var(--bg); }
 
 .cm-trace__item.is-running .cm-trace__icon { border-color: var(--ink); color: var(--ink); }
-.cm-trace__item.is-done .cm-trace__icon { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.cm-trace__item.is-error .cm-trace__icon { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.cm-trace__item.is-done .cm-trace__icon { background: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); color: var(--bg); }
+.cm-trace__item.is-error .cm-trace__icon { background: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); color: var(--bg); }
 
 .cm-trace__title {
 	margin: 0;
@@ -11945,9 +11950,9 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-weight: 600;
 	text-align: center;
 }
-.cm-diff__row[data-op='create']::before { content: '+'; }
+.cm-diff__row[data-op='create']::before { content: '+'; color: var(--tone, var(--ink)); }
 .cm-diff__row[data-op='update']::before { content: '~'; }
-.cm-diff__row[data-op='delete']::before { content: '−'; }
+.cm-diff__row[data-op='delete']::before { content: '−'; color: var(--tone, var(--ink)); }
 .cm-diff__row[data-op='same']::before { content: ' '; }
 
 /* The op word, for the reader who gets no glyph. Visually a small
@@ -11967,8 +11972,8 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 
 /* Decoration is the second half of "not colour alone", and it is what
    survives greyscale print. */
-.cm-diff__row[data-op='create'] .cm-diff__val { text-decoration: underline; text-decoration-color: var(--ink-faint); }
-.cm-diff__row[data-op='delete'] .cm-diff__val { text-decoration: line-through; text-decoration-color: var(--ink-dim); }
+.cm-diff__row[data-op='create'] .cm-diff__val { text-decoration: underline; text-decoration-color: var(--tone, var(--ink-faint)); }
+.cm-diff__row[data-op='delete'] .cm-diff__val { text-decoration: line-through; text-decoration-color: var(--tone, var(--ink-dim)); }
 
 /* Word-level spans. `del` and `ins` are real elements - the semantics are
    the browser's, so nothing has to restate them. */
@@ -12290,54 +12295,64 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-size: max(var(--min-font), var(--text-sm));
 }
 
-/* ============ status chroma (opt-in) ============
-   The palette is grey and a state is carried by a glyph and a word.
-   That stays true. This block adds a HUE on top of both, for the
-   surfaces where a reader scans dozens of states at once (a task board,
-   a fleet table) and a column of glyphs alone reads as texture.
+/* ============ status colour ============
+   Green is good, yellow is a warning, red is bad, blue is a notice.
+   Every component that already names a state with a glyph or a word
+   also takes that state's hue, in both themes, from the four
+   `--chroma-*` sets in tokens.css. The glyph and the word stay: a hue
+   says nothing in greyscale, on a one-ink printout, or to a reader who
+   cannot tell red from green, so it is the second channel, never the
+   only one.
 
-   It is opt-in. Nothing below resolves a hue until an ancestor, or the
-   element itself, carries `data-cm-chroma`, so a consumer that never
-   sets the attribute computes the values it always did. Every reader is
-   written `var(--tone, <the grey it shadows>)`, and the suite compares
-   each fallback with the rule it shadows, so the two cannot drift.
+   It is on by default. `data-cm-chroma="off"` on `<html>` or on any
+   subtree puts that subtree back in grey: the reset below wins over
+   every setter (they weigh nothing, it weighs one attribute), and every
+   reader is written `var(--tone, <the grey it had before>)`, so a reset
+   tone falls back to exactly the grey the library shipped without
+   colour. The bare `data-cm-chroma` attribute from the opt-in era still
+   works and now changes nothing.
 
    `--tone` is resolved ON the toned element from its own theme's
-   `--chroma-*`. That is why a `[data-cm-theme]` subtree inside a chroma
-   page gets its own theme's hues with no second rule.
+   `--chroma-*`, which is why a `[data-cm-theme]` subtree gets its own
+   theme's hues with no second rule.
 
-   Every reader is `<block>:where(<modifiers>)`: one class of
-   specificity, so a state rule with two (`.cm-chip--action:hover`,
-   `.cm-meter--accent .cm-meter__fill`) still wins, and no existing
-   selector is restated - the checks and mutation harnesses that anchor
-   on the original rules keep reading the original rules.
+   Two kinds of reader. Where a component's state rule already sets a
+   grey, that rule reads the tone itself, at its own weight. Where a
+   reader is added beside a rule (the chip, the alert, the dot, the
+   stat, the meter, the toast mark), it is `<block>:where(<modifiers>)`:
+   one class of specificity, so a state rule with two
+   (`.cm-chip--action:hover`, `.cm-meter--accent .cm-meter__fill`) still
+   wins.
 
    A hue never stands alone. `.cm-tone--*` by itself says nothing in
-   greyscale, on paper with one ink, or to a reader who cannot tell red
-   from green, so it goes on something that already names its state. */
-[data-cm-chroma] :where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok),
-[data-cm-chroma]:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok) {
+   greyscale, so it goes on something that already names its state. */
+:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok, .cm-toast--ok, .cm-status--ok, .cm-status-code--ok, .cm-attach--done, .cm-trace__item.is-done, .cm-diff__row[data-op='create']) {
 	--tone: var(--chroma-ok);
 	--tone-soft: var(--chroma-ok-soft);
 	--tone-line: var(--chroma-ok-line);
 }
-[data-cm-chroma] :where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn),
-[data-cm-chroma]:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn) {
+:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn, .cm-toast--warn, .cm-status--warn, .cm-status-code--warn, .cm-tile--warn, .cm-term__line--warn) {
 	--tone: var(--chroma-warn);
 	--tone-soft: var(--chroma-warn-soft);
 	--tone-line: var(--chroma-warn-line);
 }
-[data-cm-chroma] :where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err),
-[data-cm-chroma]:where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err) {
+:where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err, .cm-toast--err, .cm-status--err, .cm-status-code--err, .cm-tile--err, .cm-term__line--error, .cm-field__error, .cm-code[aria-invalid='true'], .cm-btn--danger, .cm-dropzone--err, .cm-method--delete, .cm-dropdown__item--danger, .cm-bubble--danger, .cm-attach--error, .cm-trace__item.is-error, .cm-diff__row[data-op='delete']) {
 	--tone: var(--chroma-err);
 	--tone-soft: var(--chroma-err-soft);
 	--tone-line: var(--chroma-err-line);
 }
-[data-cm-chroma] :where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info),
-[data-cm-chroma]:where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info) {
+:where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info, .cm-toast--info, .cm-term__line--info) {
 	--tone: var(--chroma-info);
 	--tone-soft: var(--chroma-info-soft);
 	--tone-line: var(--chroma-info-line);
+}
+/* `initial` on an unregistered custom property is the guaranteed-invalid
+   value, so every `var(--tone, <grey>)` below it takes its grey. */
+[data-cm-chroma='off'],
+[data-cm-chroma='off'] * {
+	--tone: initial;
+	--tone-soft: initial;
+	--tone-line: initial;
 }
 
 /* A chip: the tone as text, its soft tint behind, a hairline between.

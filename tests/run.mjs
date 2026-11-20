@@ -9050,7 +9050,7 @@ check('a variant is only called demonstrated if it differs from its base', () =>
 			'uploading does not shimmer the title');
 		assert(/cm-attach--error[\s\S]{0,400}failed - /.test(html),
 			'error keeps its reason in text (meaning beyond colour)');
-		assert(/\.cm-attach--error \{[^}]*outline: 1px solid var\(--ink\);[^}]*outline-offset: -4px;/.test(css),
+		assert(/\.cm-attach--error \{[^}]*outline: 1px solid var\(--tone, var\(--ink\)\);[^}]*outline-offset: -4px;/.test(css),
 			'error must carry a true double rule: two lines with a gap');
 		assert(/\.cm-attach__actions \{[^}]*gap: var\(--space-2\);/.test(css),
 			'the action pair keeps its breath');
@@ -11622,7 +11622,7 @@ check('the sort direction is drawn from aria-sort, never from a colour class', (
 // An invalid field is marked with the ink, not a red border: the page
 // already prints the message, and red is the one hue that does not
 // survive a dark theme, a greyscale print, or red-green colour blindness.
-check('an invalid .cm-code field is marked with the ink, never a hue', () => {
+check('an invalid .cm-code field is marked in the error hue over an ink fallback, never a literal', () => {
 	const m = /\.cm-code\[aria-invalid='true'\]\s*\{([^}]*)\}/.exec(compSrc);
 	assert(m, 'no .cm-code[aria-invalid="true"] rule');
 	// The hue check must run FIRST, or a replacement that breaks the ink
@@ -11634,8 +11634,8 @@ check('an invalid .cm-code field is marked with the ink, never a hue', () => {
 	assert(hue.length === 0,
 		'the invalid field carries a literal colour, not a palette token: '
 		+ hue.join('; '));
-	assert(/border-color:\s*var\(--ink\)/.test(m[1]),
-		'the invalid field does not mark with ink');
+	assert(/border-color:\s*var\(--tone,\s*var\(--ink\)\)/.test(m[1]),
+		'the invalid field does not mark with the error tone over ink');
 	assert(/box-shadow:\s*inset/.test(m[1]),
 		'the invalid field has no underline mark, so it differs from the ' +
 		'rest field by border colour alone');
@@ -20434,10 +20434,10 @@ check('cm-dropzone: the four states of a file target are each declared', () => {
 		assert(r, `.cm-dropzone${state} is not declared`);
 		assert(/border-style:\s*solid/.test(r), `.cm-dropzone${state} drops back to the dashed rest frame`);
 	}
-	// Severity is not carried by hue anywhere in this system; an error edge
-	// that introduced one would be the only red on the page.
-	assert(/border-color:\s*var\(--ink\)/.test(rule('.cm-dropzone--err')),
-		'.cm-dropzone--err must take the ink edge, not a hue');
+	// The error edge takes the error hue from --tone, and falls back to
+	// the ink edge where colour is off. Never a literal.
+	assert(/border-color:\s*var\(--tone,\s*var\(--ink\)\)/.test(rule('.cm-dropzone--err')),
+		'.cm-dropzone--err must take the error tone over the ink edge, not a literal hue and not grey only');
 	assert(/\.cm-dropzone:focus-visible/.test(css),
 		'a keyboard user cannot drag, so the target must take the focus ring');
 });
@@ -20900,8 +20900,8 @@ check('method badge: DELETE carries the destructive underline', () => {
 	assert(r, 'no .cm-method--delete rule in components.css');
 	assert(/text-decoration:\s*underline/.test(r),
 		'DELETE must carry the underline - the destructive signal the status code already owns');
-	assert(/color:\s*var\(--ink\)/.test(r),
-		'DELETE must read at full ink with the underline - the cm-status-code--err pair, not the resting dim');
+	assert(/color:\s*var\(--tone,\s*var\(--ink\)\)/.test(r),
+		'DELETE must read in the error tone over full ink, with the underline - the cm-status-code--err pair, not the resting dim');
 });
 
 check('method badge: the showcase demonstrates all five, in both contexts', () => {
@@ -21577,18 +21577,99 @@ check('chroma: the four hues are hues, and no two are neighbours', () => {
 	}
 });
 
-check('chroma: nothing resolves a hue without data-cm-chroma', () => {
-	// The opt-in is the whole promise to every existing consumer. A setter
-	// that is not gated turns the hue on for all of them at once.
+check('chroma: colour is on by default, and data-cm-chroma="off" puts a subtree back in grey', () => {
+	// A setter weighs nothing (all :where), so the one-attribute reset
+	// always beats it, inside the subtree and on the subtree root.
 	assert(toneSetters.length >= 4, `only ${toneSetters.length} rule(s) set --tone; one per severity was expected, so the scan is reading too little`);
-	const gated = (r) => splitSelectors(r.sel).every((s) => s.startsWith('[data-cm-chroma]'));
-	for (const r of toneSetters) {
-		assert(gated(r), `"${r.sel}" sets --tone without a data-cm-chroma gate on every selector`);
+	const reset = toneSetters.filter((r) => /--tone:\s*initial/.test(r.body));
+	assert(reset.length === 1, `${reset.length} rule(s) reset --tone to initial; exactly one (the off switch) expected`);
+	const off = reset[0];
+	assert(splitSelectors(off.sel).sort().join(' | ') === "[data-cm-chroma='off'] | [data-cm-chroma='off'] *",
+		`the off switch is "${off.sel}"; it must be [data-cm-chroma='off'] and [data-cm-chroma='off'] *, or the root or the subtree keeps its hue`);
+	for (const p of ['--tone', '--tone-soft', '--tone-line']) {
+		assert(new RegExp(`(^|[;\\s])${p}:\\s*initial`).test(off.body), `the off switch does not reset ${p}, so that part keeps its hue`);
+	}
+	for (const r of toneSetters.filter((x) => x !== off)) {
+		for (const sel of splitSelectors(r.sel)) {
+			assert(/^:where\([^]*\)$/.test(sel) && stripWhere(sel) === '', `"${sel}" sets --tone with weight; a setter must be all :where() or the off switch cannot beat it`);
+		}
 	}
 	for (const r of allCompRules.filter((x) => /var\(--chroma-/.test(x.body))) {
-		assert(gated(r), `"${r.sel}" reads a --chroma-* token outside the data-cm-chroma gate`);
+		assert(toneSetters.includes(r), `"${r.sel}" reads a --chroma-* token directly; only a setter may, so the off switch reaches it`);
 	}
 	assert(!/--chroma-|--tone\b/.test(baseSrc), 'base.css names a chroma token: element defaults must stay grey');
+});
+
+// Every state the library names, the hue it takes, and the grey it keeps
+// with colour off. Pinned here rather than derived, because the defect
+// this guards against is a component silently dropping out of the map.
+const STATE_HUES = [
+	// [setter selector, role, reader rule, property, grey it falls back to]
+	['.cm-toast--ok', 'ok', '.cm-toast--ok', 'border-inline-start-color', 'var(--ink-dim)'],
+	['.cm-toast--warn', 'warn', '.cm-toast--warn', 'border-inline-start-color', 'var(--ink-faint)'],
+	['.cm-toast--err', 'err', '.cm-toast--err', 'border-inline-start-color', 'var(--ink)'],
+	['.cm-toast--info', 'info', '.cm-toast--info', 'border-inline-start-color', 'var(--ink-faint)'],
+	['.cm-toast--ok', 'ok', ':where(.cm-toast--ok, .cm-toast--warn, .cm-toast--err, .cm-toast--info) > .cm-toast__mark', 'color', 'var(--ink-faint)'],
+	['.cm-status--ok', 'ok', '.cm-status--ok .cm-status__value::before', 'color', 'var(--ink-dim)'],
+	['.cm-status--warn', 'warn', '.cm-status--warn .cm-status__value::before', 'color', 'var(--ink-dim)'],
+	['.cm-status--err', 'err', '.cm-status--err .cm-status__value::before', 'color', 'var(--ink)'],
+	['.cm-tile--warn', 'warn', '.cm-tile--warn .cm-tile__label::before, .cm-tile--err .cm-tile__label::before', 'color', 'var(--ink-dim)'],
+	['.cm-tile--err', 'err', '.cm-tile--warn .cm-tile__val, .cm-tile--err .cm-tile__val', 'text-decoration-color', 'currentColor'],
+	['.cm-status-code--ok', 'ok', '.cm-status-code--ok', 'color', 'var(--ink)'],
+	['.cm-status-code--warn', 'warn', '.cm-status-code--warn', 'color', 'var(--ink-dim)'],
+	['.cm-status-code--err', 'err', '.cm-status-code--err', 'color', 'var(--ink)'],
+	['.cm-method--delete', 'err', '.cm-method--delete', 'color', 'var(--ink)'],
+	['.cm-btn--danger', 'err', '.cm-btn--danger', 'border-color', 'var(--ink)'],
+	['.cm-btn--danger', 'err', '.cm-btn--danger:hover', 'background', 'var(--ink)'],
+	['.cm-bubble--danger', 'err', '.cm-bubble--danger', 'border-color', 'var(--ink)'],
+	['.cm-dropdown__item--danger', 'err', '.cm-dropdown__item--danger', 'color', 'var(--ink)'],
+	['.cm-field__error', 'err', '.cm-field__error', 'color', 'var(--ink)'],
+	[".cm-code[aria-invalid='true']", 'err', ".cm-code[aria-invalid='true']", 'border-color', 'var(--ink)'],
+	['.cm-dropzone--err', 'err', '.cm-dropzone--err', 'border-color', 'var(--ink)'],
+	['.cm-attach--error', 'err', '.cm-attach--error', 'border-color', 'var(--ink)'],
+	['.cm-attach--done', 'ok', '.cm-attach--done .cm-attach__media', 'border-color', 'var(--ink)'],
+	['.cm-trace__item.is-done', 'ok', '.cm-trace__item.is-done .cm-trace__icon', 'background', 'var(--ink)'],
+	['.cm-trace__item.is-error', 'err', '.cm-trace__item.is-error .cm-trace__icon', 'background', 'var(--ink)'],
+	[".cm-diff__row[data-op='create']", 'ok', ".cm-diff__row[data-op='create']::before", 'color', 'var(--ink)'],
+	[".cm-diff__row[data-op='delete']", 'err', ".cm-diff__row[data-op='delete']::before", 'color', 'var(--ink)'],
+	[".cm-diff__row[data-op='create']", 'ok', ".cm-diff__row[data-op='create'] .cm-diff__val", 'text-decoration-color', 'var(--ink-faint)'],
+	[".cm-diff__row[data-op='delete']", 'err', ".cm-diff__row[data-op='delete'] .cm-diff__val", 'text-decoration-color', 'var(--ink-dim)'],
+	['.cm-attach--error', 'err', '.cm-attach--error .cm-attach__desc', 'color', 'var(--ink)'],
+	['.cm-dropdown__item--danger', 'err', '.cm-dropdown__item--danger .cm-dropdown__icon', 'color', 'var(--ink)'],
+	['.cm-term__line--info', 'info', '.cm-term__line--info', 'border-inline-start', 'var(--accent)'],
+	['.cm-term__line--warn', 'warn', '.cm-term__line--warn', 'border-inline-start', 'var(--ink-faint)'],
+	['.cm-term__line--error', 'err', '.cm-term__line--error', 'border-inline-start', 'var(--ink)'],
+];
+
+check('chroma: every named state takes its hue, and keeps its grey with colour off', () => {
+	const setterFor = (role) => toneSetters.find((r) => new RegExp(`--tone:\\s*var\\(--chroma-${role}\\)`).test(r.body));
+	for (const [setSel, role, readSel, prop, grey] of STATE_HUES) {
+		const setter = setterFor(role);
+		assert(setter, `no rule sets --tone to --chroma-${role}`);
+		const listed = splitSelectors(setter.sel).flatMap((x) => splitSelectors(x.replace(/^:where\(([^]*)\)$/, '$1')));
+		assert(listed.includes(setSel), `${setSel} is not in the ${role} setter, so it never gets a hue (${role} lists: ${listed.join(', ')})`);
+		for (const other of CHROMA_ROLES.filter((r) => r !== role)) {
+			const o = setterFor(other);
+			const ol = o ? splitSelectors(o.sel).flatMap((x) => splitSelectors(x.replace(/^:where\(([^]*)\)$/, '$1'))) : [];
+			assert(!ol.includes(setSel), `${setSel} is in both the ${role} and the ${other} setter; the later one wins and the state takes the wrong hue`);
+		}
+		const reader = allCompRules.find((r) => r.sel === readSel && new RegExp(`(^|[;\\s])${prop}\\s*:`).test(r.body));
+		assert(reader, `no rule "${readSel}" declares ${prop}`);
+		const v = propIn(reader.body, prop);
+		const want = `var(--tone, ${grey})`;
+		assert(v.includes(want), `${readSel} { ${prop}: ${v} } must read ${want}: the hue when colour is on, the old grey when it is off`);
+	}
+});
+
+check('chroma: no component paints a literal hue', () => {
+	// The log levels shipped #f59e0b and #ef4444: one fixed orange and red
+	// in both themes, outside the token set and outside the off switch.
+	// Every colour in components.css comes from a token; the forced-colors
+	// block (system colours) and masks (alpha only) are the exceptions.
+	const scan = paletteSrc.replace(/(^|[;{])\s*(?:-webkit-)?mask(?:-image)?\s*:[^;}]*/g, '$1');
+	const lit = [...scan.matchAll(/(?:^|[;{])\s*([a-z-]*(?:color|background|border[a-z-]*|outline[a-z-]*|box-shadow|fill|stroke|text-decoration[a-z-]*))\s*:\s*([^;}]*#[0-9a-fA-F]{3,8}\b[^;}]*)/g)]
+		.map((m) => `${m[1]}: ${m[2].trim()}`);
+	assert(lit.length === 0, `literal colour(s) in components.css: ${lit.join(' | ')}`);
 });
 
 check('chroma: a setter only sets, and a reader always has a grey to fall back to', () => {
@@ -21646,11 +21727,22 @@ check('chroma: a reader never out-ranks a state rule', () => {
 		const s = stripWhere(sel).replace(/::[a-z-]+/g, '');
 		return (s.match(/\.[a-zA-Z]|\[[^\]]+\]|:[a-z-]+/g) || []).length;
 	};
-	for (const r of toneReaders) {
+	// A reader that IS the state rule (`.cm-status--ok .cm-status__value::before`)
+	// keeps the weight it always had; those are exactly the readers pinned in
+	// STATE_HUES. Every other reader sits BESIDE a rule and must weigh one class.
+	// The exemption is named, not sniffed from the text: filtering on
+	// ':where(' let a reader rewritten with :is() fall out of the check.
+	const pinned = new Set(STATE_HUES.flatMap(([, , readSel]) => splitSelectors(readSel)));
+	const isStateRule = (r) => splitSelectors(r.sel).some((s) => pinned.has(s));
+	const beside = toneReaders.filter((r) => !isStateRule(r));
+	assert(beside.length >= 8, `only ${beside.length} reader(s) are written beside a rule, so the scan is reading too little`);
+	const heavy = [];
+	for (const r of beside) {
 		for (const s of splitSelectors(r.sel)) {
-			assert(weight(s) <= 1, `"${s}" weighs ${weight(s)} classes; a reader must weigh one, or it beats the hover and accent rules it sits beside`);
+			if (weight(s) > 1) heavy.push(`"${s}" (${weight(s)})`);
 		}
 	}
+	assert(heavy.length === 0, `${heavy.length} reader(s) out-weigh one class and are not a state rule pinned in STATE_HUES, so they beat the hover and accent rules they sit beside: ${heavy.join(', ')}`);
 	for (const [sel, n] of [['.cm-chip--action:hover', 2], ['.cm-meter--accent .cm-meter__fill', 2]]) {
 		assert(allCompRules.some((r) => splitSelectors(r.sel).includes(sel)), `${sel} is gone, so this check no longer proves what it says`);
 		assert(weight(sel) === n, `${sel} was expected to weigh ${n}, got ${weight(sel)}`);
@@ -21667,7 +21759,7 @@ check('chroma: a tone class paints nothing by itself', () => {
 	for (const r of toned) {
 		for (const s of splitSelectors(r.sel)) {
 			if (!s.includes('.cm-tone--')) continue;
-			if (s.startsWith('[data-cm-chroma]')) continue; // a setter; proven to only set above
+			if (toneSetters.includes(r)) continue; // a setter; proven to only set above
 			// The tone class is itself a `.cm-` class, so it has to come out
 			// before looking for a component. Left in, `.cm-tone--err { ... }`
 			// satisfied the test with its own name and this check could not fail.
@@ -21749,7 +21841,7 @@ check('chroma: an untoned segment cannot inherit a hue', () => {
 		'the toned segment must fall back to the grey its position would have had (--cm-seg-grey), then to --ink');
 });
 
-check('chroma: the showcase draws the same markup with and without it', () => {
+check('chroma: the showcase draws the same markup with colour on and off', () => {
 	assert(showcaseIndex.includes('chroma'), 'the status colour section is not in the section index, so the rail cannot reach it');
 	const page = exists('dist/f/surfaces/index.html') ? read('dist/f/surfaces/index.html') : '';
 	const at = page.indexOf('<section id="chroma"');
@@ -21758,8 +21850,8 @@ check('chroma: the showcase draws the same markup with and without it', () => {
 	const sec = page.slice(at, end === -1 ? undefined : end);
 	const cols = sec.split('<div class="cm-surface cm-surface--flat cm-stack"').slice(1);
 	assert(cols.length === 2, `the section renders ${cols.length} column(s), two expected: one with the attribute and one without`);
-	const gatedCols = cols.filter((c) => /^[^>]*\sdata-cm-chroma[\s>=]/.test(c));
-	assert(gatedCols.length === 1, `${gatedCols.length} of the two columns carry data-cm-chroma; exactly one must, or the grey column proves nothing`);
+	const offCols = cols.filter((c) => /^[^>]*\sdata-cm-chroma="off"/.test(c));
+	assert(offCols.length === 1 && cols.indexOf(offCols[0]) === 1, `${offCols.length} column(s) carry data-cm-chroma="off"; exactly the second must, or the grey column proves nothing`);
 	// Same markup: the list of class attributes, in order, is identical.
 	const classes = (c) => [...c.matchAll(/class="([^"]*)"/g)].map((m) => m[1]).join('|');
 	assert(classes(cols[0]) === classes(cols[1]), 'the two columns differ in markup, so the second is not a control for the first');
@@ -21768,13 +21860,16 @@ check('chroma: the showcase draws the same markup with and without it', () => {
 		...CHROMA_ROLES.map((r) => `cm-alert cm-alert--${r}`),
 		...CHROMA_ROLES.map((r) => `cm-stat cm-tone--${r}`), ...CHROMA_ROLES.map((r) => `cm-dot cm-tone--${r}`),
 		'cm-meter cm-tone--ok', 'cm-meter__track cm-meter__track--stack', 'cm-meter__seg cm-tone--ok', 'class="cm-meter__seg"', 'cm-meter__legend', 'cm-meter__count',
+		'cm-status-code cm-status-code--ok', 'cm-status-code cm-status-code--warn', 'cm-status-code cm-status-code--err',
+		'cm-method cm-method--delete', 'cm-btn cm-btn--danger', 'class="cm-field__error"',
 	]) {
 		assert(cols[1].includes(cls), `the specimen never renders ${cls}`);
 	}
-	// Nothing ABOVE the section may carry the attribute, or the whole page
-	// becomes the chroma column and the library's grey reference is gone.
+	// Nothing else on the page may carry the attribute: an "off" higher up
+	// would turn the default column grey and the comparison would be two
+	// grey columns.
 	const tags = [...page.matchAll(/<[a-z][^>]*\sdata-cm-chroma[\s>=][^>]*>|<[a-z][^>]*\sdata-cm-chroma>/g)];
-	assert(tags.length === 1, `${tags.length} element(s) on the built page carry data-cm-chroma, one expected (the specimen column)`);
+	assert(tags.length === 1, `${tags.length} element(s) on the built page carry data-cm-chroma, one expected (the grey specimen column)`);
 });
 
 check('chroma: the README documents the switch, the tokens and the limit', () => {
@@ -21783,14 +21878,17 @@ check('chroma: the README documents the switch, the tokens and the limit', () =>
 	assert(at !== -1, 'the README has no "Status colour" section');
 	const next = readme.indexOf('\n## ', at + 1);
 	const sec = readme.slice(at, next === -1 ? undefined : next);
-	assert(/data-cm-chroma/.test(sec), 'the section never names the attribute that turns it on');
+	assert(/data-cm-chroma="off"/.test(sec), 'the section never names the attribute that turns it off');
 	for (const role of CHROMA_ROLES) {
 		assert(sec.includes(`--chroma-${role}`), `the section does not list --chroma-${role}`);
 		assert(sec.includes(`cm-tone--${role}`), `the section does not list .cm-tone--${role}`);
 	}
 	assert(/cm-meter__seg/.test(sec), 'the section does not document the stacked meter');
 	assert(/cm-meter__legend/.test(sec), 'the section does not document the legend a stacked meter needs');
-	assert(/off by default|opt-in/i.test(sec), 'the section does not say the hue is off until asked for');
+	assert(/on by default/i.test(sec), 'the section does not say the hue is on by default');
+	for (const m of ['green is good', 'yellow is a warning', 'red is bad', 'blue is a notice']) {
+		assert(sec.toLowerCase().includes(m), `the section never says "${m}"`);
+	}
 	assert(/never .*alone|not .*alone/i.test(sec), 'the section does not state that a hue never carries a state alone');
 });
 
