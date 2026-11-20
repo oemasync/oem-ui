@@ -730,7 +730,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'Callout.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -21981,4 +21981,167 @@ check('the built page renders <Tree> with root attrs on only the outer ul, and t
 	// without an href (which would be a dead, unfocusable row).
 	assert(/<a class="cm-tree__row" href="#">LICENSE<\/a>/.test(rendered),
 		'the wrapper\'s href-less "LICENSE" leaf did not fall back to href="#" - it rendered either with no href at all, or with the wrong one');
+});
+
+// ---------- callout: an in-prose admonition (Note / Tip / Warning / Important) ----------
+// `.cm-alert` is a dismissible app banner; `.cm-callout` sits INSIDE `.cm-prose`'s
+// reading flow instead, so it owns its own vertical rhythm and its body's own
+// child-margin reset - neither of which `.cm-alert` needs. These checks pin
+// the shape, the chroma wiring (reused, not restated - zero new tokens) and
+// the prose-specific margin discipline.
+
+check('callout: the base rule, title and body carry the documented shape', () => {
+	const base = owningDecl('.cm-callout', 'display');
+	assert(base === 'flex', `.cm-callout declares display: ${base}, expected flex`);
+	assert(owningDecl('.cm-callout', 'flex-direction') === 'column', '.cm-callout is not a column, so title and body would sit side by side');
+	assert(owningDecl('.cm-callout', 'border-inline-start-width') === '3px', '.cm-callout lost its 3px accent edge - the same weight .cm-alert uses');
+	const firstChild = owningDecl('.cm-callout__body > :first-child', 'margin-top');
+	assert(firstChild === '0', `.cm-callout__body > :first-child sets margin-top: ${firstChild}, expected 0 - a multi-paragraph body would gain a second gap above its first line`);
+	const lastChild = owningDecl('.cm-callout__body > :last-child', 'margin-bottom');
+	assert(lastChild === '0', `.cm-callout__body > :last-child sets margin-bottom: ${lastChild}, expected 0 - a multi-paragraph body would gain a second gap below its last line`);
+});
+
+check('callout: each variant glyph matches the one the rest of the library already uses for that tone', () => {
+	for (const v of ['ok', 'warn', 'err', 'info']) {
+		const calloutGlyph = owningDecl(`.cm-callout--${v} .cm-callout__mark::before`, 'content');
+		const alertGlyph = owningDecl(`.cm-alert--${v} .cm-alert__mark::before`, 'content');
+		assert(alertGlyph, `.cm-alert--${v}'s own glyph rule is gone, so there is nothing to compare against`);
+		assert(calloutGlyph === alertGlyph, `the ${v} callout glyph is "${calloutGlyph}" but the ${v} alert glyph (the one it is supposed to reuse) is "${alertGlyph}"`);
+	}
+});
+
+check('callout: every variant falls back to the exact grey the README documents for that tone', () => {
+	// Written in fallback form from the start (var(--tone, <grey>)), so there is
+	// no separate pre-chroma rule to compare against - the claim here is that
+	// the FALLBACK matches the tone-to-grey mapping the README states.
+	const expect = { ok: 'ink-dim', warn: 'ink-faint', err: 'ink', info: 'ink-faint' };
+	for (const [v, want] of Object.entries(expect)) {
+		const decl = owningDecl(`.cm-callout--${v}`, 'border-inline-start-color');
+		assert(decl, `.cm-callout--${v} declares no border-inline-start-color at all`);
+		const got = toneFallback(decl);
+		assert(got === want, `.cm-callout--${v} falls back to --${got}, expected --${want}`);
+	}
+});
+
+check('callout: the chroma gate lists all four callout selectors beside the alert ones', () => {
+	for (const v of ['ok', 'warn', 'err', 'info']) {
+		const listed = toneSetters.some((r) => splitSelectors(r.sel).some((s) => s.includes(`.cm-callout--${v}`)));
+		assert(listed, `no [data-cm-chroma] setter rule lists .cm-callout--${v} - the gate was extended for the other components but not this one`);
+	}
+	// And the mark's own tone reader is gated the generic way too (picked up by
+	// the suite's existing toneReaders scan - this just proves OUR rule is one
+	// of them, not merely that the mechanism exists in the abstract).
+	const markReader = allCompRules.find((r) => r.sel.includes('.cm-callout--ok') && r.sel.includes('.cm-callout__mark') && /var\(--tone\b/.test(r.body));
+	assert(markReader, 'no rule reading --tone colours .cm-callout__mark for the toned variants');
+});
+
+check('callout: outside .cm-prose it carries no margin of its own, matching .cm-alert', () => {
+	assert(owningDecl('.cm-callout', 'margin') === null, '.cm-callout declares its own margin - it should be marginless outside .cm-prose, same as .cm-alert');
+	const pMargin = owningDecl('p', 'margin', baseSrc);
+	assert(pMargin, "base.css's own p { margin } rule is gone, so there is nothing to match");
+	const calloutProseMargin = owningDecl('.cm-prose .cm-callout', 'margin');
+	assert(calloutProseMargin === pMargin, `.cm-prose .cm-callout margins (${calloutProseMargin}) do not match .cm-prose's own paragraph rhythm (${pMargin}) - interleaving one with text would need an extra spacing rule`);
+});
+
+check('callout: the showcase demonstrates all four variants inside .cm-prose, one with a multi-paragraph body', () => {
+	// The showcase renders these through the <Callout> wrapper (not hand-typed
+	// .cm-callout markup), so this reads the SOURCE shape of that call - the
+	// variant attribute and the slot content - not the rendered class names;
+	// the next check ("the built page renders...") proves what actually ships.
+	const proseStart = showcase.indexOf('<div class="cm-prose">');
+	assert(proseStart !== -1, "could not locate the showcase's .cm-prose specimen");
+	const proseEnd = showcase.indexOf('<!-- The specimen is a .cm-lede', proseStart);
+	assert(proseEnd !== -1, 'could not bound the end of the .cm-prose specimen');
+	const prose = showcase.slice(proseStart, proseEnd);
+	const calls = [...prose.matchAll(/<Callout variant="([a-z]+)"[^>]*>([\s\S]*?)<\/Callout>/g)];
+	assert(calls.length === 4, `expected 4 <Callout> calls in the .cm-prose specimen, found ${calls.length}`);
+	for (const v of ['info', 'ok', 'warn', 'err']) {
+		assert(calls.some((c) => c[1] === v), `the .cm-prose specimen never calls <Callout variant="${v}">`);
+	}
+	const multiPara = calls.some((c) => (c[2].match(/<p>/g) || []).length >= 2);
+	assert(multiPara, 'no callout specimen passes a multi-paragraph body, so the first/last-child margin reset is never exercised in the showcase');
+});
+
+check('callout: the built page renders all four variants exactly once, each with its mark', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuild and re-run before shipping
+	for (const v of ['info', 'ok', 'warn', 'err']) {
+		const count = (built.match(new RegExp(`class="cm-callout cm-callout--${v}"`, 'g')) || []).length;
+		assert(count === 1, `expected exactly 1 rendered cm-callout--${v}, found ${count}`);
+	}
+	const markCount = (built.match(/<span class="cm-callout__mark" aria-hidden="true"><\/span>/g) || []).length;
+	assert(markCount === 4, `expected 4 cm-callout__mark elements on the built page, found ${markCount}`);
+});
+
+check('callout: the README documents the prose margin, the body reset and the chroma participation', () => {
+	const readme = read('README.md');
+	const at = readme.indexOf('### Callout');
+	assert(at !== -1, 'the README has no Callout section');
+	const next = readme.indexOf('\n### ', at + 1);
+	const sec = readme.slice(at, next === -1 ? undefined : next);
+	assert(/margin:\s*0\s+0\s+1\.1em/.test(sec), 'the section does not state the exact prose margin value');
+	assert(/first-child/.test(sec) && /last-child/.test(sec), "the section never documents the body's first/last-child margin reset");
+	assert(/data-cm-chroma/.test(sec), 'the section never names the attribute that colours it');
+});
+
+/* ================= <Callout> astro wrapper =================
+   .cm-callout / .cm-callout__title / .cm-callout__mark / .cm-callout__body
+   were proven in CSS and demonstrated by hand, three times over, in the
+   showcase's prose section. The wrapper is what a blog post or an API doc
+   actually calls - content in, the same markup shape out - the same role
+   <Alert> plays for a banner and <Tree>/<Param>/<Endpoint> play for their
+   own rows. The mutation sweep is tests/mutate-callout-astro.mjs. */
+console.log('\n<Callout> wrapper');
+
+const calloutAstro = read('src/astro/Callout.astro');
+// Scoped past the frontmatter fence, same reasoning as Tree.astro's and
+// Param.astro's own checks: the doc comment above the fence names several
+// classes in backticks for a reader's benefit, and an unscoped check
+// cannot tell a renamed class in the template from prose that still
+// describes the original name.
+const calloutFenceEnd = calloutAstro.indexOf('\n---\n', 3);
+const calloutMarkup = calloutFenceEnd === -1 ? calloutAstro : calloutAstro.slice(calloutFenceEnd + 5);
+
+check('Callout.astro takes no default variant, and renders it into the class list', () => {
+	assert(!/variant\s*=\s*['"](ok|warn|err|info)['"]/.test(calloutAstro),
+		'Callout.astro defaults variant to a literal tone - every real admonition in the showcase and README names one explicitly, so a silent default would hide a caller forgetting to');
+	assert(/class:list=\{\['cm-callout', `cm-callout--\$\{variant\}`, className\]\}/.test(calloutMarkup),
+		'Callout.astro does not interpolate the variant prop into a cm-callout--<variant> class, or lost the className passthrough');
+});
+
+check('Callout.astro renders the mark as an empty, aria-hidden span - the glyph is CSS, never a prop', () => {
+	assert(/<span class="cm-callout__mark" aria-hidden="true"><\/span>/.test(calloutMarkup),
+		'Callout.astro does not render an empty, aria-hidden cm-callout__mark span - either it is missing, carries content, or is not hidden from assistive tech (the CSS ::before paints the glyph; a non-empty span would double it)');
+	assert(!/Props\s[^}]*mark/s.test(calloutAstro.slice(0, calloutFenceEnd === -1 ? undefined : calloutFenceEnd)),
+		'Callout.astro\'s Props interface declares a mark prop - the glyph must come only from the CSS ::before rule for the variant, or the two could drift');
+});
+
+check('Callout.astro renders title in the title row and the slot in the body wrapper', () => {
+	assert(/<p class="cm-callout__title">/.test(calloutMarkup),
+		'Callout.astro does not render a cm-callout__title paragraph');
+	assert(/\{title\}/.test(calloutMarkup),
+		'Callout.astro does not interpolate the title prop into the title row');
+	assert(/<div class="cm-callout__body">/.test(calloutMarkup),
+		'Callout.astro does not render a cm-callout__body wrapper');
+	assert(/<slot\s*\/>/.test(calloutMarkup) && calloutMarkup.indexOf('<slot') > calloutMarkup.indexOf('cm-callout__body'),
+		'Callout.astro does not render <slot /> inside the cm-callout__body wrapper - a string prop for the body could not carry the <code> elements and multi-paragraph content the showcase specimens pass');
+});
+
+check('Callout.astro is imported and rendered 4 times in the showcase', () => {
+	assert(/import Callout from '\.\.\/astro\/Callout\.astro'/.test(showcase),
+		'the showcase does not import Callout.astro');
+	const calloutUses = showcase.match(/<Callout\s/g) || [];
+	assert(calloutUses.length === 4,
+		`the showcase renders <Callout> ${calloutUses.length} time(s) - expected exactly 4 (info/ok/warn/err)`);
+});
+
+check('the built page renders <Callout> identically through the wrapper: 4 variants, 4 marks, titles in place', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuild and re-run before shipping
+	for (const [v, title] of [['info', 'Note'], ['ok', 'Tip'], ['warn', 'Warning'], ['err', 'Important']]) {
+		const classCount = (built.match(new RegExp(`class="cm-callout cm-callout--${v}"`, 'g')) || []).length;
+		assert(classCount === 1, `expected exactly 1 rendered cm-callout--${v} (via the wrapper), found ${classCount}`);
+		assert(new RegExp(`<span class="cm-callout__mark" aria-hidden="true"></span>${title}`).test(built),
+			`the built page never pairs the ${v} callout's mark with its "${title}" title - the wrapper may have dropped the title or the mark`);
+	}
 });

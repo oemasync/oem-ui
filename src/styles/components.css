@@ -2555,6 +2555,63 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-alert--info .cm-toast__mark::before { content: '\2139\00a0'; }
 .cm-alert--loading { border-inline-start-color: var(--ink-dim); }
 
+/* ---------- callout ----------
+   An in-PROSE admonition - Note / Tip / Warning / Important - for
+   markdown and MDX content. `.cm-alert` is a dismissible app banner
+   with no opinion about vertical rhythm; a callout instead sits INSIDE
+   `.cm-prose`'s reading flow, the way GitHub's `> [!NOTE]` syntax does,
+   so it carries its own prose-scoped margin and resets its body's
+   first/last child margin rather than leaving spacing to the author.
+
+   Same tone vocabulary as the rest of the library (ok/warn/err/info),
+   so `data-cm-chroma` colours it for free - its four variants are
+   listed in the "status chroma" gate below, beside .cm-alert's. */
+.cm-callout {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-4);
+	border: 1px solid var(--line);
+	border-inline-start-width: 3px;
+	border-radius: var(--radius-sm);
+	background: var(--panel);
+}
+.cm-callout__title {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin: 0;
+	font-weight: 600;
+	color: var(--ink);
+}
+.cm-callout__mark { flex: 0 0 auto; color: var(--ink-faint); }
+.cm-callout__body { color: var(--ink-dim); }
+/* The body is free-form prose (one or more paragraphs). Its own first
+   and last child must not add a second margin on top of the box's own
+   padding, the same reset `.cm-prose-measure` uses for the same reason. */
+.cm-callout__body > :first-child { margin-top: 0; }
+.cm-callout__body > :last-child { margin-bottom: 0; }
+.cm-callout--ok .cm-callout__mark::before { content: '\25cf\00a0'; }
+.cm-callout--warn .cm-callout__mark::before { content: '\25b2\00a0'; }
+.cm-callout--err .cm-callout__mark::before { content: '\2715\00a0'; }
+.cm-callout--info .cm-callout__mark::before { content: '\2139\00a0'; }
+/* Fallback form from the start - var(--tone, <the grey below>) - so the
+   chroma gate can list these four selectors with no second "reader"
+   rule: there is no pre-chroma legacy rule here to leave unedited. */
+.cm-callout--ok { border-inline-start-color: var(--tone, var(--ink-dim)); }
+.cm-callout--warn { border-inline-start-color: var(--tone, var(--ink-faint)); }
+.cm-callout--err { border-inline-start-color: var(--tone, var(--ink)); }
+.cm-callout--info { border-inline-start-color: var(--tone, var(--ink-faint)); }
+:where(.cm-callout--ok, .cm-callout--warn, .cm-callout--err, .cm-callout--info) .cm-callout__mark {
+	color: var(--tone, var(--ink-faint));
+}
+/* In reading flow a callout takes the same bottom-margin-only rhythm as
+   `.cm-prose`'s own paragraphs (base.css: `p { margin: 0 0 1.1em }`), so
+   interleaving one with surrounding text needs no extra rule at the
+   call site. Outside `.cm-prose` (a dashboard, a card) it carries no
+   margin of its own, same as `.cm-alert`. */
+.cm-prose .cm-callout { margin: 0 0 1.1em; }
+
 /* ============ cm-revert — countdown-undo banner ============
    RevertGuard-armed settings writes (host, port, URL base, restores) and
    any destructive operation the plan marks reversible. The banner offers
@@ -12258,26 +12315,26 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    A hue never stands alone. `.cm-tone--*` by itself says nothing in
    greyscale, on paper with one ink, or to a reader who cannot tell red
    from green, so it goes on something that already names its state. */
-[data-cm-chroma] :where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok),
-[data-cm-chroma]:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok) {
+[data-cm-chroma] :where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok),
+[data-cm-chroma]:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok) {
 	--tone: var(--chroma-ok);
 	--tone-soft: var(--chroma-ok-soft);
 	--tone-line: var(--chroma-ok-line);
 }
-[data-cm-chroma] :where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn),
-[data-cm-chroma]:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn) {
+[data-cm-chroma] :where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn),
+[data-cm-chroma]:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn) {
 	--tone: var(--chroma-warn);
 	--tone-soft: var(--chroma-warn-soft);
 	--tone-line: var(--chroma-warn-line);
 }
-[data-cm-chroma] :where(.cm-tone--err, .cm-chip--err, .cm-alert--err),
-[data-cm-chroma]:where(.cm-tone--err, .cm-chip--err, .cm-alert--err) {
+[data-cm-chroma] :where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err),
+[data-cm-chroma]:where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err) {
 	--tone: var(--chroma-err);
 	--tone-soft: var(--chroma-err-soft);
 	--tone-line: var(--chroma-err-line);
 }
-[data-cm-chroma] :where(.cm-tone--info, .cm-chip--info, .cm-alert--info),
-[data-cm-chroma]:where(.cm-tone--info, .cm-chip--info, .cm-alert--info) {
+[data-cm-chroma] :where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info),
+[data-cm-chroma]:where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info) {
 	--tone: var(--chroma-info);
 	--tone-soft: var(--chroma-info-soft);
 	--tone-line: var(--chroma-info-line);

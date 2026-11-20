@@ -40,6 +40,7 @@ import Project from '../astro/Project.astro';
 import Endpoint from '../astro/Endpoint.astro';
 import Param from '../astro/Param.astro';
 import Tree from '../astro/Tree.astro';
+import Callout from '../astro/Callout.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -4606,6 +4607,20 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 						<p>oem-ui is the design language: sharp, flat, mono, high-contrast, dark by default. Transitions are <code>0.12s</code>, corners stay square, and borders do the lifting.</p>
 						<blockquote>Only touch a line if you can explain why it moved. The layout must be stable between scrolling and non-scrolling pages.</blockquote>
 						<pre><code>{`:root { --maxw: 860px; --gutter: 1.25rem; }`}</code></pre>
+
+						<Callout variant="info" title="Note">
+							<p>A callout sits IN the reading flow, not above it like <code>.cm-alert</code>: it takes the same bottom-margin-only rhythm as the paragraph before and after it, so dropping one into an article needs no spacing rule at the call site.</p>
+						</Callout>
+						<Callout variant="ok" title="Tip">
+							<p>The body is free-form: more than one paragraph is normal, and the box's own padding is the only space above the first line and below the last.</p>
+							<p>This second paragraph proves the first/last-child margin reset: there is no doubled gap between it and the one above.</p>
+						</Callout>
+						<Callout variant="warn" title="Warning">
+							<p>Same tone vocabulary as every other status-bearing component - <code>data-cm-chroma</code> colours the edge and the mark for free, with zero new tokens.</p>
+						</Callout>
+						<Callout variant="err" title="Important">
+							<p>Not dismissible and carries no <code>role="alert"</code>: a static admonition in an article is not a live region, so it is a plain &lt;div&gt;, read in document order like the paragraph beside it.</p>
+						</Callout>
 						</div>
 
 						<!-- The specimen is a .cm-lede, NOT a .cm-prose paragraph,
