@@ -12,7 +12,7 @@ JS = """() => {
   for (const id of ['cal-single', 'cal-multiple', 'cal-range']) {
     const c = document.getElementById(id);
     const heads = c.querySelectorAll('thead th').length;
-    const sel = [...c.querySelectorAll('.cm-cal__day[aria-selected="true"]')]
+    const sel = [...c.querySelectorAll('[aria-selected="true"] > .cm-cal__day')]
       .map(b => {
         const td = b.closest('td');
         const br = b.getBoundingClientRect(), tr = td.getBoundingClientRect();

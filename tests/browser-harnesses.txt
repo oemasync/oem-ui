@@ -1,0 +1,12 @@
+# Browser harnesses run by scripts/run-browser-harnesses.mjs, one per line,
+# without the .py. List a harness here only once it reads OEM_UI_URL: the
+# runner serves THIS checkout's dist/ on a free port and passes that URL, and
+# a harness that falls back to its own default measures some other build.
+verify-init-idempotent
+verify-forced-colors
+verify-calendar
+verify-calendar-multiple
+verify-datepicker
+verify-chart
+verify-chart-inherited-dir
+measure-builder-webkit

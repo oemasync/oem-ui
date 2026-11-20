@@ -33,11 +33,12 @@ Every check is a measurement with a threshold that can fail, at 390px
 Usage: python measure-builder-webkit.py [URL]
 """
 import json
+import os
 import sys
 
 from playwright.sync_api import sync_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:4321/"
+URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("OEM_UI_URL", "http://127.0.0.1:4321/")
 # The family pages carry the same specimens as the all-in-one index at a
 # fraction of its weight (layout 232KB, content 66KB, index 549KB); on a
 # loaded host the index alone took 54s to reach DOMContentLoaded.

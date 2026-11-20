@@ -1,0 +1,60 @@
+---
+/**
+ * oem-ui <Callout> — the in-prose admonition (Note / Tip / Warning /
+ * Important), the wrapper for `.cm-callout`. The showcase's own prose
+ * section hand-typed the title row (a `<p>` with a `.cm-callout__mark`
+ * span and the label text) and the body wrapper three times over, to
+ * prove the CSS shape by hand. This is the component a blog post or an
+ * API doc actually calls — the same role `<Alert>` plays for a banner,
+ * `<Endpoint>`/`<Param>` play for their own rows, and `<Tree>` plays
+ * for a nested list: data and content in, the exact markup shape out,
+ * so a consumer's callout can never drift from the one the library
+ * proved with its own mutation sweep.
+ *
+ * The glyph is never a prop. `.cm-callout--ok|warn|err|info` already
+ * paint the mark via `::before` (reusing the exact glyph `<Alert>`
+ * uses for the same tone — a check in `tests/run.mjs` pins the two
+ * together), so the wrapper only has to render the empty, `aria-hidden`
+ * span the CSS decorates. Giving it a second way to set the glyph would
+ * let the two drift.
+ *
+ * `title` is a plain string prop (the one-line label — "Note", "Tip",
+ * a question, a filename) because it can never carry a live element;
+ * `.cm-callout__title` is a `<p>`, which cannot nest a `<div>` or
+ * another `<p>`. The body is a `<slot />`, not a string prop, because
+ * the whole reason `.cm-callout__body > :first-child` / `:last-child`
+ * reset their own margin is to carry MORE than one paragraph, and
+ * inline markup (`<code>`, a link) inside it — a string prop would
+ * either render those tags as visible text or need the caller to pass
+ * raw HTML. Every specimen in the showcase exercises this: two of the
+ * four pass a `<code>` element, one passes two `<p>` children to prove
+ * the reset actually fires.
+ */
+interface Props {
+	/** Tone. No default — every real admonition in the showcase and the
+	 *  README names one; `.cm-callout` with no variant class still
+	 *  renders (plain `--line` border, no glyph), but that is not a
+	 *  shape the library demonstrates or tests, so callers say which. */
+	variant: 'ok' | 'warn' | 'err' | 'info';
+	/** The one-line label after the glyph, e.g. "Note" or "Warning". */
+	title: string;
+	/** The element id, when the callout needs one. */
+	id?: string;
+	/** Extra classes. */
+	class?: string;
+}
+
+const { variant, title, id, class: className } = Astro.props;
+---
+
+<div
+	class:list={['cm-callout', `cm-callout--${variant}`, className]}
+	{...id && { id }}
+>
+	<p class="cm-callout__title">
+		<span class="cm-callout__mark" aria-hidden="true"></span>{title}
+	</p>
+	<div class="cm-callout__body">
+		<slot />
+	</div>
+</div>

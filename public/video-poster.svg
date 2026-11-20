@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="Poster for the video specimen">
+	<rect width="640" height="360" fill="#161616"/>
+	<path d="M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360M0 80H640M0 160H640M0 240H640M0 320H640" stroke="#262626" stroke-width="1"/>
+	<rect x="0" y="0" width="24" height="360" fill="#e8e8e8"/>
+	<path d="M300 150v60l52-30z" fill="#e8e8e8"/>
+</svg>

@@ -2214,7 +2214,7 @@ button.cm-row:hover { background: var(--bg-2); }
    --ink-faint. A state that carries both then reads title -> body ->
    hint instead of three same-weight lines, and the tier clears AA
    against the panel in both themes (MEASURED: #8b8b8b on #111111 =
-   5.54:1 dark, #6d6d6d on #f5f5f5 = 4.75:1 light).
+   5.54:1 dark, #6a6a6a on #f5f5f5 = 4.96:1 light).
 
    A link inside a hint line is NOT safe yet: bare `a` resolves to
    --ink-dim, which sits 1.24:1 (dark) / 1.71:1 (light) against the
@@ -2266,9 +2266,16 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 /* The zone is a control, so it takes the focus ring. It is focusable in the
    markup (role="button" + tabindex="0") because a keyboard user cannot drag:
-   the same element has to accept Enter and Space. */
+   the same element has to accept Enter and Space.
+
+   `outline-color`, not `outline`. This rule read `outline: var(--focus)`,
+   which is the shorthand: it reset outline-style to `none`, and being more
+   specific than the bare :focus-visible rule it removed the ring that rule
+   draws. MEASURED in Chromium, a focused zone changed 0 pixels. Naming only
+   the colour leaves the width and style to the base rule, so the zone gets
+   the same 1px ring as everything else, and 2px on a coarse pointer. */
 .cm-dropzone:focus-visible {
-	outline: var(--focus);
+	outline-color: var(--focus);
 	outline-offset: 2px;
 }
 .cm-dropzone[aria-disabled='true'] { opacity: 0.5; }
@@ -2547,6 +2554,63 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-alert--info .cm-alert__mark::before { content: '\2139\00a0'; }
 .cm-alert--info .cm-toast__mark::before { content: '\2139\00a0'; }
 .cm-alert--loading { border-inline-start-color: var(--ink-dim); }
+
+/* ---------- callout ----------
+   An in-PROSE admonition - Note / Tip / Warning / Important - for
+   markdown and MDX content. `.cm-alert` is a dismissible app banner
+   with no opinion about vertical rhythm; a callout instead sits INSIDE
+   `.cm-prose`'s reading flow, the way GitHub's `> [!NOTE]` syntax does,
+   so it carries its own prose-scoped margin and resets its body's
+   first/last child margin rather than leaving spacing to the author.
+
+   Same tone vocabulary as the rest of the library (ok/warn/err/info),
+   so `data-cm-chroma` colours it for free - its four variants are
+   listed in the "status chroma" gate below, beside .cm-alert's. */
+.cm-callout {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-4);
+	border: 1px solid var(--line);
+	border-inline-start-width: 3px;
+	border-radius: var(--radius-sm);
+	background: var(--panel);
+}
+.cm-callout__title {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin: 0;
+	font-weight: 600;
+	color: var(--ink);
+}
+.cm-callout__mark { flex: 0 0 auto; color: var(--ink-faint); }
+.cm-callout__body { color: var(--ink-dim); }
+/* The body is free-form prose (one or more paragraphs). Its own first
+   and last child must not add a second margin on top of the box's own
+   padding, the same reset `.cm-prose-measure` uses for the same reason. */
+.cm-callout__body > :first-child { margin-top: 0; }
+.cm-callout__body > :last-child { margin-bottom: 0; }
+.cm-callout--ok .cm-callout__mark::before { content: '\25cf\00a0'; }
+.cm-callout--warn .cm-callout__mark::before { content: '\25b2\00a0'; }
+.cm-callout--err .cm-callout__mark::before { content: '\2715\00a0'; }
+.cm-callout--info .cm-callout__mark::before { content: '\2139\00a0'; }
+/* Fallback form from the start - var(--tone, <the grey below>) - so the
+   chroma gate can list these four selectors with no second "reader"
+   rule: there is no pre-chroma legacy rule here to leave unedited. */
+.cm-callout--ok { border-inline-start-color: var(--tone, var(--ink-dim)); }
+.cm-callout--warn { border-inline-start-color: var(--tone, var(--ink-faint)); }
+.cm-callout--err { border-inline-start-color: var(--tone, var(--ink)); }
+.cm-callout--info { border-inline-start-color: var(--tone, var(--ink-faint)); }
+:where(.cm-callout--ok, .cm-callout--warn, .cm-callout--err, .cm-callout--info) .cm-callout__mark {
+	color: var(--tone, var(--ink-faint));
+}
+/* In reading flow a callout takes the same bottom-margin-only rhythm as
+   `.cm-prose`'s own paragraphs (base.css: `p { margin: 0 0 1.1em }`), so
+   interleaving one with surrounding text needs no extra rule at the
+   call site. Outside `.cm-prose` (a dashboard, a card) it carries no
+   margin of its own, same as `.cm-alert`. */
+.cm-prose .cm-callout { margin: 0 0 1.1em; }
 
 /* ============ cm-revert — countdown-undo banner ============
    RevertGuard-armed settings writes (host, port, URL base, restores) and
@@ -8552,13 +8616,13 @@ input.cm-slider:disabled {
 	border-color: var(--ink-dim);
 	color: var(--ink);
 }
-.cm-cal__day[aria-selected='true'] {
+[aria-selected='true'] > .cm-cal__day {
 	border-color: var(--ink);
 	background: var(--ink);
 	color: var(--bg);
 }
-.cm-cal__day[aria-selected='true']:hover,
-.cm-cal__day[aria-selected='true']:focus-visible {
+[aria-selected='true'] > .cm-cal__day:hover,
+[aria-selected='true'] > .cm-cal__day:focus-visible {
 	background: var(--ink);
 	color: var(--bg);
 }
@@ -12059,7 +12123,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-btn--primary,
 	.cm-term__jump-tail,
 	.cm-bubble,
-	.cm-cal__day[aria-selected='true'] {
+	[aria-selected='true'] > .cm-cal__day {
 		print-color-adjust: exact;
 		-webkit-print-color-adjust: exact;
 	}
@@ -12251,26 +12315,26 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    A hue never stands alone. `.cm-tone--*` by itself says nothing in
    greyscale, on paper with one ink, or to a reader who cannot tell red
    from green, so it goes on something that already names its state. */
-[data-cm-chroma] :where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok),
-[data-cm-chroma]:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok) {
+[data-cm-chroma] :where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok),
+[data-cm-chroma]:where(.cm-tone--ok, .cm-chip--ok, .cm-alert--ok, .cm-callout--ok) {
 	--tone: var(--chroma-ok);
 	--tone-soft: var(--chroma-ok-soft);
 	--tone-line: var(--chroma-ok-line);
 }
-[data-cm-chroma] :where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn),
-[data-cm-chroma]:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn) {
+[data-cm-chroma] :where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn),
+[data-cm-chroma]:where(.cm-tone--warn, .cm-chip--warn, .cm-alert--warn, .cm-callout--warn) {
 	--tone: var(--chroma-warn);
 	--tone-soft: var(--chroma-warn-soft);
 	--tone-line: var(--chroma-warn-line);
 }
-[data-cm-chroma] :where(.cm-tone--err, .cm-chip--err, .cm-alert--err),
-[data-cm-chroma]:where(.cm-tone--err, .cm-chip--err, .cm-alert--err) {
+[data-cm-chroma] :where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err),
+[data-cm-chroma]:where(.cm-tone--err, .cm-chip--err, .cm-alert--err, .cm-callout--err) {
 	--tone: var(--chroma-err);
 	--tone-soft: var(--chroma-err-soft);
 	--tone-line: var(--chroma-err-line);
 }
-[data-cm-chroma] :where(.cm-tone--info, .cm-chip--info, .cm-alert--info),
-[data-cm-chroma]:where(.cm-tone--info, .cm-chip--info, .cm-alert--info) {
+[data-cm-chroma] :where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info),
+[data-cm-chroma]:where(.cm-tone--info, .cm-chip--info, .cm-alert--info, .cm-callout--info) {
 	--tone: var(--chroma-info);
 	--tone-soft: var(--chroma-info-soft);
 	--tone-line: var(--chroma-info-line);
@@ -12754,4 +12818,101 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	text-align: center;
 	color: var(--ink-dim);
 	font-size: max(var(--min-font), var(--text-sm));
+}
+
+/* ---------- forced colors ----------
+   Windows High Contrast, and every other `forced-colors: active` mode,
+   repaints each background-color to the system canvas, drops each
+   box-shadow, and forces text and borders to the system text colour. This
+   library says "selected" with a fill and draws a meter as a filled box, so
+   in that mode both said nothing.
+
+   MEASURED on the showcase in Chromium with forced colors active, before
+   this block: 86 elements whose paint is the whole of their information
+   rendered as nothing (every meter and progress fill, the reading bar, the
+   burger icon), and the selected tab, the pressed segment, the current page
+   in a pager, the selected table row and the selected calendar day were the
+   same pixels as their neighbours. tests/verify-forced-colors.py is that
+   measurement, kept, and tests/mutate-forced-colors.py removes each rule
+   below in turn and requires a named check to fail.
+
+   Every colour here is a SYSTEM colour, and it has to be: the mode discards
+   an author colour in this block exactly as it does anywhere else, so
+   `background: var(--ink)` here would be dead on arrival. Two are used, by
+   meaning:
+
+     CanvasText                a mark that is DRAWN: a fill, a bar, a dot
+     Highlight, HighlightText  the one that is SELECTED or current
+
+   `!important`, for the reason the reduced-motion block in base.css
+   carries it: this is a mode, and it has to hold whatever a component
+   says. The mode forces whichever declaration WINS the cascade, so a
+   longer normal selector does not lose to a rule here. It wins, and is
+   then repainted to nothing. Without the flag `.cm-row--on` lost to
+   `button.cm-row`, and the selected calendar day lost its fill to its own
+   hover rule while keeping the selection text colour: selection-coloured
+   text on the plain canvas, which is worse than no rule at all.
+
+   Not covered, on purpose, because each needs a design answer and not a
+   repaint: a chart tells its series apart by grey level alone, so every
+   series is one colour here; and the slider's filled portion is a
+   gradient, which the mode also drops (the thumb still shows the value). */
+@media (forced-colors: active) {
+	.cm-meter__fill,
+	.cm-progress__fill,
+	.cm-readbar__fill,
+	.cm-quiz__bar,
+	.cm-spec__bar,
+	.cm-nav-toggle__bar,
+	.cm-nav-toggle__bars::before,
+	.cm-nav-toggle__bars::after,
+	.cm-cursor,
+	.cm-guide__now-line,
+	.cm-guildrail__unread,
+	.cm-dot--on,
+	.cm-timeline__item--now::after,
+	.cm-carousel__page[aria-current='true']::before { background-color: CanvasText !important; }
+
+	.cm-tabs__tab[aria-selected='true'],
+	.cm-seg__opt[aria-pressed='true'],
+	.cm-pager__link[aria-current='page'],
+	[aria-selected='true'] > .cm-cal__day,
+	.cm-guide__program--now,
+	.cm-guildrail__item[aria-current='true'],
+	.cm-term__follow-toggle[aria-pressed='true'],
+	.cm-step.is-current .cm-step__marker,
+	.cm-row--on,
+	.cm-table tbody tr[aria-selected='true'] td {
+		background-color: Highlight !important;
+		color: HighlightText !important;
+	}
+	/* What sits ON a selected surface takes the same pair. The mode does not
+	   let a child inherit here: a title with its own `color` is forced to
+	   CanvasText, MEASURED at 1.53:1 on the selected list row, and a chip
+	   with its own fill is forced to an opaque Canvas box. Clearing the fill
+	   and naming the text colour puts both back on the surface. `:where()`
+	   keeps this at zero specificity so a drawn mark above still wins: a
+	   meter inside a selected row keeps its fill. */
+	:where(
+		.cm-tabs__tab[aria-selected='true'],
+		.cm-seg__opt[aria-pressed='true'],
+		.cm-pager__link[aria-current='page'],
+		[aria-selected='true'] > .cm-cal__day,
+		.cm-guide__program--now,
+		.cm-guildrail__item[aria-current='true'],
+		.cm-term__follow-toggle[aria-pressed='true'],
+		.cm-step.is-current .cm-step__marker,
+		.cm-row--on,
+		.cm-table tbody tr[aria-selected='true'] td
+	) * {
+		background-color: transparent !important;
+		color: HighlightText !important;
+	}
+
+	/* The track has no border, only a fill, so here it was an unframed knob
+	   floating in the row. An outline frames it without moving the knob (a
+	   border would add to the box); the focus ring is a longer selector and
+	   still replaces it while the input is focused. On and off need no
+	   colour: the knob's position is the state, here as everywhere. */
+	.cm-switch__track { outline: 1px solid CanvasText; }
 }
