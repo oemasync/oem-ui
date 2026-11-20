@@ -95,6 +95,30 @@ const compSrc = read('src/styles/components.css').replace(/\/\*[\s\S]*?\*\//g, '
 // every base-layer class as unstyled, which is the same false negative
 // as a check that reads only the showcase source.
 const baseSrc = read('src/styles/base.css').replace(/\/\*[\s\S]*?\*\//g, '');
+/* The palette scans below hold the house rule: a colour comes from a token.
+   One place cannot obey it. Inside `@media (forced-colors: active)` the
+   browser discards every author colour, a token's included, and keeps only
+   the system colour keywords, so a rule there that used a token would paint
+   nothing. Those blocks are cut out of what the palette scans read, and held
+   to their own rule instead, which is stricter: system colours and nothing
+   else ('forced colors: the blocks paint with system colours only'). */
+const forcedColorsBlocks = (css) => {
+	const out = [];
+	const open = /@media\s*\(forced-colors:\s*active\)\s*\{/g;
+	for (let m; (m = open.exec(css));) {
+		let depth = 1, i = m.index + m[0].length;
+		while (depth && i < css.length) {
+			if (css[i] === '{') depth++;
+			else if (css[i] === '}') depth--;
+			i++;
+		}
+		out.push({ start: m.index, end: i, body: css.slice(m.index + m[0].length, i - 1) });
+	}
+	return out;
+};
+const withoutForcedColors = (css) =>
+	forcedColorsBlocks(css).reverse().reduce((acc, b) => acc.slice(0, b.start) + acc.slice(b.end), css);
+const paletteSrc = withoutForcedColors(compSrc);
 const allCss = compSrc + '\n' + baseSrc;
 const showcase = read('src/pages/[...family].astro');
 
@@ -192,22 +216,112 @@ check('light theme is explicit opt-in via [data-theme=light]', () => {
 	assert(/:root\[data-theme='light'\]/.test(tokens), "missing :root[data-theme='light']");
 });
 
+/* The surfaces text is drawn on, BY TOKEN NAME, read from each theme block.
+   This list was three hex literals per theme (#fafafa, #f5f5f5, #ffffff for
+   light), so the check graded three of ten surfaces while its title said
+   "every surface". Light --ink-faint read 4.38:1 on --panel-nested the whole
+   time: axe measured it on the built showcase (29 nodes, six pages) with
+   this check green. Names instead of values, so a re-tuned surface is
+   re-graded, and the guard below fails when the theme block grows a surface
+   this list does not name. */
+const TEXT_SURFACES = ['bg', 'bg-2', 'bg-3', 'panel', 'panel-nested', 'surface-raised',
+	'header-bg', 'footer-bg', 'sidebar-background', 'sidebar-accent'];
+/* What a surface token is called. --selection-bg is absent on purpose: it is
+   translucent, painted over another surface, and carries --selection-color,
+   never an ink tier. */
+const SURFACE_NAME = /^(bg(-\d+)?|panel(-[a-z]+)?|surface-[a-z]+|header-bg|footer-bg|sidebar-background|sidebar-accent)$/;
+
+check('the contrast check names every surface token the themes declare', () => {
+	const dark = tokens.match(/:root,\s*:root\[data-theme='dark'\]\s*\{([\s\S]*?)\n\}/);
+	assert(dark, 'cannot find the dark theme block');
+	const declared = [...dark[1].replace(/\/\*[\s\S]*?\*\//g, ' ').matchAll(/--([a-z0-9-]+):\s*#[0-9a-fA-F]{3,8}\s*;/g)]
+		.map((m) => m[1]).filter((n) => SURFACE_NAME.test(n));
+	assert(declared.length >= 6, `only ${declared.length} surface tokens found in the dark block; the scan is not reading it`);
+	const ungraded = declared.filter((n) => !TEXT_SURFACES.includes(n));
+	assert(ungraded.length === 0, `surface token(s) no contrast check grades: ${ungraded.map((n) => '--' + n).join(', ')}`);
+	const gone = TEXT_SURFACES.filter((n) => !declared.includes(n));
+	assert(gone.length === 0, `the contrast check names surface(s) the theme no longer declares: ${gone.map((n) => '--' + n).join(', ')}`);
+});
+
 for (const theme of ['dark', 'light']) {
 	for (const t of ['ink', 'ink-dim', 'ink-faint']) {
 		check(`${theme} --${t} passes WCAG AA on every surface`, () => {
 			const c = varOf(t, theme);
-			const surfaces = theme === 'dark' ? ['#0a0a0a', '#111111', '#161616'] : ['#fafafa', '#f5f5f5', '#ffffff'];
-			for (const s of surfaces) {
+			for (const name of TEXT_SURFACES) {
+				const s = varOf(name, theme);
 				const r = contrast(c, s);
-				assert(r >= 4.5, `--${t} ${c} on ${s} = ${r.toFixed(2)}:1 (need 4.5)`);
+				assert(r >= 4.5, `--${t} ${c} on --${name} ${s} = ${r.toFixed(2)}:1 (need 4.5)`);
 			}
 		});
 	}
 }
 
+/* The focus ring. A ring is a user-interface component, and WCAG 1.4.11
+   asks 3:1 of it against what it is drawn beside. --focus was an alias of
+   --accent-dim, a DECORATIVE tone (a blockquote rule, a tag border) that owes
+   nobody 3:1, and base.css did not use --focus at all: it painted the
+   default ring with --accent-dim directly. MEASURED in Chromium on the built
+   showcase, dark theme: 94 of 616 focus rings sat between 2.60:1 and 2.96:1,
+   every text field, checkbox and radio among them. */
+const focusColour = (theme) => {
+	const bare = tokens.replace(/\/\*[\s\S]*?\*\//g, '');
+	let name = 'focus';
+	for (let hop = 0; hop < 4; hop++) {
+		const alias = new RegExp(`--${name}:\\s*var\\(--([a-z0-9-]+)\\)`).exec(bare);
+		if (!alias) return varOf(name, theme);
+		name = alias[1];
+	}
+	throw new Error('--focus is an alias chain more than four deep');
+};
+for (const theme of ['dark', 'light']) {
+	check(`${theme} focus ring clears 3:1 on every surface`, () => {
+		const c = focusColour(theme);
+		for (const name of TEXT_SURFACES) {
+			const s = varOf(name, theme);
+			const r = contrast(c, s);
+			assert(r >= 3, `--focus ${c} on --${name} ${s} = ${r.toFixed(2)}:1 (need 3)`);
+		}
+	});
+}
+
 /* ================= base.css ================= */
 console.log('\nbase.css');
 const base = read('src/styles/base.css');
+check('no outline shorthand is a bare colour', () => {
+	// `outline: var(--focus)` reads like "make the ring this colour". It is
+	// the SHORTHAND, so it also resets outline-style to its initial value,
+	// which is `none`: the rule draws nothing, and because it is more
+	// specific than the bare :focus-visible rule it also takes away the
+	// ring that rule would have drawn. `.cm-dropzone:focus-visible` shipped
+	// exactly that. MEASURED in Chromium: a focused dropzone changed 0
+	// pixels, against 14,080 for a text field on the same page. The colour
+	// alone is `outline-color`.
+	const STYLE = /\b(solid|dashed|dotted|double|groove|ridge|inset|outset|auto)\b/;
+	const bad = [];
+	let seen = 0;
+	for (const [file, css] of [['base.css', baseSrc], ['components.css', compSrc]]) {
+		for (const m of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+			for (const d of m[2].matchAll(/(?:^|;)\s*outline\s*:\s*([^;]+)/g)) {
+				seen++;
+				const v = d[1].replace(/!important/, '').trim();
+				if (STYLE.test(v) || /^(none|0|inherit|initial|unset|revert)$/.test(v)) continue;
+				bad.push(`${file}: ${m[1].trim().split('\n').pop().trim()} { outline: ${v} }`);
+			}
+		}
+	}
+	assert(seen >= 20, `only ${seen} outline shorthands read; the scan is not reading the sheets`);
+	assert(bad.length === 0, `outline shorthand with no line style paints nothing: ${bad.join('; ')}`);
+});
+check('the default focus ring is painted with --focus, on fine and coarse pointers', () => {
+	// The token existed and the base layer walked past it, so the one place
+	// that draws most rings could not be fixed by fixing the token.
+	const rules = [...base.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|[\s{}]):focus-visible\s*\{([^}]*)\}/g)].map((m) => m[1]);
+	assert(rules.length === 2, `expected the bare :focus-visible rule twice (fine and coarse), found ${rules.length}`);
+	for (const body of rules) {
+		assert(/outline:\s*[12]px solid var\(--focus\)/.test(body),
+			`a bare :focus-visible rule does not paint with --focus: ${body.trim()}`);
+	}
+});
 check('reserves the scrollbar gutter on every page', () => {
 	assert(/html\s*\{[^}]*overflow-y:\s*scroll/.test(base), 'html must set overflow-y:scroll');
 });
@@ -2489,7 +2603,7 @@ check('the state components carry no chroma', () => {
 	// rules by selector instead: those exist whatever the comments say.
 	const STATE = ['.cm-skeleton', '.cm-spinner', '.cm-alert', '.cm-table'];
 	const blocks = STATE.flatMap(sel =>
-		[...compSrc.matchAll(new RegExp(
+		[...paletteSrc.matchAll(new RegExp(
 			`(^|[};])\\s*([^;{}@]*\\b${sel.slice(1)}\\b[^{}]*?)\\s*\\{([^{}]*)\\}`, 'gm'))]
 			.filter(m => {
 				const s = m[2];
@@ -2522,6 +2636,33 @@ check('the state components carry no chroma', () => {
 		.filter(m => !/^var\(|^currentColor$|^inherit$|^none$|^transparent$/.test(m[2].trim()))
 		.map(m => `${m[1]}: ${m[2].trim()}`);
 	assert(raw.length === 0, `colour must come from a token, found: ${raw.join(', ')}`);
+});
+
+check('forced colors: the blocks paint with system colours only', () => {
+	// The other half of the exemption above. A token inside this media
+	// block is not a style, it is a bug that looks like one: the mode throws
+	// the colour away and the element paints as if the rule were absent.
+	const SYSTEM = /^(canvas|canvastext|highlight|highlighttext|linktext|visitedtext|buttonface|buttontext|buttonborder|graytext|field|fieldtext|mark|marktext|selecteditem|selecteditemtext|transparent|currentcolor)$/i;
+	const blocks = [...forcedColorsBlocks(compSrc), ...forcedColorsBlocks(baseSrc)];
+	assert(blocks.length >= 2, `expected a forced-colors block in components.css and in base.css, found ${blocks.length}`);
+	const bad = [];
+	let seen = 0;
+	for (const { body } of blocks) {
+		assert(!/var\(/.test(body), 'a forced-colors block references a token; the mode discards it, so the rule paints nothing');
+		assert(!/#[0-9a-f]{3,8}\b/i.test(body), 'a forced-colors block carries a hex colour; the mode discards it');
+		for (const m of body.matchAll(/(?:^|[;{])\s*((?:background|border|outline|text-decoration)(?:-[a-z]+)*-color|color|background|fill|stroke)\s*:\s*([^;}]+)/g)) {
+			seen++;
+			const value = m[2].replace(/!important/, '').trim();
+			if (!SYSTEM.test(value)) bad.push(`${m[1]}: ${value}`);
+		}
+		for (const m of body.matchAll(/(?:^|[;{])\s*(outline|border(?:-[a-z]+)*)\s*:\s*([^;}]+)/g)) {
+			seen++;
+			const colour = m[2].replace(/!important/, '').trim().split(/\s+/).filter((w) => !/^(\d|solid|dashed|dotted|double|none|thin|medium|thick)/.test(w));
+			if (colour.length !== 1 || !SYSTEM.test(colour[0])) bad.push(`${m[1]}: ${m[2].trim()}`);
+		}
+	}
+	assert(seen >= 5, `only ${seen} colour declarations read from the forced-colors blocks; the scan is not reading them`);
+	assert(bad.length === 0, `forced-colors rules must use system colours, found: ${bad.join(', ')}`);
 });
 
 check('status is never carried by colour alone', () => {
@@ -6303,7 +6444,7 @@ check('cm-timeline: the record components carry no colour of their own', () => {
 		`(^|[};])\\s*([^;{}@]*\\b${b}(?:__[a-z0-9-]+)?\\b[^{}]*?)\\s*\\{([^{}]*)\\}`, 'gm',
 	);
 	const blocks = ['cm-stats', 'cm-stat', 'cm-timeline']
-		.flatMap((b) => [...compSrc.matchAll(partOf(b))].map((m) => m[2] + ' {' + m[3] + '}'));
+		.flatMap((b) => [...paletteSrc.matchAll(partOf(b))].map((m) => m[2] + ' {' + m[3] + '}'));
 	assert(blocks.length > 0, 'no rules found for the record components — is the parse stale?');
 	// A three-block parse means the BEM parts are being skipped, which is
 	// exactly the silent-pass this check exists to prevent.
@@ -7724,8 +7865,11 @@ check('rotating to a desktop width clears the open state', () => {
 	if (!handler) throw new Error('no onChange handler for the breakpoint');
 	if (!/setOpen\(false\)/.test(handler[0]))
 		throw new Error(`the breakpoint handler does not close the panel: ${handler[0].trim()}`);
-	// And it must be the handler that is actually subscribed.
-	if (!/addEventListener\('change',\s*onChange\)/.test(MC_NAV_JS))
+	// And it must be the handler that is actually subscribed. Through
+	// cmWhileConnected, so the subscription ends when the burger leaves the
+	// page; a bare mq.addEventListener here outlived every header it was
+	// bound for.
+	if (!/cmWhileConnected\(btn,\s*mq,\s*'change',\s*onChange\)/.test(MC_NAV_JS))
 		throw new Error('onChange is defined but not the listener that is bound');
 });
 check('the panel starts closed even if markup is reused', () => {
@@ -14462,7 +14606,7 @@ check("the input group collapses to one hairline", () => {
 			const heads = (t.match(/role="columnheader"/g) || []).length;
 			assert(heads === 7, `seven weekday columns per month, found ${heads}`);
 		}
-		const rows = page.match(/<tr role="row">(<td role="gridcell">.*?<\/td>){7}<\/tr>/g) || [];
+		const rows = page.match(/<tr role="row">(<td role="gridcell"(?: aria-selected="true")?>.*?<\/td>){7}<\/tr>/g) || [];
 		assert(rows.length >= 5, `five whole weeks of seven cells, found ${rows.length}`);
 		assert(/<button type="button" class="cm-cal__day"/.test(page),
 			'a day is a button: the platform supplies focus and click');
@@ -14483,6 +14627,68 @@ check("the input group collapses to one hairline", () => {
 		assert(/setAttribute\('data-cm-cal-selected'/.test(js) &&
 			/setAttribute\('data-cm-cal-start'/.test(js),
 			'the runtime must report back what it painted');
+	});
+
+	check('a picked day is selected on its gridcell, never on its button', () => {
+		// ARIA allows aria-selected on a gridcell and not on a button: axe
+		// aria-allowed-attr, critical, on every picked day. The button keeps
+		// focus and the click; the cell around it carries the state.
+		const render = js.slice(js.indexOf('function calRender'), js.indexOf('function calFocus'));
+		assert(/var cell = isSel \? ' aria-selected="true"' : '';/.test(render),
+			'the renderer must derive the cell\'s selection from isSel');
+		assert(/'<td role="gridcell"' \+ cell \+ '><button type="button" class="cm-cal__day"'/.test(render),
+			'the selection must be written on the <td>, ahead of the button');
+		assert(!/attrs \+= ' aria-selected/.test(render),
+			'the button\'s own attrs must not carry aria-selected');
+		assert(!/class="cm-cal__day"[^>]*aria-selected/.test(page),
+			'a showcase day button carries aria-selected; it belongs on its <td>');
+		const cells = (page.match(/<td role="gridcell" aria-selected="true"><button type="button" class="cm-cal__day"/g) || []).length;
+		assert(cells === 5, `the specimens pick 5 days (one single, two multiple, a range's two ends), found ${cells} selected cells`);
+		assert(!/\.cm-cal__day\[aria-selected/.test(css),
+			'a rule still keys selection off the button, which never carries it now');
+		const keyed = (css.match(/\[aria-selected='true'\] > \.cm-cal__day/g) || []).length;
+		assert(keyed === 6, `selection paint, hover/focus, print and forced colors key off the cell: want 6 selectors, found ${keyed}`);
+	});
+
+	check('charts are read first and rendered after, so no render waits on a style recalc', () => {
+		// A render asks for the chart's direction through getComputedStyle when
+		// it carries no dir; asked after the previous chart wrote its markup,
+		// that read waited on a recalc of the whole document. WebKit, showcase,
+		// 15 charts: cmInitCharts 11.3s before, 28ms after.
+		const init = js.slice(js.indexOf('function cmInitCharts('), js.indexOf('function chBind('));
+		const reads = init.indexOf('var dirs = boxes.map(chReadDir);');
+		const widths = init.indexOf('var widths = boxes.map(');
+		const writes = init.indexOf('boxes.forEach(function (box, i) { chBind(box, widths[i], dirs[i]); });');
+		assert(widths > 0 && reads > 0 && writes > 0,
+			'cmInitCharts must measure widths, read directions, then bind with both');
+		assert(widths < writes && reads < writes, 'every read must come before the first render');
+		assert(!/chBind\(box\)/.test(init), 'a chart is bound without its pre-read width and direction');
+		const bind = js.slice(js.indexOf('function chBind('), js.indexOf('var active = -1;', js.indexOf('function chBind(')));
+		assert(/draw\(Math\.round\(plot\.getBoundingClientRect\(\)\.width\), chReadDir\(box\)\);/.test(bind),
+			'a resize re-render must read width and direction before it writes');
+		assert(/chRender\(box, w, dir\);/.test(bind), 'the pre-read direction must reach chRender');
+		assert(/var cfg = chConfig\(box, w, dir\);/.test(js), 'chRender must hand the direction to chConfig');
+		assert(/rtl: box\.getAttribute\('dir'\) \|\| dir \|\| null,/.test(js),
+			'chConfig must prefer the chart\'s own dir, then the pre-read one');
+		assert(/function chReadDir\(box\) \{\n\t\treturn chDir\(box\.getAttribute\('dir'\), box\) \? 'rtl' : 'ltr';/.test(js),
+			'chReadDir must resolve to an explicit rtl/ltr, so chDir never reads style during a render');
+	});
+
+	check('a chart re-renders on the frame after a resize, never inside the ResizeObserver callback', () => {
+		// Rendering inside the callback resizes the observed plot in the same
+		// frame; WebKit then raises "ResizeObserver loop completed with
+		// undelivered notifications" as a window error, every run, on a chart
+		// whose container narrowed (tests/verify-chart-inherited-dir.py).
+		const bind = js.slice(js.indexOf('function chBind('), js.indexOf('var active = -1;', js.indexOf('function chBind(')));
+		const ro = bind.slice(bind.indexOf('new ResizeObserver('), bind.indexOf('.observe(plot);'));
+		assert(ro.length > 0, 'chBind must observe the plot');
+		assert(!/\bpaint\(\)/.test(ro.slice(0, ro.indexOf('later('))),
+			'the observer callback calls paint() itself, so the render lands inside the callback');
+		assert(/later\(function \(\) \{ queued = false; paint\(\); \}\);/.test(ro),
+			'the observer callback must hand paint() to the next frame');
+		assert(/if \(queued\) return;\s*queued = true;/.test(ro),
+			'a burst of notifications must queue one paint, not one per notification');
+		assert(/requestAnimationFrame\(fn\)/.test(bind), 'the next frame is requestAnimationFrame');
 	});
 
 	check('the grid walks with the keys and the month with PageUp', () => {
@@ -19933,7 +20139,7 @@ console.log('\nprint mode');
 		const rule = printRules.find((r) => r.body.includes('print-color-adjust: exact'));
 		assert(rule, 'no print rule forces print-color-adjust: exact');
 		const measured = ['.cm-btn--primary', '.cm-term__jump-tail', '.cm-bubble',
-			".cm-cal__day[aria-selected='true']"];
+			"[aria-selected='true'] > .cm-cal__day"];
 		const listed = rule.sels.slice().sort();
 		assert(JSON.stringify(listed) === JSON.stringify(measured.slice().sort()),
 			`the exact-fill list is ${JSON.stringify(listed)}, want exactly the measured ${JSON.stringify(measured)}`);
@@ -20467,6 +20673,29 @@ check('cm-back: the Astro wrapper ships and renders the library classes', () => 
 	assert(show.includes('<Back '), 'the showcase never renders <Back>, so the wrapper is unproven');
 });
 
+check('cm-back: every back link on the built pages has a name', () => {
+	// <Back href="…" /> with no label and no slot rendered a link whose only
+	// content was the aria-hidden arrow: nothing for a screen reader to say,
+	// and axe reports it as a link with no discernible text. The showcase
+	// rendered exactly that as a specimen. Read from the BUILT pages, since
+	// the name is whatever the component emits, not what its source intends.
+	const html = builtHtml();
+	const links = [...html.matchAll(/<a class="cm-back"[^>]*>([\s\S]*?)<\/a>/g)];
+	assert(links.length >= 3, `only ${links.length} back link(s) on the built page; the scan is not reading it`);
+	const nameless = links.filter((m) => {
+		if (/\baria-label="[^"]+"/.test(m[0])) return false;
+		const text = m[1].replace(/<span class="cm-back__arrow"[^>]*>[\s\S]*?<\/span>/g, '').replace(/<[^>]+>/g, '').trim();
+		return text === '';
+	});
+	assert(nameless.length === 0, `${nameless.length} back link(s) have no accessible name: ${nameless.map((m) => m[0].slice(0, 120)).join(' | ')}`);
+	// All three ways to name it are rendered, so none is an unproven branch:
+	// the label prop, the default slot (markup and all), and neither.
+	const bodies = links.map((m) => m[1].replace(/<span class="cm-back__arrow"[^>]*>[\s\S]*?<\/span>/g, ''));
+	assert(bodies.some((b) => /^<span>all projects<\/span>$/.test(b.trim())), 'no specimen names the link with the label prop');
+	assert(bodies.some((b) => /<em>records<\/em>/.test(b)), 'no specimen names the link through the default slot');
+	assert(bodies.some((b) => /^<span>back<\/span>$/.test(b.trim())), 'no specimen shows the default name');
+});
+
 check('cm-search: the Astro wrapper ships and renders the library classes', () => {
 	const s = read('src/astro/Search.astro');
 	assert(/class="cm-search"/.test(s), 'Search.astro does not use the cm-search class');
@@ -20950,6 +21179,159 @@ check('parameter row: the showcase demonstrates every part, in all four location
 		'the optional specimen (limit, no asterisk) is missing - the row without its required mark is unproven');
 	assert(showcaseIndex.includes('param'),
 		'the parameter section is not in the section index, so the rail cannot reach it');
+});
+
+/* ================= window listeners that belong to an element =================
+   init() runs again on every astro:page-load and on every call a SPA makes.
+   MEASURED in WebKit and Chromium on the showcase: each extra init() added 7
+   listeners to `window` and one ResizeObserver, and after a client-side
+   navigation every listener bound for the old page was still attached. The
+   engine-level proof is tests/verify-init-idempotent.py. These two run here,
+   offline, because this file is what CI runs. */
+console.log('\nwindow listeners owned by an element');
+
+check('a window listener bound for an element lets go when the element leaves the page', () => {
+	// The REAL runtime, through an exported binder, against a window that
+	// records what is attached and what is taken back off.
+	const attached = [];
+	const docEl = { scrollTop: 0, scrollHeight: 2000, clientHeight: 1000,
+		style: { setProperty() {}, removeProperty() {} },
+		attrs: {}, classList: { add() {}, remove() {}, contains: () => false },
+		setAttribute(k, v) { this.attrs[k] = v; },
+		getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; } };
+	const bar = { attrs: { 'data-cm-progress': '' },
+		style: { setProperty(k, v) { bar.attrs['prop:' + k] = v; } },
+		setAttribute(k, v) { bar.attrs[k] = v; },
+		getAttribute(k) { return k in bar.attrs ? bar.attrs[k] : null; } };
+	const doc = { readyState: 'loading', documentElement: docEl, scrollingElement: docEl,
+		body: { style: {}, appendChild() {} },
+		querySelectorAll: (sel) => (sel === '[data-cm-progress]' ? [bar] : []),
+		querySelector: () => null, getElementById: () => null, addEventListener() {},
+		createElement: () => ({ style: {}, classList: { add() {} },
+			setAttribute() {}, getAttribute() { return null; }, appendChild() {} }) };
+	const ctx = { document: doc,
+		window: {
+			addEventListener: (t, fn) => { attached.push([t, fn]); },
+			removeEventListener: (t, fn) => {
+				const i = attached.findIndex(([a, b]) => a === t && b === fn);
+				if (i !== -1) attached.splice(i, 1);
+			},
+			scrollY: 0, innerHeight: 800, requestAnimationFrame() {},
+			matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+		},
+		localStorage: { getItem: () => null, setItem() {} }, navigator: {},
+		MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; },
+		ResizeObserver: function () { this.observe = () => {}; },
+		module: { exports: {} } };
+	ctx.globalThis = ctx;
+	ctx.self = ctx;
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	const api = ctx.window.cliMono;
+	const mine = () => attached.filter(([t]) => t === 'scroll' || t === 'resize');
+	const fire = (type) => attached.filter(([t]) => t === type).forEach(([, fn]) => fn({}));
+
+	api.initProgress(doc);
+	assert(mine().length === 2, `one bar should bind one scroll and one resize listener, found ${mine().length}`);
+	api.initProgress(doc);
+	api.initProgress(doc);
+	assert(mine().length === 2, `binding the same bar again stacked listeners: ${mine().length}`);
+
+	// In the page (this fake has no isConnected at all, which must read as
+	// "still here", never as "gone"): the listener does its job.
+	docEl.scrollTop = 500;
+	fire('scroll');
+	assert(bar.attrs['aria-valuenow'] === '50', `a live bar did not repaint on scroll: aria-valuenow=${bar.attrs['aria-valuenow']}`);
+
+	// Out of the page: it must not paint a node nobody can see, and it must
+	// take itself off the window.
+	bar.isConnected = false;
+	docEl.scrollTop = 1000;
+	fire('scroll');
+	assert(bar.attrs['aria-valuenow'] === '50', `a removed bar was still repainted: aria-valuenow=${bar.attrs['aria-valuenow']}`);
+	assert(attached.filter(([t]) => t === 'scroll').length === 0, 'the scroll listener outlived its element');
+	fire('resize');
+	assert(attached.filter(([t]) => t === 'resize').length === 0, 'the resize listener outlived its element');
+
+	// The other way out: init() lets go of everything whose owner is gone,
+	// without waiting for an event that may never come.
+	const next = { attrs: { 'data-cm-progress': '' },
+		style: { setProperty() {} }, setAttribute() {}, getAttribute(k) { return k in next.attrs ? next.attrs[k] : null; } };
+	doc.querySelectorAll = (sel) => (sel === '[data-cm-progress]' ? [next] : []);
+	api.initProgress(doc);
+	const bound = mine().map(([, fn]) => fn);
+	assert(bound.length === 2, `the second bar did not bind: ${bound.length} listeners`);
+	next.isConnected = false;
+	doc.querySelectorAll = () => [];
+	api.init(doc);
+	// By identity: init() binds a page-level listener or two of its own
+	// (the hovercard clamp), and those are not this bar's to lose.
+	const left = attached.filter(([, fn]) => bound.includes(fn)).length;
+	assert(left === 0, `init() left ${left} listener(s) attached for an element that is gone`);
+});
+
+check('no binder attaches a scroll or resize listener to window on its own', () => {
+	// The structural half. Every scroll/resize listener on `window` is
+	// either routed through cmWhileConnected or is one of the five below,
+	// each of which already has an end: the two popover pins are removed
+	// when the popover closes, and the hovercard clamp is bound once per
+	// page behind a window flag. A new raw one fails here by name.
+	const KNOWN = ["scroll:fn", "resize:fn", "scroll:closeOn", "resize:closeOn", "resize:run"];
+	const raw = [...rt.matchAll(/(?:\bwindow|\(src \|\| window\))\.addEventListener\(\s*'(scroll|resize)',\s*([A-Za-z_$][\w$]*|function)/g)]
+		.map((m) => `${m[1]}:${m[2]}`);
+	assert(raw.length >= 3, `only ${raw.length} raw window listeners found; the scan is not reading the runtime`);
+	const extra = raw.filter((r) => !KNOWN.includes(r));
+	assert(extra.length === 0,
+		`window listener(s) bound outside cmWhileConnected: ${extra.join(', ')}. One bound for an element must end when the element leaves the page`);
+	const gone = KNOWN.filter((k) => !raw.includes(k));
+	assert(gone.length === 0, `this check lists window listener(s) the runtime no longer has: ${gone.join(', ')}`);
+	const routed = (rt.match(/cmWhileConnected\(/g) || []).length;
+	assert(routed >= 15, `only ${routed} cmWhileConnected call sites; binders have gone back to raw listeners`);
+});
+
+/* ================= built pages: every local asset resolves =================
+   The video section shipped with src="/video-specimen.mp4" and
+   poster="/video-poster.svg", and neither file was ever committed. Both
+   answered 404 on the published site from the day the section landed, under
+   a check whose own failure message warned about "a dead src". That check
+   reads the MARKUP. This one reads the BUILD: every root-relative file a
+   built page LOADS must be in dist.
+
+   Only loading elements are scanned. An anchor is navigation, and the
+   showcase links to pages that do not exist on purpose (the header-link
+   specimens), so an <a href> is not a claim that a file ships. */
+console.log('\nbuilt pages: local assets');
+
+check('every local file a built page loads exists in dist', () => {
+	const dist = join(root, 'dist');
+	const pages = [];
+	const stack = [dist];
+	while (stack.length) {
+		const d = stack.pop();
+		for (const e of readdirSync(d, { withFileTypes: true })) {
+			const p = join(d, e.name);
+			if (e.isDirectory()) stack.push(p);
+			else if (e.name.endsWith('.html')) pages.push(p);
+		}
+	}
+	assert(pages.length >= 2, `only ${pages.length} built page(s) found; run the build first`);
+	const missing = new Map();
+	let seen = 0;
+	for (const page of pages) {
+		const html = readFileSync(page, 'utf8');
+		for (const tag of html.matchAll(/<(?:img|video|audio|source|track|script|link|iframe|embed)\b[^>]*>/g)) {
+			for (const m of tag[0].matchAll(/\s(?:src|poster|href)="(\/(?!\/)[^"#?]*)/g)) {
+				seen++;
+				const url = decodeURIComponent(m[1]);
+				const target = url.endsWith('/') ? join(dist, url, 'index.html') : join(dist, url);
+				if (!existsSync(target)) missing.set(url, page.slice(dist.length));
+			}
+		}
+	}
+	assert(seen >= 20, `only ${seen} local reference(s) scanned; the scan is not reading the pages`);
+	assert(missing.size === 0,
+		`built pages load ${missing.size} local file(s) that are not in dist: ` +
+		[...missing].map(([u, p]) => `${u} (from ${p})`).join(', '));
 });
 
 /* ================= hidden means hidden ================= */

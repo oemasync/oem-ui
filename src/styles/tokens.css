@@ -335,10 +335,22 @@
 	   text scan reads that line as perfectly well-formed.
 
 	   It is an alias, not a copy, on purpose: `var()` is substituted at
-	   computed-value time, so each theme's own --accent-dim is what a
-	   ring actually paints with. Duplicating the hex here would be a
-	      second value to keep in step with the first. */
-	   --focus: var(--accent-dim);
+	   computed-value time, so each theme's own value is what a ring
+	   actually paints with. Duplicating a hex here would be a second
+	   value to keep in step with the first.
+
+	   An alias of --ink-faint, and no longer of --accent-dim. A focus
+	   ring has to read at 3:1 against what it sits beside, and
+	   --accent-dim is a decorative tone that never promised that: dark
+	   #5c5c5c is 2.96:1 on --bg and 2.38:1 on --surface-raised.
+	   MEASURED in Chromium on the showcase, 94 of 616 focus rings in the
+	   dark theme were under 3:1, every text field among them.
+	   --ink-faint is already held to 4.5:1 on every surface in both
+	   themes, so the ring inherits a guarantee instead of needing one of
+	   its own. It is still the dimmest of the three ink tiers, and links
+	   and buttons still brighten theirs to --ink-dim: dim by default,
+	   brighter on what you can press. */
+	--focus: var(--ink-faint);
 	   /* There is deliberately no `--tap-sm`.
 
 	   One was added here -- `--tap-sm: 44px` -- to say "a small label may
@@ -517,7 +529,11 @@
 
 	--ink: #111111;
 	--ink-dim: #4a4a4a;
-	--ink-faint: #6d6d6d;
+	/* #6a6a6a, not the #6d6d6d it was: the faint tier has to clear AA on
+	   the DARKEST light surface, and that is --panel-nested (#ececec),
+	   where #6d6d6d read 4.38:1. Three levels darker reads 4.58:1 there
+	   and 4.75:1 or better on the other nine surfaces. */
+	--ink-faint: #6a6a6a;
 
 	--accent: #111111;
 	--accent-bright: #000000;
@@ -707,7 +723,7 @@
 	--line-soft: #e2e2e2;
 	--ink: #111111;
 	--ink-dim: #4a4a4a;
-	--ink-faint: #6d6d6d;
+	--ink-faint: #6a6a6a;
 	--accent: #111111;
 	--accent-bright: #000000;
 	--accent-dim: #666666;
@@ -796,7 +812,7 @@
 		--line-soft: #e2e2e2;
 		--ink: #111111;
 		--ink-dim: #4a4a4a;
-		--ink-faint: #6d6d6d;
+		--ink-faint: #6a6a6a;
 		--accent: #111111;
 		--accent-bright: #000000;
 		--accent-dim: #666666;

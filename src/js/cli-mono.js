@@ -157,8 +157,59 @@
 	}
 
 	/* ---------- reading / scroll progress (placeholder sentinel) */
+	/* ---------- a listener that belongs to an element ----------
+	   A listener on `window`, on `document` or on a media query outlives
+	   everything. Bound on behalf of one element, it keeps running, and
+	   keeps that element alive, after the element has left the page: a
+	   client-side navigation swaps the body, init() binds the new header,
+	   and the old header's scroll handler is still attached, still toggling
+	   a class on a node nobody can see.
+
+	   So every such listener goes through here, and is let go two ways.
+	   init() sweeps the list first and drops each one whose owner is out of
+	   the document, which is the moment a navigation has just replaced it.
+	   And a listener that fires with its owner gone removes itself, for the
+	   element a page takes out without ever calling init() again. The sweep
+	   is not redundant with that: a media query's `change` may not fire for
+	   the rest of the visit, and MEASURED it was the one listener still
+	   attached after a body swap when only the second way existed.
+
+	   `=== false`, not falsy: an environment with no `isConnected` at all
+	   must keep the listener, not drop it. */
+	var cmOwned = [];
+	function cmRelease(rec) {
+		rec.target.removeEventListener(rec.type, rec.bound, rec.opts);
+		var i = cmOwned.indexOf(rec);
+		if (i !== -1) cmOwned.splice(i, 1);
+	}
+	function cmWhileConnected(owner, target, type, fn, opts) {
+		var rec = { owner: owner, target: target, type: type, opts: opts, bound: null };
+		rec.bound = function (e) {
+			if (owner.isConnected === false) {
+				cmRelease(rec);
+				return;
+			}
+			fn(e);
+		};
+		target.addEventListener(type, rec.bound, opts);
+		cmOwned.push(rec);
+	}
+	function cmReleaseGone() {
+		for (var i = cmOwned.length - 1; i >= 0; i--) {
+			if (cmOwned[i].owner.isConnected === false) cmRelease(cmOwned[i]);
+		}
+	}
+
 	function initHeader(header) {
 		if (!header) return;
+		/* Once per header. init() runs again on every astro:page-load and on
+		   every call a SPA makes, and this function used to bind a scroll
+		   listener and a ResizeObserver each time: MEASURED in Chromium on
+		   the showcase, each extra init() added 7 window listeners and one
+		   observer across this function and three like it, and nothing
+		   ever removed them. */
+		if (header.__cmHeaderBound) return;
+		header.__cmHeaderBound = true;
 		var ticking = false;
 		function update() {
 			header.classList.toggle('is-scrolled', window.scrollY > 4);
@@ -175,9 +226,11 @@
 		if (typeof ResizeObserver === 'function') {
 			new ResizeObserver(publishHeight).observe(header);
 		} else {
-			window.addEventListener('resize', publishHeight, { passive: true });
+			cmWhileConnected(header, window, 'resize', publishHeight, { passive: true });
 		}
-		window.addEventListener(
+		cmWhileConnected(
+			header,
+			window,
 			'scroll',
 			function () {
 				if (!ticking) {
@@ -285,7 +338,7 @@
 		/* Escape closes it and returns focus to the button, so keyboard
 		   and screen-reader users are not stranded inside a menu that is
 		   now invisible. */
-		doc.addEventListener('keydown', function (e) {
+		cmWhileConnected(btn, doc, 'keydown', function (e) {
 			if (e.key === 'Escape' && isOpen()) {
 				setOpen(false);
 				btn.focus();
@@ -295,7 +348,7 @@
 		/* A click outside the header closes it. The header, not the
 		   button: the panel is inside the header, so a click on the panel
 		   must not be treated as outside. */
-		doc.addEventListener('click', function (e) {
+		cmWhileConnected(btn, doc, 'click', function (e) {
 			if (!isOpen()) return;
 			if (e.target && e.target.closest && e.target.closest('[data-cm-header]')) return;
 			setOpen(false);
@@ -339,7 +392,7 @@
 		   otherwise leave `data-open` set on a panel CSS is no longer
 		   showing, and the next phone-width view would inherit it. */
 		var onChange = function () { setOpen(false); };
-		if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onChange);
+		if (typeof mq.addEventListener === 'function') cmWhileConnected(btn, mq, 'change', onChange);
 		else if (typeof mq.addListener === 'function') mq.addListener(onChange);
 	}
 
@@ -348,22 +401,30 @@
 	// Purely additive: the server-rendered active state stays intact.
 	function initScrollSpy(nav) {
 		if (!nav) return;
-		var links = Array.prototype.slice.call(
-			nav.querySelectorAll('[data-cm-spy]')
-		);
-		if (!links.length) return;
-
-		var sections = links
-			.map(function (a) {
-				var id = a.getAttribute('data-cm-spy');
-				return { link: a, el: document.getElementById(id) };
-			})
-			.filter(function (s) {
-				return s.el;
-			});
+		/* A second init() on the same nav RE-READS the sections and binds
+		   nothing. Re-reading matters as much as not re-binding: a nav that
+		   survives a client-side navigation points at the previous page's
+		   sections, which are gone, and would highlight against them. */
+		if (nav.__cmSpyRefresh) {
+			nav.__cmSpyRefresh();
+			return;
+		}
+		var sections = [];
+		function collect() {
+			sections = Array.prototype.slice.call(nav.querySelectorAll('[data-cm-spy]'))
+				.map(function (a) {
+					var id = a.getAttribute('data-cm-spy');
+					return { link: a, el: document.getElementById(id) };
+				})
+				.filter(function (s) {
+					return s.el;
+				});
+		}
+		collect();
 		if (!sections.length) return;
 
 		function update() {
+			if (!sections.length) return;
 			/* Measured against the viewport, not `offsetTop`. `offsetTop` is
 			   relative to the nearest POSITIONED ancestor, so a consumer that
 			   puts a section inside any positioned wrapper (a card, a sticky
@@ -384,7 +445,9 @@
 			});
 		}
 		var ticking = false;
-		window.addEventListener(
+		cmWhileConnected(
+			nav,
+			window,
 			'scroll',
 			function () {
 				if (!ticking) {
@@ -397,6 +460,10 @@
 			},
 			{ passive: true }
 		);
+		nav.__cmSpyRefresh = function () {
+			collect();
+			update();
+		};
 		update();
 	}
 
@@ -613,6 +680,11 @@
 		if (!list) return;
 		var val = spec.querySelector('.cm-spec__val');
 		if (!val) return;
+		// Re-measure on a later init(), bind on the first only.
+		if (spec.__cmMeasure) {
+			spec.__cmMeasure();
+			return;
+		}
 
 		function update() {
 			var desc = list.querySelector('.cm-row__desc');
@@ -636,9 +708,10 @@
 				? 'excerpt ' + w + 'px'
 				: 'excerpt handed off';
 		}
+		spec.__cmMeasure = update;
 		update();
 		var t;
-		window.addEventListener('resize', function () {
+		cmWhileConnected(spec, window, 'resize', function () {
 			clearTimeout(t);
 			t = setTimeout(update, 120);
 		});
@@ -1404,7 +1477,7 @@
 			if (typeof ResizeObserver === 'function') {
 				new ResizeObserver(apply).observe(host);
 			}
-			window.addEventListener('resize', apply);
+			cmWhileConnected(host, window, 'resize', apply);
 			apply();
 		});
 	}
@@ -2219,15 +2292,26 @@
 	   nothing. */
 	var navSpies = [];
 	function cmInitNavmenu(root) {
-		navSpies = [];
+		/* Kept across calls, minus the bars that have left the page. This
+		   used to start from an empty list every time, so init() on a
+		   SUBTREE (a dialog, a late panel) forgot every bar outside it and
+		   the load-time re-measure below skipped them; and it bound a fresh
+		   scroll and resize listener per bar per call. */
+		navSpies = navSpies.filter(function (s) { return s.bar.isConnected !== false; });
 		Array.prototype.forEach.call(root.querySelectorAll('[data-cm-navmenu]'), function (bar) {
+			if (bar.__cmNavSpied) {
+				// Already bound: re-read the position, the page may have changed.
+				navSpy(bar);
+				return;
+			}
 			var spy = navSpy(bar);
 			if (!spy) return;
+			bar.__cmNavSpied = true;
 			var owner = navScrollport(bar);
 			var view = (typeof window !== 'undefined') ? window : null;
 			var target = (owner || view);
-			if (target) target.addEventListener('scroll', spy.fn, { passive: true });
-			if (view) view.addEventListener('resize', spy.fn);
+			if (target) cmWhileConnected(bar, target, 'scroll', spy.fn, { passive: true });
+			if (view) cmWhileConnected(bar, view, 'resize', spy.fn);
 			navSpies.push(spy);
 		});
 	}
@@ -3058,9 +3142,13 @@
 			var isSel = mode === 'range'
 				? (day === start || day === end)
 				: (mode === 'multiple' ? picked.indexOf(day) !== -1 : day === sel);
-			if (isSel) attrs += ' aria-selected="true"';
+			// The selection is the CELL's state, not the button's: ARIA
+			// allows aria-selected on a gridcell and not on a button (axe
+			// aria-allowed-attr, critical). The button is what takes focus
+			// and the click; the cell around it is what is selected.
+			var cell = isSel ? ' aria-selected="true"' : '';
 			if (start && end && start < day && day < end) attrs += ' data-in-range="true"';
-			cells.push('<td role="gridcell"><button type="button" class="cm-cal__day"' +
+			cells.push('<td role="gridcell"' + cell + '><button type="button" class="cm-cal__day"' +
 				attrs + ' tabindex="' + (active === day ? 0 : -1) + '">' +
 				+day.slice(8) + '</button></td>');
 		});
@@ -3332,7 +3420,7 @@
 				handle.setAttribute('aria-orientation', stacked() ? 'horizontal' : 'vertical');
 			};
 			syncAxis();
-			window.addEventListener('resize', syncAxis);
+			cmWhileConnected(g, window, 'resize', syncAxis);
 			var clamp = function (pct) {
 				var min = parseFloat(handle.getAttribute('aria-valuemin'));
 				var max = parseFloat(handle.getAttribute('aria-valuemax'));
@@ -3850,7 +3938,7 @@
 			if (prev) prev.addEventListener('click', function () { go(activeIndex() - 1); });
 			if (next) next.addEventListener('click', function () { go(activeIndex() + 1); });
 			pages.forEach(function (p, n) { p.addEventListener('click', function () { go(n); }); });
-			window.addEventListener('resize', paint, { passive: true });
+			cmWhileConnected(car, window, 'resize', paint, { passive: true });
 			paint();
 		});
 	}
@@ -3989,7 +4077,7 @@
 			});
 			// Clicking anywhere else closes it - the listbox's own half of
 			// the contract, and the part every hand-rolled version forgets.
-			document.addEventListener('click', function (e) {
+			cmWhileConnected(wrap, document, 'click', function (e) {
 				if (!wrap.contains(e.target)) setOpen(false);
 			});
 			setOpen(false);
@@ -4152,7 +4240,7 @@
 				var o = t.closest('.cm-mention__option');
 				if (o && list.contains(o)) { choose(o); e.preventDefault(); }
 			});
-			document.addEventListener('click', function (e) {
+			cmWhileConnected(anchor, document, 'click', function (e) {
 				if (!anchor.contains(e.target)) setOpen(false);
 			});
 			setOpen(false);
@@ -4911,8 +4999,8 @@
 					// The pair, always together. See above.
 					bar.setAttribute('aria-valuenow', String(pct));
 				}
-				(src || window).addEventListener('scroll', paint, { passive: true });
-				window.addEventListener('resize', paint, { passive: true });
+				cmWhileConnected(bar, src || window, 'scroll', paint, { passive: true });
+				cmWhileConnected(bar, window, 'resize', paint, { passive: true });
 				paint();
 			})(bars[i]);
 		}
@@ -4962,8 +5050,8 @@
 					bar.style.setProperty('--cm-readbar', r + '%');
 					bar.setAttribute('aria-valuenow', String(r));
 				}
-				window.addEventListener('scroll', paint, { passive: true });
-				window.addEventListener('resize', paint, { passive: true });
+				cmWhileConnected(bar, window, 'scroll', paint, { passive: true });
+				cmWhileConnected(bar, window, 'resize', paint, { passive: true });
 				paint();
 			})(bars[i]);
 		}
@@ -5293,6 +5381,8 @@
 
 	/* ---------- init ---------- */
 	function init(root) {
+		// First: let go of what was bound for elements that are gone.
+		cmReleaseGone();
 		(root || document)
 			.querySelectorAll(TOGGLE_SEL)
 			.forEach(function (btn) {
@@ -6603,7 +6693,12 @@
 		if (!rows.length) return null;
 		return { x: xkey, series: ser, data: rows };
 	}
-	function chConfig(box, w) {
+	/* The chart's RENDERED direction, read once per render pass and handed
+	   to chConfig, so the render itself never asks for style mid-write. */
+	function chReadDir(box) {
+		return chDir(box.getAttribute('dir'), box) ? 'rtl' : 'ltr';
+	}
+	function chConfig(box, w, dir) {
 		var d = chData(box);
 		if (!d) return null;
 		return {
@@ -6620,7 +6715,10 @@
 			ticks: 4,
 			w: w,
 			h: Math.round(chNum(box.getAttribute('data-cm-chart-h')) || 240),
-			rtl: box.getAttribute('dir'),
+			// The chart's own `dir` wins; without one, the direction read
+			// before the render (chReadDir), and only without THAT does
+			// chDir fall back to asking getComputedStyle itself.
+			rtl: box.getAttribute('dir') || dir || null,
 			box: box,
 			/* the tooltip/legend prop surface, all defaulted OFF */
 			indicator: box.getAttribute('data-cm-chart-indicator'),
@@ -6631,9 +6729,9 @@
 			description: box.getAttribute('data-cm-chart-desc') || 'chart'
 		};
 	}
-	function chRender(box, w) {
+	function chRender(box, w, dir) {
 		var plot = box.querySelector('.cm-chart__plot');
-		var cfg = chConfig(box, w);
+		var cfg = chConfig(box, w, dir);
 		if (!plot || !cfg) return false;
 		var hadFocus = plot.contains(document.activeElement);
 		plot.innerHTML = chartPlot(cfg);
@@ -6709,34 +6807,67 @@
 	}
 
 	function cmInitCharts(root) {
+		/* Read every chart (width AND rendered direction), THEN render
+		   every chart. A chart's render asks for its direction through
+		   getComputedStyle when it carries no `dir` of its own, and asked
+		   right after the previous chart wrote its markup, that read waits
+		   on a style recalc of the whole document. Measured in WebKit on the
+		   showcase (15 charts, 8k nodes): 11.3s of init, ~700ms per
+		   cartesian/pie chart, the build step itself ~1ms. Reading both
+		   before any write pays for one recalc, not one per chart. */
+		var boxes = [];
 		Array.prototype.forEach.call(
 			(root || document).querySelectorAll('[data-cm-chart]'),
 			function (box) {
 				if (box.getAttribute('data-cm-chart-bound')) return;
 				box.setAttribute('data-cm-chart-bound', '1');
-				chBind(box);
+				boxes.push(box);
 			}
 		);
+		var widths = boxes.map(function (box) {
+			var plot = box.querySelector('.cm-chart__plot');
+			return plot ? Math.round(plot.getBoundingClientRect().width) : 0;
+		});
+		var dirs = boxes.map(chReadDir);
+		boxes.forEach(function (box, i) { chBind(box, widths[i], dirs[i]); });
 	}
 
-	function chBind(box) {
+	function chBind(box, w0, dir0) {
 		var plot = box.querySelector('.cm-chart__plot');
 		if (!plot) return;
 		var width = 0;
-		var paint = function () {
-			var w = Math.round(plot.getBoundingClientRect().width);
+		var draw = function (w, dir) {
 			if (!(w > 0) || w === width) return;
 			width = w;
-			chRender(box, w);
+			chRender(box, w, dir);
 		};
-		paint();
+		var paint = function () {
+			// Both reads before the write, same as the first pass.
+			draw(Math.round(plot.getBoundingClientRect().width), chReadDir(box));
+		};
+		draw(w0, dir0);
 		if (typeof ResizeObserver === 'function') {
 			/* Width only. Re-rendering changes the plot's HEIGHT, so an
 			   observer that re-rendered on any resize would write the
-			   markup it is being measured against and loop forever. */
-			new ResizeObserver(function () { paint(); }).observe(plot);
+			   markup it is being measured against and loop forever.
+			   And not from inside the callback: a render there resizes the
+			   observed plot in the same frame, and the browser reports
+			   "ResizeObserver loop completed with undelivered
+			   notifications" as a window error (measured in WebKit on a
+			   chart whose container narrowed, every run). The paint waits
+			   for the next frame, one per frame however many fire. */
+			var queued = false;
+			var later = function (fn) {
+				return typeof requestAnimationFrame === 'function'
+					? requestAnimationFrame(fn) : setTimeout(fn, 16);
+			};
+			new ResizeObserver(function () {
+				if (queued) return;
+				queued = true;
+				later(function () { queued = false; paint(); });
+			}).observe(plot);
 		} else if (typeof window !== 'undefined') {
-			window.addEventListener('resize', paint);
+			cmWhileConnected(box, window, 'resize', paint);
 		}
 
 		var active = -1;

@@ -12,11 +12,12 @@ separates an attribute-borne set from one stamped onto cells that
 A connection failure is a HARNESS error and prints as such; it is never a
 product verdict.
 """
+import os
 import sys
 from playwright.sync_api import sync_playwright
 from harness_wait import boot_timeout
 
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4471/'
+URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('OEM_UI_URL', 'http://192.168.1.68:4471/')
 SEL = '#cal-multiple'
 results = []
 
@@ -36,7 +37,7 @@ STATE = """(sel) => {
     mode: c.getAttribute('data-cm-cal-mode'),
     month: c.getAttribute('data-cm-cal-month'),
     attr: (c.getAttribute('data-cm-cal-selected') || ''),
-    selected: days.filter(d => d.getAttribute('aria-selected') === 'true')
+    selected: days.filter(d => d.closest('td').getAttribute('aria-selected') === 'true')
                    .map(d => d.dataset.cmDay).sort(),
     roving: days.filter(d => d.tabIndex === 0).map(d => d.dataset.cmDay),
     // "The state a reader hears is the state a reader sees": a day that
@@ -44,8 +45,8 @@ STATE = """(sel) => {
     // against an unselected sibling in the same grid, so the check is a
     // difference rather than a hard-coded colour.
     inkMismatch: (() => {
-      const on = days.find(d => d.getAttribute('aria-selected') === 'true');
-      const off = days.find(d => d.getAttribute('aria-selected') !== 'true'
+      const on = days.find(d => d.closest('td').getAttribute('aria-selected') === 'true');
+      const off = days.find(d => d.closest('td').getAttribute('aria-selected') !== 'true'
                                && !d.hasAttribute('data-outside'));
       if (!on || !off) return null;
       const a = getComputedStyle(on), b = getComputedStyle(off);
