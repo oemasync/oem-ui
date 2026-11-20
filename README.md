@@ -2010,6 +2010,53 @@ through `:has()` whenever the list holds no item, by any route. Nested
 lists drop their panel and, from the third level, become a rule down the
 side, so depth reads as "belongs to" instead of as more boxes.
 
+### Dense workbench — `.cm-dense`
+
+A scope, not a variant: put it on a tool palette, an inspector or any
+region of a workbench, and every field, select, textarea, `.cm-btn` and
+`.cm-seg__opt` inside it drops the `--tap` floor and takes `--text-xs`, so
+forty controls share one screen.
+
+```html
+<aside class="cm-dense">
+  <select aria-label="Terrain">…</select>
+  <input type="text" aria-label="Monster">
+  <button type="button" class="cm-btn">Place</button>
+</aside>
+```
+
+Only on a fine pointer. On touch the floor is the point, and a field under
+16px makes iOS zoom the page on focus, so a coarse pointer keeps the
+library's sizes inside `.cm-dense` too.
+
+### Property list — `.cm-props`
+
+A record of any shape, edited in place: one row per field with its key, its
+control and its tools; a field that holds a record or a list folds open
+into another `.cm-props`. For editors drawn from data rather than from a
+hand-written form.
+
+```html
+<div class="cm-props cm-dense">
+  <div class="cm-props__row">
+    <span class="cm-props__key">key</span>
+    <div class="cm-props__value"><input type="text" aria-label="Key"></div>
+    <span class="cm-props__tools"><button class="cm-icon-btn cm-icon-btn--bare" aria-label="Remove key">&times;</button></span>
+  </div>
+  <details class="cm-props__group">
+    <summary class="cm-props__summary">
+      <span class="cm-props__key">goals</span>
+      <span class="cm-props__peek">(requirement: Any, conditions: […])</span>
+    </summary>
+    <div class="cm-props">…</div>
+  </details>
+</div>
+```
+
+The key is the row's title and wraps; the peek is a one-line preview and
+truncates, and hides while the group is open. Depth is a rule down the
+side rather than another frame. Below 40rem the key takes its own line.
+
 ### Hover card and input group
 
 ```html

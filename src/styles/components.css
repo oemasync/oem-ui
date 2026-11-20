@@ -12728,6 +12728,131 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	cursor: not-allowed;
 }
 
+/* ============ workbench density, .cm-dense ============
+   The library sizes every control for a thumb: a field is full width with a
+   --tap floor (base.css), a button carries the same floor. That is right for
+   a page a reader fills in once. It is wrong for a workbench - a tool
+   palette, an inspector, a property list - where forty controls must share
+   one screen and the reader is on a mouse.
+
+   It is a SCOPE, not a variant on each control, so a page opts a whole
+   region in once and every control inside follows, including ones a
+   script draws later.
+
+   Only on a fine pointer. On touch the floor is the point, and below 16px
+   an iOS field zooms the page on focus, so a coarse pointer keeps the
+   library's sizes inside .cm-dense too.
+
+   The selectors repeat the field block's own exclusions and add the scope
+   class, so they outrank base.css's (0,6,1) by exactly one class - the
+   same repair .cm-number documents for its inner input. */
+@media (pointer: fine) {
+	.cm-dense input:not([type='checkbox']):not([type='radio']):not([type='range']):not(.cm-inline__input):not(.cm-search__input),
+	.cm-dense textarea:not(.cm-inline__input):not(.cm-search__input),
+	.cm-dense select:not(.cm-inline__input):not(.cm-search__input) {
+		min-height: 0;
+		padding: var(--space-1) var(--space-2);
+		font-size: max(var(--min-font), var(--text-xs));
+		line-height: 1.4;
+	}
+	/* The select arrow's clearance, at the same weight as base.css's arrow
+	   rule plus the scope, or the arrow paints over a long option. */
+	.cm-dense select:not(.cm-search__input):not(.cm-inline__input):not([multiple]) {
+		padding-inline-end: var(--space-6);
+		background-position: calc(100% - 0.9rem) 52%, calc(100% - 0.55rem) 52%;
+	}
+	.cm-dense textarea:not(.cm-inline__input):not(.cm-search__input) { min-height: calc(var(--tap) * 1.5); }
+	.cm-dense .cm-btn { min-height: 0; padding: 0.25em 0.7em; font-size: var(--text-xs); }
+	.cm-dense .cm-seg__opt { padding: var(--space-1) var(--space-2); }
+	.cm-dense .cm-field { gap: var(--space-1); }
+}
+
+/* ============ property list, .cm-props ============
+   A record of any shape, edited in place: one row per field, a key, its
+   control, and the row's tools; a field that holds a record or a list
+   folds open into another property list. It is what a devtools inspector
+   or a config editor draws, and what an editor drawn from data (rather
+   than from a hand-written form) needs, because it cannot know the depth
+   in advance.
+
+   The key is the row's title, so it never truncates: it wraps. The peek
+   beside a folded group is its description, a one-line preview of the
+   value, so it is the part that truncates (AGENTS.md rule 6).
+
+   Depth is a rule down the side, not another box, so a deep record does
+   not spend its width on frames. */
+/* The three columns belong to the LIST, and each row takes them through
+   subgrid, so every value starts at one x however long its own key is. A
+   row that owned its columns aligned only with itself. */
+.cm-props {
+	display: grid;
+	grid-template-columns: minmax(6ch, max-content) minmax(0, 1fr) auto;
+	gap: var(--space-1) var(--space-2);
+	min-width: 0;
+	font-size: max(var(--min-font), var(--text-xs));
+}
+.cm-props__row {
+	display: grid;
+	grid-column: 1 / -1;
+	grid-template-columns: subgrid;
+	align-items: start;
+	min-width: 0;
+}
+.cm-props__key {
+	padding-top: var(--space-1);
+	color: var(--ink-dim);
+	font-family: var(--font-mono);
+	overflow-wrap: break-word;
+}
+.cm-props__value { min-width: 0; }
+.cm-props__tools {
+	display: inline-flex;
+	gap: var(--space-1);
+	white-space: nowrap;
+}
+.cm-props__group { grid-column: 1 / -1; min-width: 0; }
+.cm-props__summary {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	min-width: 0;
+	padding-block: var(--space-1);
+	list-style: none;
+	cursor: pointer;
+}
+.cm-props__summary::-webkit-details-marker { display: none; }
+.cm-props__summary::before {
+	content: '\25B8';
+	flex: none;
+	color: var(--ink-faint);
+	transition: transform var(--cm-t) var(--cm-ease);
+}
+.cm-props__group[open] > .cm-props__summary::before { transform: rotate(90deg); }
+.cm-props__peek {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--ink-faint);
+	font-family: var(--font-mono);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cm-props__group[open] > .cm-props__summary > .cm-props__peek { visibility: hidden; }
+.cm-props__group > .cm-props,
+.cm-props__value > .cm-props {
+	padding-inline-start: var(--space-3);
+	border-inline-start: 1px solid var(--line-soft);
+}
+/* A narrow column cannot hold key, control and tools side by side; the
+   key takes its own line above the control rather than squeezing it. */
+@media (max-width: 40rem) {
+	.cm-props { grid-template-columns: minmax(0, 1fr) auto; }
+	.cm-props__key { grid-column: 1 / -1; padding-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.cm-props__summary::before { transition: none; }
+}
+
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number
