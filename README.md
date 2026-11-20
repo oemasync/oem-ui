@@ -1859,6 +1859,29 @@ It is not dismissible and carries no `role="alert"`: a static admonition in
 an article is not a live region announcing a change, so it is a plain
 `<div>`, read in document order like the paragraph beside it.
 
+The showcase's own prose section hand-typed this markup three times over to
+prove the shape in CSS; `<Callout>` is the component a post or an API doc
+actually calls:
+
+```astro
+---
+import Callout from '../astro/Callout.astro';
+---
+
+<Callout variant="info" title="Note">
+  <p>Body content — one paragraph or several.</p>
+</Callout>
+```
+
+`variant` has no default — every real admonition names one, so a silent
+default would hide a caller forgetting to. The glyph is never a prop: it
+comes only from the CSS `::before` rule for the variant, exactly as it does
+in the raw markup above. `title` is a plain string (the one-line label); the
+body is a `<slot />`, not a string prop, because it routinely carries more
+than one paragraph and inline markup (`<code>`, a link) that a string prop
+could not express without either rendering the tags as visible text or
+needing raw HTML from the caller.
+
 ### Small native components: keys, pages, people, disclosure
 
 ```html

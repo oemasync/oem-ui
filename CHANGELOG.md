@@ -1,3 +1,39 @@
+## Unreleased - `<Callout>`: the in-prose admonition wrapper
+
+`.cm-callout` shipped with CSS, tests and a mutation sweep, but no Astro
+wrapper - the showcase's prose section proved it by hand-typing the title
+row and body wrapper three times over, the exact markup a blog post or an
+API doc would have to retype for every admonition it renders. Every other
+hand-built row in the showcase already had its own wrapper (`<Alert>`,
+`<Endpoint>`, `<Param>`, `<Tree>`); the callout was the one still unwrapped.
+
+- `src/astro/Callout.astro` - a new Astro component. `variant` (`'ok' |
+  'warn' | 'err' | 'info'`, no default - every real admonition names one)
+  and `title` (a plain string, the one-line label) are props; the body is a
+  `<slot />`, not a string prop, because it routinely carries more than one
+  paragraph and inline markup (`<code>`, a link) a string prop could not
+  express. The glyph is never a prop either: the wrapper renders only the
+  empty, `aria-hidden` mark span the CSS `::before` rule paints, so the
+  glyph can never drift from the one `.cm-callout--<variant>` already
+  defines (and reuses from `.cm-alert`'s own glyph for the same tone).
+- `src/pages/[...family].astro` - the four hand-typed `.cm-callout` blocks
+  in the prose specimen now render through `<Callout>`, with identical
+  content (title, tone, body text) - the built page ships byte-identical
+  markup, proven by a check that reads the rendered HTML.
+- `README.md` - the Callout section gains the wrapper's usage example and
+  the reasoning for the no-default variant and the slot-not-string body.
+- `tests/run.mjs` - five new checks for the wrapper (no default variant,
+  variant-to-class interpolation, the mark stays prop-free, title/slot
+  placement, the showcase import and call count) plus a rewrite of the
+  pre-existing "showcase demonstrates all four variants" check, which read
+  literal `.cm-callout` markup and had to be repointed at the `<Callout>`
+  call shape the showcase now uses instead.
+- `tests/mutate-callout-astro.mjs` - eleven mutants, each required to fail
+  the check that names it (11/11 caught). Verified in real WebKit (390x844
+  and 1280x900): the four callouts render identically to the pre-wrapper
+  markup - same classes, same mark, same title text, same multi-paragraph
+  body.
+
 ## Unreleased - `<Tree>`: the nested file/record tree wrapper
 
 The showcase's tree section proved `.cm-tree` in CSS by hand-nesting three
