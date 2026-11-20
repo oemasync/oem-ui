@@ -32,6 +32,12 @@ that broke the token rule and ignored both themes.
   hue, the full list of what takes it, and a default column beside a
   `data-cm-chroma="off"` column of the same markup.
 - `AGENTS.md` rule 11: how a new state gets its hue.
+- `tests/verify-status-colour.py` - new, listed in `tests/browser-harnesses.txt`.
+  Measures the #chroma specimen in WebKit in both themes: each probe paints
+  its `--chroma-*` by default and a grey inside `data-cm-chroma="off"`,
+  text holds 4.5:1 on the background it sits on, and a hovered danger button
+  fills with the error hue (94 checks). Three mutants (off switch deleted, a
+  state dropped from its setter, the hover fill back to grey) all fail it.
 
 For consumers: this changes how a page looks on the next vendor sync. Put
 `data-cm-chroma="off"` on `<html>` to keep the grey.
