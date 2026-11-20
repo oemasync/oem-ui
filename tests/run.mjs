@@ -730,7 +730,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'Callout.astro', 'Diff.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'Callout.astro', 'Diff.astro', 'Trace.astro', 'TraceStep.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19179,6 +19179,130 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 			assert(/cm-diff/.test(rm), 'the README never mentions cm-diff');
 			assert(/data-op/.test(rm), 'the README does not document the data-op contract');
 		});
+			}
+
+			/* ============================================================ batch 40
+			   <Trace> / <TraceStep> — the Astro wrapper for cm-trace, "a record
+			   of what a run did". The showcase hand-typed three shapes of
+			   .cm-trace__item (plain row, row + desc, disclosure with a hidden
+			   body) across two sections; both now call the wrapper.
+
+			   Every assertion here is mutation-checked in
+			   tests/mutate-trace-astro.mjs. */
+			{
+				const TRACE_CLASSES = [
+					'cm-trace',
+					'cm-trace__item',
+					'cm-trace__icon',
+					'cm-trace__title',
+					'cm-trace__desc',
+					'cm-trace__trigger',
+					'cm-trace__body',
+				];
+
+				check('batch 40: every cm-trace class is defined in the library', () => {
+					const comp = read('src/styles/components.css');
+					for (const cls of TRACE_CLASSES) {
+						const styled = new RegExp(`\\.${cls}(?![a-z0-9_-])`).test(comp);
+						assert(styled, `.${cls} has no rule in components.css`);
+					}
+				});
+
+				check('batch 40: every cm-trace class is DEMONSTRATED, so none is dead CSS', () => {
+					// The hand-typed markup moved into Trace.astro (the list) and
+					// TraceStep.astro (the item), so the literal classes live
+					// there, not in the showcase source any more.
+					const traceAstro = read('src/astro/Trace.astro');
+					const stepAstro = read('src/astro/TraceStep.astro');
+					const combined = traceAstro + '\n' + stepAstro;
+					for (const cls of TRACE_CLASSES) {
+						assert(new RegExp(`class(?:Name)?[:=]?[^>]*${cls}|${cls}`).test(combined) &&
+							new RegExp(cls.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')).test(combined),
+							`.${cls} is defined but never rendered by Trace.astro or TraceStep.astro`);
+					}
+					const show = read('src/pages/[...family].astro');
+					assert(/import Trace from '\.\.\/astro\/Trace\.astro'/.test(show),
+						'the showcase does not import Trace.astro');
+					assert(/import TraceStep from '\.\.\/astro\/TraceStep\.astro'/.test(show),
+						'the showcase does not import TraceStep.astro');
+					assert((show.match(/<Trace>/g) || []).length >= 2,
+						'the showcase calls <Trace> fewer than 2 times - both trace sections should use the wrapper');
+					assert((show.match(/<TraceStep\b/g) || []).length >= 7,
+						'the showcase never calls <TraceStep> enough times - cm-trace__item would be under-demonstrated');
+				});
+
+				check('batch 40: each state maps to a DISTINCT glyph, no two alike', () => {
+					const stepAstro = read('src/astro/TraceStep.astro');
+					const m = /const GLYPH: Record<string, string> = \{([^}]*)\}/.exec(stepAstro);
+					assert(m, 'TraceStep.astro has no GLYPH map');
+					const entries = [...m[1].matchAll(/(\w+):\s*'([^']*)'/g)].map((e) => e[2]);
+					assert(entries.length === 4, `GLYPH map has ${entries.length} entries, expected 4 (idle/running/done/error)`);
+					assert(new Set(entries).size === entries.length,
+						'two states in the GLYPH map share the same glyph - a reader could not tell them apart');
+				});
+
+				check('batch 40: the idle state renders with NO state modifier class', () => {
+					const stepAstro = read('src/astro/TraceStep.astro');
+					const m = /const STATE_CLASS: Record<string, string> = \{([^}]*)\}/.exec(stepAstro);
+					assert(m, 'TraceStep.astro has no STATE_CLASS map');
+					assert(/idle:\s*''/.test(m[1]),
+						"idle does not map to an empty class - it would paint a spurious is-* modifier on the showcase's idle specimen");
+					assert(/running:\s*'is-running'/.test(m[1]) &&
+						/done:\s*'is-done'/.test(m[1]) &&
+						/error:\s*'is-error'/.test(m[1]),
+						'running/done/error do not map to their documented is-* modifier classes');
+				});
+
+				check('batch 40: a step with no body renders no trigger and no desc', () => {
+					// Mirrors initTrace's own runtime guard ("a trigger pointing at
+					// nothing is left alone"): the markup side of the same rule
+					// is to never emit a dead trigger or an empty desc paragraph.
+					const stepAstro = read('src/astro/TraceStep.astro');
+					assert(/Astro\.slots\.has\('default'\)/.test(stepAstro),
+						'TraceStep.astro never checks whether slot content was passed');
+					assert(/const collapsible = hasBody && Boolean\(id\)/.test(stepAstro),
+						'TraceStep.astro does not require BOTH slot content and an id before becoming a disclosure');
+					const show = read('src/pages/[...family].astro');
+					assert(/<TraceStep state="idle" title="author the two components" \/>/.test(show),
+						'the showcase lost its no-body idle specimen - the empty-slot path would go unproven');
+				});
+
+				check('batch 40: a collapsible step wires aria-expanded/aria-controls and hides its body by default', () => {
+					const stepAstro = read('src/astro/TraceStep.astro');
+					assert(/aria-expanded=\{open \? 'true' : 'false'\}/.test(stepAstro),
+						"the trigger's aria-expanded does not reflect the open prop");
+					assert(/aria-controls=\{id\}/.test(stepAstro),
+						'the trigger does not point aria-controls at the body id');
+					assert(/<div class="cm-trace__body" id=\{id\} \{\.\.\.\(!open && \{ hidden: true \}\)\}>/.test(stepAstro),
+						"the body does not default to hidden, or does not clear 'hidden' when open");
+					const show = read('src/pages/[...family].astro');
+					assert(/id="trace-detail-1"/.test(show),
+						'the showcase lost its closed collapsible specimen (trace-detail-1)');
+					const at2 = show.indexOf('id="trace-detail-2"');
+					assert(at2 > 0, 'the showcase lost its open collapsible specimen (trace-detail-2)');
+					assert(/^\s*open\s*$/m.test(show.slice(at2, at2 + 60)),
+						"trace-detail-2's <TraceStep> no longer carries the open prop - the open-by-default path would go unproven");
+				});
+
+				check('batch 40: the built page renders <Trace> identically through the wrapper', () => {
+					const dist = read('dist/index.html');
+					// Every glyph used by the specimens must survive the build.
+					assert(dist.includes('\u25cb'), 'the idle glyph (\\u25cb) is missing from the built page');
+					assert(dist.includes('\u25cf'), 'the running glyph (\\u25cf) is missing from the built page');
+					assert(dist.includes('\u2713'), 'the done glyph (\\u2713) is missing from the built page');
+					assert(dist.includes('\u2717'), 'the error glyph (\\u2717) is missing from the built page');
+					const openCount = (dist.match(/cm-trace__trigger[^>]*aria-expanded="true"/g) || []).length;
+					const closedCount = (dist.match(/cm-trace__trigger[^>]*aria-expanded="false"/g) || []).length;
+					assert(openCount >= 1 && closedCount >= 1,
+						`the built page has ${openCount} open and ${closedCount} closed trace triggers - both states must render`);
+				});
+
+				check('batch 40: the README documents cm-trace', () => {
+					const rm = read('README.md');
+					assert(/cm-trace/.test(rm), 'the README never mentions cm-trace');
+					assert(/<Trace>|<TraceStep/.test(rm),
+						'the README documents cm-trace in raw HTML only, with no mention of the Astro wrapper');
+				});
 			}
 
 			/* ============================================================ batch 35

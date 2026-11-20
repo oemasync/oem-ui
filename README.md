@@ -2074,6 +2074,34 @@ Three decisions:
 Proof lives in `tests/verify-codeblock-trace.py` (WebKit, 20 assertions)
 and `tests/mutate-codeblock-trace.mjs`.
 
+`<Trace>`/`<TraceStep>` is the wrapper - the exact markup above, with the
+state-to-glyph and state-to-class maps owned by the component instead of
+retyped at every call site:
+
+```astro
+---
+import Trace from '../astro/Trace.astro';
+import TraceStep from '../astro/TraceStep.astro';
+---
+<Trace>
+  <TraceStep state="done" title="measured the live list">
+    fetched with a real Safari user agent&hellip;
+  </TraceStep>
+  <TraceStep state="running" title="diff against the pinned ledger" />
+  <TraceStep state="idle" title="author the two components" />
+  <TraceStep state="done" title="shadcn added code-block and trace" id="trace-detail-1">
+    <p>the pinned ledger cannot see this&hellip;</p>
+  </TraceStep>
+</Trace>
+```
+
+`title` is plain text (a step's label is log output, not authored prose);
+the body is a `<slot />` because the real detail content carries `<code>`
+and multiple paragraphs. A step becomes a disclosure (a real `<button>`
+with `aria-expanded`/`aria-controls`, a body hidden by default) only when
+it is given BOTH an `id` and slot content - one without the other falls
+back to a plain row, so a trigger can never point at an empty body.
+
 ### Popover and combobox
 
 ```html

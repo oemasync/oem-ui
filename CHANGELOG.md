@@ -4764,6 +4764,21 @@ per-trigger, shared viewport, vertical).
 
 ## [Unreleased]
 
+- **`<Trace>`/`<TraceStep>` — the Astro wrapper for `cm-trace`**, "a record
+  of what a run did, one step per line". The showcase hand-typed three
+  shapes of `.cm-trace__item` (a plain row, a row with a desc, a disclosure
+  with a hidden body) across two sections to prove the CSS by hand; both
+  now call the wrapper. `TraceStep` owns the state-to-glyph and
+  state-to-class maps (idle outline/○, running filled/●, done check/✓,
+  error cross/✗) so a step's glyph can never drift from its class the way
+  four hand-typed HTML entities across a page could, and a step becomes a
+  real disclosure (`aria-expanded`/`aria-controls`, a body hidden by
+  default) only when given BOTH an `id` and slot content — one without the
+  other falls back to a plain row, so a trigger can never point at an
+  empty body (the same rule `initTrace`'s own runtime guard already
+  enforces at click time). 8 new contract checks in `tests/run.mjs`
+  (batch 40), mutation-proven in `tests/mutate-trace-astro.mjs`.
+
 - **The showcase's own section ledes were rendering beside their titles,
   one word per line.** `.cm-head-row__text` is `display: flex` in a ROW --
   deliberately, so a caller who wraps a `.cm-head__badge` with a title gets

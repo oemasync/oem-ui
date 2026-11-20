@@ -42,6 +42,8 @@ import Param from '../astro/Param.astro';
 import Tree from '../astro/Tree.astro';
 import Callout from '../astro/Callout.astro';
 import Diff from '../astro/Diff.astro';
+import Trace from '../astro/Trace.astro';
+import TraceStep from '../astro/TraceStep.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -3992,51 +3994,24 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					same in greyscale, and the state is also in the markup rather than
 					only in the paint.
 				</p>
-				<ol class="cm-trace">
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<p class="cm-trace__title">read the failing test</p>
-							<p class="cm-trace__desc">
-								<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
-								names all 66 entries and their order.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<p class="cm-trace__title">measure the live list</p>
-							<p class="cm-trace__desc">
-								Fetched with a real Safari user agent: a plain
-								<code>curl</code> returns the bot wall, not the page.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-running">
-							<span class="cm-trace__icon" aria-hidden="true">&#9679;</span>
-							<p class="cm-trace__title">diff against the pinned ledger</p>
-							<p class="cm-trace__desc">two names are in the live list and not in ours.</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item">
-							<span class="cm-trace__icon" aria-hidden="true">&#9675;</span>
-							<p class="cm-trace__title">author the two components</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-error">
-							<span class="cm-trace__icon" aria-hidden="true">&#10007;</span>
-							<p class="cm-trace__title">mutation sweep, first attempt</p>
-							<p class="cm-trace__desc">
-								The sweep refused: it was pointed at a sibling worktree, so
-								another lane's uncommitted edits read as failures here.
-							</p>
-						</div>
-					</li>
-				</ol>
+				<Trace>
+					<TraceStep state="done" title="read the failing test">
+						<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
+						names all 66 entries and their order.
+					</TraceStep>
+					<TraceStep state="done" title="measure the live list">
+						Fetched with a real Safari user agent: a plain
+						<code>curl</code> returns the bot wall, not the page.
+					</TraceStep>
+					<TraceStep state="running" title="diff against the pinned ledger">
+						two names are in the live list and not in ours.
+					</TraceStep>
+					<TraceStep state="idle" title="author the two components" />
+					<TraceStep state="error" title="mutation sweep, first attempt">
+						The sweep refused: it was pointed at a sibling worktree, so
+						another lane's uncommitted edits read as failures here.
+					</TraceStep>
+				</Trace>
 
 				<h3 class="cm-kicker">collapsible step</h3>
 				<p class="cm-head__sub">
@@ -4046,45 +4021,32 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					<code>aria-expanded</code>, not a styled <code>div</code>: a
 					disclosure that a keyboard cannot open is not a disclosure.
 				</p>
-				<ol class="cm-trace">
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<button class="cm-trace__trigger" type="button" aria-expanded="false"
-								aria-controls="trace-detail-1">
-								<span class="cm-trace__title">shadcn added code-block and trace</span>
-							</button>
-							<div class="cm-trace__body" id="trace-detail-1" hidden>
-								<p>
-									The pinned ledger cannot see this: it compares our README
-									against a list written down once, and never re-fetches.
-									That is the point of pinning &mdash; an update is a
-									deliberate act with a diff &mdash; but it means the only
-									thing that can notice an addition is a tool that reads the
-									live site.
-								</p>
-							</div>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<button class="cm-trace__trigger" type="button" aria-expanded="true"
-								aria-controls="trace-detail-2">
-								<span class="cm-trace__title">both were measured before being claimed</span>
-							</button>
-							<div class="cm-trace__body" id="trace-detail-2">
-								<p>
-									<code>code-block</code> depends on <code>button</code> and
-									<code>use-highlighted-code</code>; <code>trace</code> depends
-									on <code>collapsible</code>. Both are registry
-									<code>registry:ui</code> entries with a docs page, which is
-									what separates a component from a code sample.
-								</p>
-							</div>
-						</div>
-					</li>
-				</ol>
+				<Trace>
+					<TraceStep state="done" title="shadcn added code-block and trace" id="trace-detail-1">
+						<p>
+							The pinned ledger cannot see this: it compares our README
+							against a list written down once, and never re-fetches.
+							That is the point of pinning &mdash; an update is a
+							deliberate act with a diff &mdash; but it means the only
+							thing that can notice an addition is a tool that reads the
+							live site.
+						</p>
+					</TraceStep>
+					<TraceStep
+						state="done"
+						title="both were measured before being claimed"
+						id="trace-detail-2"
+						open
+					>
+						<p>
+							<code>code-block</code> depends on <code>button</code> and
+							<code>use-highlighted-code</code>; <code>trace</code> depends
+							on <code>collapsible</code>. Both are registry
+							<code>registry:ui</code> entries with a docs page, which is
+							what separates a component from a code sample.
+						</p>
+					</TraceStep>
+				</Trace>
 			</section>
 			)}
 
