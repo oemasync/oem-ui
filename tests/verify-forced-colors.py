@@ -160,7 +160,24 @@ READ_JS = """([probe]) => {
   const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
   const rgb = s => { const m = s.match(/[\\d.]+/g).map(Number); return m.length > 3 && m[3] === 0 ? null : m; };
-  const behind = e => { for (let n = e; n; n = n.parentElement) { const c = rgb(getComputedStyle(n).backgroundColor); if (c) return c; } return [255, 255, 255]; };
+  // A translucent fill is composited over what sits behind it. Taking the
+  // first fill and dropping its alpha read a status chip's 14% tint as its
+  // solid hue, so green text measured 1.00:1 on "green".
+  const behind = e => {
+    const layers = [];
+    for (let n = e; n; n = n.parentElement) {
+      const c = rgb(getComputedStyle(n).backgroundColor);
+      if (!c) continue;
+      layers.push(c);
+      if (c.length < 4 || c[3] >= 1) break;
+    }
+    let out = [255, 255, 255];
+    for (const c of layers.reverse()) {
+      const a = c.length > 3 ? c[3] : 1;
+      out = [0, 1, 2].map(i => c[i] * a + out[i] * (1 - a));
+    }
+    return out;
+  };
   const host = document.querySelector('[data-fc-read]');
   if (!host) return null;
   const added = [];
