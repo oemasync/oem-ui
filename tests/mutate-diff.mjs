@@ -12,9 +12,10 @@
  * worthless.
  *
  * All mutations target files the batch-34 checks read directly
- * (components.css, the showcase, the README, the runtime), so no astro
- * build is needed between mutants - which is also what keeps the cycle
- * under a minute.
+ * (components.css, the showcase, the README, the runtime, and
+ * Diff.astro - the wrapper the showcase now calls instead of
+ * hand-typing the row markup), so no astro build is needed between
+ * mutants - which is also what keeps the cycle under a minute.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -27,6 +28,7 @@ const COMP = 'src/styles/components.css';
 const SHOW = 'src/pages/[...family].astro';
 const README = 'README.md';
 const RUNTIME = 'src/js/cli-mono.js';
+const DIFF = 'src/astro/Diff.astro';
 
 const MUTATIONS = [
 	{
@@ -68,22 +70,25 @@ const MUTATIONS = [
 	},
 	{
 		// The app writes the count; the check ties it to the rows that
-		// actually collapsed.
-		name: 'the fold summary count drifts from its rows',
-		file: SHOW,
-		from: /<summary>3 unchanged<\/summary>/,
-		to: '<summary>4 unchanged</summary>',
+		// actually collapsed. Markup moved into Diff.astro, so the
+		// mutant now breaks the wrapper's OWN derivation instead of a
+		// hand-typed number - the bug class moved, the check followed.
+		name: 'the fold summary count is hardcoded, no longer derived',
+		file: DIFF,
+		from: /<summary>\{folded\.length\} \{foldLabel\}<\/summary>/,
+		to: '<summary>3 {foldLabel}</summary>',
 		expectFail: 'the fold counts unchanged rows exactly',
 		skipBuild: true,
 	},
 	{
-		// The defect the fold exists to prevent: an unchanged row
-		// rendered inline, where the reader must wade through it.
-		name: 'a same row leaks outside the fold',
-		file: SHOW,
-		from: /<h3 class="cm-kicker" style="margin-top:var\(--space-4\)">long values<\/h3>/,
-		to: '<li class="cm-diff__row" data-op="same"><span class="cm-diff__op">same</span><span class="cm-diff__val">leaked</span></li>\n				<h3 class="cm-kicker" style="margin-top:var(--space-4)">long values</h3>',
-		expectFail: 'the fold counts unchanged rows exactly',
+		// The defect the fold exists to prevent: a changed row ends up
+		// folded away with the unchanged ones (or vice versa). The
+		// wrapper's two filters are the only place this can happen now.
+		name: 'the fold filter is inverted - shown and folded rows swap',
+		file: DIFF,
+		from: /const shown = foldLabel \? rows\.filter\(\(r\) => r\.op !== 'same'\) : rows;/,
+		to: "const shown = foldLabel ? rows.filter((r) => r.op === 'same') : rows;",
+		expectFail: "Diff.astro's fold extracts exactly the same rows, never the changed ones",
 		skipBuild: true,
 	},
 	{
@@ -109,10 +114,12 @@ const MUTATIONS = [
 	{
 		// The fixture discipline: a short-only specimen proves nothing
 		// about wrapping, so shrink the long value below the floor.
+		// The markup moved into Diff.astro; the DATA stays in the
+		// showcase, so this still mutates the showcase source.
 		name: 'the long value fixture is shortened below the wrap',
 		file: SHOW,
-		from: /\/config\/rclone\/remotes\/prod-archive: <del class="cm-diff__del">rclone:securesync-legacy-prod<\/del> → <ins class="cm-diff__ins">rclone:securesync-v2-prod<\/ins>/,
-		to: 'a: <del class="cm-diff__del">x</del> → <ins class="cm-diff__ins">y</ins>',
+		from: /to: 'rclone:securesync-v2-prod',/,
+		to: "to: 'x',",
 		expectFail: 'the specimen exercises a LONG value, or the hanging indent is unproven',
 		skipBuild: true,
 	},
@@ -138,9 +145,10 @@ const MUTATIONS = [
 	},
 	{
 		// Demonstration direction: the fold class leaves the markup
-		// while its CSS remains - "defined but never rendered".
-		name: 'the fold class is dropped from the specimen markup',
-		file: SHOW,
+		// while its CSS remains - "defined but never rendered". The
+		// literal class now lives in Diff.astro, not the showcase.
+		name: 'the fold class is dropped from the wrapper markup',
+		file: DIFF,
 		from: /<li class="cm-diff__fold">/,
 		to: '<li class="diff-fold">',
 		expectFail: 'every cm-diff class is DEMONSTRATED, so none is dead CSS',
@@ -154,7 +162,9 @@ const runSuite = () => {
 };
 
 let caught = 0, missed = 0, noop = 0;
-for (const mut of MUTATIONS) {
+const RANGE = process.env.MUT_RANGE ? process.env.MUT_RANGE.split(',').map(Number) : null;
+const batch = RANGE ? MUTATIONS.slice(RANGE[0] - 1, RANGE[1]) : MUTATIONS;
+for (const mut of batch) {
 	const file = p(mut.file);
 	const orig = readFileSync(file, 'utf8');
 	const mutated = orig.replace(mut.from, mut.to);
@@ -177,6 +187,6 @@ for (const mut of MUTATIONS) {
 		writeFileSync(file, orig);
 	}
 }
-console.log(`\n${MUTATIONS.length} mutations: ${caught} caught, ${missed} missed, ${noop} no-op`);
+console.log(`\n${batch.length} mutations: ${caught} caught, ${missed} missed, ${noop} no-op`);
 if (noop) process.exit(2);
 process.exit(missed ? 1 : 0);

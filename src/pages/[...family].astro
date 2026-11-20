@@ -41,6 +41,7 @@ import Endpoint from '../astro/Endpoint.astro';
 import Param from '../astro/Param.astro';
 import Tree from '../astro/Tree.astro';
 import Callout from '../astro/Callout.astro';
+import Diff from '../astro/Diff.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -4097,49 +4098,29 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					</p>
 				</SectionHead>
 
-				<ul class="cm-diff">
-					<li class="cm-diff__row" data-op="create" aria-label="create: new field">
-						<span class="cm-diff__op">create</span>
-						<span class="cm-diff__val">new field: <code>api_key</code></span>
-					</li>
-					<li class="cm-diff__row" data-op="update" aria-label="update: url base">
-						<span class="cm-diff__op">update</span>
-						<span class="cm-diff__val">url base: <del class="cm-diff__del">http://old</del> → <ins class="cm-diff__ins">https://new</ins></span>
-					</li>
-					<li class="cm-diff__row" data-op="delete" aria-label="delete: legacy_port">
-						<span class="cm-diff__op">delete</span>
-						<span class="cm-diff__val">legacy_port</span>
-					</li>
-					<li class="cm-diff__fold">
-						<details>
-							<summary>3 unchanged</summary>
-							<ul style="margin:0;padding:0;list-style:none">
-								<li class="cm-diff__row" data-op="same" aria-label="same: log_level">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">log_level: info</span>
-								</li>
-								<li class="cm-diff__row" data-op="same" aria-label="same: bind">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">bind: 0.0.0.0</span>
-								</li>
-								<li class="cm-diff__row" data-op="same" aria-label="same: cache">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">cache: 100</span>
-								</li>
-							</ul>
-						</details>
-					</li>
-				</ul>
+				<Diff
+					rows={[
+						{ op: 'create', label: 'new field', value: 'api_key' },
+						{ op: 'update', label: 'url base', from: 'http://old', to: 'https://new' },
+						{ op: 'delete', label: 'legacy_port' },
+						{ op: 'same', label: 'log_level', value: 'info' },
+						{ op: 'same', label: 'bind', value: '0.0.0.0' },
+						{ op: 'same', label: 'cache', value: '100' },
+					]}
+					foldLabel="unchanged"
+				/>
 
 				<h3 class="cm-kicker" style="margin-top:var(--space-4)">long values</h3>
-				<ul class="cm-diff">
-					<li class="cm-diff__row" data-op="update" aria-label="update: path with long value">
-						<span class="cm-diff__op">update</span>
-						<span class="cm-diff__val">
-							/config/rclone/remotes/prod-archive: <del class="cm-diff__del">rclone:securesync-legacy-prod</del> → <ins class="cm-diff__ins">rclone:securesync-v2-prod</ins>
-						</span>
-					</li>
-				</ul>
+				<Diff
+					rows={[
+						{
+							op: 'update',
+							label: '/config/rclone/remotes/prod-archive',
+							from: 'rclone:securesync-legacy-prod',
+							to: 'rclone:securesync-v2-prod',
+						},
+					]}
+				/>
 			</section>
 			)}
 

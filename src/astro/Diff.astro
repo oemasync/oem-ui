@@ -1,0 +1,117 @@
+---
+/**
+ * oem-ui <Diff> — one row of a word-level diff list (preview-then-apply
+ * surfaces: Config Sync reconcile, profile previews).
+ *
+ * `.cm-diff` was proven in CSS and demonstrated by hand in the showcase,
+ * twice over — a four-row create/update/delete/same demo with a fold, and
+ * a second "long values" demo — the same hand-typed
+ * `<li class="cm-diff__row" data-op="…" aria-label="…">` shape retyped for
+ * every row in both. This is the wrapper a reconcile page actually calls.
+ *
+ * Every row's shown text is built from PLAIN DATA, never raw HTML, because
+ * a diff's values are exactly the kind of thing computed from live system
+ * state (a config key, a URL, a path) rather than hand-authored prose —
+ * the opposite contract from <Kbd>'s `key`, which is always a hand-written
+ * shortcut string and is the one place in this library `set:html` is safe.
+ * Astro's `{expr}` interpolation escapes every value automatically.
+ *
+ *   - `create`: `label` alone, or `label: ` + `value` wrapped in `<code>`
+ *     (a created field's name/value is a literal, so it earns the same
+ *     code treatment a parameter name gets elsewhere in the library).
+ *   - `update`: `label` + a `<del>`/`<ins>` pair built from `from`/`to`,
+ *     required TOGETHER — a value with nothing new to show is a delete,
+ *     not an update with an empty `to`.
+ *   - `delete`: `label` alone. There is nothing left to show a value for.
+ *   - `same`: `label` alone, or `label: ` + `value` as plain text — no
+ *     `<code>`, because an unchanged field carries no operator and gets
+ *     none of the operator styling a changed one does.
+ *
+ * `foldLabel` collapses every `same` row behind one trailing `<details>`
+ * fold, whose summary reads `${folded.length} ${foldLabel}` (e.g.
+ * "3 unchanged" for `foldLabel="unchanged"`); omit `foldLabel` to show
+ * `same` rows inline in their given order instead. The count is DERIVED
+ * from the rows that actually landed in the fold, never a number the
+ * caller supplies, so it can never drift from what is collapsed - the
+ * hand-typed markup this wrapper replaces could (a summary reading
+ * "3 unchanged" beside a fold that actually holds four rows), which is
+ * exactly the kind of thing the batch-34 mutation sweep existed to catch.
+ */
+interface DiffRow {
+	/** The operation this row describes. */
+	op: 'create' | 'update' | 'delete' | 'same';
+	/** The field or path name. The whole shown value on a `delete` row. */
+	label: string;
+	/** `create`/`same` only: the value, shown after `label: `. */
+	value?: string;
+	/** `update` only, required alongside `to`: the previous value. */
+	from?: string;
+	/** `update` only, required alongside `from`: the new value. */
+	to?: string;
+}
+
+interface Props {
+	/** The rows, in display order. */
+	rows: DiffRow[];
+	/**
+	 * Collapses every `same` row behind a `<details>` fold, placed
+	 * after the other rows. The summary reads `${count} ${foldLabel}`
+	 * (e.g. "unchanged" -> "3 unchanged") with the count always derived
+	 * from the rows actually folded. Omit to show `same` rows inline.
+	 */
+	foldLabel?: string;
+}
+
+const { rows, foldLabel } = Astro.props;
+
+rows.forEach((row, i) => {
+	if (row.op === 'update' && (row.from === undefined || row.to === undefined)) {
+		throw new Error(
+			`<Diff> row ${i} ("${row.label}") is op="update" but is missing from/to - both are required together, so a diff row never shows an operator with nothing to compare`,
+		);
+	}
+});
+
+const shown = foldLabel ? rows.filter((r) => r.op !== 'same') : rows;
+const folded = foldLabel ? rows.filter((r) => r.op === 'same') : [];
+---
+
+<ul class="cm-diff">
+	{shown.map((r) => (
+		<li class="cm-diff__row" data-op={r.op} aria-label={`${r.op}: ${r.label}`}>
+			<span class="cm-diff__op">{r.op}</span>
+			<span class="cm-diff__val">
+				{r.op === 'delete' ? (
+					r.label
+				) : r.op === 'update' ? (
+					<>
+						{r.label}: <del class="cm-diff__del">{r.from}</del> → <ins class="cm-diff__ins">{r.to}</ins>
+					</>
+				) : r.value === undefined ? (
+					r.label
+				) : r.op === 'create' ? (
+					<>
+						{r.label}: <code>{r.value}</code>
+					</>
+				) : (
+					`${r.label}: ${r.value}`
+				)}
+			</span>
+		</li>
+	))}
+	{foldLabel && folded.length > 0 && (
+		<li class="cm-diff__fold">
+			<details>
+				<summary>{folded.length} {foldLabel}</summary>
+				<ul style="margin:0;padding:0;list-style:none">
+					{folded.map((r) => (
+						<li class="cm-diff__row" data-op={r.op} aria-label={`${r.op}: ${r.label}`}>
+							<span class="cm-diff__op">{r.op}</span>
+							<span class="cm-diff__val">{r.value === undefined ? r.label : `${r.label}: ${r.value}`}</span>
+						</li>
+					))}
+				</ul>
+			</details>
+		</li>
+	)}
+</ul>

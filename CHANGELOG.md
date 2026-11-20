@@ -1,3 +1,56 @@
+## Unreleased - `<Diff>`: the word-level diff row wrapper
+
+`.cm-diff` shipped with CSS, tests and a mutation sweep (batch 34), but no
+Astro wrapper - the showcase's diff section hand-typed every
+`<li class="cm-diff__row" data-op="…" aria-label="…">` twice over, once for
+the create/update/delete/same demo with its fold and once for the "long
+values" demo. The same risk that moved every other hand-built row behind a
+wrapper applied here too, plus a sharper one: a hand-typed fold summary's
+"N unchanged" count can drift from the rows actually inside it with nothing
+to catch it, which is exactly what batch 34's own mutation sweep was built
+to prove could happen.
+
+- `src/astro/Diff.astro` - a new Astro component. Each row's shape depends
+  on its `op`: `create`/`same` take an optional `value` (shown after
+  `label: `, wrapped in `<code>` for `create` since a created field's value
+  is a literal, plain text for `same` since an unchanged field carries no
+  operator styling); `update` requires `from` AND `to` TOGETHER (throws
+  otherwise - a value with nothing new to show is a `delete`, not an
+  update with an empty `to`) and renders as a real `<del>`/`<ins>` pair;
+  `delete` renders `label` alone. Every value is interpolated as plain
+  data, never `set:html` - a diff's values are computed from live system
+  state (a config key, a URL, a path), not hand-authored prose, which is
+  the opposite contract from `<Kbd>`'s `key`. `foldLabel` collapses every
+  `same` row behind one `<details>` fold whose summary reads
+  `${folded.length} ${foldLabel}` - the count is DERIVED from the rows
+  that actually landed in the fold, never a number the caller supplies,
+  so the drift batch 34 guarded against by hand is now impossible by
+  construction. Omitting `foldLabel` shows `same` rows inline instead.
+- `src/pages/[...family].astro` - both hand-typed `.cm-diff` demos now
+  render through `<Diff>`, with identical content - the built page ships
+  byte-identical markup (proven by a check that reads the rendered HTML),
+  except the long-values demo's aria-label is now the field's own path
+  (`update: /config/rclone/remotes/prod-archive`) rather than the old
+  hand-written paraphrase (`update: path with long value`), matching the
+  formula every other row already used.
+- `README.md` - the diff-rows section gains the wrapper's usage example
+  and the reasoning for the derived fold count and the no-`set:html` rule.
+- `tests/run.mjs` - six new checks for the wrapper (the from/to guard, the
+  shared aria-label template, the no-raw-HTML rule, the fold's two
+  filters, the per-op render shape, the showcase import and call count)
+  plus a rewrite of four pre-existing batch-34 checks that read literal
+  `.cm-diff` markup out of the showcase and had to be repointed at
+  `Diff.astro` (where the literal markup now lives) or at the showcase's
+  row DATA (where the hand-typed HTML used to be).
+- `tests/mutate-diff.mjs` - four of its twelve mutants retargeted from the
+  showcase's now-gone hand-typed markup to the wrapper's own logic (the
+  fold count derivation, the fold's two filters, the long-value fixture,
+  the fold class); all twelve still caught (12/12).
+- `tests/mutate-diff-astro.mjs` - eight new mutants for the wrapper itself
+  (the throw guard, the aria-label, a `set:html` regression, each op's
+  render shape, the showcase import, the long-values specimen), all eight
+  caught (8/8). 20/20 across both sweeps, 0 no-ops, 0 missed.
+
 ## Unreleased - `<Callout>`: the in-prose admonition wrapper
 
 `.cm-callout` shipped with CSS, tests and a mutation sweep, but no Astro
