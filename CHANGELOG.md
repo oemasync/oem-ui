@@ -1,3 +1,311 @@
+## Unreleased - one command runs the browser harnesses
+
+The WebKit harnesses in `tests/*.py` each found their page their own way (a
+LAN address, a fixed port, `BASE_URL`, or nothing), so running them meant
+starting a preview by hand and trusting that each one measured it.
+
+- `scripts/run-browser-harnesses.mjs` - new, `npm run test:browser`. Builds,
+  serves this checkout's `dist/` on a free loopback port (with range
+  requests, for the video specimens), passes that URL as `OEM_UI_URL` to
+  every listed harness, and exits non-zero if any fails. `--no-build` reuses
+  `dist/`; naming harnesses runs only those. Python comes from `OEM_UI_PY`.
+- `tests/browser-harnesses.txt` - new. The harnesses the runner runs. A
+  harness is listed only once it reads `OEM_UI_URL`, so nothing on the list
+  can fall back to measuring another server's build. Seven to start.
+- `AGENTS.md` - the verify section uses the runner.
+
+CI still runs build and `npm test` only.
+
+## Unreleased - charts no longer stall `init()`
+
+In WebKit on the showcase, `init()` spent 11.3s in `cmInitCharts`. That is
+most of a DOMContentLoaded that took 18 to 25s, long enough that every
+browser harness with a 30s `goto` timed out on a loaded host. The chart build
+itself was about 1ms. The time went into `chDir()`: a chart with no `dir` of
+its own asks `getComputedStyle()` for its direction while it renders, and
+asked right after the previous chart wrote its markup, that read waited on a
+style recalc of the whole document (8k nodes), about 700ms per cartesian or
+pie chart.
+
+- `src/js/cli-mono.js` - `cmInitCharts` reads every chart's width and
+  rendered direction first (`chReadDir`), then renders them all. The
+  direction reaches `chConfig` as an explicit `ltr`/`rtl`, so `chDir` returns
+  before it touches style. A chart's own `dir` still wins. The
+  ResizeObserver re-render also reads both before it writes.
+- `tests/run.mjs` - one check that pins the read-then-render order and the
+  path the direction takes. Four mutants each fail it.
+- `tests/verify-chart-inherited-dir.py` - new. The path this moved was not
+  tested anywhere: the showcase's RTL chart carries `dir="rtl"` itself. The
+  harness clones the LTR chart, with no `dir`, into an RTL wrapper and an LTR
+  one, and requires the first to mirror and the second not to, at init and
+  after a resize. It passes on the commit before this change too. Two
+  mutants (inherited RTL ignored at init, and on resize) each fail it.
+
+Measured at the same host load: `cmInitCharts` 11,300ms to 28ms, all of
+`init()` 12.7 to 17.4s down to 3.2 to 4.9s, WebKit DOMContentLoaded 18.6 to
+25.7s down to 6.1 to 12.0s. Four binders still cost about one forced recalc
+each (scroller, scroll spy, header, hovercard clamp).
+
+A chart whose container narrowed raised "ResizeObserver loop completed with
+undelivered notifications" as a window error, every run in WebKit, on this
+branch and on the commit before it. The re-render ran inside the observer
+callback and resized the plot it was observing in the same frame. It now
+waits for the next animation frame, and a burst of notifications queues one
+paint. `tests/run.mjs` pins that. Three mutants (paint back in the callback,
+no coalescing, no requestAnimationFrame) each fail it.
+
+## Unreleased - a picked calendar day is selected on its cell
+
+The runtime and the showcase wrote `aria-selected="true"` on the day's
+`<button>`. ARIA allows `aria-selected` on a `gridcell` and not on a button,
+so every picked day was an invalid attribute (axe `aria-allowed-attr`,
+critical) that a screen reader is free to ignore. The state now sits on the
+`<td role="gridcell">` around the button. The button still takes focus and
+the click.
+
+- `src/js/cli-mono.js` - `calRender` writes the selection on the cell.
+- `src/styles/components.css` - the six selectors that painted a picked day
+  (fill, hover/focus, print, forced colors) key off
+  `[aria-selected='true'] > .cm-cal__day`.
+- `src/pages/[...family].astro` - the five statically picked days in the
+  three specimens carry the state on their cell.
+- `README.md` - the hand-written markup for a picked day.
+- `tests/run.mjs` - one check over the renderer, the showcase and the CSS.
+  Three mutants (runtime, CSS, showcase back on the button) each fail it by
+  its own message.
+- `tests/verify-calendar.py`, `verify-calendar-multiple.py`,
+  `verify-datepicker.py`, `verify-forced-colors.py`, `mutate-calendar.py`,
+  `measure-print-webkit.py`, `screenshot-cal-cells.py` read the state off the
+  cell. The three verify harnesses also take `OEM_UI_URL`, and
+  `mutate-calendar.py` now mutates the checkout it lives in and passes the URL
+  to its harness. It had a fixed `/root/projects/oem-ui` path and let the
+  harness fall back to a LAN default, so it could mutate one tree and measure
+  another.
+
+`tests/verify-calendar.py` had also been failing since November 1, for a
+reason unrelated to this change. The specimens show october 2026 and today
+comes from the clock, so outside that month there is no today, and the
+"today sits where the markup said" check failed. The ring-colour check next
+to it passed on `None`. The harness now pins the page clock to 2026-10-20
+(`page.clock.set_fixed_time`, timers still run), expects exactly that day as
+today, and requires a measured ring. 34 passed, 0 failed.
+
+A consumer with a hand-written static calendar has to move the attribute too.
+A runtime-rendered calendar needs nothing.
+
+## Unreleased - `<Back>` always has a name
+
+`<Back href="…" />` with no `label` and no slot rendered a link whose only
+content was the arrow, and the arrow is `aria-hidden`. A screen reader had
+nothing to say for it, and axe reports it as a link with no discernible
+text. The showcase rendered exactly that as one of its two specimens.
+
+- `src/astro/Back.astro` - with neither a label nor a slot, the link says
+  "back". The label prop and the default slot behave as before.
+- `src/pages/[...family].astro` - a third specimen names the link through
+  the default slot, which no specimen did, so that path was unproven.
+- `tests/run.mjs` - one check over the built page: every `a.cm-back` has a
+  name once the hidden arrow is set aside, and all three ways to give it one
+  are rendered. It failed naming the bare specimen before the change.
+
+The bare specimen in the showcase now reads "← back" where it read "←".
+axe `link-name` on the built pages: 1 node before, 0 after.
+
+## Unreleased - the dropzone has a focus ring
+
+`.cm-dropzone:focus-visible` read `outline: var(--focus)`. That is the
+shorthand, so it reset `outline-style` to `none`, and being more specific
+than the bare `:focus-visible` rule it also removed the ring that rule
+draws. The zone is `role="button" tabindex="0"` because a keyboard user
+cannot drag, so the one user it was made focusable for could not see where
+focus was. Measured in Chromium: a focused dropzone changed 0 pixels, and a
+text field on the same page changed 14,080.
+
+- `src/styles/components.css` - `outline-color: var(--focus)`. Width and
+  style come from the base rule, so the zone gets the same 1px ring as
+  everything else, and 2px on a coarse pointer.
+- `tests/run.mjs` - one check over both sheets: an `outline` shorthand must
+  carry a line style, or be `none`. It failed naming this rule, the only
+  one in either sheet.
+
+Measured after: the focused zone changes 2,192 pixels, and all 621
+focusable elements on the showcase draw a ring, in both themes.
+
+## Unreleased - the focus ring clears 3:1 in the dark theme
+
+Measured in Chromium on the built showcase, dark theme: 94 of 616 focus
+rings were under the 3:1 that WCAG 1.4.11 asks of a focus indicator, at
+2.60:1 to 2.96:1. Every text, email, password and search field was among
+them, with every checkbox, radio, textarea and `<summary>`. Links and
+buttons were fine, and so was the whole light theme.
+
+Two causes, one in each layer. `--focus` was an alias of `--accent-dim`, a
+decorative tone (a blockquote rule, a tag border) that is `#5c5c5c` in the
+dark theme. And `base.css` did not use `--focus` at all: the bare
+`:focus-visible` rule painted with `--accent-dim` directly, so fixing the
+token alone would have fixed seven component rules and missed the one that
+draws most rings.
+
+- `src/styles/tokens.css` - `--focus` is an alias of `--ink-faint`. That
+  tier is already held to 4.5:1 on every surface in both themes, so the
+  ring inherits a guarantee. Dark rings go from `#5c5c5c` to `#8b8b8b`;
+  light rings from `#666666` to `#6a6a6a`, which nobody will see. It is
+  still the dimmest ink tier, and links and buttons still brighten theirs
+  to `--ink-dim`.
+- `src/styles/base.css` - the bare `:focus-visible` rule and its
+  coarse-pointer twin paint with `var(--focus)`.
+- `tests/run.mjs` - three checks: the ring's resolved colour against all
+  ten surface tokens at 3:1 in each theme, and that both bare
+  `:focus-visible` rules paint with `--focus`. Red first: the dark check
+  failed at `#5c5c5c on --bg = 2.96:1`, and the base check on
+  `var(--accent-dim)`.
+
+Measured after, same probe: 0 of 616 under 3:1 in either theme.
+
+## Unreleased - `init()` binds once, and lets go of what it bound
+
+`init()` runs again on every `astro:page-load`, and a SPA calls it after a
+route change. The README said it was idempotent. Measured on the showcase,
+in WebKit and Chromium alike, it was not: each extra call added 7 listeners
+to `window` (4 scroll, 3 resize) and constructed one more `ResizeObserver`.
+And after the body was replaced, the way a client-side navigation replaces
+it, every long-lived listener bound for the page that left was still
+attached: 35 resize and 23 scroll listeners on `window`, 3 click and 1
+keydown on `document`, each one holding its old element.
+
+No project in the fleet re-runs `init()` today, so nobody has met this yet.
+It is the first thing a consumer with Astro's client router would meet.
+
+- `src/js/cli-mono.js` - four binders had no guard and now bind once per
+  element: the header, the scroll spy, the navigation menu's section spy and
+  the measure readout. The scroll spy re-reads its sections on a later call
+  and binds nothing, so a nav that survives a navigation stops highlighting
+  against the previous page. The navigation menu no longer forgets the bars
+  outside the subtree it was called on.
+- `src/js/cli-mono.js` - `cmWhileConnected(owner, target, type, fn, opts)`.
+  Every listener the runtime attaches to `window`, `document` or a media
+  query on behalf of one element goes through it, 19 call sites. `init()`
+  first drops each one whose owner has left the document, and one that fires
+  with its owner gone removes itself. Both are needed: a media query's
+  `change` may never fire again, and it was the one listener still attached
+  after a body swap when only the second existed.
+- `tests/verify-init-idempotent.py` - new. Counts long-lived listeners,
+  observers and intervals from before the page's own scripts run. Three more
+  `init()` calls and an `astro:page-load` must add none; a full body swap
+  followed by `init()` must end on the boot count, with a control that the
+  new header is live. 8 checks failed on the old runtime, 4 in each engine;
+  18 of 18 now.
+- `tests/mutate-init-idempotent.py` - new. Drops each guard, each of the two
+  ways out, and puts each of the 19 call sites back to a bare
+  `addEventListener`, in memory: 25 mutants, 22 killed by a named check. The
+  other 3 cannot be reached in an engine (two are fallbacks for a browser
+  with no `ResizeObserver`, one is hidden by the sweep) and each is killed
+  by `npm test` instead.
+- `tests/run.mjs` - two checks, because this file is what CI runs. One
+  drives the real runtime through `initProgress` against a window that
+  records what is attached and what is taken back off. The other fails by
+  name when a binder attaches a scroll or resize listener to `window`
+  without going through `cmWhileConnected`.
+- `README.md` - the JS API section says what a repeated `init()` does.
+
+Checked on the new build: the 11 built pages load in WebKit and Chromium
+with no page error and no failed request, and on each the header still
+reacts to scroll after a second `init()`.
+
+## Unreleased - forced colors keeps every state and every drawn mark
+
+Windows High Contrast, and every other `forced-colors: active` mode,
+repaints each `background-color` to the system canvas and drops each
+`box-shadow`. This library says "selected" with a fill and draws a meter as
+a filled box, so in that mode both said nothing. Measured on the showcase in
+Chromium with forced colors active: 86 elements whose paint is the whole of
+their information rendered as nothing (every meter and progress fill, the
+reading bar, the burger's bars), and the selected tab, the pressed segment,
+the current pager link, the selected table row, the selected calendar day
+and a checked radio were the same pixels as their unselected neighbours.
+
+- `src/styles/components.css` - one `@media (forced-colors: active)` block
+  at the end of the sheet, in system colours, because those are the only
+  colours the mode keeps: `CanvasText` for 14 drawn marks, `Highlight` with
+  `HighlightText` for 10 selected surfaces, the same pair for whatever sits
+  on a selected surface (a `:where()` rule, so a meter inside a selected row
+  keeps its fill), and an outline that frames the switch track. The colour
+  rules carry `!important` for the reason the reduced-motion block does. The
+  mode forces whichever declaration wins the cascade, so a longer normal
+  selector does not lose to the block, it wins and is repainted to nothing:
+  without the flag the selected list row stayed invisible, and the selected
+  calendar day lost its fill to its own hover rule while keeping the
+  selection text colour.
+- `src/styles/base.css` - a checked radio takes `Highlight`. Its disc and
+  punch-out were a background and a box-shadow. The checkbox needed nothing:
+  its tick is a border.
+- `tests/verify-forced-colors.py` - new. 98 cases in each of two system
+  schemes. It flips each state on a live specimen and requires the picture
+  to change, at rest, under the pointer and with keyboard focus; hides each
+  mark and requires the same; and measures every piece of text on a selected
+  surface against what is behind it, as rendered and again with a coloured
+  span and a `<code>` added. Each case is refused unless it also changes the
+  picture with forced colors off, and unless two pictures of the untouched
+  specimen agree. 10 of 50 passed on the first draft against the old sheet;
+  196 of 196 now.
+- `tests/mutate-forced-colors.py` - new. Removes every selector, every
+  declaration and every `!important` from the forced-colors blocks, one at a
+  time, in memory, and requires a named check to fail for each: 49 mutants,
+  49 killed. Three survived the first sweep and each was a hole in the
+  harness, not in the sheet: one burger bar still passed with the other
+  gone, and text contrast was only measured at rest.
+- `tests/run.mjs` - two palette scans ("colour must come from a token") now
+  read the sheet without its forced-colors blocks, since a token there
+  paints nothing, and a new check holds those blocks to system colours only.
+- `README.md` - the Accessibility section documents the mode and what it
+  does not cover.
+
+Not covered, and said so in the block: a chart tells its series apart by
+grey level alone, so every series is one colour in this mode, and the
+slider's filled portion is a gradient, which the mode also drops.
+
+Nothing changes outside forced colors: the built stylesheet differs only by
+the two added media blocks.
+
+## Unreleased - the video specimen ships its clip and poster
+
+The showcase's video section loads `/video-specimen.mp4` with
+`/video-poster.svg` as its poster, and neither file was ever committed.
+Both answered 404 on ui.mrx.sh from the day the section landed, so the one
+specimen meant to show a frame with a clip in it showed an empty frame.
+
+- `public/video-specimen.mp4` - a 2 second, 640x360, 12 fps greyscale
+  sweep (H.264 constrained baseline, no audio, 5.9 KB).
+- `public/video-poster.svg` - the matching first frame, 461 bytes.
+- `tests/run.mjs` - one new check reads the BUILT pages and requires every
+  root-relative file an element loads (`src`, `poster`, a `<link href>`) to
+  exist in `dist`. Anchors are not scanned: the header-link specimens point
+  at pages that do not exist on purpose. Proven red first: before the two
+  files existed it failed naming exactly them.
+
+Measured on the built page at 390px: the clip reaches `readyState 4` at
+640x360 in WebKit and Chromium, no request fails, the page does not widen.
+
+## Unreleased - light `--ink-faint` clears AA on every surface
+
+Light `--ink-faint` was `#6d6d6d`, which reads 4.38:1 on `--panel-nested`
+(`#ececec`) and on `--sidebar-accent` (the same value). axe measured it on
+the built showcase in the light theme: 29 nodes across six pages, on
+`.cm-tile__note`, `.cm-card__sub`, `.cm-head__sub`, `.cm-row__meta` and the
+others that put the faint tier on a nested panel. Dark was never affected.
+
+- `src/styles/tokens.css` - light `--ink-faint` is `#6a6a6a` in all three
+  places it is declared (the document theme, the scoped `[data-cm-theme]`
+  theme and the print palette). 4.58:1 on `--panel-nested`, 4.75:1 or
+  better on the other nine surfaces. Three levels of grey; no layout moves.
+- `tests/run.mjs` - the check that let this through was titled "passes
+  WCAG AA on every surface" and graded three hex literals per theme. It now
+  reads ten surface tokens BY NAME from each theme block, so a re-tuned
+  surface is re-graded, and a second check fails when a theme declares a
+  surface token the list does not name. Proven red first: with the old
+  token the suite fails on exactly `--ink-faint #6d6d6d on --panel-nested
+  #ececec = 4.38:1`.
+- `src/styles/components.css` - one comment quoted the old value's ratio.
 ## Unreleased - `<Callout>`: the in-prose admonition wrapper
 
 `.cm-callout` shipped with CSS, tests and a mutation sweep, but no Astro

@@ -2517,7 +2517,12 @@ code path for a thing the platform gives away.
 
 Selection reports itself three ways - `aria-selected`, the `data-*` the
 markup reads back, and the inverted cell the eye sees - because those three
-disagreeing is how a dead calendar and a live one look identical. The
+disagreeing is how a dead calendar and a live one look identical.
+`aria-selected` sits on the **`<td role="gridcell">`**, not on the button:
+ARIA allows it on a gridcell and not on a button, so a button that carries
+it is an invalid attribute a screen reader may ignore. A hand-written day is
+`<td role="gridcell" aria-selected="true"><button class="cm-cal__day" ...>`,
+and the CSS paints it through `[aria-selected='true'] > .cm-cal__day`. The
 range has exactly three transitions, the ones DayPicker has: a pick on a
 COMPLETE range starts a new one (the finished range is not editable), a
 pick after an open start stretches the end, and a pick BEFORE that start
@@ -4736,6 +4741,20 @@ cliMono.toggleTheme();
 cliMono.init(rootEl);    // re-bind after client-side navigation
 ```
 
+`init()` can be called as often as a page likes. It binds each element once,
+and it lets go of what it bound for elements that have since left the
+document: a listener on `window`, `document` or a media query that was
+attached on behalf of an element is removed the next time `init()` runs, or
+the first time it fires, whichever comes first. So a client-side navigation
+that swaps the body and calls `init()` ends with the same number of
+listeners it started with.
+
+```bash
+npm run build && npm run preview &
+OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/verify-init-idempotent.py
+OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/mutate-init-idempotent.py
+```
+
 ## Astro components
 
 Copy from `src/astro/` and set your identity in `config.ts`:
@@ -4813,9 +4832,33 @@ props, so one library serves many projects.
   on, in both themes. The test suite computes this from the real hex values,
   so a future tweak that breaks it fails `npm test`.
 - Focus is always visible. The house style is a dim 1px outline that
-  brightens on interaction; never remove it without replacing it.
+  brightens on interaction; never remove it without replacing it. The ring
+  is `--focus`, an alias of `--ink-faint`, so it clears 3:1 against every
+  surface in both themes and `npm test` computes that from the token values.
 - `prefers-reduced-motion` disables the cursor blink and all transitions.
 - Decorative glyphs (`▸`, `●`, the cursor) are `aria-hidden`.
+- **Forced colors** (Windows High Contrast) keeps every state and every
+  drawn mark. That mode repaints each background to the system canvas and
+  drops each box-shadow, which is how this library says "selected" and how
+  it draws a meter. One block at the end of `components.css` answers it
+  with system colours: `CanvasText` for a mark that is drawn (a meter or
+  progress fill, the reading bar, the burger's bars), `Highlight` and
+  `HighlightText` for the one that is selected (tab, segment, pager link,
+  calendar day, list row, table row). Text and chips on a selected surface
+  take the same pair. Not covered: a chart's series are told apart by grey
+  level alone, so they are one colour in this mode, and the slider's filled
+  portion is a gradient, which the mode drops.
+
+  ```bash
+  npm run build && { npm run preview & }
+  OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/verify-forced-colors.py
+  OEM_UI_URL=http://127.0.0.1:4321/ python3 tests/mutate-forced-colors.py
+  ```
+
+  The first flips each state on a live specimen and requires the picture
+  to change, and measures every piece of text on a selected surface against
+  what is behind it. The second removes each rule in turn and requires a
+  named check to fail.
 
 ### The `hidden` attribute
 

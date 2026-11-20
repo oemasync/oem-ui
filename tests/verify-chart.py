@@ -27,11 +27,12 @@ tick label, the bar count with the category count, and the slice
 angles with the values they are supposed to encode.
 """
 import re
+import os
 import sys
 from playwright.sync_api import sync_playwright
 from harness_wait import boot_timeout
 
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:4471/'
+URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('OEM_UI_URL', 'http://127.0.0.1:4471/')
 WIDTHS = (320, 360, 390, 402, 768, 1280)
 
 # Playwright's DEFAULT navigation ceiling is 30s, and every goto below

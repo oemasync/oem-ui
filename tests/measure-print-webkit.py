@@ -60,7 +60,7 @@ SCROLLERS = ['.cm-scrollarea', '.cm-scroller', '.cm-table-wrap',
              '.cm-code--scroll', '.cm-typeset-scroll', '.cm-term__body',
              '.cm-codebar pre', 'pre.cm-code']
 EXACT = ['.cm-btn--primary', '.cm-term__jump-tail', '.cm-bubble',
-         '.cm-cal__day[aria-selected="true"]']
+         '[aria-selected="true"] > .cm-cal__day']
 
 READ = r"""() => {
   const cs = (el) => getComputedStyle(el);

@@ -1,10 +1,11 @@
 #!/root/.venvs/mau/bin/python
 """WebKit proof for batch 13: the date picker (composition over the
 existing popover + calendar machinery) and the scroll area."""
+import os
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
+URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('OEM_UI_URL', 'http://192.168.1.68:4321/')
 results = []
 
 
@@ -101,7 +102,7 @@ with sync_playwright() as pw:
     page.wait_for_timeout(150)
     persisted = page.evaluate("""() => {
         const cal = document.querySelector('#dp-panel [data-cm-cal]');
-        const cell = cal.querySelector('[aria-selected="true"]');
+        const cell = cal.querySelector('[aria-selected="true"] > .cm-cal__day');
         return {
             open: document.getElementById('dp-panel').matches(':popover-open'),
             sel: cal.getAttribute('data-cm-cal-selected'),
