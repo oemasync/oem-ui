@@ -1,3 +1,41 @@
+## Unreleased - status colour is on by default
+
+Green is good, yellow is a warning, red is bad, blue is a notice. The four
+hues existed since the opt-in release, but only behind `data-cm-chroma`
+and only on chips, alerts, callouts, dots, stats and meters. Every other
+state the library names stayed grey, and the terminal log levels were the
+only colour on a default page: two literal hexes (`#f59e0b`, `#ef4444`)
+that broke the token rule and ignored both themes.
+
+- `src/styles/components.css` - the setters are now `:where(...)` with no
+  gate, so the hue is on everywhere. `data-cm-chroma="off"` on any element
+  resets `--tone` for it and everything inside it, and every reader falls
+  back to the grey it had before. The bare `data-cm-chroma` attribute still
+  works and changes nothing.
+- Newly coloured: toasts (edge and mark), status lines, tiles, status
+  codes, `DELETE` method badges, danger buttons, bubbles and menu items,
+  field errors, invalid `.cm-code` fields, dropzone and attachment errors,
+  done attachments, done and failed trace steps, diff create and delete
+  rows, and the info, warn and error log lines (now from tokens, so they
+  follow the theme and print).
+- Every glyph, underline, strike and double rule stays. A hue is the second
+  channel, never the only one.
+- `tests/run.mjs` - `STATE_HUES` pins 30 state rules to their hue and their
+  grey fallback; a new check refuses a literal hue anywhere in
+  `components.css`. The checks that pinned "ink, never a hue" on the
+  invalid field, the dropzone, the `DELETE` badge and the attachment now
+  pin the tone over the same ink. 916 checks.
+- `tests/mutate-chroma.mjs` - the old gate mutant had not matched since the
+  callout joined the setters (a no-op nobody saw); replaced by mutants of
+  the new switch and the new map.
+- `README.md` "Status colour" and the surfaces showcase: the meaning of each
+  hue, the full list of what takes it, and a default column beside a
+  `data-cm-chroma="off"` column of the same markup.
+- `AGENTS.md` rule 11: how a new state gets its hue.
+
+For consumers: this changes how a page looks on the next vendor sync. Put
+`data-cm-chroma="off"` on `<html>` to keep the grey.
+
 ## Unreleased - one command runs the browser harnesses
 
 The WebKit harnesses in `tests/*.py` each found their page their own way (a

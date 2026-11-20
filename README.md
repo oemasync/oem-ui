@@ -3742,20 +3742,16 @@ the token.
 
 ## Status colour
 
-The palette is grey, and it stays grey until a page asks for more. The
-hue is opt-in: put `data-cm-chroma` on `<html>`, or on any subtree, and
-the four severities the library already has pick up a colour.
+Green is good, yellow is a warning, red is bad, blue is a notice. Every
+component that names a state already has a glyph or a word for it, and
+it now also takes that state's hue, in both themes. It is on by default.
 
-```html
-<html data-cm-chroma>
-```
-
-| severity | token | dark | light |
-| --- | --- | --- | --- |
-| ok | `--chroma-ok` | `#4ade80` | `#166534` |
-| warn | `--chroma-warn` | `#facc15` | `#854d0e` |
-| err | `--chroma-err` | `#ff7b72` | `#a4161a` |
-| info | `--chroma-info` | `#79b8ff` | `#1d4ed8` |
+| severity | means | token | dark | light |
+| --- | --- | --- | --- | --- |
+| ok | good, passing, done, created | `--chroma-ok` | `#4ade80` | `#166534` |
+| warn | warning, degraded, pending | `--chroma-warn` | `#facc15` | `#854d0e` |
+| err | bad, failing, invalid, destructive, deleted | `--chroma-err` | `#ff7b72` | `#a4161a` |
+| info | a notice, queued, in review | `--chroma-info` | `#79b8ff` | `#1d4ed8` |
 
 Each one also has a `-soft` (the tint behind a chip) and a `-line` (the
 hairline around it). They live in `tokens.css` beside the greys, in both
@@ -3763,27 +3759,48 @@ themes, in the `[data-cm-theme]` blocks, and in the print block, which
 uses the light set because the dark-theme green is 1.74:1 on white.
 Retune them the way you would retune any token.
 
+To put a page, or one part of it, back in grey:
+
+```html
+<html data-cm-chroma="off">
+```
+
+`data-cm-chroma="off"` works on any element and covers everything inside
+it. Each rule below is written `var(--tone, <grey>)`, and the grey is the
+one the library used before colour was on, so an "off" subtree renders
+exactly as it used to. The bare `data-cm-chroma` attribute from the
+opt-in release still works and no longer changes anything.
+
 What takes the hue:
 
-| markup | with `data-cm-chroma` |
+| markup | what turns colour |
 | --- | --- |
 | `.cm-chip--ok` `--warn` `--err` `--info` | text, glyph, tint and hairline |
-| `.cm-alert--ok` `--warn` `--err` `--info` | the left edge and the mark. The title and the text stay ink |
 | `.cm-chip.cm-tone--ok` `cm-tone--warn` `cm-tone--err` `cm-tone--info` | the same chip colours without a glyph, for a chip whose word already is the state ("in progress") |
+| `.cm-alert--*`, `.cm-callout--*` | the left edge and the mark. The title and the text stay ink |
+| `.cm-toast--ok` `--warn` `--err` `--info` | the left edge and the mark |
+| `.cm-status--ok` `--warn` `--err` | the glyph before the value |
+| `.cm-tile--warn` `--err` | the label glyph and the value's underline |
+| `.cm-status-code--ok` `--warn` `--err` | the code |
+| `.cm-method--delete` | the method name (the underline stays) |
+| `.cm-btn--danger`, `.cm-bubble--danger` | the double rule, and the button's hover fill |
+| `.cm-dropdown__item--danger` | the label and its icon |
+| `.cm-field__error`, `.cm-code[aria-invalid='true']` | the message, and the invalid field's edge |
+| `.cm-dropzone--err`, `.cm-attach--error`, `.cm-attach--done` | the edge (error: the double rule; done: the media box) |
+| `.cm-trace__item.is-done`, `.is-error` | the filled step marker |
+| `.cm-diff__row[data-op='create']`, `[data-op='delete']` | the `+` / `−` and the underline / strike |
+| `.cm-term__line--info` `--warn` `--error` | the log-level rule |
 | `.cm-dot.cm-tone--*` | a filled square in the hue |
 | `.cm-stat.cm-tone--*` | the tile's top edge |
 | `.cm-meter.cm-tone--*` | the fill |
 | `.cm-meter__seg.cm-tone--*` | one share of a stacked meter |
 
-Without the attribute every row above renders in the grey it always
-had. That is checked, not assumed: each rule is written
-`var(--tone, <grey>)`, and the suite compares every fallback with the
-rule it shadows.
-
 **A hue is never the state alone.** It sits on top of a glyph or a
 word. `.cm-tone--*` on a bare element does nothing, on purpose, because
 a colour with no other cue says nothing in greyscale, on a one-ink
-printout, or to a reader who cannot tell red from green.
+printout, or to a reader who cannot tell red from green. In Windows High
+Contrast the hues give way to system colours, and the glyphs and rules
+still carry every state.
 
 Contrast, lowest case per hue, computed by the suite from the token
 values (4.5:1 is the floor):
@@ -3792,6 +3809,10 @@ values (4.5:1 is the floor):
 | --- | --- | --- |
 | dark ok / warn / err / info | 9.13 / 10.39 / 6.31 / 7.66 | 6.78 / 7.44 / 5.04 / 5.82 |
 | light ok / warn / err / info | 6.04 / 5.80 / 6.56 / 5.67 | 5.25 / 5.04 / 5.55 / 4.89 |
+
+A filled marker (a done trace step, the danger button on hover) prints
+`--bg` on the hue, which is the same pair the other way round, so it
+holds the same ratio.
 
 The tint goes only behind text set in the same hue. Grey text on a tint
 does not hold (`--ink-dim` on the dark ok tint is 4.3:1), which is why
