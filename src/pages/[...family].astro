@@ -5934,6 +5934,67 @@ inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-
 							</div>
 						</li></template>
 					<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ action</button>
+				<h3 class="cm-kicker">dense workbench</h3>
+				<p class="cm-head__sub">
+					<code>.cm-dense</code> is a scope: every field, select, textarea and
+					button inside it drops the tap floor on a fine pointer, so a tool
+					palette or an inspector fits its controls on one screen. On touch the
+					library's sizes stay.
+				</p>
+				<div class="cm-cols">
+					<div class="cm-field">
+						<span class="cm-field__label">default density</span>
+						<select aria-label="terrain, default density"><option>terrain.flagstone</option><option>terrain.brine_pool</option></select>
+						<input type="text" value="monster.saltglass_thrower" aria-label="monster, default density" />
+						<button type="button" class="cm-btn">place</button>
+					</div>
+					<div class="cm-field cm-dense" id="dense-demo">
+						<span class="cm-field__label">inside .cm-dense</span>
+						<select aria-label="terrain, dense"><option>terrain.flagstone</option><option>terrain.brine_pool</option></select>
+						<input type="text" value="monster.saltglass_thrower" aria-label="monster, dense" />
+						<button type="button" class="cm-btn">place</button>
+					</div>
+				</div>
+
+				<h3 class="cm-kicker">property list</h3>
+				<p class="cm-head__sub">
+					A record of any shape edited in place: key, control, tools; a field
+					that holds a record or a list folds open into another property list,
+					marked by a rule down the side. The key never truncates; the peek
+					beside a folded group does.
+				</p>
+				<div class="cm-props cm-dense" id="props-demo">
+					<div class="cm-props__row">
+						<span class="cm-props__key">key</span>
+						<div class="cm-props__value"><input type="text" value="scenario.lantern_wharf" aria-label="key" /></div>
+						<span class="cm-props__tools"></span>
+					</div>
+					<div class="cm-props__row">
+						<span class="cm-props__key">starting_room</span>
+						<div class="cm-props__value"><input type="number" value="0" aria-label="starting room" /></div>
+						<span class="cm-props__tools"><button type="button" class="cm-icon-btn cm-icon-btn--bare" aria-label="remove starting_room">&times;</button></span>
+					</div>
+					<details class="cm-props__group" open>
+						<summary class="cm-props__summary"><span class="cm-props__key">goals</span><span class="cm-props__peek">(requirement: Any, conditions: [FigureDies(Objective("objective.lantern_wharf.beacon"))])</span></summary>
+						<div class="cm-props">
+							<div class="cm-props__row">
+								<span class="cm-props__key">requirement</span>
+								<div class="cm-props__value"><select aria-label="requirement"><option>Any</option><option>All</option></select></div>
+								<span class="cm-props__tools"></span>
+							</div>
+							<details class="cm-props__group">
+								<summary class="cm-props__summary"><span class="cm-props__key">conditions</span><span class="cm-props__peek">[FigureDies(Objective("objective.lantern_wharf.beacon"))]</span></summary>
+								<div class="cm-props">
+									<div class="cm-props__row">
+										<span class="cm-props__key">0</span>
+										<div class="cm-props__value"><input type="text" value="FigureDies" aria-label="condition 0" /></div>
+										<span class="cm-props__tools"><button type="button" class="cm-icon-btn cm-icon-btn--bare" aria-label="remove condition 0">&times;</button></span>
+									</div>
+								</div>
+							</details>
+						</div>
+					</details>
+				</div>
 				</div>
 			</section>
 			)}

@@ -1,3 +1,21 @@
+## Unreleased - workbench controls: dense scope and property list
+
+Built for the Lunehaven scenario editor, a workbench with a tool palette, a
+hex board and an inspector whose forms are drawn from data of any depth.
+It started from the card builder's controls (b31) and found two gaps.
+
+- `.cm-dense` - a density scope. Inside it, on a fine pointer, fields,
+  selects, textareas, `.cm-btn` and `.cm-seg__opt` drop the `--tap` floor
+  and take `--text-xs`. A coarse pointer keeps the library's sizes. Its
+  selectors repeat the field block's exclusions plus the scope class, so
+  they outrank base.css by one class and nothing else. Nothing changes for
+  a page that does not use the class.
+- `.cm-props` - a property list: key, control and tools per row, and
+  folding groups (`<details class="cm-props__group">`) that hold another
+  `.cm-props`. The key wraps and never truncates; the peek truncates.
+  Depth is a rule down the side.
+- `tests/run.mjs` - three source checks.
+
 ## Unreleased - form controls for an editor: stepper, repeater, artwork pick
 
 Built for the Lunehaven card builder, an editor where every field of a

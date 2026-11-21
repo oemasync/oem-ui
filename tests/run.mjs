@@ -22463,3 +22463,50 @@ check('the built page renders <Diff> identically through the wrapper: every op, 
 	assert(/update: \/config\/rclone\/remotes\/prod-archive/.test(sec),
 		'the built long-values demo lost its row');
 });
+
+/* ================= workbench controls =================
+   .cm-dense and .cm-props were added for the Lunehaven scenario editor, a
+   workbench (tool palette, hex board, inspector) whose forms are drawn
+   from data of any depth. These checks pin the facts the README promises. */
+console.log('\nworkbench controls');
+
+check('cm-dense: a scope that drops the tap floor on a fine pointer only', () => {
+	const dense = comp.replace(/\/\*[\s\S]*?\*\//g, '');
+	const at = dense.indexOf('.cm-dense input:not');
+	assert(at > 0, 'no .cm-dense field rule');
+	const media = dense.lastIndexOf('@media', at);
+	assert(/@media \(pointer: fine\)/.test(dense.slice(media, at)),
+		'.cm-dense is not scoped to a fine pointer, so a phone would lose the tap floor and zoom on focus');
+	// One class above base.css's field block, never a bare class that loses to (0,6,1).
+	const sel = ".cm-dense input:not([type='checkbox']):not([type='radio']):not([type='range']):not(.cm-inline__input):not(.cm-search__input)";
+	assert(dense.includes(sel), 'the dense field selector no longer repeats the field block\'s exclusions, so it loses the cascade');
+	const body = dense.slice(dense.indexOf('{', at), dense.indexOf('}', at));
+	assert(/min-height:\s*0/.test(body), '.cm-dense keeps the --tap floor on fields');
+	assert(/\.cm-dense select:not\(\.cm-search__input\):not\(\.cm-inline__input\):not\(\[multiple\]\)/.test(dense),
+		'the dense select lost its arrow clearance, so a long option runs under the arrow');
+});
+
+check('cm-props: the key wraps, the peek truncates, depth is a rule', () => {
+	assert(builderRule('.cm-props') && /grid-template-columns:\s*minmax\(6ch, max-content\) minmax\(0, 1fr\) auto/.test(builderRule('.cm-props')),
+		'a property list is no longer key / control / tools');
+	assert(/grid-template-columns:\s*subgrid/.test(builderRule('.cm-props__row') || ''),
+		'a row owns its columns again, so values no longer line up between rows');
+	const key = builderRule('.cm-props__key');
+	assert(key && !/text-overflow/.test(key) && /overflow-wrap:\s*break-word/.test(key),
+		'the key (the row\'s title) truncates or no longer wraps');
+	const peek = builderRule('.cm-props__peek');
+	assert(peek && /text-overflow:\s*ellipsis/.test(peek) && /white-space:\s*nowrap/.test(peek),
+		'the peek (the description) no longer truncates to one line');
+	const nest = builderRule('.cm-props__group > .cm-props');
+	assert(nest && /border-inline-start:\s*1px solid var\(--line-soft\)/.test(nest),
+		'a nested property list lost its rule down the side');
+});
+
+check('the workbench specimens are in the showcase and the README', () => {
+	assert(/id="dense-demo"/.test(showcase), 'no dense specimen');
+	assert(/id="props-demo"/.test(showcase), 'no property-list specimen');
+	assert((showcase.match(/class="cm-props__group"/g) || []).length >= 2, 'the property-list specimen no longer nests');
+	const readme = read('README.md');
+	assert(/### Dense workbench — `\.cm-dense`/.test(readme), 'the README does not document .cm-dense');
+	assert(/### Property list — `\.cm-props`/.test(readme), 'the README does not document .cm-props');
+});
