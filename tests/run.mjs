@@ -22120,6 +22120,110 @@ check('the built page renders <Tree> with root attrs on only the outer ul, and t
 		'the wrapper\'s href-less "LICENSE" leaf did not fall back to href="#" - it rendered either with no href at all, or with the wrong one');
 });
 
+/* ================= card-builder controls =================
+   .cm-number, .cm-repeater and .cm-artwork__pick were added for the
+   Lunehaven card builder, a form-heavy editor. These checks pin the
+   facts the README promises. The behaviour (bounds, focus, nesting,
+   cancelable events, ring and mark) is measured in real WebKit by
+   tests/measure-builder-webkit.py; the checks here pin the source shapes
+   that behaviour rests on, so a refactor that drops one fails by name. */
+console.log('\ncard-builder controls');
+
+const builderCss = comp.replace(/\/\*[\s\S]*?\*\//g, '');
+const builderRule = (sel) => {
+	for (const m of builderCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+		if (m[1].split(',').map((s) => s.trim()).includes(sel)) return m[2];
+	}
+	return null;
+};
+const builderJs = runtimeSrc.replace(/\/\*[\s\S]*?\*\//g, '');
+
+check('cm-number: one frame and one ring, the inner input draws neither', () => {
+	const frame = builderRule('.cm-number');
+	assert(frame && /border:\s*1px solid var\(--line\)/.test(frame), '.cm-number does not own the frame');
+	const ring = builderRule('.cm-number:focus-within');
+	assert(ring && /outline:\s*2px solid var\(--focus\)/.test(ring),
+		'.cm-number has no :focus-within ring, so keyboard focus lands on a piece instead of the control');
+	// The input selector must repeat the element default's exclusions:
+	// a bare class is (0,1,0) and loses to the (0,4,1) field block.
+	const inputSel = ".cm-number > input.cm-number__input:not([type='checkbox']):not([type='radio']):not([type='range']):not(.cm-inline__input):not(.cm-search__input)";
+	const input = builderRule(inputSel);
+	assert(input, 'the stepper input rule no longer matches the field block\'s specificity, so the input draws its own border and goes full width');
+	assert(/border:\s*0/.test(input) && /background-color:\s*transparent/.test(input),
+		'the stepper input keeps a border or fill of its own inside the frame');
+	assert(/appearance:\s*textfield/.test(input), 'the native spin buttons are back beside the drawn ones');
+	assert(builderRule('.cm-number__btn:disabled'), 'a disabled step button looks the same as a live one');
+});
+
+check('cm-number: the runtime clamps, disables at the bounds, and fires input + change', () => {
+	assert(/function cmSyncNumber\(wrap\)/.test(builderJs), 'cmSyncNumber is gone');
+	assert(/p\.dec\.disabled = off \|\| \(!isNaN\(v\) && min !== null && v <= min\)/.test(builderJs),
+		'the minus is no longer disabled at min');
+	assert(/p\.inc\.disabled = off \|\| \(!isNaN\(v\) && max !== null && v >= max\)/.test(builderJs),
+		'the plus is no longer disabled at max');
+	assert(/if \(min !== null && next < min\) next = min;/.test(builderJs) && /if \(max !== null && next > max\) next = max;/.test(builderJs),
+		'a step is no longer clamped to [min, max]');
+	assert(/getOwnPropertyDescriptor\(proto, 'value'\)/.test(builderJs),
+		'a step no longer goes through the native value setter, so React would not see it');
+	assert(/new Event\('input', \{ bubbles: true \}\)/.test(builderJs) && /new Event\('change', \{ bubbles: true \}\)/.test(builderJs),
+		'a step no longer fires input and change');
+	assert(/next\.toFixed\(places\)/.test(builderJs), 'a decimal step is no longer rounded to its own places');
+	assert(/addEventListener\('click', onNumberClick\)/.test(builderJs), 'the stepper click is not bound at the root');
+	assert(/cmInitNumbers\(root\);/.test(builderJs), 'init no longer syncs steppers, so a stepper at min paints a live minus');
+});
+
+check('cm-repeater: changes are offered as cancelable events before the DOM is written', () => {
+	for (const name of ['cm:repeater-add', 'cm:repeater-remove', 'cm:repeater-move']) {
+		assert(new RegExp(`if \\(!cmRepeaterOffer\\(rep, '${name}'`).test(builderJs),
+			`${name} is not offered before the change, so an app that owns the list cannot take it`);
+	}
+	assert(/cancelable: true/.test(builderJs.slice(builderJs.indexOf('function cmRepeaterOffer'))),
+		'the repeater events are not cancelable');
+});
+
+check('cm-repeater: scoped to the nearest repeater, so a nested list never touches its parent', () => {
+	assert(/return el\.closest\('\[data-cm-repeater\]'\) === rep;/.test(builderJs),
+		'cmRepeaterOwn no longer filters to the nearest repeater');
+	assert(/return el\.closest\('\[data-cm-repeater-item\]'\) === item;/.test(builderJs),
+		'cmItemOwn no longer filters to the item, so an inner row\'s tools would be renumbered by the outer list');
+});
+
+check('cm-repeater: the ends, the bounds and the focus are kept true', () => {
+	assert(/btn\.disabled = i === 0;/.test(builderJs), "the first row's up is no longer disabled");
+	assert(/btn\.disabled = i === items\.length - 1;/.test(builderJs), "the last row's down is no longer disabled");
+	assert(/btn\.disabled = min !== null && items\.length <= min;/.test(builderJs), 'remove is no longer disabled at data-min');
+	assert(/btn\.disabled = max !== null && items\.length >= max;/.test(builderJs), 'add is no longer disabled at data-max');
+	assert(/var next = left\[index\] \|\| left\[index - 1\];/.test(builderJs),
+		'focus after a remove no longer goes to the neighbouring row, so it falls to <body>');
+	const empty = builderRule('.cm-repeater__list:not(:has(> .cm-repeater__item)) ~ .cm-repeater__empty');
+	assert(empty && /display:\s*block/.test(empty), 'the empty state no longer shows when the list is empty');
+	assert(/'\[data-cm-number\], \[data-cm-repeater\], ' \+/.test(builderJs),
+		'the late-markup watcher does not know the new hooks, so a SPA-rendered stepper paints a live minus at min');
+});
+
+check('cm-artwork__pick: chosen is a ring AND a mark, focus is a third signal', () => {
+	const radio = builderRule('.cm-artwork__pick > .cm-artwork__radio');
+	assert(radio && /inset:\s*0/.test(radio) && /opacity:\s*0/.test(radio),
+		'the radio no longer covers the tile, so the picture is not the click target');
+	const ring = builderRule('.cm-artwork__pick:has(> .cm-artwork__radio:checked) > .cm-artwork__item::before');
+	assert(ring && /box-shadow:\s*inset 0 0 0 3px var\(--ink\)/.test(ring),
+		'the chosen ring is gone (or moved back onto the tile, where the frame paints over it)');
+	const mark = builderRule('.cm-artwork__pick:has(> .cm-artwork__radio:checked) > .cm-artwork__item::after');
+	assert(mark && /content:\s*'\\2713'/.test(mark), 'the chosen tile lost its check mark; a ring alone is too thin a difference');
+	const focus = builderRule('.cm-artwork__pick:has(> .cm-artwork__radio:focus-visible) > .cm-artwork__item');
+	assert(focus && /outline:\s*2px solid var\(--focus\)/.test(focus), 'keyboard focus on a pick tile draws nothing');
+});
+
+check('the card-builder specimens are in the showcase', () => {
+	assert(/class="cm-number" data-cm-number/.test(showcase), 'no stepper specimen');
+	assert(/id="rep-demo" class="cm-repeater" data-cm-repeater/.test(showcase), 'no repeater specimen');
+	assert((showcase.match(/<template data-cm-repeater-template>/g) || []).length >= 2,
+		'the repeater specimen no longer nests a second repeater');
+	assert((showcase.match(/class="cm-artwork__pick"/g) || []).length >= 3, 'no artwork-pick specimen');
+	assert(/README|\.cm-number/.test(read('README.md')) && /### Repeater — `\.cm-repeater`/.test(read('README.md')),
+		'the README does not document the repeater');
+});
+
 // ---------- callout: an in-prose admonition (Note / Tip / Warning / Important) ----------
 // `.cm-alert` is a dismissible app banner; `.cm-callout` sits INSIDE `.cm-prose`'s
 // reading flow instead, so it owns its own vertical rhythm and its body's own

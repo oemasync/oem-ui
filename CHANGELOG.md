@@ -1,3 +1,37 @@
+## Unreleased - form controls for an editor: stepper, repeater, artwork pick
+
+Built for the Lunehaven card builder, an editor where every field of a
+card has its own control. Three gaps showed up that composing existing
+parts could not close honestly.
+
+- `.cm-number` - a number field with its own minus and plus in one frame.
+  An input group with two buttons was tried first and refused: its minus
+  stays live at the minimum and its plus at the maximum, so a press does
+  nothing and says nothing, and it draws three frames and three focus
+  rings. The stepper owns one frame and one `:focus-within` ring; the
+  runtime disables each button at the field's own `min`/`max`, clamps a
+  step (including from an off-grid typed value), rounds a decimal step to
+  its own places, and fires `input` + `change` through the native value
+  setter so a framework sees a step as typing.
+- `.cm-repeater` - an ordered list the reader edits: add, remove, move up
+  and down, nestable. The runtime keeps the numbering, the count, the
+  disabled ends, `data-min`/`data-max` and focus true (focus never falls to
+  `<body>` after a remove). Every change is first offered as a cancelable
+  `cm:repeater-add` / `-remove` / `-move`, so an app that owns the list in
+  its own state takes the change and redraws; a static page gets the DOM
+  write from a `<template>`. Everything is scoped to the nearest repeater.
+- `.cm-artwork__pick` - make an artwork grid a radio group. Chosen is a
+  ring AND a corner check; keyboard focus is a third, separate signal. The
+  ring is an overlay because an inset shadow on the tile paints under its
+  frame and was invisible in the first draft.
+- `cliMono.syncNumber(wrap)` / `cliMono.syncRepeater(rep)` for consumers
+  that change values or rows from script; both hooks also arm the
+  late-markup observer, so a SPA-rendered stepper is synced on first paint.
+- `tests/run.mjs` - seven source checks. `tests/measure-builder-webkit.py`
+  measures the behaviour in real WebKit at 390px (coarse pointer) and
+  1280px. `tests/mutate-builder-webkit.py` proves the probe can fail: each
+  mutant must be killed by the check named for it.
+
 ## Unreleased - `<Diff>`: the word-level diff row wrapper
 
 `.cm-diff` shipped with CSS, tests and a mutation sweep (batch 34), but no
