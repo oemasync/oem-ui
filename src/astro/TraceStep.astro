@@ -1,0 +1,94 @@
+---
+/**
+ * oem-ui <TraceStep> — one `<li>` of a `<Trace>`, the wrapper for
+ * `.cm-trace__item`. The showcase's own "steps and state" and
+ * "collapsible step" sections hand-typed this three shapes over (a
+ * plain row, a row with a desc, a disclosure with a hidden body) to
+ * prove `.cm-trace` in CSS by hand. This is the component a build log,
+ * a sync report or a deployment trace page actually calls.
+ *
+ * `state` picks the icon: idle (outline circle, the default — most
+ * steps in a trace have not run yet), running (filled circle), done
+ * (check), error (cross). The state-to-glyph and state-to-class maps
+ * live HERE, not on the caller, so a step's glyph can never drift from
+ * its class the way four hand-typed `&#9679;`/`&#10003;`/`&#10007;`
+ * entities across a page could.
+ *
+ * `title` is a plain string: a step's label is a line of a log — real
+ * system/run output, computed at the moment the step fires — not
+ * hand-authored prose, the same reasoning `<Diff>` uses for its row
+ * values (the opposite contract from `<Kbd>`'s `key`). The body is a
+ * `<slot />`, because the showcase's own detail content carries `<code>`
+ * and multiple paragraphs, and a string prop would either render those
+ * tags as visible text or need the caller to pass raw HTML.
+ *
+ * A step becomes a real disclosure (a `<button>` with `aria-expanded`/
+ * `aria-controls`, a body hidden by default) only when it is given BOTH
+ * an `id` AND slot content. One without the other falls back to a plain
+ * row: a trigger whose `aria-controls` points at a body with nothing in
+ * it is a dead control, which is exactly the bug `initTrace` itself
+ * already guards against on the runtime side (a trigger pointing at a
+ * missing panel is left alone rather than flipped open) — the markup
+ * side of the same rule is to never emit that trigger in the first
+ * place when there is no body to show.
+ */
+interface Props {
+	/** The step's one-line label. */
+	title: string;
+	/** idle (default, outline) | running (filled) | done (check) | error (cross). */
+	state?: 'idle' | 'running' | 'done' | 'error';
+	/** Required (with slot content) to make the step a disclosure; used as the body's id and the trigger's aria-controls. */
+	id?: string;
+	/** Starts a collapsible step open. Ignored without id + slot content. */
+	open?: boolean;
+}
+
+const STATE_CLASS: Record<string, string> = {
+	idle: '',
+	running: 'is-running',
+	done: 'is-done',
+	error: 'is-error',
+};
+const GLYPH: Record<string, string> = {
+	idle: '\u25cb',
+	running: '\u25cf',
+	done: '\u2713',
+	error: '\u2717',
+};
+
+const { title, state = 'idle', id, open = false } = Astro.props;
+const hasBody = Astro.slots.has('default');
+const collapsible = hasBody && Boolean(id);
+---
+
+<li>
+	<div class:list={['cm-trace__item', STATE_CLASS[state]]}>
+		<span class="cm-trace__icon" aria-hidden="true">{GLYPH[state]}</span>
+		{
+			collapsible ? (
+				<>
+					<button
+						class="cm-trace__trigger"
+						type="button"
+						aria-expanded={open ? 'true' : 'false'}
+						aria-controls={id}
+					>
+						<span class="cm-trace__title">{title}</span>
+					</button>
+					<div class="cm-trace__body" id={id} {...(!open && { hidden: true })}>
+						<slot />
+					</div>
+				</>
+			) : hasBody ? (
+				<>
+					<p class="cm-trace__title">{title}</p>
+					<p class="cm-trace__desc">
+						<slot />
+					</p>
+				</>
+			) : (
+				<p class="cm-trace__title">{title}</p>
+			)
+		}
+	</div>
+</li>

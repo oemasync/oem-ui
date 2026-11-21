@@ -1,0 +1,28 @@
+---
+/**
+ * oem-ui <Trace> — the `<ol class="cm-trace">` wrapper for a record of
+ * what a run DID, one step per line. Pairs with `<TraceStep>`, which
+ * renders each `<li>`.
+ *
+ * This component owns only the list: `data-cm-trace` is never set here
+ * (the runtime's `initTrace` binds once, delegated at `document`, and
+ * needs no hook on the list element itself), so `<Trace>` is just the
+ * `.cm-trace` class plus a slot. The reason it still exists rather than
+ * a caller writing `<ol class="cm-trace">` by hand is symmetry with
+ * every other list wrapper in this library (`<Tree>`, `<DataTable>`) and
+ * so a future list-level concern (an `aria-label` when a trace has no
+ * visible heading, a `data-*` hook) has one place to land.
+ */
+interface Props {
+	/** Extra classes on the `<ol>`. */
+	class?: string;
+	/** The list's own id, when a surface needs to target it. */
+	id?: string;
+}
+
+const { class: className, id } = Astro.props;
+---
+
+<ol class:list={['cm-trace', className]} {...(id && { id })}>
+	<slot />
+</ol>

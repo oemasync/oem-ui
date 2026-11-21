@@ -41,6 +41,9 @@ import Endpoint from '../astro/Endpoint.astro';
 import Param from '../astro/Param.astro';
 import Tree from '../astro/Tree.astro';
 import Callout from '../astro/Callout.astro';
+import Diff from '../astro/Diff.astro';
+import Trace from '../astro/Trace.astro';
+import TraceStep from '../astro/TraceStep.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -3991,51 +3994,24 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					same in greyscale, and the state is also in the markup rather than
 					only in the paint.
 				</p>
-				<ol class="cm-trace">
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<p class="cm-trace__title">read the failing test</p>
-							<p class="cm-trace__desc">
-								<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
-								names all 66 entries and their order.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<p class="cm-trace__title">measure the live list</p>
-							<p class="cm-trace__desc">
-								Fetched with a real Safari user agent: a plain
-								<code>curl</code> returns the bot wall, not the page.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-running">
-							<span class="cm-trace__icon" aria-hidden="true">&#9679;</span>
-							<p class="cm-trace__title">diff against the pinned ledger</p>
-							<p class="cm-trace__desc">two names are in the live list and not in ours.</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item">
-							<span class="cm-trace__icon" aria-hidden="true">&#9675;</span>
-							<p class="cm-trace__title">author the two components</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-error">
-							<span class="cm-trace__icon" aria-hidden="true">&#10007;</span>
-							<p class="cm-trace__title">mutation sweep, first attempt</p>
-							<p class="cm-trace__desc">
-								The sweep refused: it was pointed at a sibling worktree, so
-								another lane's uncommitted edits read as failures here.
-							</p>
-						</div>
-					</li>
-				</ol>
+				<Trace>
+					<TraceStep state="done" title="read the failing test">
+						<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
+						names all 66 entries and their order.
+					</TraceStep>
+					<TraceStep state="done" title="measure the live list">
+						Fetched with a real Safari user agent: a plain
+						<code>curl</code> returns the bot wall, not the page.
+					</TraceStep>
+					<TraceStep state="running" title="diff against the pinned ledger">
+						two names are in the live list and not in ours.
+					</TraceStep>
+					<TraceStep state="idle" title="author the two components" />
+					<TraceStep state="error" title="mutation sweep, first attempt">
+						The sweep refused: it was pointed at a sibling worktree, so
+						another lane's uncommitted edits read as failures here.
+					</TraceStep>
+				</Trace>
 
 				<h3 class="cm-kicker">collapsible step</h3>
 				<p class="cm-head__sub">
@@ -4045,45 +4021,32 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					<code>aria-expanded</code>, not a styled <code>div</code>: a
 					disclosure that a keyboard cannot open is not a disclosure.
 				</p>
-				<ol class="cm-trace">
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<button class="cm-trace__trigger" type="button" aria-expanded="false"
-								aria-controls="trace-detail-1">
-								<span class="cm-trace__title">shadcn added code-block and trace</span>
-							</button>
-							<div class="cm-trace__body" id="trace-detail-1" hidden>
-								<p>
-									The pinned ledger cannot see this: it compares our README
-									against a list written down once, and never re-fetches.
-									That is the point of pinning &mdash; an update is a
-									deliberate act with a diff &mdash; but it means the only
-									thing that can notice an addition is a tool that reads the
-									live site.
-								</p>
-							</div>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<button class="cm-trace__trigger" type="button" aria-expanded="true"
-								aria-controls="trace-detail-2">
-								<span class="cm-trace__title">both were measured before being claimed</span>
-							</button>
-							<div class="cm-trace__body" id="trace-detail-2">
-								<p>
-									<code>code-block</code> depends on <code>button</code> and
-									<code>use-highlighted-code</code>; <code>trace</code> depends
-									on <code>collapsible</code>. Both are registry
-									<code>registry:ui</code> entries with a docs page, which is
-									what separates a component from a code sample.
-								</p>
-							</div>
-						</div>
-					</li>
-				</ol>
+				<Trace>
+					<TraceStep state="done" title="shadcn added code-block and trace" id="trace-detail-1">
+						<p>
+							The pinned ledger cannot see this: it compares our README
+							against a list written down once, and never re-fetches.
+							That is the point of pinning &mdash; an update is a
+							deliberate act with a diff &mdash; but it means the only
+							thing that can notice an addition is a tool that reads the
+							live site.
+						</p>
+					</TraceStep>
+					<TraceStep
+						state="done"
+						title="both were measured before being claimed"
+						id="trace-detail-2"
+						open
+					>
+						<p>
+							<code>code-block</code> depends on <code>button</code> and
+							<code>use-highlighted-code</code>; <code>trace</code> depends
+							on <code>collapsible</code>. Both are registry
+							<code>registry:ui</code> entries with a docs page, which is
+							what separates a component from a code sample.
+						</p>
+					</TraceStep>
+				</Trace>
 			</section>
 			)}
 
@@ -4098,49 +4061,29 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					</p>
 				</SectionHead>
 
-				<ul class="cm-diff">
-					<li class="cm-diff__row" data-op="create" aria-label="create: new field">
-						<span class="cm-diff__op">create</span>
-						<span class="cm-diff__val">new field: <code>api_key</code></span>
-					</li>
-					<li class="cm-diff__row" data-op="update" aria-label="update: url base">
-						<span class="cm-diff__op">update</span>
-						<span class="cm-diff__val">url base: <del class="cm-diff__del">http://old</del> → <ins class="cm-diff__ins">https://new</ins></span>
-					</li>
-					<li class="cm-diff__row" data-op="delete" aria-label="delete: legacy_port">
-						<span class="cm-diff__op">delete</span>
-						<span class="cm-diff__val">legacy_port</span>
-					</li>
-					<li class="cm-diff__fold">
-						<details>
-							<summary>3 unchanged</summary>
-							<ul style="margin:0;padding:0;list-style:none">
-								<li class="cm-diff__row" data-op="same" aria-label="same: log_level">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">log_level: info</span>
-								</li>
-								<li class="cm-diff__row" data-op="same" aria-label="same: bind">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">bind: 0.0.0.0</span>
-								</li>
-								<li class="cm-diff__row" data-op="same" aria-label="same: cache">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">cache: 100</span>
-								</li>
-							</ul>
-						</details>
-					</li>
-				</ul>
+				<Diff
+					rows={[
+						{ op: 'create', label: 'new field', value: 'api_key' },
+						{ op: 'update', label: 'url base', from: 'http://old', to: 'https://new' },
+						{ op: 'delete', label: 'legacy_port' },
+						{ op: 'same', label: 'log_level', value: 'info' },
+						{ op: 'same', label: 'bind', value: '0.0.0.0' },
+						{ op: 'same', label: 'cache', value: '100' },
+					]}
+					foldLabel="unchanged"
+				/>
 
 				<h3 class="cm-kicker" style="margin-top:var(--space-4)">long values</h3>
-				<ul class="cm-diff">
-					<li class="cm-diff__row" data-op="update" aria-label="update: path with long value">
-						<span class="cm-diff__op">update</span>
-						<span class="cm-diff__val">
-							/config/rclone/remotes/prod-archive: <del class="cm-diff__del">rclone:securesync-legacy-prod</del> → <ins class="cm-diff__ins">rclone:securesync-v2-prod</ins>
-						</span>
-					</li>
-				</ul>
+				<Diff
+					rows={[
+						{
+							op: 'update',
+							label: '/config/rclone/remotes/prod-archive',
+							from: 'rclone:securesync-legacy-prod',
+							to: 'rclone:securesync-v2-prod',
+						},
+					]}
+				/>
 			</section>
 			)}
 

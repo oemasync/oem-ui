@@ -730,7 +730,7 @@ console.log('\nastro components');
 // scripts/install.sh now installs whatever is IN the directory, so the
 // list has to be derived the other way round or the two drift apart again:
 // this check fails when a component exists on disk but is not claimed here.
-const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'Callout.astro', 'config.ts', 'current.ts'];
+const astroFiles = ['Head.astro', 'Header.astro', 'HeaderLink.astro', 'Footer.astro', 'PageHead.astro', 'PostHead.astro', 'PostRow.astro', 'StatusStrip.astro', 'Card.astro', 'CodeBlock.astro', 'Meter.astro', 'Stat.astro', 'SectionHead.astro', 'TimelineItem.astro', 'DataTable.astro', 'Alert.astro', 'Avatar.astro', 'Chip.astro', 'Kbd.astro', 'Crumbs.astro', 'Progress.astro', 'Pager.astro', 'Dialog.astro', 'Tabs.astro', 'Back.astro', 'Search.astro', 'Field.astro', 'Kv.astro', 'State.astro', 'Project.astro', 'Endpoint.astro', 'Param.astro', 'Tree.astro', 'Callout.astro', 'Diff.astro', 'Trace.astro', 'TraceStep.astro', 'config.ts', 'current.ts'];
 for (const f of astroFiles) {
 	check(`ships src/astro/${f}`, () => {
 		// Assert the file is ON DISK, not merely named in this list. A list
@@ -19053,13 +19053,19 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 		});
 
 		check('batch 34: every cm-diff class is DEMONSTRATED, so none is dead CSS', () => {
-			const show = read('src/pages/[...family].astro');
-			const at = show.indexOf('id="diff"');
-			assert(at > 0, 'the showcase has no #diff section');
+			// The hand-typed markup moved into Diff.astro (the wrapper the
+			// showcase now calls), so the literal classes live there, not
+			// in the showcase source any more.
+			const diffAstro = read('src/astro/Diff.astro');
 			for (const cls of diffClasses) {
-				assert(new RegExp(`class="[^"]*${cls}`).test(show),
-					`.${cls} is defined but never rendered in the diff specimen`);
+				assert(new RegExp(`class="[^"]*${cls}`).test(diffAstro),
+					`.${cls} is defined but never rendered by Diff.astro`);
 			}
+			const show = read('src/pages/[...family].astro');
+			assert(/import Diff from '\.\.\/astro\/Diff\.astro'/.test(show),
+				'the showcase does not import Diff.astro');
+			assert((show.match(/<Diff\s/g) || []).length >= 1,
+				'the showcase never calls <Diff> - cm-diff would be defined but never demonstrated');
 		});
 
 		check('batch 34: each op maps to a DISTINCT glyph prefix, no two alike', () => {
@@ -19108,40 +19114,37 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 		});
 
 		check('batch 34: the fold counts unchanged rows exactly', () => {
+			// The hand-typed markup could drift the summary's count from
+			// the rows actually inside it; the wrapper makes that drift
+			// IMPOSSIBLE by deriving the count from the rows it holds,
+			// never from a caller-supplied number. Scoped to the
+			// TEMPLATE half only - the frontmatter doc comment names
+			// `${folded.length}` in a backtick example, and a whole-file
+			// scan would be satisfied by its own documentation.
+			const diffAstro = read('src/astro/Diff.astro');
+			const fenceEnd = diffAstro.indexOf('\n---\n', 3);
+			const diffTemplate = fenceEnd === -1 ? diffAstro : diffAstro.slice(fenceEnd + 5);
+			assert(/\{folded\.length\}/.test(diffTemplate),
+				'Diff.astro does not interpolate folded.length into the fold summary - a hardcoded or caller-supplied count could drift from the rows actually inside the fold');
 			const show = read('src/pages/[...family].astro');
 			const at = show.indexOf('id="diff"');
-			const sec = show.slice(at, show.indexOf('<section', at + 10));
-			// The summary's count is REAL TEXT the app writes.
-			const sum = /<summary>(\d+) unchanged/.exec(sec);
-			assert(sum, 'the fold summary does not carry an "N unchanged" count');
-			// Count the same rows INSIDE the fold only.
-			const foldAt = sec.indexOf('cm-diff__fold');
-			const fold = sec.slice(foldAt, sec.indexOf('</details>', foldAt));
-			const sameRows = (fold.match(/data-op="same"/g) || []).length;
-			assert(Number(sum[1]) === sameRows,
-				`the summary says ${sum[1]} unchanged but the fold holds ${sameRows} same rows`);
-			// No same row may leak OUTSIDE the fold - that is the defect
-			// the fold exists to prevent. Counted as section-total minus
-			// fold-total so a leak AFTER the fold counts too; a slice up
-			// to foldAt only guards one side - MEASURED as a mutant that
-			// injected a same row after </ul> and survived.
-			const inSection = (sec.match(/data-op="same"/g) || []).length;
-			assert(inSection === sameRows,
-				`${inSection - sameRows} same row(s) render OUTSIDE the fold (${inSection} in section, ` +
-				`${sameRows} in fold); unchanged rows must collapse`);
+			assert(at > 0, 'the showcase has no #diff section');
+			const sec = show.slice(at, show.indexOf('</section>', at));
+			const sameCount = (sec.match(/op:\s*'same'/g) || []).length;
+			assert(sameCount === 3,
+				`the diff specimen's fixture carries ${sameCount} 'same' row(s), expected 3 - the fold demo no longer exercises what it claims to`);
 		});
 
 		check('batch 34: the fold is platform expansion — a <details>, not runtime', () => {
 			const comp = read('src/styles/components.css');
 			// The chevron state keys off [open], the platform's own attribute.
-			assert(/\.cm-diff__fold\[open\] > summary/.test(comp),
+			assert(/\.cm-diff__fold\[open\] > summary::after \{ content: '▾'; \}/.test(comp),
 				'the fold chevron does not key off [open]; the state must be the platform attribute');
-			const show = read('src/pages/[...family].astro');
-			const at = show.indexOf('cm-diff__fold');
-			assert(at > 0, 'the specimen has no fold');
-			const before = show.slice(Math.max(0, at - 200), at);
-			assert(/<details>/.test(show.slice(at - 60, at + 40)) || /<details>/.test(before),
-				'the fold is not a <details> element; expansion is the platform\'s');
+			const diffAstro = read('src/astro/Diff.astro');
+			const at = diffAstro.indexOf('cm-diff__fold');
+			assert(at > 0, 'Diff.astro never renders a cm-diff__fold element');
+			assert(/<details>/.test(diffAstro.slice(at, at + 120)),
+				"Diff.astro's fold is not a <details> element; expansion is the platform's");
 			// And no runtime owns it: the JS must not reference cm-diff.
 			const js = read('src/js/cli-mono.js');
 			assert(!/cm-diff/.test(js),
@@ -19149,15 +19152,25 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 		});
 
 		check('batch 34: the specimen exercises a LONG value, or the hanging indent is unproven', () => {
+			// The rendered length can no longer be read off the showcase
+			// source directly (the markup now lives in Diff.astro), so
+			// approximate it from the row's own literal fields instead -
+			// label + value, or label + from + to for an update row.
 			const show = read('src/pages/[...family].astro');
 			const at = show.indexOf('id="diff"');
-			const sec = show.slice(at, show.indexOf('<section', at + 10));
-			// A value long enough to wrap at any reasonable width.
-			const vals = [...sec.matchAll(/class="cm-diff__val"[^>]*>([\s\S]*?)<\/span>/g)]
-				.map((m) => m[1].replace(/<[^>]+>/g, ''));
-			const longest = vals.reduce((n, v) => Math.max(n, v.trim().length), 0);
+			assert(at > 0, 'the showcase has no #diff section');
+			const sec = show.slice(at, show.indexOf('</section>', at));
+			const field = (body, name) => (new RegExp(`${name}:\\s*'([^']*)'`).exec(body) || [, ''])[1];
+			let longest = 0;
+			for (const m of sec.matchAll(/\{[^{}]*op:\s*'\w+'[^{}]*\}/g)) {
+				const body = m[0];
+				const label = field(body, 'label'), value = field(body, 'value');
+				const from = field(body, 'from'), to = field(body, 'to');
+				const rendered = (from || to) ? `${label}${from}${to}` : `${label}${value}`;
+				longest = Math.max(longest, rendered.length);
+			}
 			assert(longest >= 80,
-				`the longest diff value is ${longest} chars; nothing exercises the wrap, ` +
+				`the longest diff row's rendered text is approximately ${longest} chars; nothing exercises the wrap, ` +
 				'so the grid hanging indent is unproven');
 		});
 
@@ -19166,6 +19179,130 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 			assert(/cm-diff/.test(rm), 'the README never mentions cm-diff');
 			assert(/data-op/.test(rm), 'the README does not document the data-op contract');
 		});
+			}
+
+			/* ============================================================ batch 40
+			   <Trace> / <TraceStep> — the Astro wrapper for cm-trace, "a record
+			   of what a run did". The showcase hand-typed three shapes of
+			   .cm-trace__item (plain row, row + desc, disclosure with a hidden
+			   body) across two sections; both now call the wrapper.
+
+			   Every assertion here is mutation-checked in
+			   tests/mutate-trace-astro.mjs. */
+			{
+				const TRACE_CLASSES = [
+					'cm-trace',
+					'cm-trace__item',
+					'cm-trace__icon',
+					'cm-trace__title',
+					'cm-trace__desc',
+					'cm-trace__trigger',
+					'cm-trace__body',
+				];
+
+				check('batch 40: every cm-trace class is defined in the library', () => {
+					const comp = read('src/styles/components.css');
+					for (const cls of TRACE_CLASSES) {
+						const styled = new RegExp(`\\.${cls}(?![a-z0-9_-])`).test(comp);
+						assert(styled, `.${cls} has no rule in components.css`);
+					}
+				});
+
+				check('batch 40: every cm-trace class is DEMONSTRATED, so none is dead CSS', () => {
+					// The hand-typed markup moved into Trace.astro (the list) and
+					// TraceStep.astro (the item), so the literal classes live
+					// there, not in the showcase source any more.
+					const traceAstro = read('src/astro/Trace.astro');
+					const stepAstro = read('src/astro/TraceStep.astro');
+					const combined = traceAstro + '\n' + stepAstro;
+					for (const cls of TRACE_CLASSES) {
+						assert(new RegExp(`class(?:Name)?[:=]?[^>]*${cls}|${cls}`).test(combined) &&
+							new RegExp(cls.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')).test(combined),
+							`.${cls} is defined but never rendered by Trace.astro or TraceStep.astro`);
+					}
+					const show = read('src/pages/[...family].astro');
+					assert(/import Trace from '\.\.\/astro\/Trace\.astro'/.test(show),
+						'the showcase does not import Trace.astro');
+					assert(/import TraceStep from '\.\.\/astro\/TraceStep\.astro'/.test(show),
+						'the showcase does not import TraceStep.astro');
+					assert((show.match(/<Trace>/g) || []).length >= 2,
+						'the showcase calls <Trace> fewer than 2 times - both trace sections should use the wrapper');
+					assert((show.match(/<TraceStep\b/g) || []).length >= 7,
+						'the showcase never calls <TraceStep> enough times - cm-trace__item would be under-demonstrated');
+				});
+
+				check('batch 40: each state maps to a DISTINCT glyph, no two alike', () => {
+					const stepAstro = read('src/astro/TraceStep.astro');
+					const m = /const GLYPH: Record<string, string> = \{([^}]*)\}/.exec(stepAstro);
+					assert(m, 'TraceStep.astro has no GLYPH map');
+					const entries = [...m[1].matchAll(/(\w+):\s*'([^']*)'/g)].map((e) => e[2]);
+					assert(entries.length === 4, `GLYPH map has ${entries.length} entries, expected 4 (idle/running/done/error)`);
+					assert(new Set(entries).size === entries.length,
+						'two states in the GLYPH map share the same glyph - a reader could not tell them apart');
+				});
+
+				check('batch 40: the idle state renders with NO state modifier class', () => {
+					const stepAstro = read('src/astro/TraceStep.astro');
+					const m = /const STATE_CLASS: Record<string, string> = \{([^}]*)\}/.exec(stepAstro);
+					assert(m, 'TraceStep.astro has no STATE_CLASS map');
+					assert(/idle:\s*''/.test(m[1]),
+						"idle does not map to an empty class - it would paint a spurious is-* modifier on the showcase's idle specimen");
+					assert(/running:\s*'is-running'/.test(m[1]) &&
+						/done:\s*'is-done'/.test(m[1]) &&
+						/error:\s*'is-error'/.test(m[1]),
+						'running/done/error do not map to their documented is-* modifier classes');
+				});
+
+				check('batch 40: a step with no body renders no trigger and no desc', () => {
+					// Mirrors initTrace's own runtime guard ("a trigger pointing at
+					// nothing is left alone"): the markup side of the same rule
+					// is to never emit a dead trigger or an empty desc paragraph.
+					const stepAstro = read('src/astro/TraceStep.astro');
+					assert(/Astro\.slots\.has\('default'\)/.test(stepAstro),
+						'TraceStep.astro never checks whether slot content was passed');
+					assert(/const collapsible = hasBody && Boolean\(id\)/.test(stepAstro),
+						'TraceStep.astro does not require BOTH slot content and an id before becoming a disclosure');
+					const show = read('src/pages/[...family].astro');
+					assert(/<TraceStep state="idle" title="author the two components" \/>/.test(show),
+						'the showcase lost its no-body idle specimen - the empty-slot path would go unproven');
+				});
+
+				check('batch 40: a collapsible step wires aria-expanded/aria-controls and hides its body by default', () => {
+					const stepAstro = read('src/astro/TraceStep.astro');
+					assert(/aria-expanded=\{open \? 'true' : 'false'\}/.test(stepAstro),
+						"the trigger's aria-expanded does not reflect the open prop");
+					assert(/aria-controls=\{id\}/.test(stepAstro),
+						'the trigger does not point aria-controls at the body id');
+					assert(/<div class="cm-trace__body" id=\{id\} \{\.\.\.\(!open && \{ hidden: true \}\)\}>/.test(stepAstro),
+						"the body does not default to hidden, or does not clear 'hidden' when open");
+					const show = read('src/pages/[...family].astro');
+					assert(/id="trace-detail-1"/.test(show),
+						'the showcase lost its closed collapsible specimen (trace-detail-1)');
+					const at2 = show.indexOf('id="trace-detail-2"');
+					assert(at2 > 0, 'the showcase lost its open collapsible specimen (trace-detail-2)');
+					assert(/^\s*open\s*$/m.test(show.slice(at2, at2 + 60)),
+						"trace-detail-2's <TraceStep> no longer carries the open prop - the open-by-default path would go unproven");
+				});
+
+				check('batch 40: the built page renders <Trace> identically through the wrapper', () => {
+					const dist = read('dist/index.html');
+					// Every glyph used by the specimens must survive the build.
+					assert(dist.includes('\u25cb'), 'the idle glyph (\\u25cb) is missing from the built page');
+					assert(dist.includes('\u25cf'), 'the running glyph (\\u25cf) is missing from the built page');
+					assert(dist.includes('\u2713'), 'the done glyph (\\u2713) is missing from the built page');
+					assert(dist.includes('\u2717'), 'the error glyph (\\u2717) is missing from the built page');
+					const openCount = (dist.match(/cm-trace__trigger[^>]*aria-expanded="true"/g) || []).length;
+					const closedCount = (dist.match(/cm-trace__trigger[^>]*aria-expanded="false"/g) || []).length;
+					assert(openCount >= 1 && closedCount >= 1,
+						`the built page has ${openCount} open and ${closedCount} closed trace triggers - both states must render`);
+				});
+
+				check('batch 40: the README documents cm-trace', () => {
+					const rm = read('README.md');
+					assert(/cm-trace/.test(rm), 'the README never mentions cm-trace');
+					assert(/<Trace>|<TraceStep/.test(rm),
+						'the README documents cm-trace in raw HTML only, with no mention of the Astro wrapper');
+				});
 			}
 
 			/* ============================================================ batch 35
@@ -22248,6 +22385,83 @@ check('the built page renders <Callout> identically through the wrapper: 4 varia
 		assert(new RegExp(`<span class="cm-callout__mark" aria-hidden="true"></span>${title}`).test(built),
 			`the built page never pairs the ${v} callout's mark with its "${title}" title - the wrapper may have dropped the title or the mark`);
 	}
+});
+
+/* ================================================================
+   <Diff> wrapper — one row of the word-level diff list (cm-diff,
+   batch 34). The showcase's own diff section hand-typed
+   `<li class="cm-diff__row" data-op="…" aria-label="…">` twice over,
+   once for the create/update/delete/same demo with its fold and once
+   for the "long values" demo. <Diff> is the wrapper a reconcile page
+   actually calls, the same role <Tree>/<Param>/<Callout> play for
+   their own rows. */
+const diffAstroSrc = read('src/astro/Diff.astro');
+
+check('Diff.astro throws when an update row is missing from or to', () => {
+	assert(/row\.op === 'update' && \(row\.from === undefined \|\| row\.to === undefined\)/.test(diffAstroSrc),
+		"Diff.astro does not guard an update row's from/to together - a diff could render an operator with nothing to compare");
+	assert(/throw new Error/.test(diffAstroSrc),
+		'Diff.astro does not throw on the missing from/to case');
+});
+
+check("Diff.astro's aria-label is always `${op}: ${label}`, on every row it renders", () => {
+	const occurrences = diffAstroSrc.match(/aria-label=\{`\$\{r\.op\}: \$\{r\.label\}`\}/g) || [];
+	assert(occurrences.length === 2,
+		`Diff.astro's aria-label template appears ${occurrences.length} time(s) - expected 2 (the shown-rows loop and the folded-rows loop), so one of the two row renderers could drift from the other`);
+});
+
+check('Diff.astro never renders raw HTML - every value is plain, escaped data', () => {
+	// Scope to the TEMPLATE half only - the frontmatter doc comment
+	// names `set:html` in prose (explaining why it is NOT used here),
+	// and a naive whole-file scan would be satisfied by its own comment.
+	const fenceEnd = diffAstroSrc.indexOf('\n---\n', 3);
+	const template = fenceEnd === -1 ? diffAstroSrc : diffAstroSrc.slice(fenceEnd + 5);
+	assert(!/set:html/.test(template),
+		'Diff.astro uses set:html in its template - a diff value is computed from live system state, not hand-authored prose, and must stay escaped, never raw HTML (the opposite contract from <Kbd>)');
+});
+
+check('Diff.astro\'s fold extracts exactly the same rows, never the changed ones', () => {
+	assert(/rows\.filter\(\(r\) => r\.op !== 'same'\)/.test(diffAstroSrc),
+		'Diff.astro does not filter shown rows to exclude same - a changed row could end up folded away with the unchanged ones');
+	assert(/rows\.filter\(\(r\) => r\.op === 'same'\)/.test(diffAstroSrc),
+		'Diff.astro does not filter folded rows to same only - an unchanged row could leak outside the fold, the exact defect the fold exists to prevent');
+});
+
+check('Diff.astro renders create wrapped in <code>, update as <del>/<ins>, delete and same as plain text', () => {
+	assert(/<del class="cm-diff__del">\{r\.from\}<\/del> → <ins class="cm-diff__ins">\{r\.to\}<\/ins>/.test(diffAstroSrc),
+		'Diff.astro does not render an update row as a del/ins pair built from from/to');
+	assert(/<code>\{r\.value\}<\/code>/.test(diffAstroSrc),
+		'Diff.astro does not wrap a create row\'s value in <code>');
+	assert(/r\.op === 'delete' \? \(\s*r\.label\s*\)/.test(diffAstroSrc),
+		"Diff.astro does not render a delete row as its label alone - there is nothing left to show a value for");
+});
+
+check('Diff.astro is imported and rendered 2 times in the showcase', () => {
+	assert(/import Diff from '\.\.\/astro\/Diff\.astro'/.test(showcase),
+		'the showcase does not import Diff.astro');
+	const diffUses = showcase.match(/<Diff\s/g) || [];
+	assert(diffUses.length === 2,
+		`the showcase renders <Diff> ${diffUses.length} time(s) - expected exactly 2 (the create/update/delete/same+fold demo and the long-values demo)`);
+});
+
+check('the built page renders <Diff> identically through the wrapper: every op, the fold, and the long-values row', () => {
+	const built = builtHtml();
+	if (!built) return; // dist not built in this run; rebuild and re-run before shipping
+	const at = built.indexOf('id="diff"');
+	assert(at > 0, 'the built page has no #diff section');
+	const sec = built.slice(at, built.indexOf('</section>', at));
+	assert(/<li class="cm-diff__row" data-op="create" aria-label="create: new field"><span class="cm-diff__op">create<\/span><span class="cm-diff__val">new field: <code>api_key<\/code><\/span><\/li>/.test(sec),
+		'the built create row does not match the pre-wrapper markup exactly');
+	assert(/<li class="cm-diff__row" data-op="update" aria-label="update: url base"><span class="cm-diff__op">update<\/span><span class="cm-diff__val">url base: <del class="cm-diff__del">http:\/\/old<\/del> → <ins class="cm-diff__ins">https:\/\/new<\/ins><\/span><\/li>/.test(sec),
+		'the built update row does not match the pre-wrapper markup exactly');
+	assert(/<li class="cm-diff__row" data-op="delete" aria-label="delete: legacy_port"><span class="cm-diff__op">delete<\/span><span class="cm-diff__val">legacy_port<\/span><\/li>/.test(sec),
+		'the built delete row does not match the pre-wrapper markup exactly');
+	assert(/<details><summary>3 unchanged<\/summary>/.test(sec),
+		'the built fold summary does not read "3 unchanged"');
+	const sameInFold = (sec.slice(sec.indexOf('<details>')).match(/data-op="same"/g) || []).length;
+	assert(sameInFold === 3, `expected 3 same rows inside the fold, found ${sameInFold}`);
+	assert(/update: \/config\/rclone\/remotes\/prod-archive/.test(sec),
+		'the built long-values demo lost its row');
 });
 
 /* ================= workbench controls =================
