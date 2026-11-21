@@ -2156,6 +2156,34 @@ Three decisions:
 Proof lives in `tests/verify-codeblock-trace.py` (WebKit, 20 assertions)
 and `tests/mutate-codeblock-trace.mjs`.
 
+`<Trace>`/`<TraceStep>` is the wrapper - the exact markup above, with the
+state-to-glyph and state-to-class maps owned by the component instead of
+retyped at every call site:
+
+```astro
+---
+import Trace from '../astro/Trace.astro';
+import TraceStep from '../astro/TraceStep.astro';
+---
+<Trace>
+  <TraceStep state="done" title="measured the live list">
+    fetched with a real Safari user agent&hellip;
+  </TraceStep>
+  <TraceStep state="running" title="diff against the pinned ledger" />
+  <TraceStep state="idle" title="author the two components" />
+  <TraceStep state="done" title="shadcn added code-block and trace" id="trace-detail-1">
+    <p>the pinned ledger cannot see this&hellip;</p>
+  </TraceStep>
+</Trace>
+```
+
+`title` is plain text (a step's label is log output, not authored prose);
+the body is a `<slot />` because the real detail content carries `<code>`
+and multiple paragraphs. A step becomes a disclosure (a real `<button>`
+with `aria-expanded`/`aria-controls`, a body hidden by default) only when
+it is given BOTH an `id` and slot content - one without the other falls
+back to a plain row, so a trigger can never point at an empty body.
+
 ### Popover and combobox
 
 ```html
@@ -4396,6 +4424,36 @@ li.cm-diff__row {
   </li>
 </ul>
 ```
+
+`<Diff rows={[...]} foldLabel="unchanged" />` is the wrapper - the exact
+markup above, plus one guarantee it is impossible to get wrong by hand: the
+fold's "N unchanged" count is DERIVED from the rows that actually land in
+the fold, never a number the caller supplies, so it can never drift from
+what is collapsed. Every value is interpolated as plain data (never
+`set:html`) because a diff's values are computed from live system state,
+not hand-authored prose - the opposite contract from `<Kbd>`'s `key`.
+
+```astro
+---
+import Diff from '../astro/Diff.astro';
+---
+<Diff
+  rows={[
+    { op: 'create', label: 'new field', value: 'api_key' },
+    { op: 'update', label: 'url base', from: 'http://old', to: 'https://new' },
+    { op: 'delete', label: 'legacy_port' },
+    { op: 'same', label: 'log_level', value: 'info' },
+  ]}
+  foldLabel="unchanged"
+/>
+```
+
+Each row's shape depends on its `op`: `create`/`same` take an optional
+`value` (shown after `label: `, wrapped in `<code>` for `create`, plain
+text for `same`); `update` requires `from` AND `to` together (a value with
+nothing new to show is a `delete`, not an update with an empty `to`) and
+renders as `<del>`/`<ins>`; `delete` shows `label` alone. Omit `foldLabel`
+to show `same` rows inline instead of collapsing them.
 
 The fold is a `<details>` element — expansion is the platform's. The runtime
 never owns it, so there is no `data-cm-diff` attribute and no JS init.
