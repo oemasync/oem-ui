@@ -1,0 +1,2 @@
+- content family: restyled terminal, cards, tiles, hero to the new terminal-refined language (machined inset top highlight on raised panels, scanline texture on terminal body, bracketed window title, dot-grid on hero, blinking caret, inverted button hover).
+- content: fixed (none beyond restyle).
