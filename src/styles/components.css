@@ -637,6 +637,7 @@
 	padding: var(--space-3);
 	border: 1px solid var(--line);
 	background: var(--panel);
+	box-shadow: var(--inset-highlight);
 }
 /* The chip is drawn from the token itself, so a swatch cannot claim a
    colour the system does not actually use. */
@@ -825,8 +826,14 @@
 	color: var(--bg);
 }
 .cm-btn:focus-visible {
-	outline: 2px solid var(--focus);
-	outline-offset: 2px;
+	outline: var(--focus-width) solid var(--focus);
+	outline-offset: var(--focus-offset);
+}
+@media (pointer: coarse) {
+	.cm-btn:focus-visible {
+		outline: var(--focus-width-coarse) solid var(--focus);
+		outline-offset: var(--focus-offset);
+	}
 }
 .cm-btn:active { background: var(--bg-3); }
 .cm-btn[disabled],

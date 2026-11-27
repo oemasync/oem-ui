@@ -1,0 +1,4 @@
+- foundation: swatches as labelled tiles with token name, value and contrast ratio; type scale gains a display step; spacing ruler unchanged.
+- buttons: inverted hover on default .cm-btn; focus ring uses --focus-width/--focus-offset; size/variant matrix with disabled, loading, pressed states.
+- crumbs: demo anchors point to /f/surfaces/#lists.
+- a11y: .cm-chip__x hit area enlarged via pseudo-element; coarse + max-width tap floor for .cm-icon-btn, .cm-btn--sm, .cm-seg__opt at mobile widths.
