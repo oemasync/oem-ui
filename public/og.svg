@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="oem/ui">
+  <title>oem/ui — terminal, refined design system</title>
+  <defs>
+    <pattern id="dotgrid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#1c1c1c" />
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#0a0a0a" />
+  <rect width="1200" height="630" fill="url(#dotgrid)" />
+  <!-- terminal window frame -->
+  <rect x="60" y="60" width="1080" height="510" fill="#0f0f0f" stroke="#2a2a2a" stroke-width="1" />
+  <rect x="60" y="60" width="1080" height="44" fill="#161616" stroke="#2a2a2a" stroke-width="1" />
+  <text x="84" y="88" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="600" fill="#7a7a7a" letter-spacing="0.12em">[ oem/ui ]</text>
+  <text x="1092" y="88" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#5c5c5c">ui.mrx.sh</text>
+  <!-- eyebrow -->
+  <text x="100" y="180" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="600" fill="#7a7a7a" letter-spacing="0.28em">01 ── TERMINAL, REFINED</text>
+  <!-- wordmark -->
+  <text x="100" y="300" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="128" font-weight="700" letter-spacing="-0.02em" fill="#fafafa">oem/ui</text>
+  <rect x="560" y="200" width="44" height="112" fill="#fafafa" />
+  <!-- tagline -->
+  <text x="100" y="360" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" fill="#b3b3b3">a zero-dependency mono/terminal design system.</text>
+  <text x="100" y="400" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" fill="#b3b3b3">three css layers · one runtime · optional astro components.</text>
+  <!-- bottom rule + meta -->
+  <line x1="100" y1="470" x2="1100" y2="470" stroke="#2a2a2a" stroke-width="1" />
+  <text x="100" y="510" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#5c5c5c" letter-spacing="0.18em">DARK BY DEFAULT · SQUARE CORNERS · GREYSCALE · BORDERS DO THE LIFTING</text>
+</svg>
