@@ -1096,7 +1096,7 @@ html {
    `:last-child` on the row, not on the list, so a row followed by any
    other element - a footer action, a nested list - keeps its rule. */
 .cm-row:last-child { border-bottom: 0; }
-.cm-row:hover { background: var(--panel); color: var(--ink); }
+.cm-row:hover { background: var(--ink); color: var(--bg); }
 .cm-row__idx {
 	color: var(--ink-faint);
 	font-size: var(--text-micro);
@@ -1152,7 +1152,17 @@ button.cm-row--on,
 button.cm-row--on:hover {
 	background: var(--bg-2);
 }
-button.cm-row:hover { background: var(--bg-2); }
+button.cm-row--on:hover {
+	background: var(--ink);
+	color: var(--bg);
+	box-shadow: inset 3px 0 0 var(--bg);
+}
+.cm-row--on:hover {
+	background: var(--ink);
+	color: var(--bg);
+	box-shadow: inset 3px 0 0 var(--bg);
+}
+button.cm-row:hover { background: var(--ink); color: var(--bg); }
 
 .cm-row__title {
 	font-weight: 700;
@@ -1277,6 +1287,11 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 .cm-row__meta--wrap > * { min-width: 0; }
 .cm-row__meta--wrap > * { min-width: 0; }
+
+.cm-row:hover .cm-row__title,
+.cm-row:hover .cm-row__idx,
+.cm-row:hover .cm-row__meta,
+.cm-row:hover .cm-row__desc { color: var(--bg); }
 /* The other direction: a meta slot whose contents are ONE string that
    must not break across lines. MEASURED on rpm in WebKit at 390px:
    the `→ ip : port` slot was left wrappable and broke into two rows -
