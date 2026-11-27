@@ -1,0 +1,4 @@
+- Site shell: indexed section heads (`01 ── name`) via CSS counter on `.cm-section`.
+- Landing: family grid on `/` linking to all nine family pages with component counts.
+- Page head: tighter tracking on the display title.
+- Inset top highlight and machined panel feel: deferred to follow-up (out of scope for this pass).
