@@ -607,7 +607,7 @@
    margin, so the head's own bottom padding is what opens the gap to
    the rule. */
 .cm-post-head .cm-kicker { margin-bottom: var(--space-3); }
-.cm-post-head h1 { margin-bottom: var(--space-4); font-size: var(--text-xl); letter-spacing: -0.02em; line-height: 1.1; }
+.cm-post-head h1 { margin-bottom: var(--space-4); font-size: 2.5rem; letter-spacing: -0.02em; line-height: 1.1; }
 @media (max-width: 680px) {
 	.cm-post-head h1 { line-height: 1.25; }
 }
@@ -746,6 +746,7 @@
 	font-family: var(--font-mono);
 	font-size: var(--text-xs);
 	color: var(--ink-faint);
+	font-variant-numeric: tabular-nums;
 }
 /* The separator is GENERATED, on the item it precedes.
    `.cm-footer__meta > *:not(:first-child)::before` is the same rule for the
@@ -1390,6 +1391,9 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-prose h2::before { content: '## '; color: var(--ink-faint); }
 .cm-prose a { color: var(--ink-dim); }
 .cm-prose a:hover { color: var(--ink); }
+.cm-prose blockquote { margin: var(--space-4) 0; padding: var(--space-3) var(--space-4); border-inline-start: 3px solid var(--ink-dim); background: var(--bg-2); color: var(--ink-dim); box-shadow: var(--shadow-1); }
+.cm-prose pre { margin: var(--space-4) 0; padding: var(--space-3); border: 1px solid var(--line); background: var(--bg-2); box-shadow: var(--shadow-1); overflow-x: auto; }
+.cm-prose code { background: var(--bg-2); padding: 0.1em 0.3em; }
 
 /* ---------- prose measure ----------
    A reading column NARROWER than the default one, for the case the
@@ -1536,7 +1540,9 @@ button.cm-row:hover { background: var(--bg-2); }
 	color: var(--ink-dim);
 	font-weight: 600;
 	font-size: var(--min-font);
-	letter-spacing: 0.02em;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
 	white-space: normal;
 }
 /* A rule under the header, not a box around every cell: a prose table
@@ -1906,6 +1912,15 @@ button.cm-row:hover { background: var(--bg-2); }
 	display: block; width: 100%;
 	border-radius: var(--radius-sm);
 	border: 1px solid var(--line);
+	box-shadow: var(--shadow-1);
+}
+.cm-media figcaption {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: var(--ink-faint);
+	margin-top: var(--space-2);
 }
 
 /* ---------- blinking cursor (the brand mark) ---------- */
@@ -2585,7 +2600,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	font-weight: 600;
 	color: var(--ink);
 }
-.cm-callout__mark { flex: 0 0 auto; color: var(--ink-faint); }
+.cm-callout__mark { display: inline-flex; align-items: center; justify-content: center; width: 1.25em; height: 1.25em; border: 1px solid var(--line); background: var(--bg-3); color: var(--ink-faint); font-size: var(--text-micro); }
 .cm-callout__body { color: var(--ink-dim); }
 /* The body is free-form prose (one or more paragraphs). Its own first
    and last child must not add a second margin on top of the box's own

@@ -67,7 +67,6 @@
 	   the same number as --text-xs, so a rule that reaches for either
 	   lands on the same rendered size. */
 	--text-lg: 1.35rem;
-	--text-xl: 2.5rem;
 	/* The one step between a section heading (--head-h2, 18.4px) and body
 	   text. A metric VALUE belongs here and not at --text-lg: a tile whose
 	   number is louder than the heading that introduces it inverts the
