@@ -4,4 +4,3 @@
 - Hovered rows now reset only text-bearing descendants (status code, cell action, numeric) so controls (switch, checkbox, badge, chip, kbd, status dot) keep their own paint; contrast measured 0 failing samples in both themes.
 - Selected rows (`aria-selected='true'`) keep their selected fill on hover instead of inverting.
 - Adopted design tokens: `--tracking-wide` for header tracking, `--shadow-1` for the raised-panel inset highlight.
-- Switch keeps square track/knob, inverted on state, visible focus ring, and position (not fill) carries state under forced colors.
