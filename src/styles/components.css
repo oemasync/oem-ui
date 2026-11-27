@@ -825,15 +825,10 @@
 	border-color: var(--ink);
 	color: var(--bg);
 }
-.cm-btn:focus-visible {
-	outline: var(--focus-width) solid var(--focus);
-	outline-offset: var(--focus-offset);
-}
-@media (pointer: coarse) {
-	.cm-btn:focus-visible {
-		outline: var(--focus-width-coarse) solid var(--focus);
-		outline-offset: var(--focus-offset);
-	}
+.cm-btn[aria-pressed='true'] {
+	background: var(--ink);
+	color: var(--bg);
+	border-color: var(--ink);
 }
 .cm-btn:active { background: var(--bg-3); }
 .cm-btn[disabled],
@@ -6526,11 +6521,11 @@ button.cm-link:focus-visible {
 .cm-chip__x::before {
 	content: '';
 	position: absolute;
-	inset: -0.5rem;
+	inset: calc(var(--space-2) * -1);
 }
 @media (pointer: coarse) {
 	.cm-chip__x::before {
-		inset: -0.75rem;
+		inset: calc(var(--space-3) * -1);
 	}
 }
 .cm-chip__x:hover { color: var(--ink); }
@@ -6942,15 +6937,6 @@ button.cm-link:focus-visible {
 }
 /* Long option sets wrap onto a second line rather than running off the
    edge; the control is inline-flex, so it is the ROW that wraps. */
-
-/* Mobile viewports are touch in practice, even when a desktop browser is
-   resized to measure them, so the tap floor must also key off width and not
-   only off `pointer: coarse` (which reports the host's input device). */
-@media (max-width: 680px) {
-	.cm-icon-btn { width: var(--tap); height: var(--tap); }
-	.cm-btn--sm { min-height: var(--tap); }
-	.cm-seg__opt { min-height: var(--tap); }
-}
 
 /* ---------- disclosure ----------
    A summary row that reveals a panel. Native-first where the platform
@@ -13073,6 +13059,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	) * {
 		background-color: transparent !important;
 		color: HighlightText !important;
+	}
+
+.cm-btn[aria-pressed='true'] {
+		background-color: Highlight !important;
+		color: HighlightText !important;
+		border-color: Highlight !important;
 	}
 
 	/* The track has no border, only a fill, so here it was an unframed knob

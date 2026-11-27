@@ -3187,8 +3187,11 @@ check('every specimen in the showcase is rendered from a token, not typed', () =
 		'spacing bars must be drawn from the token they name, not a literal px value');
 	const specRows = f.match(/\['--space-\d+',/g) || [];
 	assert(specRows.length === 11, `all 11 steps must be listed, found ${specRows.length}`);
-	// swatches: the chip must paint the token it names
-	const chips = f.match(/background:\s*var\(--[\w-]+\)/g) || [];
+	// swatches: the chip must paint the token it names (measured in the built page,
+	// since the markup is now generated from a frontmatter list)
+	const built = builtHtml();
+	const bf = built.slice(built.indexOf('id="foundation"'), built.indexOf('id="buttons"'));
+	const chips = bf.match(/background:\s*var\(--[\w-]+\)/g) || [];
 	assert(chips.length >= 7, `swatch chips must paint their token, found ${chips.length}`);
 	// type scale: each sample must set the size from a token
 	assert(/font-size:\s*var\(--/.test(f),

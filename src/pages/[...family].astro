@@ -132,6 +132,80 @@ export function getStaticPaths() {
 /* Astro drops a prop whose value is nullish for a route whose param is
  * absent, so the whole-page build arrives as `undefined`. Normalising here
  * is what makes `family === null` a usable test for "the whole page". */
+import { readFileSync } from 'node:fs';
+
+// Derive swatch values + contrast ratios from tokens.css at build time so the
+// specimen can never drift from the system it documents.
+const tokensSrc = readFileSync('src/styles/tokens.css', 'utf8');
+
+function parseThemeBlocks(src) {
+	const out = { dark: {}, light: {} };
+	let mode = null;
+	for (const line of src.split(/\r?\n/)) {
+		if (/\[data-cm-theme='dark'\]/.test(line)) { mode = 'dark'; continue; }
+		if (/\[data-cm-theme='light'\]/.test(line)) { mode = 'light'; continue; }
+		if (mode) {
+			const m = line.match(/^\s*(--[a-z0-9-]+)\s*:\s*(.+?)\s*;?\s*$/i);
+			if (m) out[mode][m[1]] = m[2].replace(/;$/, '').trim();
+		}
+	}
+	return out;
+}
+
+function toRgb(v) {
+	v = v.trim();
+	let m = v.match(/^#([0-9a-f]{6})$/i);
+	if (m) {
+		const h = m[1];
+		return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+	}
+	m = v.match(/^rgba?\(([^)]+)\)$/i);
+	if (m) {
+		const parts = m[1].split(',').map(s => parseFloat(s.trim()));
+		return [parts[0], parts[1], parts[2]];
+	}
+	return [0,0,0];
+}
+
+function lum(c) {
+	const [r,g,b] = c.map(x => {
+		const s = x / 255;
+		return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+	});
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(a, b) {
+	const la = lum(toRgb(a)), lb = lum(toRgb(b));
+	return (Math.max(la,lb) + 0.05) / (Math.min(la,lb) + 0.05);
+}
+
+const themeBlocks = parseThemeBlocks(tokensSrc);
+const swatchRoles = [
+	{ token: '--bg', role: 'surface · base' },
+	{ token: '--panel', role: 'surface' },
+	{ token: '--line', role: 'rule' },
+	{ token: '--ink', role: 'text' },
+	{ token: '--ink-dim', role: 'text' },
+	{ token: '--ink-faint', role: 'text' },
+	{ token: '--accent-bright', role: 'highlight' },
+];
+
+const swatches = swatchRoles.map(({ token, role }) => {
+	const darkVal = themeBlocks.dark[token];
+	const lightVal = themeBlocks.light[token];
+	const darkBg = themeBlocks.dark['--bg'];
+	const lightBg = themeBlocks.light['--bg'];
+	return {
+		token,
+		role,
+		darkVal,
+		lightVal,
+		darkContrast: contrast(darkVal, darkBg).toFixed(2),
+		lightContrast: contrast(lightVal, lightBg).toFixed(2),
+	};
+});
+
 const family = (Astro.props as { family?: string | null }).family ?? null;
 const shows = (f: string) => family === null || family === f;
 
@@ -501,49 +575,15 @@ The design language, shown as specimens. Every value here is rendered from the t
 					the dimmest text we allow, and it still clears WCAG AA.
 				</p>
 				<ul class="cm-swatch" role="list">
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--bg)"></span>
-									<span class="cm-swatch__meta"><code>--bg</code></span>
-									<span class="cm-swatch__val"><code>#0a0a0a · #fafafa</code></span>
-									<span class="cm-swatch__val"><code>surface · base</code></span>
-								</li>
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--panel)"></span>
-									<span class="cm-swatch__meta"><code>--panel</code></span>
-									<span class="cm-swatch__val"><code>#111111 · #f5f5f5</code></span>
-									<span class="cm-swatch__val"><code>surface · 1.05:1</code></span>
-								</li>
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--line)"></span>
-									<span class="cm-swatch__meta"><code>--line</code></span>
-									<span class="cm-swatch__val"><code>#262626 · #d6d6d6</code></span>
-									<span class="cm-swatch__val"><code>rule · 1.31:1</code></span>
-								</li>
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--ink)"></span>
-									<span class="cm-swatch__meta"><code>--ink</code></span>
-									<span class="cm-swatch__val"><code>#e8e8e8 · #111111</code></span>
-									<span class="cm-swatch__val"><code>text · 16.16:1</code></span>
-								</li>
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--ink-dim)"></span>
-									<span class="cm-swatch__meta"><code>--ink-dim</code></span>
-									<span class="cm-swatch__val"><code>#9c9c9c · #4a4a4a</code></span>
-									<span class="cm-swatch__val"><code>text · 7.21:1</code></span>
-								</li>
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--ink-faint)"></span>
-									<span class="cm-swatch__meta"><code>--ink-faint</code></span>
-									<span class="cm-swatch__val"><code>#8b8b8b · #6a6a6a</code></span>
-									<span class="cm-swatch__val"><code>text · 5.81:1</code></span>
-								</li>
-								<li class="cm-swatch__item">
-									<span class="cm-swatch__chip" style="background:var(--accent-bright)"></span>
-									<span class="cm-swatch__meta"><code>--accent-bright</code></span>
-									<span class="cm-swatch__val"><code>#ffffff · #000000</code></span>
-									<span class="cm-swatch__val"><code>highlight · 19.8:1</code></span>
-								</li>
-							</ul>
+				{swatches.map((s) => (
+					<li class="cm-swatch__item">
+						<span class="cm-swatch__chip" style={`background:var(${s.token})`}></span>
+						<span class="cm-swatch__meta"><code>{s.token}</code></span>
+						<span class="cm-swatch__val"><code>{s.darkVal} · {s.lightVal}</code></span>
+						<span class="cm-swatch__val"><code>{s.role} · {s.darkContrast}:1 / {s.lightContrast}:1</code></span>
+					</li>
+				))}
+			</ul>
 
 				<h3>type</h3>
 				<p class="cm-head__sub">
@@ -555,7 +595,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>display</code></span>
 						<span class="cm-spec__sample" style="font-size:var(--head-display); letter-spacing:var(--tracking-tight); line-height:1">Aa</span>
-						<span class="cm-spec__val"><code>2.5rem · 40px</code></span>
+						<span class="cm-spec__val"><code>var(--head-display)</code></span>
 					</div>
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>h1</code></span>
