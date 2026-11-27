@@ -3861,13 +3861,45 @@ button.cm-row:hover { background: var(--bg-2); }
 /* Form controls: a visible offset ring on top of the base one, so a field
    in focus reads as a strong rule rather than a hairline. Scoped to the
    field component rather than bare elements. */
+.cm-field {
+	--cm-field-ring: var(--space-0);
+}
 .cm-field input:focus-visible,
 .cm-field textarea:focus-visible,
 .cm-field select:focus-visible,
 .cm-input-group input:focus-visible,
 .cm-input-group select:focus-visible {
-	outline: var(--space-0) solid var(--focus);
-	outline-offset: var(--space-0);
+	outline: var(--cm-field-ring, var(--space-0)) solid var(--focus);
+	outline-offset: var(--cm-field-ring, var(--space-0));
+}
+
+/* A crisp hairline box on the panel surface: the control reads as a
+   machined field, and the strong rule on hover/focus/invalid is the
+   only thing that changes. */
+.cm-field input:not([type='checkbox']):not([type='radio']):not([type='range']),
+.cm-field textarea,
+.cm-field select {
+	background: var(--panel);
+	border: 1px solid var(--line);
+	padding: var(--space-1) var(--space-2);
+	color: var(--ink);
+}
+.cm-field input:not([type='checkbox']):not([type='radio']):not([type='range']):hover,
+.cm-field textarea:hover,
+.cm-field select:hover {
+	border-color: var(--ink-dim);
+}
+.cm-field input:not([type='checkbox']):not([type='radio']):not([type='range'])[aria-invalid='true'],
+.cm-field textarea[aria-invalid='true'],
+.cm-field select[aria-invalid='true'] {
+	border-color: var(--ink);
+}
+.cm-field input:disabled,
+.cm-field textarea:disabled,
+.cm-field select:disabled {
+	border-style: dashed;
+	color: var(--ink-faint);
+	background: var(--bg-2);
 }
 
 /* ---------- form layout: wrapper, group, actions, help, error ----------
@@ -3916,7 +3948,7 @@ button.cm-row:hover { background: var(--bg-2); }
    shows a bare exclamation mark at all times. Re-assert the attribute so an
    error slot can be shipped hidden, which is the only useful default. */
 .cm-field__error[hidden] { display: none; }
-.cm-field__error::before { content: '!'; opacity: 0.7; }
+.cm-field__error::before { content: '✕'; opacity: 0.7; }
 
 /* two fields side by side, collapsing to one column on a phone */
 .cm-field-row {
@@ -8511,6 +8543,7 @@ input.cm-slider:disabled {
 	border: 1px solid var(--line);
 	background: var(--panel);
 	overflow-x: auto;
+	box-shadow: inset 0 1px 0 var(--line-soft);
 }
 .cm-cal__bar {
 	/* pinned: when the grid scrolls sideways inside the card, the
@@ -8630,6 +8663,8 @@ input.cm-slider:disabled {
 .cm-cal__day[aria-current='date'] {
 	border-color: var(--ink-dim);
 	color: var(--ink);
+	text-decoration: underline;
+	text-underline-offset: 2px;
 }
 [aria-selected='true'] > .cm-cal__day {
 	border-color: var(--ink);
@@ -8642,8 +8677,9 @@ input.cm-slider:disabled {
 	color: var(--bg);
 }
 .cm-cal__day[data-in-range='true'] {
-	background: var(--bg-2);
+	background: var(--panel-nested);
 	color: var(--ink);
+	border-color: var(--line);
 }
 .cm-cal__day[data-preview='true'] {
 	background: var(--bg-3);
@@ -10013,6 +10049,7 @@ input.cm-slider:disabled {
 	background: var(--panel);
 	padding: var(--space-3);
 	margin-block: 0 var(--space-6);
+	box-shadow: inset 0 1px 0 var(--line-soft);
 }
 /* A circular chart draws its marks against the NESTED surface step, so
    the thin ring lines have something to sit on that is not the panel
