@@ -1113,7 +1113,7 @@ html {
    `:last-child` on the row, not on the list, so a row followed by any
    other element - a footer action, a nested list - keeps its rule. */
 .cm-row:last-child { border-bottom: 0; }
-.cm-row:hover { background: var(--panel); color: var(--ink); }
+.cm-row:hover { background: var(--ink); color: var(--bg); }
 .cm-row__idx {
 	color: var(--ink-faint);
 	font-size: var(--text-micro);
@@ -1169,7 +1169,13 @@ button.cm-row--on,
 button.cm-row--on:hover {
 	background: var(--bg-2);
 }
-button.cm-row:hover { background: var(--bg-2); }
+button.cm-row--on:hover,
+.cm-row--on:hover {
+	background: var(--ink);
+	color: var(--bg);
+	box-shadow: inset 3px 0 0 var(--bg);
+}
+button.cm-row:hover { background: var(--ink); color: var(--bg); }
 
 .cm-row__title {
 	font-weight: 700;
@@ -1294,6 +1300,11 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 .cm-row__meta--wrap > * { min-width: 0; }
 .cm-row__meta--wrap > * { min-width: 0; }
+
+.cm-row:hover .cm-row__title,
+.cm-row:hover .cm-row__idx,
+.cm-row:hover .cm-row__meta,
+.cm-row:hover .cm-row__desc { color: var(--bg); }
 /* The other direction: a meta slot whose contents are ONE string that
    must not break across lines. MEASURED on rpm in WebKit at 390px:
    the `→ ip : port` slot was left wrappable and broke into two rows -
@@ -1348,7 +1359,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	transition: color var(--cm-t) var(--cm-ease),
 		transform var(--cm-t) var(--cm-ease);
 }
-.cm-row:hover .cm-row__sym { color: var(--ink); transform: translateX(3px); }
+.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(3px); }
 
 /* stacked variant: title over desc over meta, taller rows */
 /* Row icon slot: a fixed-width box that centres a glyph or SVG next to
@@ -1362,6 +1373,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	width: 1.1rem;
 	color: var(--ink-dim);
 }
+.cm-row:hover .cm-row__icon { color: var(--bg); }
 
 /* Column body: title over desc, both full width. --stacked renders the
    body as a block for prose-style rows; this is the flex-column form a
@@ -2208,15 +2220,22 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-state__mark {
 	display: block;
 	margin: 0 auto var(--space-3);
-	width: 2.4rem;
-	height: 2.4rem;
+	width: var(--space-8);
+	height: var(--space-8);
 	border: 1px dashed var(--line);
 	border-radius: 0;
 	color: var(--ink-faint);
-	line-height: 2.3rem;
-	font-size: var(--min-font);
+	line-height: var(--space-8);
+	font-size: var(--text-lg);
+	text-align: center;
 }
-.cm-state__title { color: var(--ink); margin: 0 0 var(--space-2); }
+.cm-state__title {
+	color: var(--ink-dim);
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-micro);
+	letter-spacing: var(--tracking-wide);
+	text-transform: uppercase;
+}
 .cm-state__body { margin: 0 auto; max-width: var(--measure-narrow); color: var(--ink-dim); }
 /* The documented one-liner under the title. The README's empty-state
    example named it `cm-state__text` from the day the family shipped, and
@@ -2530,8 +2549,14 @@ button.cm-row:hover { background: var(--bg-2); }
 	border-inline-start-width: 3px;
 	border-radius: var(--radius-sm);
 	background: var(--panel);
+	box-shadow: var(--shadow-1);
 }
-.cm-alert__mark { flex: 0 0 auto; color: var(--ink-faint); }
+.cm-alert__mark {
+	flex: 0 0 auto;
+	min-width: var(--cm-typeset-flow);
+	text-align: center;
+	color: var(--ink-faint);
+}
 .cm-alert__body { min-width: 0; }
 .cm-alert__title { margin: 0 0 var(--space-1); color: var(--ink); }
 .cm-alert__text { margin: 0; color: var(--ink-dim); }
@@ -3070,6 +3095,8 @@ button.cm-row:hover { background: var(--bg-2); }
 	color: var(--ink-dim);
 	white-space: nowrap;
 	max-width: 100%;
+	padding: var(--space-1) var(--space-2);
+	font-variant-numeric: tabular-nums;
 }
 /* The glyph duplicates the word beside it, which is the whole point: the
    state survives a greyscale screen, a print, and a reader who cannot
@@ -3140,6 +3167,8 @@ button.cm-row:hover { background: var(--bg-2); }
 	text-transform: uppercase;
 	color: var(--ink-dim);
 	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+	padding: var(--space-1) var(--space-2);
 }
 .cm-method--get { border-color: var(--line); color: var(--ink-dim); }
 .cm-method--post {
@@ -3230,6 +3259,7 @@ button.cm-row:hover { background: var(--bg-2); }
    unlegible; the description takes the rest of the line, or its own
    line when there is no room, which is the phone case. */
 .cm-param {
+	font-variant-numeric: tabular-nums;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: baseline;
@@ -3266,6 +3296,8 @@ button.cm-row:hover { background: var(--bg-2); }
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 	color: var(--ink-dim);
+	font-variant-numeric: tabular-nums;
+	padding: var(--space-1) var(--space-2);
 }
 .cm-param__desc {
 	/* The description takes the rest of the line, or its own line
@@ -13074,4 +13106,13 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	   still replaces it while the input is focused. On and off need no
 	   colour: the knob's position is the state, here as everywhere. */
 	.cm-switch__track { outline: 1px solid CanvasText; }
+}
+
+
+/* Terminal prompt for an endpoint line: $ GET /path. */
+.cm-endpoint::before {
+	content: "$";
+	color: var(--ink-faint);
+	font-family: var(--font-mono);
+	margin-inline-end: var(--space-2);
 }
