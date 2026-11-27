@@ -3216,8 +3216,8 @@ check('a token name can never be truncated in a swatch', () => {
 		compSrc.indexOf('.cm-spec {'));
 	assert(!/text-overflow:\s*ellipsis/.test(swatchBlock),
 		'swatch labels must not ellipsise; size the chip off the font instead');
-	assert(/\.cm-swatch__chip\s*\{[^}]*width:\s*[\d.]+em/.test(compSrc),
-		'the swatch chip must be font-relative so a long name still fits');
+	assert(/\.cm-swatch__chip\s*\{[^}]*width:\s*var\(--swatch-chip\)/.test(compSrc),
+		'the swatch chip must be sized from the --swatch-chip token');
 });
 
 /* ================= shared row surface ================= */
