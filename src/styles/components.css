@@ -7486,8 +7486,6 @@ input.cm-slider {
 	background: transparent;
 	border: 0;
 	--cm-slider: 0%;
-	--cm-slider-track-h: 8px;
-	--cm-slider-thumb-h: 18px;
 }
 input.cm-slider::-webkit-slider-runnable-track {
 	height: var(--cm-slider-track-h);
@@ -8609,7 +8607,7 @@ input.cm-slider:disabled {
 	font-weight: 400;
 	text-align: center;
 	text-transform: uppercase;
-	letter-spacing: 0.12em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-cal__grid td {
 	padding: 0;
@@ -8663,7 +8661,7 @@ input.cm-slider:disabled {
 	border-color: var(--ink-dim);
 	color: var(--ink);
 	text-decoration: underline;
-	text-underline-offset: 0.2em;
+	text-underline-offset: var(--underline-offset);
 }
 [aria-selected='true'] > .cm-cal__day {
 	border-color: var(--ink);

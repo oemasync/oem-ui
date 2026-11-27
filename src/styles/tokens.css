@@ -214,8 +214,6 @@
 	   4     64px   above a top-of-page head
 	   6     96px   page-level breathing room  */
 	--space-0: 0.125rem;
-	--cm-slider-track-h: 8px;
-	--cm-slider-thumb-h: 18px;
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;
 	--space-3: 0.75rem;
@@ -226,6 +224,11 @@
 	--space-8: 3rem;
 	--space-9: 4rem;
 	--space-10: 6rem;
+
+	/* ---- component geometry ------------------------------------ */
+	--cm-slider-track-h: 8px;
+	--cm-slider-thumb-h: 18px;
+	--underline-offset: 0.2em;
 
 	/* ---- rhythm ------------------------------------------------
 	   THE spacing contract for stacked blocks. The --space-N scale says
