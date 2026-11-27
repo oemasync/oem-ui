@@ -1,3 +1,4 @@
 ### Changed
-- tokens.css: added surface/rule/texture/type-tracking/focus-ring/caret tokens for the "terminal, refined" redesign (both themes + scoped + print).
-- base.css: dot-grid page background, scanline on code surfaces, tighter display tracking, tabular numerals on table cells, texture off under reduced-motion/forced-colors.
+- tokens.css: added surface ladder tokens, rule/line tokens (incl. --line-strong), inset highlight, display/eyebrow type tokens, dot-grid/scanline texture tokens, focus-ring geometry tokens, caret blink timing, selection colours, scrollbar styling; light theme --surface-raised raised to #ffffff; desktop --focus-width set to 1px.
+- base.css: dot-grid page background, scanline on code/pre surfaces, tighter display tracking, tabular numerals on table cells, ::selection, focus-visible ring driven by --focus-* tokens, caret blink keyframes, scrollbar styling.
+- tests/run.mjs: focus-ring checks now resolve --focus-width/--focus-width-coarse/--focus-offset through tokens.css.

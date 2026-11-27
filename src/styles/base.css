@@ -374,16 +374,12 @@ td { font-variant-numeric: tabular-nums; }
    So: same colour, same idiom, more weight where the reading distance
    demands it. */
 :focus-visible {
-	outline: 2px solid var(--focus);
 	outline: var(--focus-width) solid var(--focus);
-	outline-offset: 2px;
 	outline-offset: var(--focus-offset);
 }
 @media (pointer: coarse) {
 	:focus-visible {
-		outline: 2px solid var(--focus);
 		outline: var(--focus-width-coarse) solid var(--focus);
-		outline-offset: 2px;
 		outline-offset: var(--focus-offset);
 	}
 }

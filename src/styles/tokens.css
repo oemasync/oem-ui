@@ -386,12 +386,13 @@
 	/* ---- focus ring geometry --------------------------------------
 	   Widths and offset for the keyboard focus ring. Colours come from
 	   --focus; geometry lives here so it is retuned once. */
-	--focus-width: 2px;
+	--focus-width: 1px;
 	--focus-width-coarse: 2px;
 	--focus-offset: 2px;
 	/* ---- caret blink timing ---------------------------------------
 	   The brand caret and any terminal cursor blink on this cadence.
-	   Reduced-motion zeroes it (see base.css). */
+	   The single reduced-motion block in components.css stops the
+	   animation. */
 	--caret-blink: 1.06s;
 	/* ---- switch geometry ----
 	   A 2:1 track, and a knob inset by half the gap it leaves. Deriving the
