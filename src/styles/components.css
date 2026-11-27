@@ -607,7 +607,7 @@
    margin, so the head's own bottom padding is what opens the gap to
    the rule. */
 .cm-post-head .cm-kicker { margin-bottom: var(--space-3); }
-.cm-post-head h1 { margin-bottom: var(--space-4); }
+.cm-post-head h1 { margin-bottom: var(--space-4); font-size: var(--text-xl); letter-spacing: -0.02em; line-height: 1.1; }
 @media (max-width: 680px) {
 	.cm-post-head h1 { line-height: 1.25; }
 }
@@ -2575,6 +2575,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	border-inline-start-width: 3px;
 	border-radius: var(--radius-sm);
 	background: var(--panel);
+	box-shadow: var(--shadow-1);
 }
 .cm-callout__title {
 	display: flex;
@@ -12183,6 +12184,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	background: var(--bg-2);
+	box-shadow: var(--shadow-1);
 }
 /* One row at a time. The element's own chrome (the scrubber, the
    buttons) wraps to a second line on a phone; the identity row
@@ -12251,6 +12253,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	background: var(--bg-2);
+	box-shadow: var(--shadow-1);
 }
 .cm-video__id {
 	display: flex;

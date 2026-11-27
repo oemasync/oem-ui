@@ -1,0 +1,1 @@
+- prose: post head title uses a display-size step with tight tracking; raised frames (callout, audio, video) carry the machined inset highlight; media-grid demo copy now states its measured geometry truthfully.
