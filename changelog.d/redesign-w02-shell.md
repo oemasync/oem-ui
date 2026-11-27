@@ -1,4 +1,6 @@
 - Site shell: indexed section heads (`01 ── name`) via CSS counter on `.cm-section`.
-- Landing: family grid on `/` linking to all nine family pages with component counts.
-- Page head: tighter tracking on the display title.
-- Inset top highlight and machined panel feel: deferred to follow-up (out of scope for this pass).
+- Landing: family grid on `/` linking to all nine family pages with component counts; install snippet via `.cm-term`.
+- Page head: display-size title (clamp) with eyebrow and blinking caret.
+- Header: group counts with accessible label; active rail link uses ink + bold left rule; machined bottom rule retained.
+- Specimen frames: terminal-window title bar with per-specimen bracketed label and inset top highlight.
+- Mobile: verified burger and horizontal scroll; no shell-caused overflow (pre-existing lists/tables).
