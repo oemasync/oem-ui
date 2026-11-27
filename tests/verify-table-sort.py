@@ -36,6 +36,7 @@ def js_order(vals, reverse=False):
             { numeric: true, sensitivity: 'base' }))""", [vals, reverse])
 
 COL = """([sel, i]) => [...document.querySelectorAll(sel + ' tbody tr')]
+    .filter(tr => !tr.hasAttribute('data-cm-empty'))
     .map(tr => (tr.cells[i] ? tr.cells[i].textContent : '').trim())"""
 
 STATE = """(sel) => {
@@ -53,7 +54,7 @@ with sync_playwright() as p:
     pg.goto(URL, wait_until='load')
     pg.wait_for_timeout(300)
 
-    T = 'table.cm-table[data-cm-sort]'
+    T = 'table.cm-table[data-cm-sort]:not([data-cm-size])'
     check(pg.evaluate("() => !!document.querySelector('table.cm-table[data-cm-sort]')"),
           'the showcase table opts in with data-cm-sort')
 
@@ -67,7 +68,8 @@ with sync_playwright() as p:
     check(declared.get('Method') == 'descending',
           f'Method declares descending on load ({declared.get("Method")})')
     method_is_desc = pg.evaluate("""() => {
-      const vals = [...document.querySelectorAll('table.cm-table[data-cm-sort] tbody tr')]
+      const vals = [...document.querySelectorAll('table.cm-table[data-cm-sort]:not([data-cm-size]) tbody tr')]
+        .filter(r => !r.hasAttribute('data-cm-empty'))
         .map(r => r.cells[1].textContent.trim());
       const want = [...vals].sort((a, b) =>
         b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }));
