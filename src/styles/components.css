@@ -955,9 +955,9 @@
 .cm-codebar {
 	position: relative;
 	margin: 0 0 1.4em;
-	/* The bar owns the radius now; the block inside must not draw its own
-	   or the two corners double up. */
+	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-1);
 	overflow: hidden;
 }
 /* The pre is an ELEMENT default in base.css with its own border, radius
@@ -969,7 +969,15 @@
 	border: 0;
 	border-inline-start: 0;
 	border-radius: 0;
-	background: var(--bg-2);
+	background-color: var(--bg-2);
+	background-image: repeating-linear-gradient(
+		0deg,
+		transparent 0,
+		transparent 2px,
+		var(--line-soft) 2px,
+		var(--line-soft) 3px
+	);
+	background-blend-mode: normal;
 }
 .cm-codebar__bar {
 	display: flex;
@@ -4071,8 +4079,8 @@ button.cm-row:hover { background: var(--bg-2); }
 	background: var(--bg-2);
 	color: var(--ink);
 	font-family: var(--font-body);
-	box-shadow: var(--shadow-card);
-	overflow: auto;
+	box-shadow: var(--shadow-1), var(--shadow-card);
+			overflow: auto;
 }
 /* --scrim is a token, not a literal: the same alpha over #0a0a0a and
    over #fafafa hides the page by very different amounts, so the wash
@@ -4221,7 +4229,7 @@ dialog.cm-dialog--spec:not([open]) {
 	color: var(--ink);
 	font-size: max(var(--min-font), var(--text-xs));
 	pointer-events: auto;
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	animation: cm-toast-in var(--cm-t-slow) var(--cm-ease);
 }
 @keyframes cm-toast-in {
@@ -4312,7 +4320,7 @@ dialog.cm-dialog--spec:not([open]) {
 	color: var(--ink);
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	/* A 40-row timezone list must scroll INSIDE the panel instead of
 	   running off the phone: 60vh keeps the trigger and the last row
 	   both visible, and `contain` stops a swipe over the list from
@@ -4396,7 +4404,7 @@ dialog.cm-dialog--spec:not([open]) {
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.5;
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	opacity: 0;
 	/* visibility, not just opacity: a transparent tip is still read by
 	   a screen reader and still swallows a click on the button under it. */
@@ -5195,8 +5203,8 @@ dialog.cm-dialog--spec:not([open]) {
 }
 .cm-pager__link:hover { color: var(--ink); background: var(--panel); }
 .cm-pager__link[aria-current='page'] {
-	color: var(--ink);
-	background: var(--panel);
+	color: var(--bg);
+	background: var(--ink);
 	box-shadow: inset 0 -2px 0 var(--ink);
 }
 /* An edge with nowhere to go is not a link: render it as a span. */
@@ -7539,6 +7547,7 @@ input.cm-slider:disabled {
 	   of content, and `.cm-card`'s `overflow: hidden` cut the profile
 	   off. MEASURED scrollHeight 78 / clientHeight 25 before this rule. */
 	height: auto;
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	opacity: 0;
 	visibility: hidden;
 	transform: translateY(-4px);
@@ -7873,7 +7882,7 @@ input.cm-slider:disabled {
 	border-radius: var(--radius-sm);
 	background: var(--bg-2);
 	color: var(--ink);
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 }
 .cm-popover__title {
 	margin: 0 0 var(--space-2);
@@ -13040,4 +13049,9 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	   still replaces it while the input is focused. On and off need no
 	   colour: the knob's position is the state, here as everywhere. */
 	.cm-switch__track { outline: 1px solid CanvasText; }
+	.cm-codebar > pre { background-image: none; }
+	}
+
+@media (prefers-reduced-motion: reduce) {
+	.cm-codebar > pre { background-image: none; }
 }
