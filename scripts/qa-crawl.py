@@ -41,23 +41,27 @@ def check_url(url):
     if url in URL_CHECK_CACHE:
         return URL_CHECK_CACHE[url]
     status = None
+    head_error = None
     try:
         req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "oem-ui-qa/1.0"})
         with urllib.request.urlopen(req, timeout=10) as r:
             status = r.status
     except urllib.error.HTTPError as he:
         status = he.code
-    except Exception:
+    except Exception as e:
+        head_error = str(e)[:120]
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "oem-ui-qa/1.0"})
             with urllib.request.urlopen(req, timeout=10) as r:
                 status = r.status
         except urllib.error.HTTPError as he:
             status = he.code
-        except Exception as e:
-            status = "ERR:" + str(e)[:80]
-    URL_CHECK_CACHE[url] = status
-    return status
+        except Exception as e2:
+            status = "ERR:" + str(e2)[:80]
+            head_error = head_error + "; GET: " + str(e2)[:80]
+    result = {"status": status, "headError": head_error}
+    URL_CHECK_CACHE[url] = result
+    return result
 
 
 JS_DETECT = r"""
@@ -71,6 +75,7 @@ JS_DETECT = r"""
     return tag;
   }
   function sectionOf(el){ const s = el && el.closest ? el.closest('section[id]') : null; return s ? s.id : null; }
+  const jsErrors = [];
   const all = Array.from(document.querySelectorAll('*'));
   const pageOverflowPx = document.documentElement.scrollWidth - window.innerWidth;
   const voSet = new Set();
@@ -167,8 +172,8 @@ JS_DETECT = r"""
     const href = a.getAttribute('href');
     if(!href || href==='#') continue;
     let target=null;
-    try { target = document.querySelector(href); } catch(e){}
-    if(!target && href.length>1){ try{ target = document.getElementById(href.slice(1)); }catch(e){} }
+    try { target = document.querySelector(href); } catch(e){ jsErrors.push({href, error: String(e)}); }
+    if(!target && href.length>1){ try{ target = document.getElementById(href.slice(1)); } catch(e){ jsErrors.push({href, error: String(e)}); } }
     if(!target){ brokenAnchors.push({href, selector:sel(a), section:sectionOf(a)}); }
   }
   const coveredAnchors = [];
@@ -178,17 +183,17 @@ JS_DETECT = r"""
     const href = a.getAttribute('href');
     if(!href || href==='#') continue;
     let target=null;
-    try { target = document.querySelector(href); } catch(e){}
-    if(!target && href.length>1){ try{ target = document.getElementById(href.slice(1)); }catch(e){} }
+    try { target = document.querySelector(href); } catch(e){ jsErrors.push({href, error: String(e)}); }
+    if(!target && href.length>1){ try{ target = document.getElementById(href.slice(1)); } catch(e){ jsErrors.push({href, error: String(e)}); } }
     if(!target) continue;
-    try { target.scrollIntoView({block:'start', behavior:'instant'}); } catch(e){}
+    try { target.scrollIntoView({block:'start', behavior:'instant'}); } catch(e){ jsErrors.push({href, error: String(e)}); }
     const tr = target.getBoundingClientRect();
     const hr = header ? header.getBoundingClientRect() : null;
     if(hr && tr.top < hr.bottom + 4){
       coveredAnchors.push({href, target:sel(target), section:sectionOf(target), targetTop:Math.round(tr.top), headerBottom:Math.round(hr.bottom)});
     }
   }
-  try { window.scrollTo(0, prevScroll); } catch(e){}
+  try { window.scrollTo(0, prevScroll); } catch(e){ jsErrors.push({action: 'restoreScroll', error: String(e)}); }
   function parseColor(str){
     const m = String(str).match(/rgba?\(([^)]+)\)/);
     if(!m) return null;
@@ -262,6 +267,7 @@ JS_DETECT = r"""
     coveredAnchors,
     contrastIssues,
     tops1,
+    errors: jsErrors,
   };
 }
 """
@@ -393,9 +399,13 @@ def run_one(page, url, engine, viewport, theme, shot_dir, screenshots_only):
         base_host = urllib.parse.urlparse(url).netloc
         if parsed.netloc != base_host and 'github.com' not in parsed.netloc:
             continue
-        status = check_url(full)
+        check = check_url(full)
+        status = check["status"] if isinstance(check, dict) else check
         if (isinstance(status, int) and status >= 400) or (isinstance(status, str) and status.startswith("ERR")):
-            broken_links.append({"href": href, "resolved": full, "status": status})
+            item = {"href": href, "resolved": full, "status": status}
+            if isinstance(check, dict) and check.get("headError"):
+                item["headError"] = check["headError"]
+            broken_links.append(item)
     if isinstance(data, dict):
         data["brokenLinks"] = broken_links
 
