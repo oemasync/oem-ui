@@ -1,0 +1,4 @@
+- Panels: overlays and sheets restyled as raised machined panels with a 1px inset top highlight.
+- Code blocks: terminal-window frame with bracketed language label and faint scanline (disabled under reduced motion and forced colors).
+- Pager: active page now inverted (ink-on-bg).
+- Dialogs, dropdowns, popovers, tooltips, toasts, hovercards: added the machined inset highlight.

@@ -972,9 +972,11 @@
 .cm-codebar {
 	position: relative;
 	margin: 0 0 1.4em;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-1);
 	/* The bar owns the radius now; the block inside must not draw its own
 	   or the two corners double up. */
-	border-radius: var(--radius-sm);
 	overflow: hidden;
 }
 /* The pre is an ELEMENT default in base.css with its own border, radius
@@ -986,7 +988,9 @@
 	border: 0;
 	border-inline-start: 0;
 	border-radius: 0;
-	background: var(--bg-2);
+	background-color: var(--bg-2);
+	background-image: var(--scanline);
+	overflow-x: auto;
 }
 .cm-codebar__bar {
 	display: flex;
@@ -4133,7 +4137,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	background: var(--bg-2);
 	color: var(--ink);
 	font-family: var(--font-body);
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card), inset 0 1px 0 var(--line-soft);
 	overflow: auto;
 }
 /* --scrim is a token, not a literal: the same alpha over #0a0a0a and
@@ -4283,7 +4287,7 @@ dialog.cm-dialog--spec:not([open]) {
 	color: var(--ink);
 	font-size: max(var(--min-font), var(--text-xs));
 	pointer-events: auto;
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	animation: cm-toast-in var(--cm-t-slow) var(--cm-ease);
 }
 @keyframes cm-toast-in {
@@ -4296,6 +4300,7 @@ dialog.cm-dialog--spec:not([open]) {
 .cm-toast__close {
 	flex: 0 0 auto;
 	align-self: flex-start;
+	position: relative;
 	padding: 0 var(--space-1);
 	border: 0;
 	background: transparent;
@@ -4304,6 +4309,14 @@ dialog.cm-dialog--spec:not([open]) {
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.2;
 	cursor: pointer;
+}
+.cm-toast__close::before {
+	content: '';
+	position: absolute;
+	inset: calc(var(--space-1) * -1);
+}
+@media (pointer: coarse) {
+	.cm-toast__close::before { inset: calc(var(--space-4) * -1); }
 }
 .cm-toast__close:hover { color: var(--ink); }
 .cm-toast--ok { border-inline-start-color: var(--ink-dim); }
@@ -4374,7 +4387,7 @@ dialog.cm-dialog--spec:not([open]) {
 	color: var(--ink);
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	/* A 40-row timezone list must scroll INSIDE the panel instead of
 	   running off the phone: 60vh keeps the trigger and the last row
 	   both visible, and `contain` stops a swipe over the list from
@@ -4458,7 +4471,8 @@ dialog.cm-dialog--spec:not([open]) {
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.5;
-	box-shadow: var(--shadow-card);
+	overflow-wrap: break-word;
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	opacity: 0;
 	/* visibility, not just opacity: a transparent tip is still read by
 	   a screen reader and still swallows a click on the button under it. */
@@ -5131,7 +5145,7 @@ dialog.cm-dialog--spec:not([open]) {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	background: var(--surface-raised);
-	box-shadow: inset 0 -2px 0 var(--line);
+	box-shadow: var(--shadow-1), inset 0 -2px 0 var(--line-soft);
 	color: var(--ink);
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-micro));
@@ -5257,9 +5271,12 @@ dialog.cm-dialog--spec:not([open]) {
 }
 .cm-pager__link:hover { color: var(--ink); background: var(--panel); }
 .cm-pager__link[aria-current='page'] {
-	color: var(--ink);
-	background: var(--panel);
-	box-shadow: inset 0 -2px 0 var(--ink);
+	color: var(--bg);
+	background: var(--ink);
+}
+.cm-pager__link[aria-current='page']:hover {
+	color: var(--bg);
+	background: var(--ink);
 }
 /* An edge with nowhere to go is not a link: render it as a span. */
 .cm-pager__link--off { color: var(--ink-faint); border-style: dashed; cursor: default; }
@@ -6974,9 +6991,14 @@ button.cm-link:focus-visible {
 .cm-seg__opt:last-child { border-inline-end: 0; }
 .cm-seg__opt:hover { color: var(--ink); background: var(--panel); }
 .cm-seg__opt[aria-pressed='true'] {
-	color: var(--ink);
-	background: var(--panel);
-	box-shadow: inset 0 -2px 0 var(--ink);
+	color: var(--bg);
+	background: var(--ink);
+	box-shadow: inset 0 0 0 1px var(--bg);
+}
+.cm-seg__opt[aria-pressed='true']:hover {
+	color: var(--bg);
+	background: var(--ink);
+	box-shadow: inset 0 0 0 1px var(--bg);
 }
 /* A coarse pointer gets the same floor every other control carries, so
    the option is not a 24px sliver of a 390px screen. */
@@ -7614,6 +7636,7 @@ input.cm-slider:disabled {
 	   of content, and `.cm-card`'s `overflow: hidden` cut the profile
 	   off. MEASURED scrollHeight 78 / clientHeight 25 before this rule. */
 	height: auto;
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	opacity: 0;
 	visibility: hidden;
 	transform: translateY(-4px);
@@ -7948,7 +7971,7 @@ input.cm-slider:disabled {
 	border-radius: var(--radius-sm);
 	background: var(--bg-2);
 	color: var(--ink);
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 }
 .cm-popover__title {
 	margin: 0 0 var(--space-2);
@@ -13131,6 +13154,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	   still replaces it while the input is focused. On and off need no
 	   colour: the knob's position is the state, here as everywhere. */
 	.cm-switch__track { outline: 1px solid CanvasText; }
+	.cm-codebar > pre { background-image: none; }
 }
 
 
