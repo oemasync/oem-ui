@@ -7125,6 +7125,11 @@ button.cm-link:focus-visible {
 .cm-search__clear {
 	position: absolute;
 	inset-inline-end: var(--space-1);
+	/* Vertically centre the (possibly enlarged, coarse-pointer) button
+	   inside the field. Without this it pinned to the top edge and
+	   overlapped the typed value on the first line. */
+	top: 50%;
+	transform: translateY(-50%);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
