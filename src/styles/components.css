@@ -1280,6 +1280,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	   min-width lets the box shrink; this stops the nowrap content from
 	   escaping it. The chips inside ellipsize on their own. */
 	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 /* A meta slot is a fixed, unshrinkable strip by default - correct for a
@@ -2346,6 +2347,10 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	border-color: var(--accent);
 	background: var(--bg-3);
 	color: var(--ink);
+}
+.cm-dropzone--over .cm-dropzone__mark::before,
+.cm-dropzone[data-over='true'] .cm-dropzone__mark::before {
+	content: "↓";
 }
 
 /* Decoration, and hidden from assistive tech by the caller. The ring is drawn
@@ -4482,8 +4487,8 @@ dialog.cm-dialog--spec:not([open]) {
 }
 .cm-dropdown__item:hover,
 .cm-dropdown__item:focus-visible {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
 	text-decoration: none;
 }
 .cm-dropdown__item[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
@@ -8346,11 +8351,12 @@ input.cm-slider:disabled {
 	text-decoration: none;
 	white-space: nowrap;
 	cursor: pointer;
+	min-height: var(--space-6);
 }
 .cm-navmenu__trigger:focus-visible,
 .cm-navmenu__trigger[aria-expanded='true'] {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
 }
 /* Hover is a POINTER affordance, and a pointer that cannot hover must not
    be given one: on touch, :hover STICKS to the last tapped row and paints
@@ -8359,8 +8365,8 @@ input.cm-slider:disabled {
    behaviour agree about what a pointer is. */
 @media (hover: hover) and (pointer: fine) {
 	.cm-navmenu__trigger:hover {
-		background: var(--bg-3);
-		color: var(--ink);
+		background: var(--ink);
+		color: var(--bg);
 	}
 }
 /* A border pair rotated 45deg IS the mark: no icon font, no inline SVG, and
@@ -8394,6 +8400,7 @@ input.cm-slider:disabled {
 	inset: auto;
 	width: min(20rem, calc(100vw - (2 * var(--gutter))));
 	padding: var(--space-2);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 }
 /* The shared viewport's swap, painted: data-state is the same
    state-attribute fingerprint the rest of the system uses (data-active on
@@ -8418,8 +8425,14 @@ input.cm-slider:disabled {
 }
 .cm-navmenu__link:hover,
 .cm-navmenu__link:focus-visible {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
+}
+.cm-navmenu__link:hover .cm-navmenu__label,
+.cm-navmenu__link:focus-visible .cm-navmenu__label,
+.cm-navmenu__link:hover .cm-navmenu__desc,
+.cm-navmenu__link:focus-visible .cm-navmenu__desc {
+	color: var(--bg);
 }
 /* The copy column stacks because a panel is a table of contents: the label
    is what the reader scans and the description is what tells them which of
@@ -9066,6 +9079,15 @@ input.cm-slider:disabled {
 	align-items: baseline;
 }
 .cm-msg--end .cm-msg__footer { justify-content: flex-end; }
+.cm-msg__header::before {
+	content: '$ ' / '';
+	color: var(--ink-faint);
+}
+.cm-msg__footer {
+	font-variant-numeric: tabular-nums;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-wide);
+}
 .cm-msg__action {
 	background: none;
 	border: 0;
@@ -9076,6 +9098,9 @@ input.cm-slider:disabled {
 	color: var(--ink-dim);
 	text-decoration: underline;
 	cursor: pointer;
+	min-height: var(--space-6);
+	display: inline-flex;
+	align-items: center;
 }
 /* consecutive rows from one sender keep the avatar rhythm: earlier
    rows carry an EMPTY .cm-msg__avatar and the gap tightens */
@@ -9305,6 +9330,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	line-height: 1.5;
 	cursor: pointer;
+	min-height: var(--space-6);
 }
 .cm-msglist__reaction:hover {
 	border-color: var(--ink-dim);
@@ -9334,7 +9360,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	color: var(--ink-faint);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-msglist__daylabel {
 	font-weight: 700;
@@ -9358,7 +9384,7 @@ input.cm-slider:disabled {
 	font-weight: 700;
 	color: var(--ink);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-msglist__unreadlabel {
 	letter-spacing: inherit;
@@ -9683,7 +9709,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	color: var(--ink-faint);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-scroller__link {
 	display: flex;
@@ -9702,7 +9728,7 @@ input.cm-slider:disabled {
 	cursor: pointer;
 	width: 100%;
 }
-.cm-scroller__link:hover { color: var(--ink); border-color: var(--line); }
+.cm-scroller__link:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .cm-scroller__link[aria-current="true"] {
 	color: var(--ink);
 	border-color: var(--ink);
@@ -10775,6 +10801,7 @@ input.cm-slider:disabled {
 	   two identical fills would make the frame the only edge the box
 	   has. */
 	background: var(--panel-nested);
+	box-shadow: var(--shadow-1);
 	transition: border-color var(--cm-t) var(--cm-ease);
 }
 .cm-composer__bar:focus-within { border-color: var(--focus); }
@@ -13172,6 +13199,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    repaint: a chart tells its series apart by grey level alone, so every
    series is one colour here; and the slider's filled portion is a
    gradient, which the mode also drops (the thumb still shows the value). */
+@media (pointer: coarse) {
+	.cm-msg__action,
+	.cm-msglist__reaction,
+	.cm-navmenu__trigger { min-height: var(--tap); }
+}
+
 @media (forced-colors: active) {
 	.cm-meter__fill,
 	.cm-progress__fill,
@@ -13194,6 +13227,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	[aria-selected='true'] > .cm-cal__day,
 	.cm-guide__program--now,
 	.cm-guildrail__item[aria-current='true'],
+	.cm-navmenu__trigger[aria-expanded='true'],
 	.cm-term__follow-toggle[aria-pressed='true'],
 	.cm-step.is-current .cm-step__marker,
 	.cm-row--on,
@@ -13215,6 +13249,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 		[aria-selected='true'] > .cm-cal__day,
 		.cm-guide__program--now,
 		.cm-guildrail__item[aria-current='true'],
+		.cm-navmenu__trigger[aria-expanded='true'],
 		.cm-term__follow-toggle[aria-pressed='true'],
 		.cm-step.is-current .cm-step__marker,
 		.cm-row--on,
