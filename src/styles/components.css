@@ -3858,6 +3858,15 @@ button.cm-row:hover { background: var(--bg-2); }
 	}
 }
 
+/* Form controls: a visible offset ring on top of the base one, so a field
+   in focus reads as a strong rule rather than a hairline. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
 /* ---------- form layout: wrapper, group, actions, help, error ----------
    The inputs themselves are element defaults in base.css. These wrap
    them: a field is a label + control + optional help, and a form is a
@@ -7459,7 +7468,7 @@ input.cm-slider::-webkit-slider-thumb {
 	appearance: none;
 	width: 10px;
 	height: 18px;
-	margin-top: calc((10px - 18px) / 2);
+	margin-top: calc((8px - 18px) / 2);
 	background: var(--ink);
 	border: 1px solid var(--bg);
 	border-radius: 0;
@@ -8577,6 +8586,7 @@ input.cm-slider:disabled {
 	height: var(--tap);
 	margin: 0;
 	padding: 0;
+	font-variant-numeric: tabular-nums;
 	/* MEASURED: a shared collapse border takes a pixel out of the cell's
 	   CONTENT box, so `min(tap, 100%)` here rendered 43px days on
 	   desktop - the tap must be named, not derived. The tiny-viewport
@@ -10037,7 +10047,9 @@ input.cm-slider:disabled {
 	fill: var(--ink-faint);
 	font-family: var(--font-mono);
 	font-size: var(--min-font);
-	letter-spacing: 0.04em;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
 }
 /* 2px is a hairline at every zoom and every DPR, and the line and the
    legend dot are the same weight so a key and a curve agree. */
@@ -10211,6 +10223,9 @@ input.cm-slider:disabled {
 	list-style: none;
 	color: var(--ink-dim);
 	font-size: max(var(--min-font), var(--text-micro));
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
 }
 .cm-chart__legend-item {
 	display: flex;
