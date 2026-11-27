@@ -1,9 +1,10 @@
-- prose: post head title uses a 2.5rem display size with tight tracking (-0.02em, single literal listed for W01 --tracking-tight); byline carries tabular numerals.
-- prose: callouts gain a square glyph cell and raised surface highlight; blockquotes gain a heavy leading rule on the raised surface.
-- prose: prose tables use an uppercase tracked eyebrow header row; code blocks in prose sit on the raised surface.
-- prose: media frames carry the machined inset highlight and their captions read as eyebrows.
-- prose: media-grid demo uses `.cm-media-grid--demo` (floor 120px; measured 2 columns at 390px, 5 at 768px, 6 at 1440px) and its copy states only the measured counts.
+- prose: post head title uses `var(--head-display)` (clamp(2rem, 1.2rem + 3vw, 3.5rem)) with `var(--tracking-tight)` (-0.04em); byline carries tabular numerals.
+- prose: callouts gain a square glyph cell and raised surface highlight (`--shadow-1`); blockquotes gain a heavy leading rule (`var(--space-1)`) on the raised surface.
+- prose: prose tables use an uppercase tracked eyebrow header row (`var(--tracking-wide)`); code blocks in prose sit on the raised surface.
+- prose: media frames use `--shadow-1` and their captions read as eyebrows (`var(--tracking-wide)`).
+- prose: media-grid demo uses `.cm-media-grid--demo` (floor `var(--media-grid-demo-min)`, 120px; measured 2 columns at 390px, 5 at 768px, 6 at 1440px) and its copy states only the measured counts.
 - prose: `.cm-prose pre` uses `background-color` so the base scanline background-image survives.
 - prose: inline code is scoped to `.cm-prose :not(pre) > code` to avoid doubling padding/background in code blocks.
-- prose: display size and tracking values moved into local custom properties on `.cm-post-head` and `.cm-prose`; spacing comes from `--space-*`.
+- prose: spacing comes from `--space-*`; display/tracking values come from W01 tokens.
 - prose: `.cm-video` specimen carries intrinsic width/height (1200x675).
+- prose: forced-colors clears the `.cm-surface` dot-grid background-image (base.css).

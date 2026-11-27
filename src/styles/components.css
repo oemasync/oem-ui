@@ -5350,7 +5350,7 @@ dialog.cm-dialog--spec:not([open]) {
     padding: 0;
     min-width: 0;
 }
-.cm-media-grid--demo .cm-media-grid { --media-grid-min: 120px; }
+.cm-media-grid--demo .cm-media-grid { --media-grid-min: var(--media-grid-demo-min); }
 .cm-media-grid__tile {
     display: flex;
     flex-direction: column;

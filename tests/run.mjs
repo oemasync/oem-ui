@@ -18995,6 +18995,25 @@ console.log('\ncontract: mention typeahead + image viewer (batch 31)');
 			'the specimen has no long filename, so nothing exercises the grid item min-width');
 	});
 
+	check('W08 round 4: the media-grid demo floor is a token, not a literal', () => {
+		const toks = read('src/styles/tokens.css');
+		assert(/--media-grid-demo-min:\s*120px/.test(toks),
+			'tokens.css does not declare --media-grid-demo-min: 120px');
+		const comp = read('src/styles/components.css');
+		assert(/--media-grid-min:\s*var\(--media-grid-demo-min\)/.test(comp),
+			'components.css does not use var(--media-grid-demo-min) for the demo override');
+	});
+
+	check('W08 round 4: the cm-video specimen carries intrinsic dimensions', () => {
+		const show = read('src/pages/[...family].astro');
+		const videoAt = show.indexOf('class="cm-video"');
+		assert(videoAt > 0, 'no .cm-video specimen found');
+		const sec = show.slice(videoAt, show.indexOf('</section>', videoAt));
+		assert(/<video[^>]*width="1200"[^>]*height="675"/.test(sec) ||
+			/<video[^>]*height="675"[^>]*width="1200"/.test(sec),
+			'the cm-video specimen has no 1200x675 intrinsic size');
+	});
+
 	check('batch 33: the README documents the lattice and the probe that measures it', () => {
 		const rm = read('README.md');
 		const at = rm.indexOf('### The media lattice');
