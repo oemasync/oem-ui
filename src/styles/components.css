@@ -2154,10 +2154,10 @@ button.cm-row:hover { background: var(--bg-2); }
 	outline: 1px solid var(--ink-dim);
 	outline-offset: -1px;
 }
-.cm-kv--link dt { color: var(--ink-faint); }
+.cm-kv--link dt { color: var(--ink-faint); min-width: 0; }
 .cm-kv--link a:hover dt,
 .cm-kv--link a:focus-visible dt { color: var(--ink-dim); }
-.cm-kv--link dd { color: var(--ink-dim); }
+.cm-kv--link dd { color: var(--ink-dim); min-width: 0; overflow-wrap: break-word; }
 .cm-kv--link a:hover dd,
 .cm-kv--link a:focus-visible dd { color: var(--ink); }
 
@@ -3861,16 +3861,12 @@ button.cm-row:hover { background: var(--bg-2); }
 /* Form controls: a visible offset ring on top of the base one, so a field
    in focus reads as a strong rule rather than a hairline. Scoped to the
    field component rather than bare elements. */
-.cm-field {
-	--cm-field-ring: var(--space-0);
-}
 .cm-field input:focus-visible,
 .cm-field textarea:focus-visible,
 .cm-field select:focus-visible,
 .cm-input-group input:focus-visible,
 .cm-input-group select:focus-visible {
-	outline: var(--cm-field-ring, var(--space-0)) solid var(--focus);
-	outline-offset: var(--cm-field-ring, var(--space-0));
+	border-color: var(--ink);
 }
 
 /* A crisp hairline box on the panel surface: the control reads as a
@@ -3883,6 +3879,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	border: 1px solid var(--line);
 	padding: var(--space-1) var(--space-2);
 	color: var(--ink);
+	min-width: 0;
 }
 .cm-field input:not([type='checkbox']):not([type='radio']):not([type='range']):hover,
 .cm-field textarea:hover,
@@ -3913,7 +3910,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	margin-bottom: var(--space-4);
 }
 .cm-field__label {
-	font-size: max(var(--min-font), var(--text-xs));
+	font-size: max(var(--min-font), var(--text-micro));
 	text-transform: uppercase;
 	letter-spacing: 0.12em;
 	color: var(--ink-dim);
@@ -7492,7 +7489,7 @@ input.cm-slider {
 	--cm-slider-thumb-h: 18px;
 }
 input.cm-slider::-webkit-slider-runnable-track {
-	height: var(--cm-slider-track-h, 8px);
+	height: var(--cm-slider-track-h);
 	background:
 		linear-gradient(to right,
 			var(--ink) var(--cm-slider, 0%),
@@ -7505,23 +7502,23 @@ input.cm-slider::-webkit-slider-thumb {
 	appearance: none;
 	border-radius: 0;
 	width: 10px;
-	height: var(--cm-slider-thumb-h, 18px);
-	margin-top: calc((var(--cm-slider-track-h, 8px) - var(--cm-slider-thumb-h, 18px)) / 2);
+	height: var(--cm-slider-thumb-h);
+	margin-top: calc((var(--cm-slider-track-h) - var(--cm-slider-thumb-h)) / 2);
 	background: var(--ink);
 	border: 1px solid var(--bg);
 }
 input.cm-slider::-moz-range-track {
-	height: var(--cm-slider-track-h, 8px);
+	height: var(--cm-slider-track-h);
 	background: var(--bg-3);
 	border: 1px solid var(--line);
 }
 input.cm-slider::-moz-range-progress {
-	height: var(--cm-slider-track-h, 8px);
+	height: var(--cm-slider-track-h);
 	background: var(--ink);
 }
 input.cm-slider::-moz-range-thumb {
 	width: 10px;
-	height: var(--cm-slider-thumb-h, 18px);
+	height: var(--cm-slider-thumb-h);
 	background: var(--ink);
 	border: 1px solid var(--bg);
 	border-radius: 0;
@@ -8543,7 +8540,7 @@ input.cm-slider:disabled {
 	border: 1px solid var(--line);
 	background: var(--panel);
 	overflow-x: auto;
-	box-shadow: inset 0 1px 0 var(--line-soft);
+	box-shadow: var(--shadow-1);
 }
 .cm-cal__bar {
 	/* pinned: when the grid scrolls sideways inside the card, the
@@ -8606,11 +8603,12 @@ input.cm-slider:disabled {
 	width: var(--tap);
 	padding: 0 0 var(--space-1);
 	border-bottom: 1px solid var(--line);
-	color: var(--ink-faint);
+	color: var(--ink-dim);
 	font-size: var(--text-micro);
 	font-weight: 400;
 	text-align: center;
 	text-transform: uppercase;
+	letter-spacing: 0.12em;
 }
 .cm-cal__grid td {
 	padding: 0;
@@ -8664,7 +8662,7 @@ input.cm-slider:disabled {
 	border-color: var(--ink-dim);
 	color: var(--ink);
 	text-decoration: underline;
-	text-underline-offset: 2px;
+	text-underline-offset: 0.2em;
 }
 [aria-selected='true'] > .cm-cal__day {
 	border-color: var(--ink);
@@ -8752,7 +8750,7 @@ input.cm-slider:disabled {
 	scrollbar-width: thin;
 	scrollbar-color: var(--line) transparent;
 }
-.cm-scrollarea::-webkit-scrollbar { width: var(--space-2); }
+.cm-scrollarea::-webkit-scrollbar { width: var(--space-2); height: var(--space-2); }
 .cm-scrollarea::-webkit-scrollbar-track { background: transparent; }
 .cm-scrollarea::-webkit-scrollbar-thumb {
 	background: var(--ink-faint);
@@ -10049,7 +10047,7 @@ input.cm-slider:disabled {
 	background: var(--panel);
 	padding: var(--space-3);
 	margin-block: 0 var(--space-6);
-	box-shadow: inset 0 1px 0 var(--line-soft);
+	box-shadow: var(--shadow-1);
 }
 /* A circular chart draws its marks against the NESTED surface step, so
    the thin ring lines have something to sit on that is not the panel
@@ -10097,7 +10095,7 @@ input.cm-slider:disabled {
 	fill: var(--ink-faint);
 	font-family: var(--font-mono);
 	font-size: var(--min-font);
-	letter-spacing: 0.06em;
+	letter-spacing: var(--cm-eyebrow-tracking);
 	text-transform: uppercase;
 	font-variant-numeric: tabular-nums;
 }
@@ -10274,7 +10272,7 @@ input.cm-slider:disabled {
 	color: var(--ink-dim);
 	font-size: max(var(--min-font), var(--text-micro));
 	font-variant-numeric: tabular-nums;
-	letter-spacing: 0.06em;
+	letter-spacing: var(--cm-eyebrow-tracking);
 	text-transform: uppercase;
 }
 .cm-chart__legend-item {
