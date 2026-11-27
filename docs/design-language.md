@@ -110,5 +110,3 @@ box-shadow. Any new mark whose paint is its whole meaning (a fill, a
 bar, a dot) must also be added to the forced-colors block at the end
 of `components.css`, in system colours only, with a case in
 `tests/verify-forced-colors.py`.
-EOF
-echo done
