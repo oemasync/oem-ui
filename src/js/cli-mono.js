@@ -5614,7 +5614,7 @@
 		root = root || document;
 		// First: let go of what was bound for elements that are gone.
 		cmReleaseGone();
-		(root || document)
+		root
 			.querySelectorAll(TOGGLE_SEL)
 			.forEach(function (btn) {
 				if (btn.dataset.cmBound) return;

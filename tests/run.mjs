@@ -480,6 +480,92 @@ check('emits a FOUC guard snippet that only applies saved light', () => {
 	assert(attrs.every(([n]) => n === 'data-theme'), 'the guard may only touch data-theme');
 });
 
+check('cliMono.init() with no argument does not throw', () => {
+	// The public API documents init() as callable with no argument (a
+	// consumer re-running after a late commit). A bare call must not
+	// reach `root.querySelectorAll` on undefined.
+	const store = {};
+	const docEl = { attrs: {}, getAttribute: (k) => (k in docEl.attrs ? docEl.attrs[k] : null), setAttribute: (k, v) => { docEl.attrs[k] = v; }, style: {} };
+	const doc = {
+		documentElement: docEl,
+		querySelector: () => null,
+		querySelectorAll: (sel) => [],
+		addEventListener: () => {},
+		createElement: () => ({ setAttribute() {}, style: {}, classList: { add() {} }, appendChild() {} }),
+		getElementById: () => null,
+		readyState: 'complete',
+	};
+	const ctx = {
+		document: doc,
+		window: { addEventListener: () => {}, removeEventListener: () => {}, scrollY: 0, innerWidth: 1280, innerHeight: 900, innerHeight: 900, requestAnimationFrame: () => 1, location: { hostname: 'localhost' }, ResizeObserver: undefined, IntersectionObserver: undefined, MutationObserver: undefined },
+		localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
+		navigator: { clipboard: undefined },
+		module: { exports: {} },
+	};
+	ctx.globalThis = ctx;
+	ctx.requestAnimationFrame = () => 1;
+	ctx.cancelAnimationFrame = () => {};
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	// Must not throw.
+	ctx.window.cliMono.init();
+	assert(true, 'init() threw');
+});
+
+check("sorting a table with a [data-cm-empty] row never reads that row's cells", () => {
+	// Build a fake table whose empty row's cells accessor throws if touched,
+	// so a regression that iterates every row (including the empty one)
+	// surfaces as a thrown error rather than a silent pass.
+	const store = {};
+	const appended = [];
+	const makeCell = (text) => ({ textContent: text });
+	const rowA = { hasAttribute: (a) => a !== 'data-cm-empty', cells: [makeCell('zebra')], getAttribute: () => null };
+	const rowB = { hasAttribute: (a) => a !== 'data-cm-empty', cells: [makeCell('apple')], getAttribute: () => null };
+	const emptyRow = {
+		hasAttribute: (a) => a === 'data-cm-empty',
+		get cells() { throw new Error('empty row cells were read'); },
+	};
+	const body = {
+		rows: [rowA, rowB, emptyRow],
+		appendChild: (r) => { appended.push(r); },
+	};
+	const th = { cellIndex: 0, getAttribute: (n) => (n === 'aria-sort' ? 'ascending' : null), setAttribute: () => {} };
+	const table = {
+		tBodies: [body],
+		dataset: {},
+		querySelector: (sel) => (sel === 'th[aria-sort="ascending"], th[aria-sort="descending"]' ? th : null),
+		querySelectorAll: (sel) => (sel === 'th[aria-sort]' ? [th] : []),
+	};
+	const docEl = { attrs: {}, getAttribute: (k) => (k in docEl.attrs ? docEl.attrs[k] : null), setAttribute: (k, v) => { docEl.attrs[k] = v; }, style: {} };
+	const doc = {
+		documentElement: docEl,
+		querySelector: (sel) => (sel === 'table[data-cm-sort]' ? null : null),
+		querySelectorAll: (sel) => (sel === 'table[data-cm-sort]' ? [table] : []),
+		addEventListener: () => {},
+		createElement: () => ({ setAttribute() {}, style: {}, classList: { add() {} }, appendChild() {} }),
+		getElementById: () => null,
+		readyState: 'complete',
+	};
+	const ctx = {
+		document: doc,
+		window: { addEventListener: () => {}, removeEventListener: () => {}, scrollY: 0, innerWidth: 1280, innerHeight: 900, requestAnimationFrame: () => 1, location: { hostname: 'localhost' } },
+		localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
+		navigator: { clipboard: undefined },
+		module: { exports: {} },
+	};
+	ctx.globalThis = ctx;
+	ctx.requestAnimationFrame = () => 1;
+	ctx.cancelAnimationFrame = () => {};
+	vm.createContext(ctx);
+	vm.runInContext(runtimeSrc, ctx);
+	ctx.window.cliMono.init(doc);
+	// data rows sorted ascending: apple before zebra; empty row last.
+	assert(appended.length === 3, `expected 3 appended rows, got ${appended.length}`);
+	assert(appended[0] === rowB, 'first appended row should be apple (ascending)');
+	assert(appended[1] === rowA, 'second appended row should be zebra (ascending)');
+	assert(appended[2] === emptyRow, 'empty row must stay in the body, appended last');
+});
+
 check('a chart answers a degenerate config instead of drawing nonsense', () => {
 	// The eleven specimens on the showcase are the EASY case: twelve months,
 	// a max in the thousands, a series for every mark. A consumer's first
