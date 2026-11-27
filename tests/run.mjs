@@ -11693,6 +11693,11 @@ check('the focus ring is heavy enough to see on a coarse pointer', () => {
 	assert(wMatch, `cannot read the coarse focus outline width from: ${cf[1].trim()}`);
 	const wPx = resolveFocusPx(wMatch[1]);
 	assert(wPx !== null, `cannot resolve the coarse focus outline width from: ${cf[1].trim()}`);
+	// The OFFSET is asserted on the COARSE body, not the base: the base
+	// keeps its own offset, so a check reading the base stays green while
+	// the phone loses the gap - and a ring drawn flush against the control
+	// reads as a second border, which is the failure this whole rule is
+	// about. Proven: `focus-coarse-loses-offset` survived reading the base body instead.
 	const offMatch = /outline-offset:\s*(var\(--[\w-]+\)|[\d.]+px)/.exec(cf[1]);
 	assert(offMatch, 'the coarse-pointer focus ring is not offset from the control, so it '
 		+ 'reads as a second border rather than a ring around it');
@@ -11703,13 +11708,14 @@ check('the focus ring is heavy enough to see on a coarse pointer', () => {
 		`the coarse-pointer focus ring is ${wPx}px - the same weight as the `
 		+ '1px border it sits outside, so a reader looking for a change '
 		+ 'cannot see one');
+	// and the desktop idiom must NOT have been quietly rewritten, since
+	// that was the thing being preserved
 	const dwMatch = /outline(?:-width)?:\s*(var\(--[\w-]+\)|[\d.]+px)/.exec(fv[1]);
 	const dwPx = dwMatch ? resolveFocusPx(dwMatch[1]) : null;
 	assert(dwPx !== null && dwPx < 2,
 		'the desktop focus ring was changed; it is the house style and only '
 		+ 'the coarse pointer was in scope');
 });
-
 
 /* ---------- search ---------- */
 
