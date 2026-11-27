@@ -36,6 +36,7 @@ def js_order(vals, reverse=False):
             { numeric: true, sensitivity: 'base' }))""", [vals, reverse])
 
 COL = """([sel, i]) => [...document.querySelectorAll(sel + ' tbody tr')]
+    .filter(tr => !tr.hasAttribute('data-cm-empty'))
     .map(tr => (tr.cells[i] ? tr.cells[i].textContent : '').trim())"""
 
 STATE = """(sel) => {
@@ -68,6 +69,7 @@ with sync_playwright() as p:
           f'Method declares descending on load ({declared.get("Method")})')
     method_is_desc = pg.evaluate("""() => {
       const vals = [...document.querySelectorAll('table.cm-table[data-cm-sort] tbody tr')]
+        .filter(r => !r.hasAttribute('data-cm-empty'))
         .map(r => r.cells[1].textContent.trim());
       const want = [...vals].sort((a, b) =>
         b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }));

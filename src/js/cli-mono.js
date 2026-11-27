@@ -2292,6 +2292,7 @@
 	   nothing. */
 	var navSpies = [];
 	function cmInitNavmenu(root) {
+		root = root || document;
 		/* Kept across calls, minus the bars that have left the page. This
 		   used to start from an empty list every time, so init() on a
 		   SUBTREE (a dialog, a late panel) forgot every bar outside it and
@@ -2964,6 +2965,7 @@
 		panel.style.left = (left - wr.left) + 'px';
 	}
 	function cmClampHovercards(root) {
+		root = root || document;
 		if (typeof window === 'undefined') return;
 		var run = function () {
 			Array.prototype.forEach.call(root.querySelectorAll('.cm-hovercard__panel'), cmClampPanel);
@@ -3314,6 +3316,7 @@
 	}
 
 	function cmInitCal(root) {
+		root = root || document;
 		Array.prototype.forEach.call(root.querySelectorAll('[data-cm-cal]'), function (cal) {
 			if (cal.__cmCal) return;
 			cal.__cmCal = true;
@@ -3404,6 +3407,7 @@
 	   second implementation, and reports itself in aria-valuenow as the
 	   same percentage the CSS consumes. */
 	function cmInitResize(root) {
+		root = root || document;
 		Array.prototype.forEach.call(root.querySelectorAll('[data-cm-resize]'), function (g) {
 			if (g.__cmResize) return;
 			g.__cmResize = true;
@@ -3803,7 +3807,9 @@
 		// be interleaved, and appending a sorted list across sections would
 		// do exactly that.
 		Array.prototype.forEach.call(table.tBodies, function (body) {
-			var rows = Array.prototype.slice.call(body.rows);
+			var allRows = Array.prototype.slice.call(body.rows);
+			var emptyRows = allRows.filter(function (r) { return r.hasAttribute('data-cm-empty'); });
+			var rows = allRows.filter(function (r) { return !r.hasAttribute('data-cm-empty'); });
 			var keyed = rows.map(function (r) {
 				return { row: r, key: cmSortValue(r.cells[idx]) };
 			});
@@ -3811,8 +3817,10 @@
 				return sign * cmSortCompare(x.key, y.key);
 			});
 			// appendChild MOVES a live node, so no row is recreated and
-			// per-row listeners and state survive.
+			// per-row listeners and state survive. The empty-state row is
+			// never sorted and is kept at the end of the body.
 			keyed.forEach(function (k) { body.appendChild(k.row); });
+			emptyRows.forEach(function (r) { body.appendChild(r); });
 		});
 		// Only th elements that carry the attribute: a plain header has no
 		// sort state to reset.
@@ -4929,6 +4937,7 @@
 	   while following, and tracks visible rows only when the outline asks
 	   (data-track-visible). */
 	function cmInitScroller(root) {
+		root = root || document;
 		var frames = root.querySelectorAll('[data-cm-scroller]');
 		for (var i = 0; i < frames.length; i++) {
 			(function (frame) {
@@ -5362,6 +5371,7 @@
 	}
 
 	function cmInitQuiz(root) {
+		root = root || document;
 		var forms = root.querySelectorAll('[data-cm-quiz]');
 		for (var q = 0; q < forms.length; q++) {
 			(function (form) {
@@ -5501,6 +5511,7 @@
 	}
 
 	function cmInitForms(root) {
+		root = root || document;
 		var forms = root.querySelectorAll('form[data-cm-validate]');
 		for (var i = 0; i < forms.length; i++) {
 			(function (form) {
@@ -5596,6 +5607,11 @@
 
 	/* ---------- init ---------- */
 	function init(root) {
+		// `init()` is part of the public API and is documented as callable
+		// with no argument (a consumer re-running after a late commit). Default
+		// the root the same way every guarded binder does, so a bare call
+		// cannot reach `root.querySelectorAll` on undefined.
+		root = root || document;
 		// First: let go of what was bound for elements that are gone.
 		cmReleaseGone();
 		(root || document)
