@@ -229,7 +229,8 @@
    paints a shell should not get a second one composited over the top. */
 .cm-surface {
 	background-color: var(--bg);
-	background-image: var(--vignette);
+	background-image: var(--vignette), var(--dot-grid);
+	background-size: auto, var(--dot-grid-size) var(--dot-grid-size);
 	background-attachment: fixed;
 	color: var(--ink);
 	font-family: var(--font-body);
