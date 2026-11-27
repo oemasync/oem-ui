@@ -1,5 +1,9 @@
 - prose: post head title uses a 2.5rem display size with tight tracking (-0.02em, single literal listed for W01 --tracking-tight); byline carries tabular numerals.
-- prose: callouts gain a square glyph cell and raised surface highlight; blockquotes gain a 3px leading rule on the raised surface.
+- prose: callouts gain a square glyph cell and raised surface highlight; blockquotes gain a heavy leading rule on the raised surface.
 - prose: prose tables use an uppercase tracked eyebrow header row; code blocks in prose sit on the raised surface.
 - prose: media frames carry the machined inset highlight and their captions read as eyebrows.
-- prose: media-grid demo overrides its floor to 120px (measured 2 columns at 390px, 5 at 768px, 6 at 1440px) and its copy states only the measured counts.
+- prose: media-grid demo uses `.cm-media-grid--demo` (floor 120px; measured 2 columns at 390px, 5 at 768px, 6 at 1440px) and its copy states only the measured counts.
+- prose: `.cm-prose pre` uses `background-color` so the base scanline background-image survives.
+- prose: inline code is scoped to `.cm-prose :not(pre) > code` to avoid doubling padding/background in code blocks.
+- prose: display size and tracking values moved into local custom properties on `.cm-post-head` and `.cm-prose`; spacing comes from `--space-*`.
+- prose: `.cm-video` specimen carries intrinsic width/height (1200x675).
