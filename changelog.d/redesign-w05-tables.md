@@ -1,0 +1,5 @@
+- Restyled `.cm-table` (showcase grid and `DataTable.astro` primitive) headers as uppercase, wide-tracked eyebrow labels; hairline rows now invert on hover (ink-on-bg).
+- Numeric columns keep tabular numerals and right alignment.
+- `.cm-row` hover now inverts (ink-on-bg) for crisp row links.
+- Fixed the switch's real checkbox tap target: it now covers the whole track instead of a 16px box.
+" 
