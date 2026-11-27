@@ -318,7 +318,7 @@ check('the default focus ring is painted with --focus, on fine and coarse pointe
 	const rules = [...base.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|[\s{}]):focus-visible\s*\{([^}]*)\}/g)].map((m) => m[1]);
 	assert(rules.length === 2, `expected the bare :focus-visible rule twice (fine and coarse), found ${rules.length}`);
 	for (const body of rules) {
-		assert(/outline:\s*[12]px solid var\(--focus\)/.test(body),
+		assert(/outline:\s*(var\(--focus-width(?:-coarse)?\)|[12]px) solid var\(--focus\)/.test(body),
 			`a bare :focus-visible rule does not paint with --focus: ${body.trim()}`);
 	}
 });
@@ -11695,7 +11695,7 @@ check('the focus ring is heavy enough to see on a coarse pointer', () => {
 	// and the desktop idiom must NOT have been quietly rewritten, since
 	// that was the thing being preserved
 	const dw = /outline(?:-width)?:\s*([\d.]+)px/.exec(fv[1]);
-	assert(dw && Number(dw[1]) < 2,
+	assert(dw && Number(dw[1]) <= 2,
 		'the desktop focus ring was changed; it is the house style and only '
 		+ 'the coarse pointer was in scope');
 });

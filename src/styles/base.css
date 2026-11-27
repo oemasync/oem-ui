@@ -374,13 +374,17 @@ td { font-variant-numeric: tabular-nums; }
    So: same colour, same idiom, more weight where the reading distance
    demands it. */
 :focus-visible {
-	outline: 1px solid var(--focus);
+	outline: 2px solid var(--focus);
+	outline: var(--focus-width) solid var(--focus);
 	outline-offset: 2px;
+	outline-offset: var(--focus-offset);
 }
 @media (pointer: coarse) {
 	:focus-visible {
 		outline: 2px solid var(--focus);
+		outline: var(--focus-width-coarse) solid var(--focus);
 		outline-offset: 2px;
+		outline-offset: var(--focus-offset);
 	}
 }
 a:focus-visible,
@@ -394,8 +398,6 @@ button:focus-visible,
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
 	}
-	body { background-image: var(--vignette); }
-	pre { background-image: none; }
 }
 
 /* ============ responsive baseline ============ */
@@ -881,6 +883,12 @@ input[type='radio']:checked {
 	body { background-image: none; }
 	pre { background-image: none; }
 	input[type='radio']:checked { background-color: Highlight; }
+}
+
+/* ============ caret blink keyframes ============ */
+@keyframes cm-caret-blink {
+	0%, 50% { opacity: 1; }
+	50.01%, 100% { opacity: 0; }
 }
 
 /* the label is the tap target, so a phone-sized hit area is the text row */

@@ -1916,9 +1916,8 @@ button.cm-row:hover { background: var(--bg-2); }
 	height: 1em;
 	background: var(--ink);
 	margin-inline-start: 0.1em;
-	animation: cm-blink 1.2s step-end infinite;
+	animation: cm-caret-blink var(--caret-blink) step-end infinite;
 }
-@keyframes cm-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
 /* ---------- mono divider with optional label ---------- */
 .cm-rule { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-6) 0; }

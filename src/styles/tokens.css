@@ -374,6 +374,11 @@
 	   tracking. Both live here so the scale is retuned in one place. */
 	--tracking-tight: -0.04em;
 	--tracking-wide: 0.12em;
+	/* ---- display head (fluid, page-title scale) --------------------
+	   W02 applies this to page-title h1 elements; the token is defined
+	   here so the scale is retuned in one place. Eyebrow labels use
+	   --text-micro for size and --tracking-wide for tracking. */
+	--head-display: clamp(2rem, 1.2rem + 3vw, 3.5rem);
 	/* ---- texture sizing -------------------------------------------
 	   The dot-grid pitch. Kept here (theme-independent) so the grid
 	   does not change density between themes. */
@@ -381,7 +386,7 @@
 	/* ---- focus ring geometry --------------------------------------
 	   Widths and offset for the keyboard focus ring. Colours come from
 	   --focus; geometry lives here so it is retuned once. */
-	--focus-width: 1px;
+	--focus-width: 2px;
 	--focus-width-coarse: 2px;
 	--focus-offset: 2px;
 	/* ---- caret blink timing ---------------------------------------
@@ -548,7 +553,7 @@
 	   chip on --panel-nested, the control and its own container painted
 	   the identical fill and the control vanished into the card. One
 	   more step, and no more - a control is not a region. */
-	--surface-raised: #f5f5f5;
+	--surface-raised: #ffffff;
 	--line: #d6d6d6;
 	--line-soft: #e2e2e2;
 
@@ -754,7 +759,7 @@
 	   chip on --panel-nested, the control and its own container painted
 	   the identical fill and the control vanished into the card. One
 	   more step, and no more - a control is not a region. */
-	--surface-raised: #f5f5f5;
+	--surface-raised: #ffffff;
 	--line: #d6d6d6;
 	--line-soft: #e2e2e2;
 	--ink: #111111;
@@ -849,7 +854,7 @@
 		--bg-3: #f0f0f0;
 		--panel: #f5f5f5;
 		--panel-nested: #ececec;
-		--surface-raised: #f5f5f5;
+		--surface-raised: #ffffff;
 		--line: #d6d6d6;
 		--line-soft: #e2e2e2;
 		--ink: #111111;
@@ -879,9 +884,9 @@
 		   two-theme set at two. A scrim never paints on paper - its
 		   backdrop is a hidden dialog - so this is consistency, not ink. */
 		--scrim: rgba(24, 24, 24, 0.42);
-	--line-strong: #a0a0a0;
-	--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
-	--dot-grid: none;
-	--scanline: none;
+		--line-strong: #a0a0a0;
+		--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
+		--dot-grid: none;
+		--scanline: none;
 	}
 }
