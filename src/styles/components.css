@@ -4410,6 +4410,7 @@ dialog.cm-dialog--spec:not([open]) {
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.5;
+	overflow-wrap: break-word;
 	box-shadow: var(--shadow-1), var(--shadow-card);
 	opacity: 0;
 	/* visibility, not just opacity: a transparent tip is still read by
