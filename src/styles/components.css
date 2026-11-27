@@ -8915,7 +8915,7 @@ input.cm-slider:disabled {
 .cm-msg__footer {
 	font-variant-numeric: tabular-nums;
 	text-transform: uppercase;
-	letter-spacing: var(--tracking-wide, 0.08em);
+	letter-spacing: var(--tracking-wide);
 }
 .cm-msg__action {
 	background: none;
@@ -9189,7 +9189,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	color: var(--ink-faint);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-msglist__daylabel {
 	font-weight: 700;
@@ -9213,7 +9213,7 @@ input.cm-slider:disabled {
 	font-weight: 700;
 	color: var(--ink);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-msglist__unreadlabel {
 	letter-spacing: inherit;
@@ -9538,7 +9538,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	color: var(--ink-faint);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 }
 .cm-scroller__link {
 	display: flex;
@@ -10476,11 +10476,8 @@ input.cm-slider:disabled {
    it has to be readable in greyscale: a fill AND the ink AND the pill,
    never the hue on its own. */
 .cm-guildrail__item[aria-current='true'] {
-	background: var(--ink);
-	color: var(--bg);
-}
-.cm-guildrail__item[aria-current='true'] .cm-guildrail__pill {
-	background: var(--bg);
+	background: var(--surface-raised);
+	color: var(--ink);
 }
 /* The activity pill: a tick on hover, a full bar for the room you are
    in. It is scaled, not resized - a `block-size` transition is a layout
