@@ -3218,6 +3218,8 @@ check('a token name can never be truncated in a swatch', () => {
 		'swatch labels must not ellipsise; size the chip off the font instead');
 	assert(/\.cm-swatch__chip\s*\{[^}]*width:\s*var\(--swatch-chip\)/.test(compSrc),
 		'the swatch chip must be sized from the --swatch-chip token');
+	assert(/--swatch-chip\s*:\s*[\d.]+em\b/.test(tokenSrc),
+		'--swatch-chip must be defined as an em value in tokens.css');
 });
 
 /* ================= shared row surface ================= */
