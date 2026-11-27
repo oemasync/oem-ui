@@ -7104,14 +7104,15 @@ button.cm-link:focus-visible {
 	color: var(--ink-dim);
 }
 .cm-search__icon > svg {
-	/* An icon tracks the text beside it, so this is 1em and not a scale
-	   step - the same rule .cm-btn > svg states. Without it a lucide
-	   glyph is a replaced element at its own default size (24px), which
-	   is wider than the 16px the padding arithmetic above assumes and
-	   pushes the placeholder under it. */
 	flex: 0 0 auto;
 	width: 1em;
 	height: 1em;
+	display: none;
+}
+.cm-search__icon::before {
+	content: "$";
+	font-weight: 700;
+	color: var(--ink-faint);
 }
 .cm-search__clear {
 	position: absolute;
@@ -7210,10 +7211,10 @@ button.cm-link:focus-visible {
    the WEIGHT of the mark, not by swapping its colour, so it survives
    greyscale and it is still obvious when the two sit adjacent. */
 .cm-findbar__hit--current {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
 	box-shadow: 0 0 0 2px var(--ink);
-	font-weight: 600;
+	font-weight: 700;
 }
 
 .cm-code {
@@ -9436,7 +9437,10 @@ input.cm-slider:disabled {
 	background: var(--panel);
 	cursor: pointer;
 }
-.cm-quiz__choice:has(input:checked) { border-color: var(--ink); }
+.cm-quiz__choice { border-color: var(--line-soft); background: var(--panel); }
+.cm-quiz__choice:hover { background: var(--bg-3); }
+.cm-quiz__choice:has(input:checked) { border-color: var(--ink); background: var(--surface-raised); }
+.cm-quiz__choice:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: -2px; }
 .cm-quiz__choice input { margin-top: var(--space-0); flex: none; }
 .cm-quiz__choice > span { display: grid; gap: var(--space-0); min-width: 0; }
 .cm-quiz__hint { font-size: var(--text-micro); color: var(--ink-dim); }
@@ -11280,6 +11284,13 @@ input.cm-slider:disabled {
 .cm-auth--wide > * { max-width: 34rem; }
 
 .cm-card--auth { padding: var(--space-5); gap: var(--space-4); }
+.cm-card--auth {
+	box-shadow: inset 0 1px 0 var(--line-soft);
+}
+.cm-card--auth .cm-card__title {
+	font-size: var(--text-lg);
+	letter-spacing: -0.02em;
+}
 
 /* An icon inside a card or a title sizes ITSELF from the type it sits
    beside. The sign-in page was passing `style={{ width: 22, height: 22 }}`

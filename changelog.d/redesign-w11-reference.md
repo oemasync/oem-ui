@@ -1,0 +1,3 @@
+- Reference family restyled to the terminal-refined language: search field renders a `$` prompt instead of a magnifier, the current find-bar match is inverted (ink-on-canvas), quiz choices gain hover/checked/focus states, auth cards gain a machined inset top highlight with eyebrow + display heading, readme block uses a bracketed `[ README ]` terminal title.
+- Search clear button remains 32px on fine pointers and grows to the 44px tap floor on coarse pointers without growing the field row.
+- No JS changes; no tests weakened; npm test 942/0.
