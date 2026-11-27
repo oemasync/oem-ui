@@ -226,6 +226,11 @@
 	--space-9: 4rem;
 	--space-10: 6rem;
 
+	/* ---- component geometry ------------------------------------ */
+	--cm-slider-track-h: 8px;
+	--cm-slider-thumb-h: 18px;
+	--underline-offset: 0.2em;
+
 	/* ---- rhythm ------------------------------------------------
 	   THE spacing contract for stacked blocks. The --space-N scale says
 	   WHICH sizes exist; these say WHICH ONE GOES WHERE, which is the
