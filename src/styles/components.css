@@ -7270,14 +7270,27 @@ button.cm-link:focus-visible {
 	   step - the same rule .cm-btn > svg states. Without it a lucide
 	   glyph is a replaced element at its own default size (24px), which
 	   is wider than the 16px the padding arithmetic above assumes and
-	   pushes the placeholder under it. */
+	   pushes the placeholder under it. The svg is retained (and hidden)
+	   so the Astro wrapper contract and the left-gutter arithmetic stay
+	   intact; the visible prompt is drawn by ::before below. */
 	flex: 0 0 auto;
 	width: 1em;
 	height: 1em;
+	display: none;
+}
+.cm-search__icon::before {
+	content: '$' / '';
+	font-weight: 700;
+	color: var(--ink-faint);
 }
 .cm-search__clear {
 	position: absolute;
 	inset-inline-end: var(--space-1);
+	/* Vertically centre the (possibly enlarged, coarse-pointer) button
+	   inside the field. Without this it pinned to the top edge and
+	   overlapped the typed value on the first line. */
+	top: 50%;
+	transform: translateY(-50%);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -7372,10 +7385,10 @@ button.cm-link:focus-visible {
    the WEIGHT of the mark, not by swapping its colour, so it survives
    greyscale and it is still obvious when the two sit adjacent. */
 .cm-findbar__hit--current {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
 	box-shadow: 0 0 0 2px var(--ink);
-	font-weight: 600;
+	font-weight: 700;
 }
 
 .cm-code {
@@ -9634,7 +9647,12 @@ input.cm-slider:disabled {
 	background: var(--panel);
 	cursor: pointer;
 }
-.cm-quiz__choice:has(input:checked) { border-color: var(--ink); }
+.cm-quiz__choice:hover { background: var(--bg-3); }
+.cm-quiz__choice:has(input:checked) { border-color: var(--ink); background: var(--surface-raised); }
+.cm-quiz__choice:has(input:focus-visible) {
+	outline: var(--focus-width) solid var(--focus);
+	outline-offset: calc(var(--focus-offset) * -1);
+}
 .cm-quiz__choice input { margin-top: var(--space-0); flex: none; }
 .cm-quiz__choice > span { display: grid; gap: var(--space-0); min-width: 0; }
 .cm-quiz__hint { font-size: var(--text-micro); color: var(--ink-dim); }
@@ -11484,7 +11502,15 @@ input.cm-slider:disabled {
 .cm-auth > * { width: 100%; max-width: 26rem; }
 .cm-auth--wide > * { max-width: 34rem; }
 
-.cm-card--auth { padding: var(--space-5); gap: var(--space-4); }
+.cm-card--auth {
+	padding: var(--space-5);
+	gap: var(--space-4);
+	box-shadow: var(--shadow-1);
+}
+.cm-card--auth .cm-card__title {
+	font-size: var(--text-lg);
+	letter-spacing: var(--tracking-tight);
+}
 
 /* An icon inside a card or a title sizes ITSELF from the type it sits
    beside. The sign-in page was passing `style={{ width: 22, height: 22 }}`
@@ -13231,7 +13257,8 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-term__follow-toggle[aria-pressed='true'],
 	.cm-step.is-current .cm-step__marker,
 	.cm-row--on,
-	.cm-table tbody tr[aria-selected='true'] td {
+	.cm-table tbody tr[aria-selected='true'] td,
+	.cm-quiz__choice:has(input:checked) {
 		background-color: Highlight !important;
 		color: HighlightText !important;
 	}
@@ -13253,7 +13280,8 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 		.cm-term__follow-toggle[aria-pressed='true'],
 		.cm-step.is-current .cm-step__marker,
 		.cm-row--on,
-		.cm-table tbody tr[aria-selected='true'] td
+		.cm-table tbody tr[aria-selected='true'] td,
+		.cm-quiz__choice:has(input:checked)
 	) * {
 		background-color: transparent !important;
 		color: HighlightText !important;
