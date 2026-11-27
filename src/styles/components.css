@@ -2526,7 +2526,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	border-inline-start-width: 3px;
 	border-radius: var(--radius-sm);
 	background: var(--panel);
-	box-shadow: var(--shadow-1);
+	box-shadow: var(--inset-highlight);
 }
 .cm-alert__mark { flex: 0 0 auto; color: var(--ink-faint); }
 .cm-alert__body { min-width: 0; }
