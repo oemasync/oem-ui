@@ -4930,7 +4930,7 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 
 						<p class="cm-head__sub">The other shape a renderer emits is a <strong>lattice of previews the reader chooses between</strong>. <code>.cm-cards</code> is the wrong host: it floors a column at 20rem, which is one column on a phone <em>and</em> at 860px, so a gallery of twenty files reads as twenty full-width plates. <code>.cm-media-grid</code> floors at 150px and fills the row, so the same twenty files are two columns at 390px and four at 860px. This demo overrides the floor to 120px on its own <code>ul</code>, so the measured lattice here is 2 columns at 390px, 5 at 768px, 6 at 1440px. The README's documented rule is the mathematical one above; the behaviour in practice is geometry-dependent.</p>
 
-						<ul class="cm-media-grid" style="--media-grid-min: 120px">
+						<ul class="cm-media-grid cm-media-grid--demo">
 							<li>
 								<div class="cm-media-grid__tile">
 									<div class="cm-media-grid__thumb">
@@ -5017,7 +5017,8 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 								<span class="cm-video__meta">12.4s · 1080p</span>
 							</div>
 							<video src="/video-specimen.mp4" controls preload="metadata" poster="/video-poster.svg"
-								aria-label="Video specimen: a short clip."></video>
+													width="1200" height="675"
+														aria-label="Video specimen: a short clip."></video>
 						</div>
 
 						<div class="cm-video">

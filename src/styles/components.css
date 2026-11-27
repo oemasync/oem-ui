@@ -599,6 +599,8 @@
    on the header and the following prose is the header's sibling, so
    there is no child to collapse against. */
 .cm-post-head {
+	--cm-post-head-display: 2.5rem;
+	--cm-post-head-tracking: -0.02em;
 	padding: var(--head-top) 0 var(--space-6);
 	border-bottom: 1px solid var(--line);
 	margin-bottom: var(--space-7);
@@ -607,7 +609,7 @@
    margin, so the head's own bottom padding is what opens the gap to
    the rule. */
 .cm-post-head .cm-kicker { margin-bottom: var(--space-3); }
-.cm-post-head h1 { margin-bottom: var(--space-4); font-size: 2.5rem; letter-spacing: -0.02em; line-height: 1.1; }
+.cm-post-head h1 { margin-bottom: var(--space-4); font-size: var(--cm-post-head-display); letter-spacing: var(--cm-post-head-tracking); line-height: 1.1; }
 @media (max-width: 680px) {
 	.cm-post-head h1 { line-height: 1.25; }
 }
@@ -1385,15 +1387,19 @@ button.cm-row:hover { background: var(--bg-2); }
 
 /* ---------- prose container ----------
    Long-form reading column. Adds the markdown heading marks. */
-.cm-prose { color: var(--ink); font-size: var(--text); }
+.cm-prose {
+	--cm-prose-eyebrow-tracking: 0.08em;
+	--cm-prose-wide-tracking: 0.18em;
+	color: var(--ink); font-size: var(--text);
+}
 .cm-prose h2 { margin-top: 2em; }
 .cm-prose h3 { margin-top: 1.6em; }
 .cm-prose h2::before { content: '## '; color: var(--ink-faint); }
 .cm-prose a { color: var(--ink-dim); }
 .cm-prose a:hover { color: var(--ink); }
-.cm-prose blockquote { margin: var(--space-4) 0; padding: var(--space-3) var(--space-4); border-inline-start: 3px solid var(--ink-dim); background: var(--bg-2); color: var(--ink-dim); box-shadow: var(--shadow-1); }
-.cm-prose pre { margin: var(--space-4) 0; padding: var(--space-3); border: 1px solid var(--line); background: var(--bg-2); box-shadow: var(--shadow-1); overflow-x: auto; }
-.cm-prose code { background: var(--bg-2); padding: 0.1em 0.3em; }
+.cm-prose blockquote { margin: var(--space-4) 0; padding: var(--space-3) var(--space-4); border-inline-start: var(--space-1) solid var(--ink-dim); background: var(--bg-2); color: var(--ink-dim); box-shadow: var(--shadow-1); }
+.cm-prose pre { margin: var(--space-4) 0; padding: var(--space-3); border: 1px solid var(--line); background-color: var(--bg-2); box-shadow: var(--shadow-1); overflow-x: auto; }
+.cm-prose :not(pre) > code { background-color: var(--bg-2); padding: var(--space-0) var(--space-1); }
 
 /* ---------- prose measure ----------
    A reading column NARROWER than the default one, for the case the
@@ -1540,7 +1546,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	color: var(--ink-dim);
 	font-weight: 600;
 	font-size: var(--min-font);
-	letter-spacing: 0.08em;
+	letter-spacing: var(--cm-prose-eyebrow-tracking);
 	text-transform: uppercase;
 	font-variant-numeric: tabular-nums;
 	white-space: normal;
@@ -1915,10 +1921,11 @@ button.cm-row:hover { background: var(--bg-2); }
 	box-shadow: var(--shadow-1);
 }
 .cm-media figcaption {
+	--cm-media-caption-tracking: 0.18em;
 	font-family: var(--font-mono);
 	font-size: var(--text-micro);
 	text-transform: uppercase;
-	letter-spacing: 0.18em;
+	letter-spacing: var(--cm-media-caption-tracking);
 	color: var(--ink-faint);
 	margin-top: var(--space-2);
 }
@@ -2582,6 +2589,7 @@ button.cm-row:hover { background: var(--bg-2); }
    so `data-cm-chroma` colours it for free - its four variants are
    listed in the "status chroma" gate below, beside .cm-alert's. */
 .cm-callout {
+	--cm-callout-mark: 1.25em;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
@@ -2600,7 +2608,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	font-weight: 600;
 	color: var(--ink);
 }
-.cm-callout__mark { display: inline-flex; align-items: center; justify-content: center; width: 1.25em; height: 1.25em; border: 1px solid var(--line); background: var(--bg-3); color: var(--ink-faint); font-size: var(--text-micro); }
+.cm-callout__mark { display: inline-flex; align-items: center; justify-content: center; width: var(--cm-callout-mark); height: var(--cm-callout-mark); border: 1px solid var(--line); background: var(--bg-3); color: var(--ink-faint); font-size: var(--text-micro); }
 .cm-callout__body { color: var(--ink-dim); }
 /* The body is free-form prose (one or more paragraphs). Its own first
    and last child must not add a second margin on top of the box's own
@@ -5337,6 +5345,7 @@ dialog.cm-dialog--spec:not([open]) {
    version of this comment said "2 columns at 390, 3 at 860" from
    theory; both numbers were wrong.
 */
+.cm-media-grid--demo { --media-grid-min: 120px; }
 .cm-media-grid {
     --media-grid-min: 150px;
     display: grid;
