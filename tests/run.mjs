@@ -318,7 +318,7 @@ check('the default focus ring is painted with --focus, on fine and coarse pointe
 	const rules = [...base.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|[\s{}]):focus-visible\s*\{([^}]*)\}/g)].map((m) => m[1]);
 	assert(rules.length === 2, `expected the bare :focus-visible rule twice (fine and coarse), found ${rules.length}`);
 	for (const body of rules) {
-		assert(/outline:\s*[12]px solid var\(--focus\)/.test(body),
+		assert(/outline:\s*(var\(--focus-width(?:-coarse)?\)|[12]px) solid var\(--focus\)/.test(body),
 			`a bare :focus-visible rule does not paint with --focus: ${body.trim()}`);
 	}
 });
@@ -11678,24 +11678,41 @@ check('the focus ring is heavy enough to see on a coarse pointer', () => {
 	assert(cf,
 		'no coarse-pointer focus rule: 1px is the desktop house style and '
 		+ 'stays, but a phone held at arm\'s length needs a heavier ring');
-	const w = /outline(?:-width)?:\s*([\d.]+)px/.exec(cf[1]);
-	assert(w, `cannot read the coarse focus outline width from: ${cf[1].trim()}`);
+	const resolveFocusPx = (raw) => {
+		const v = String(raw).trim();
+		const m = /var\(\s*(--[\w-]+)\s*\)/.exec(v);
+		if (!m) {
+			const n = Number(v.replace(/px$/, ''));
+			return Number.isFinite(n) ? n : null;
+		}
+		const toks = read('src/styles/tokens.css');
+		const tok = toks.match(new RegExp(m[1] + ':\\s*([\\d.]+)px'));
+		return tok ? Number(tok[1]) : null;
+	};
+	const wMatch = /outline(?:-width)?:\s*(var\(--[\w-]+\)|[\d.]+px)/.exec(cf[1]);
+	assert(wMatch, `cannot read the coarse focus outline width from: ${cf[1].trim()}`);
+	const wPx = resolveFocusPx(wMatch[1]);
+	assert(wPx !== null, `cannot resolve the coarse focus outline width from: ${cf[1].trim()}`);
 	// The OFFSET is asserted on the COARSE body, not the base: the base
 	// keeps its own offset, so a check reading the base stays green while
 	// the phone loses the gap - and a ring drawn flush against the control
 	// reads as a second border, which is the failure this whole rule is
 	// about. Proven: `focus-coarse-loses-offset` survived reading the base body instead.
-	assert(/outline-offset:\s*([\d.]+)px/.test(cf[1]),
-		'the coarse-pointer focus ring is not offset from the control, so it '
+	const offMatch = /outline-offset:\s*(var\(--[\w-]+\)|[\d.]+px)/.exec(cf[1]);
+	assert(offMatch, 'the coarse-pointer focus ring is not offset from the control, so it '
 		+ 'reads as a second border rather than a ring around it');
-	assert(Number(w[1]) >= 2,
-		`the coarse-pointer focus ring is ${w[1]}px - the same weight as the `
+	const offPx = resolveFocusPx(offMatch[1]);
+	assert(offPx !== null && offPx > 0, 'the coarse-pointer focus ring is not offset from the control, so it '
+		+ 'reads as a second border rather than a ring around it');
+	assert(wPx >= 2,
+		`the coarse-pointer focus ring is ${wPx}px - the same weight as the `
 		+ '1px border it sits outside, so a reader looking for a change '
 		+ 'cannot see one');
 	// and the desktop idiom must NOT have been quietly rewritten, since
 	// that was the thing being preserved
-	const dw = /outline(?:-width)?:\s*([\d.]+)px/.exec(fv[1]);
-	assert(dw && Number(dw[1]) < 2,
+	const dwMatch = /outline(?:-width)?:\s*(var\(--[\w-]+\)|[\d.]+px)/.exec(fv[1]);
+	const dwPx = dwMatch ? resolveFocusPx(dwMatch[1]) : null;
+	assert(dwPx !== null && dwPx < 2,
 		'the desktop focus ring was changed; it is the house style and only '
 		+ 'the coarse pointer was in scope');
 });
