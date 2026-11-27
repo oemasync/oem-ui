@@ -629,9 +629,13 @@
 }
 .cm-swatch__item {
 	display: flex;
-	align-items: center;
+	flex-direction: column;
+	align-items: flex-start;
 	gap: var(--space-2);
 	min-width: 0;
+	padding: var(--space-3);
+	border: 1px solid var(--line);
+	background: var(--panel);
 }
 /* The chip is drawn from the token itself, so a swatch cannot claim a
    colour the system does not actually use. */
@@ -639,8 +643,8 @@
 	/* The chip is sized off the font, so a swatch grid of long token names
 	   still fits its column. A fixed chip width plus a long name is how
 	   `--accent-bright` ended up rendered as `--accent-bri…`. */
-	width: 1.4em;
-	height: 1.4em;
+	width: 3.5em;
+	height: 3.5em;
 	flex: 0 0 auto;
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
@@ -650,6 +654,11 @@
 	/* No overflow, no ellipsis, no wrap: a token name is either shown whole
 	   or it is not a specimen of anything. The grid below gives the label
 	   enough room for the longest name in the system. */
+	white-space: nowrap;
+}
+.cm-swatch__val {
+	font-size: var(--text-micro);
+	color: var(--ink-dim);
 	white-space: nowrap;
 }
 
@@ -810,9 +819,13 @@
 		color var(--cm-t) var(--cm-ease);
 }
 .cm-btn:hover {
-	background: var(--bg-2);
+	background: var(--ink);
 	border-color: var(--ink);
-	color: var(--ink);
+	color: var(--bg);
+}
+.cm-btn:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
 }
 .cm-btn:active { background: var(--bg-3); }
 .cm-btn[disabled],
@@ -6499,6 +6512,18 @@ button.cm-link:focus-visible {
 	color: var(--ink-dim);
 	font: inherit;
 	cursor: pointer;
+	position: relative;
+}
+/* Enlarge the hit area without growing the chip visually. */
+.cm-chip__x::before {
+	content: '';
+	position: absolute;
+	inset: -0.5rem;
+}
+@media (pointer: coarse) {
+	.cm-chip__x::before {
+		inset: -0.75rem;
+	}
 }
 .cm-chip__x:hover { color: var(--ink); }
 
@@ -6910,8 +6935,16 @@ button.cm-link:focus-visible {
 /* Long option sets wrap onto a second line rather than running off the
    edge; the control is inline-flex, so it is the ROW that wraps. */
 
-/* ---------- disclosure ----------
+/* Mobile viewports are touch in practice, even when a desktop browser is
+   resized to measure them, so the tap floor must also key off width and not
+   only off `pointer: coarse` (which reports the host's input device). */
+@media (max-width: 680px) {
+	.cm-icon-btn { width: var(--tap); height: var(--tap); }
+	.cm-btn--sm { min-height: var(--tap); }
+	.cm-seg__opt { min-height: var(--tap); }
+}
 
+/* ---------- disclosure ----------
    A summary row that reveals a panel. Native-first where the platform
    helps and wrong where it does not: <details>/<summary> gives keyboard
    and find-in-page for free, but the marker is a browser triangle the
