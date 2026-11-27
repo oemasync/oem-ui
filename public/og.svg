@@ -16,9 +16,7 @@
   <text x="100" y="180" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="600" fill="#7a7a7a" letter-spacing="0.28em">01 ── TERMINAL, REFINED</text>
   <!-- wordmark -->
   <text x="100" y="300" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="128" font-weight="700" letter-spacing="-0.02em" fill="#fafafa">oem/ui</text>
-  <rect x="560" y="200" width="44" height="112" fill="#fafafa">
-    <animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite" />
-  </rect>
+  <rect x="560" y="200" width="44" height="112" fill="#fafafa" />
   <!-- tagline -->
   <text x="100" y="360" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" fill="#b3b3b3">a zero-dependency mono/terminal design system.</text>
   <text x="100" y="400" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" fill="#b3b3b3">three css layers · one runtime · optional astro components.</text>

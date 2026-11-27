@@ -53,9 +53,10 @@ Body text, six steps, from largest to smallest:
 - `--text-micro` — the uppercase tracked label, and the floor.
 
 Eyebrows are wide-tracked uppercase at `--text-micro`. The `--min-font`
-token is the hard tap-target floor; it is the smallest size the system
-permits, and `--text-micro` is the smallest text step. Neither is
-below the floor. Their values live in `tokens.css`.
+token is the smallest font size the system permits (a font-size floor,
+not a tap-target floor — tap targets use `--tap`, 44px). `--text-micro`
+is the smallest text step. Neither text step is below `--min-font`.
+Their values live in `tokens.css`.
 
 ## Texture — the dot grid
 
