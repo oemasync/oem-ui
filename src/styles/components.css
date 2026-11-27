@@ -1096,7 +1096,7 @@ html {
    `:last-child` on the row, not on the list, so a row followed by any
    other element - a footer action, a nested list - keeps its rule. */
 .cm-row:last-child { border-bottom: 0; }
-.cm-row:hover { background: var(--ink); color: var(--bg); }
+.cm-row:hover { background: var(--panel); color: var(--ink); }
 .cm-row__idx {
 	color: var(--ink-faint);
 	font-size: var(--text-micro);
@@ -1331,7 +1331,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	transition: color var(--cm-t) var(--cm-ease),
 		transform var(--cm-t) var(--cm-ease);
 }
-.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(3px); }
+.cm-row:hover .cm-row__sym { color: var(--ink); transform: translateX(3px); }
 
 /* stacked variant: title over desc over meta, taller rows */
 /* Row icon slot: a fixed-width box that centres a glyph or SVG next to
@@ -2807,8 +2807,12 @@ button.cm-row:hover { background: var(--bg-2); }
 	top: 0;
 }
 .cm-table tbody tr:last-child td { border-bottom: 0; }
-.cm-table tbody tr:hover td {
+.cm-table tbody tr:not([aria-selected='true']):hover td {
 	background: var(--ink);
+	color: var(--bg);
+}
+.cm-table tbody tr:not([aria-selected='true']):hover td * {
+	background: transparent;
 	color: var(--bg);
 }
 .cm-table tbody tr[aria-selected='true'] td {
@@ -12942,8 +12946,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 .cm-table__td--right { text-align: end; font-variant-numeric: tabular-nums; }
 .cm-table__tr { display: table-row; }
 .cm-table__tr:last-child .cm-table__td { border-bottom: none; }
-.cm-table__tr:hover .cm-table__td {
+.cm-table__tr:not([aria-selected='true']):hover .cm-table__td {
 	background: var(--ink);
+	color: var(--bg);
+}
+.cm-table__tr:not([aria-selected='true']):hover .cm-table__td * {
+	background: transparent;
 	color: var(--bg);
 }
 .cm-table__empty {
