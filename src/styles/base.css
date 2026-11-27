@@ -48,7 +48,8 @@ html {
 body {
 	margin: 0;
 	background-color: var(--bg);
-	background-image: var(--vignette);
+	background-image: var(--vignette), var(--dot-grid);
+	background-size: auto, var(--dot-grid-size) var(--dot-grid-size);
 	background-attachment: fixed;
 	color: var(--ink);
 	font-family: var(--font-body);
@@ -85,7 +86,7 @@ h1, h2, h3, h4, h5, h6 {
 	color: var(--ink);
 	font-weight: 700;
 	line-height: 1.25;
-	letter-spacing: -0.01em;
+	letter-spacing: var(--tracking-tight);
 }
 h1 { font-size: var(--head-h1); }
 h2 { font-size: var(--head-h2); margin-top: 2em; }
@@ -124,6 +125,7 @@ code {
 /* pre blocks */
 pre {
 	background: var(--bg-2);
+	background-image: var(--scanline);
 	border: 1px solid var(--line);
 	border-inline-start: 2px solid var(--accent-dim);
 	border-radius: var(--radius-sm);
@@ -342,7 +344,8 @@ th, td { padding: 0.6em 0.9em; border: 1px solid var(--line); text-align: start;
    so this rule governs the BARE `<th>` - the one a markdown renderer,
    an admin console or a hand-written page emits - which is exactly the
    case that had no declaration to lose. */
-th { background: var(--bg-3); color: var(--ink); font-weight: 700; }
+th { background: var(--bg-3); color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+td { font-variant-numeric: tabular-nums; }
 
 ::selection { background: var(--selection-bg); color: var(--selection-color); }
 
@@ -391,6 +394,8 @@ button:focus-visible,
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
 	}
+	body { background-image: var(--vignette); }
+	pre { background-image: none; }
 }
 
 /* ============ responsive baseline ============ */
@@ -516,6 +521,7 @@ button:focus-visible,
    would zero the element whose specificity is the thing being preserved. */
 :where([data-cm-theme]) pre {
 	background: var(--bg-2);
+	background-image: var(--scanline);
 	border: 1px solid var(--line);
 	border-inline-start: 2px solid var(--accent-dim);
 	border-radius: var(--radius-sm);
@@ -872,6 +878,8 @@ input[type='radio']:checked {
    system's own selection colour. The checkbox needs nothing: its tick is
    a border, and borders survive. */
 @media (forced-colors: active) {
+	body { background-image: none; }
+	pre { background-image: none; }
 	input[type='radio']:checked { background-color: Highlight; }
 }
 

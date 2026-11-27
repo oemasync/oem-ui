@@ -369,6 +369,25 @@
 	   Both halves are measured; neither is a default. */
 	--min-font: 12px;
 
+	/* ---- type tracking --------------------------------------------
+	   Display heads carry tight tracking; eyebrow labels carry wide
+	   tracking. Both live here so the scale is retuned in one place. */
+	--tracking-tight: -0.04em;
+	--tracking-wide: 0.12em;
+	/* ---- texture sizing -------------------------------------------
+	   The dot-grid pitch. Kept here (theme-independent) so the grid
+	   does not change density between themes. */
+	--dot-grid-size: 20px;
+	/* ---- focus ring geometry --------------------------------------
+	   Widths and offset for the keyboard focus ring. Colours come from
+	   --focus; geometry lives here so it is retuned once. */
+	--focus-width: 1px;
+	--focus-width-coarse: 2px;
+	--focus-offset: 2px;
+	/* ---- caret blink timing ---------------------------------------
+	   The brand caret and any terminal cursor blink on this cadence.
+	   Reduced-motion zeroes it (see base.css). */
+	--caret-blink: 1.06s;
 	/* ---- switch geometry ----
 	   A 2:1 track, and a knob inset by half the gap it leaves. Deriving the
 	   knob from the track height means the off position and the on position
@@ -505,6 +524,12 @@
 
 	/* terminal vignette */
 	--vignette: radial-gradient(120% 90% at 50% 0%, transparent 62%, rgba(0, 0, 0, 0.5));
+
+	/* ---- texture + rule tokens (dark) ---- */
+	--dot-grid: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(255, 255, 255, 0.025) 2px, rgba(255, 255, 255, 0.025) 3px);
+	--line-strong: #3a3a3a;
+	--inset-highlight: 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ================= light — explicit opt-in ================= */
@@ -590,6 +615,11 @@
 
 	--vignette: radial-gradient(120% 90% at 50% 0%, transparent 62%, rgba(0, 0, 0, 0.06));
 
+	/* ---- texture + rule tokens (light) ---- */
+	--dot-grid: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0, 0, 0, 0.025) 2px, rgba(0, 0, 0, 0.025) 3px);
+	--line-strong: #a0a0a0;
+	--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
 	scrollbar-color: #b8b8b8 #f0f0f0;
 
 	/* The same five steps, inverted for a light surface: c1 is the
@@ -680,6 +710,12 @@
 	--sidebar-ring: var(--focus);
 	--selection-color: #ffffff;
 	--vignette: radial-gradient(120% 90% at 50% 0%, transparent 62%, rgba(0, 0, 0, 0.5));
+
+	/* ---- texture + rule tokens (dark) ---- */
+	--dot-grid: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(255, 255, 255, 0.025) 2px, rgba(255, 255, 255, 0.025) 3px);
+	--line-strong: #3a3a3a;
+	--inset-highlight: 0 1px 0 rgba(255, 255, 255, 0.06);
 	scrollbar-color: #3a3a3a #0a0a0a;
 
 	/* ---- the chart series scale (five steps, no chroma) --------
@@ -762,6 +798,12 @@
 	--sidebar-ring: var(--focus);
 	--selection-color: #000000;
 	--vignette: radial-gradient(120% 90% at 50% 0%, transparent 62%, rgba(0, 0, 0, 0.06));
+
+	/* ---- texture + rule tokens (light) ---- */
+	--dot-grid: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0, 0, 0, 0.025) 2px, rgba(0, 0, 0, 0.025) 3px);
+	--line-strong: #a0a0a0;
+	--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
 	scrollbar-color: #b8b8b8 #f0f0f0;
 
 	/* The same five steps as the document light block above, because
@@ -837,5 +879,9 @@
 		   two-theme set at two. A scrim never paints on paper - its
 		   backdrop is a hidden dialog - so this is consistency, not ink. */
 		--scrim: rgba(24, 24, 24, 0.42);
+	--line-strong: #a0a0a0;
+	--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
+	--dot-grid: none;
+	--scanline: none;
 	}
 }
