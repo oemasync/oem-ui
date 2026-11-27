@@ -1252,6 +1252,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	   min-width lets the box shrink; this stops the nowrap content from
 	   escaping it. The chips inside ellipsize on their own. */
 	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 /* A meta slot is a fixed, unshrinkable strip by default - correct for a
@@ -2289,6 +2290,10 @@ button.cm-row:hover { background: var(--bg-2); }
 	border-color: var(--accent);
 	background: var(--bg-3);
 	color: var(--ink);
+}
+.cm-dropzone--over .cm-dropzone__mark::before,
+.cm-dropzone[data-over='true'] .cm-dropzone__mark::before {
+	content: "↓";
 }
 
 /* Decoration, and hidden from assistive tech by the caller. The ring is drawn
@@ -8188,7 +8193,7 @@ input.cm-slider:disabled {
 	text-decoration: none;
 	white-space: nowrap;
 	cursor: pointer;
-	min-height: var(--tap);
+	min-height: var(--space-6);
 }
 .cm-navmenu__trigger:focus-visible,
 .cm-navmenu__trigger[aria-expanded='true'] {
@@ -8903,13 +8908,13 @@ input.cm-slider:disabled {
 }
 .cm-msg--end .cm-msg__footer { justify-content: flex-end; }
 .cm-msg__header::before {
-	content: "$ ";
+	content: '$ ' / '';
 	color: var(--ink-faint);
 }
 .cm-msg__footer {
 	font-variant-numeric: tabular-nums;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide, 0.08em);
 }
 .cm-msg__action {
 	background: none;
@@ -8921,7 +8926,7 @@ input.cm-slider:disabled {
 	color: var(--ink-dim);
 	text-decoration: underline;
 	cursor: pointer;
-	min-height: var(--tap);
+	min-height: var(--space-6);
 	display: inline-flex;
 	align-items: center;
 }
@@ -9153,7 +9158,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	line-height: 1.5;
 	cursor: pointer;
-	min-height: var(--tap);
+	min-height: var(--space-6);
 }
 .cm-msglist__reaction:hover {
 	border-color: var(--ink-dim);
@@ -10470,8 +10475,11 @@ input.cm-slider:disabled {
    it has to be readable in greyscale: a fill AND the ink AND the pill,
    never the hue on its own. */
 .cm-guildrail__item[aria-current='true'] {
-	background: var(--surface-raised);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
+}
+.cm-guildrail__item[aria-current='true'] .cm-guildrail__pill {
+	background: var(--bg);
 }
 /* The activity pill: a tick on hover, a full bar for the room you are
    in. It is scaled, not resized - a `block-size` transition is a layout
@@ -13004,6 +13012,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    repaint: a chart tells its series apart by grey level alone, so every
    series is one colour here; and the slider's filled portion is a
    gradient, which the mode also drops (the thumb still shows the value). */
+@media (pointer: coarse) {
+	.cm-msg__action,
+	.cm-msglist__reaction,
+	.cm-navmenu__trigger { min-height: var(--tap); }
+}
+
 @media (forced-colors: active) {
 	.cm-meter__fill,
 	.cm-progress__fill,
@@ -13026,6 +13040,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	[aria-selected='true'] > .cm-cal__day,
 	.cm-guide__program--now,
 	.cm-guildrail__item[aria-current='true'],
+	.cm-navmenu__trigger[aria-expanded='true'],
 	.cm-term__follow-toggle[aria-pressed='true'],
 	.cm-step.is-current .cm-step__marker,
 	.cm-row--on,
@@ -13047,6 +13062,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 		[aria-selected='true'] > .cm-cal__day,
 		.cm-guide__program--now,
 		.cm-guildrail__item[aria-current='true'],
+		.cm-navmenu__trigger[aria-expanded='true'],
 		.cm-term__follow-toggle[aria-pressed='true'],
 		.cm-step.is-current .cm-step__marker,
 		.cm-row--on,
