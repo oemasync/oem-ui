@@ -2779,7 +2779,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	max-height: var(--table-max-h, 30rem);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
-	box-shadow: var(--inset-highlight);
+	box-shadow: var(--shadow-1);
 	-webkit-overflow-scrolling: touch;
 	/* A wide table that scrolls horizontally has no scrollbar affordance
 	   on many phone touch UIs. A subtle left edge fade hints the content
@@ -2809,11 +2809,21 @@ button.cm-row:hover { background: var(--bg-2); }
 	top: 0;
 }
 .cm-table tbody tr:last-child td { border-bottom: 0; }
+.cm-table td.cm-table__num,
+.cm-table th.cm-table__num {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
 .cm-table tbody tr:not([aria-selected='true']):hover td {
 	background: var(--ink);
 	color: var(--bg);
 }
-.cm-table tbody tr:not([aria-selected='true']):hover td * {
+/* Only text-bearing descendants that carry their own colour or background
+   get reset on hover; controls (switch, checkbox, badge, chip, status dot,
+   kbd) keep their own paint. */
+.cm-table tbody tr:not([aria-selected='true']):hover td .cm-status-code,
+.cm-table tbody tr:not([aria-selected='true']):hover td .cm-table__action,
+.cm-table tbody tr:not([aria-selected='true']):hover td .cm-table__num {
 	background: transparent;
 	color: var(--bg);
 }
@@ -2832,11 +2842,6 @@ button.cm-row:hover { background: var(--bg-2); }
    `.cm-table__num` is 0,1,0, so the cell rule WINS and every duration
    rendered left-aligned with a ragged right edge - measured, and it read
    correctly in the source the whole time. */
-.cm-table td.cm-table__num,
-.cm-table th.cm-table__num {
-	text-align: end;
-	font-variant-numeric: tabular-nums;
-}
 /* A long host or path must not set the column width for the whole
    column - 40 hosts of wildly different lengths otherwise makes every
    row as wide as the worst one. Truncate with an ellipsis so the value
@@ -12908,7 +12913,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	overflow-x: auto;
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
-	box-shadow: var(--inset-highlight);
+	box-shadow: var(--shadow-1);
 	background: var(--bg);
 	position: relative;
 	max-height: var(--table-max-h, 30rem);
@@ -12953,7 +12958,9 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	background: var(--ink);
 	color: var(--bg);
 }
-.cm-table__tr:not([aria-selected='true']):hover .cm-table__td * {
+.cm-table__tr:not([aria-selected='true']):hover .cm-table__td .cm-status-code,
+.cm-table__tr:not([aria-selected='true']):hover .cm-table__td .cm-table__action,
+.cm-table__tr:not([aria-selected='true']):hover .cm-table__td .cm-table__num {
 	background: transparent;
 	color: var(--bg);
 }

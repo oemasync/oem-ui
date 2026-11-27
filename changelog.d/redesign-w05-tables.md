@@ -1,3 +1,7 @@
-- Restyled `.cm-table` (showcase grid and `DataTable.astro` primitive) headers as uppercase, wide-tracked eyebrow labels; hairline rows now invert on hover (ink-on-bg).
+- Restyled `.cm-table` (showcase grid and `DataTable.astro` primitive): headers are uppercase, wide-tracked eyebrow labels; hairline rows invert on hover (ink-on-bg); zebra-free.
 - Numeric columns keep tabular numerals and right alignment.
-- Fixed the switch's real checkbox tap target: it now covers the whole track instead of a 16px box. 
+- Fixed the switch's real checkbox tap target: it now covers the whole track instead of a 16px box.
+- Hovered rows now reset only text-bearing descendants (status code, cell action, numeric) so controls (switch, checkbox, badge, chip, kbd, status dot) keep their own paint; contrast measured 0 failing samples in both themes.
+- Selected rows (`aria-selected='true'`) keep their selected fill on hover instead of inverting.
+- Adopted design tokens: `--tracking-wide` for header tracking, `--shadow-1` for the raised-panel inset highlight.
+- Switch keeps square track/knob, inverted on state, visible focus ring, and position (not fill) carries state under forced colors.
