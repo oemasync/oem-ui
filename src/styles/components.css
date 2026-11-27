@@ -1931,7 +1931,6 @@ button.cm-row:hover { background: var(--bg-2); }
 
 /* ---------- terminal / shell panel ---------- */
 .cm-term {
-	--cm-term-scanline: repeating-linear-gradient(0deg, transparent 0, transparent 3px, var(--line-soft) 3px, var(--line-soft) 4px);
 	background: var(--bg-2);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
@@ -1956,7 +1955,7 @@ button.cm-row:hover { background: var(--bg-2); }
 .cm-term__title { letter-spacing: 0.1em; text-transform: uppercase; }
 .cm-term__title::before { content: '[ '; }
 .cm-term__title::after { content: ' ]'; }
-.cm-term__body { padding: 1.1em 1.3em; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; background-image: var(--cm-term-scanline, none); }
+.cm-term__body { padding: 1.1em 1.3em; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; background-image: var(--scanline); }
 .cm-term__body pre { margin: 0; border: none; background: transparent; padding: 0; }
 .cm-term__prompt { color: var(--ink-faint); user-select: none; }
 .cm-term__line { display: block; white-space: pre-wrap; }
@@ -11398,9 +11397,6 @@ input.cm-slider:disabled {
    page - the regression that produced five projects each shipping a local
    `main { width: auto; max-width: none }` override. */
 .cm-hero {
-	--cm-hero-dot-grid: radial-gradient(var(--line) 1px, transparent 1px);
-	--cm-hero-dot-size: 16px;
-	--cm-hero-caret-blink: 1.1s;
 	--hero-maxw: 61.25rem;
 	--hero-title: clamp(var(--head-h1), 2rem + 4vw, 4rem);
 	width: min(var(--hero-maxw, 61.25rem), 100%);
@@ -11408,27 +11404,23 @@ input.cm-slider:disabled {
 	padding: var(--space-8) var(--gutter) var(--space-7);
 	text-align: center;
 	/* Subtle dot-grid texture on the hero surface. */
-	background-image: var(--cm-hero-dot-grid, none);
-	background-size: var(--cm-hero-dot-size, 16px) var(--cm-hero-dot-size, 16px);
+	background-image: var(--dot-grid);
+	background-size: var(--dot-grid-size) var(--dot-grid-size);
 	background-position: center;
 }
 .cm-hero__title {
 	font-size: var(--hero-title, clamp(var(--head-h1), 2rem + 4vw, 4rem));
 	line-height: 1.05;
-	letter-spacing: -0.02em;
+	letter-spacing: var(--tracking-tight);
 	font-weight: 700;
 	margin: 0 0 var(--space-4);
 	overflow-wrap: break-word;
 }
 .cm-hero__title::after {
-	content: '_' / '';
-	margin-inline-start: 0.05em;
+	content: ' _' / '';
+	margin-inline-start: 0;
 	color: var(--accent-bright);
-	width: 0;
-	display: inline-block;
-	overflow: visible;
-	white-space: nowrap;
-	animation: cm-blink var(--cm-hero-caret-blink, 1.1s) steps(2, start) infinite;
+	animation: cm-blink var(--caret-blink) steps(2, start) infinite;
 }
 /* The lede is centered here, not in `.cm-lede`: `.cm-lede` is a block that
    starts at the text edge (prose, list rows), and a hero's lede has to be
