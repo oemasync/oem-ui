@@ -4076,7 +4076,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	background: var(--bg-2);
 	color: var(--ink);
 	font-family: var(--font-body);
-	box-shadow: var(--shadow-1), var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card), inset 0 1px 0 var(--line-soft);
 	overflow: auto;
 }
 /* --scrim is a token, not a literal: the same alpha over #0a0a0a and
@@ -4252,10 +4252,10 @@ dialog.cm-dialog--spec:not([open]) {
 .cm-toast__close::before {
 	content: '';
 	position: absolute;
-	inset: -4px;
+	inset: calc(var(--space-1) * -1);
 }
 @media (pointer: coarse) {
-	.cm-toast__close::before { inset: -14px; }
+	.cm-toast__close::before { inset: calc(var(--space-4) * -1); }
 }
 .cm-toast__close:hover { color: var(--ink); }
 .cm-toast--ok { border-inline-start-color: var(--ink-dim); }
@@ -4467,6 +4467,10 @@ dialog.cm-dialog--spec:not([open]) {
 	       real `max-width`, and only ever tightens the CSS floor.
 	*/
 	max-width: min(18rem, 50vw);
+
+	/* Without this transform `left:50%` put the trigger's MIDDLE at the
+	   tip's left edge, so the tip always hung to the right of the
+	   trigger. Centring is the transform's whole job. */
 	transform: translateX(-50%);
 }
 .cm-tooltip--start .cm-tooltip__tip {
@@ -13060,4 +13064,4 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	   colour: the knob's position is the state, here as everywhere. */
 	.cm-switch__track { outline: 1px solid CanvasText; }
 	.cm-codebar > pre { background-image: none; }
-	}
+}

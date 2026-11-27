@@ -9,6 +9,8 @@
  *
  * variant: '' (default modal) | 'alert' (decision dialog) | 'sheet'
  * (side-anchored). open: renders the dialog open (specimen use).
+ * spec: renders the dialog in-flow as a specimen (visible even when
+ *   closed). Prefer this over `open` for showcase frames.
  * title: optional title rendered in the head. ariaLabel: accessible name
  * when there is no visible title.
  */
@@ -20,17 +22,21 @@ interface Props {
 	/** Whether the dialog is open. Use for specimens only; production
 	 *  code calls .showModal() / .show() on the element. */
 	open?: boolean;
+	/** Render the dialog in-flow as a specimen, visible even when closed. */
+	spec?: boolean;
 	/** Accessible label when no visible title is rendered. */
 	ariaLabel?: string;
 }
 
-const { variant = '', title, open = false, ariaLabel } = Astro.props;
+const { variant = '', title, open = false, spec = false, ariaLabel } = Astro.props;
 const variantClass = variant ? `cm-dialog--${variant}` : '';
+const classes = ['cm-dialog', variantClass];
+if (spec) classes.push('cm-dialog--spec');
 ---
 
 <dialog
-	class:list={['cm-dialog', variantClass]}
-	open={open}
+	class:list={classes}
+	open={open && !spec}
 	role="dialog"
 	aria-label={ariaLabel ?? title}
 >
