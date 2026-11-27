@@ -670,7 +670,7 @@
 .cm-spec__row:last-child { border-bottom: 0; }
 .cm-spec__label { flex: 0 0 6.5rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .cm-spec__sample { flex: 1; min-width: 0; line-height: 1.1; }
-.cm-spec__val { flex: 0 0 auto; text-align: end; }
+.cm-spec__val { flex: 0 0 auto; text-align: end; min-width: 0; overflow-wrap: break-word; }
 /* A specimen that reports its own live state. The inline row's title
    column is only in play inside a width band, and a static `42ch` beside
    it is decoration -- it cannot tell you that at 700px the excerpt has
@@ -3859,12 +3859,15 @@ button.cm-row:hover { background: var(--bg-2); }
 }
 
 /* Form controls: a visible offset ring on top of the base one, so a field
-   in focus reads as a strong rule rather than a hairline. */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-	outline: 2px solid var(--focus);
-	outline-offset: 2px;
+   in focus reads as a strong rule rather than a hairline. Scoped to the
+   field component rather than bare elements. */
+.cm-field input:focus-visible,
+.cm-field textarea:focus-visible,
+.cm-field select:focus-visible,
+.cm-input-group input:focus-visible,
+.cm-input-group select:focus-visible {
+	outline: var(--space-0) solid var(--focus);
+	outline-offset: var(--space-0);
 }
 
 /* ---------- form layout: wrapper, group, actions, help, error ----------
@@ -7453,9 +7456,11 @@ input.cm-slider {
 	background: transparent;
 	border: 0;
 	--cm-slider: 0%;
+	--cm-slider-track-h: 8px;
+	--cm-slider-thumb-h: 18px;
 }
 input.cm-slider::-webkit-slider-runnable-track {
-	height: 8px;
+	height: var(--cm-slider-track-h, 8px);
 	background:
 		linear-gradient(to right,
 			var(--ink) var(--cm-slider, 0%),
@@ -7466,25 +7471,25 @@ input.cm-slider::-webkit-slider-runnable-track {
 input.cm-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
+	border-radius: 0;
 	width: 10px;
-	height: 18px;
-	margin-top: calc((8px - 18px) / 2);
+	height: var(--cm-slider-thumb-h, 18px);
+	margin-top: calc((var(--cm-slider-track-h, 8px) - var(--cm-slider-thumb-h, 18px)) / 2);
 	background: var(--ink);
 	border: 1px solid var(--bg);
-	border-radius: 0;
 }
 input.cm-slider::-moz-range-track {
-	height: 8px;
+	height: var(--cm-slider-track-h, 8px);
 	background: var(--bg-3);
 	border: 1px solid var(--line);
 }
 input.cm-slider::-moz-range-progress {
-	height: 8px;
+	height: var(--cm-slider-track-h, 8px);
 	background: var(--ink);
 }
 input.cm-slider::-moz-range-thumb {
 	width: 10px;
-	height: 18px;
+	height: var(--cm-slider-thumb-h, 18px);
 	background: var(--ink);
 	border: 1px solid var(--bg);
 	border-radius: 0;
@@ -8708,6 +8713,14 @@ input.cm-slider:disabled {
 	max-height: var(--scroll-h, 18rem);
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: var(--line) transparent;
+}
+.cm-scrollarea::-webkit-scrollbar { width: var(--space-2); }
+.cm-scrollarea::-webkit-scrollbar-track { background: transparent; }
+.cm-scrollarea::-webkit-scrollbar-thumb {
+	background: var(--ink-faint);
+	border: 1px solid var(--line);
 }
 
 
