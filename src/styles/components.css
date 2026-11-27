@@ -958,7 +958,18 @@
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	box-shadow: var(--shadow-1);
+	/* The bar owns the radius now; the block inside must not draw its own
+	   or the two corners double up. */
 	overflow: hidden;
+	/* Scanline texture. Kept as one local custom property so W01's
+	   --scanline token can replace it in one place once it lands. */
+	--cm-codebar-scanline: repeating-linear-gradient(
+		0deg,
+		transparent 0,
+		transparent 2px,
+		var(--line-soft) 2px,
+		var(--line-soft) 3px
+	);
 }
 /* The pre is an ELEMENT default in base.css with its own border, radius
    and left accent rule. Inside a bar it is the body of the panel, so those
@@ -970,14 +981,8 @@
 	border-inline-start: 0;
 	border-radius: 0;
 	background-color: var(--bg-2);
-	background-image: repeating-linear-gradient(
-		0deg,
-		transparent 0,
-		transparent 2px,
-		var(--line-soft) 2px,
-		var(--line-soft) 3px
-	);
-	background-blend-mode: normal;
+	background-image: var(--cm-codebar-scanline, none);
+	overflow-x: auto;
 }
 .cm-codebar__bar {
 	display: flex;
@@ -4080,7 +4085,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	color: var(--ink);
 	font-family: var(--font-body);
 	box-shadow: var(--shadow-1), var(--shadow-card);
-			overflow: auto;
+	overflow: auto;
 }
 /* --scrim is a token, not a literal: the same alpha over #0a0a0a and
    over #fafafa hides the page by very different amounts, so the wash
@@ -4242,6 +4247,7 @@ dialog.cm-dialog--spec:not([open]) {
 .cm-toast__close {
 	flex: 0 0 auto;
 	align-self: flex-start;
+	position: relative;
 	padding: 0 var(--space-1);
 	border: 0;
 	background: transparent;
@@ -4250,6 +4256,14 @@ dialog.cm-dialog--spec:not([open]) {
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.2;
 	cursor: pointer;
+}
+.cm-toast__close::before {
+	content: '';
+	position: absolute;
+	inset: -4px;
+}
+@media (pointer: coarse) {
+	.cm-toast__close::before { inset: -14px; }
 }
 .cm-toast__close:hover { color: var(--ink); }
 .cm-toast--ok { border-inline-start-color: var(--ink-dim); }
@@ -4461,10 +4475,6 @@ dialog.cm-dialog--spec:not([open]) {
 	       real `max-width`, and only ever tightens the CSS floor.
 	*/
 	max-width: min(18rem, 50vw);
-
-	/* Without this transform `left:50%` put the trigger's MIDDLE at the
-	   tip's left edge, so the tip always hung to the right of the
-	   trigger. Centring is the transform's whole job. */
 	transform: translateX(-50%);
 }
 .cm-tooltip--start .cm-tooltip__tip {
@@ -5077,7 +5087,7 @@ dialog.cm-dialog--spec:not([open]) {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	background: var(--surface-raised);
-	box-shadow: inset 0 -2px 0 var(--line);
+	box-shadow: var(--shadow-1), inset 0 -2px 0 var(--line-soft);
 	color: var(--ink);
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-micro));
@@ -5205,7 +5215,10 @@ dialog.cm-dialog--spec:not([open]) {
 .cm-pager__link[aria-current='page'] {
 	color: var(--bg);
 	background: var(--ink);
-	box-shadow: inset 0 -2px 0 var(--ink);
+}
+.cm-pager__link[aria-current='page']:hover {
+	color: var(--bg);
+	background: var(--ink);
 }
 /* An edge with nowhere to go is not a link: render it as a span. */
 .cm-pager__link--off { color: var(--ink-faint); border-style: dashed; cursor: default; }
@@ -6906,9 +6919,14 @@ button.cm-link:focus-visible {
 .cm-seg__opt:last-child { border-inline-end: 0; }
 .cm-seg__opt:hover { color: var(--ink); background: var(--panel); }
 .cm-seg__opt[aria-pressed='true'] {
-	color: var(--ink);
-	background: var(--panel);
-	box-shadow: inset 0 -2px 0 var(--ink);
+	color: var(--bg);
+	background: var(--ink);
+	box-shadow: inset 0 0 0 1px var(--bg);
+}
+.cm-seg__opt[aria-pressed='true']:hover {
+	color: var(--bg);
+	background: var(--ink);
+	box-shadow: inset 0 0 0 1px var(--bg);
 }
 /* A coarse pointer gets the same floor every other control carries, so
    the option is not a 24px sliver of a 390px screen. */
@@ -13051,7 +13069,3 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-switch__track { outline: 1px solid CanvasText; }
 	.cm-codebar > pre { background-image: none; }
 	}
-
-@media (prefers-reduced-motion: reduce) {
-	.cm-codebar > pre { background-image: none; }
-}
