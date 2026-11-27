@@ -1,7 +1,13 @@
-- content family: restyled terminal, cards, tiles, hero, diff to the terminal-refined language.
-  - terminal: scanline texture on body (local --cm-term-scanline), bracketed window title `[ name ]`, machined inset top highlight via --shadow-1.
-  - hero: dot-grid texture (local --cm-hero-dot-grid / --cm-hero-dot-size), blinking caret on title (local --cm-hero-caret-blink, reduced-motion guarded, SR-silent via content: '_' / ''), display type retained.
-  - cards, tiles, diff: machined inset top highlight via --shadow-1.
-  - reverted out-of-scope .cm-btn:hover change (owned by buttons worker).
-  - forced-colors: texture removal without !important.
-- pending: --scanline, --dot-grid, --dot-grid-size, --caret-blink tokens arrive via W01 merge; values currently live in one local custom property per component.
+- content family: restyled records, trace, diff, guide, term, artwork, cards, hero, tiles to the terminal-refined language.
+  - terminal: scanline texture via var(--scanline), bracketed window title `[ name ]`, machined inset top highlight via var(--shadow-1).
+  - hero: dot-grid texture via var(--dot-grid)/var(--dot-grid-size), blinking caret via var(--caret-blink) (reduced-motion guarded, SR-silent via content: ' _' / ''), display type with var(--tracking-tight), wraps at every width.
+  - cards, tiles: machined inset top highlight via var(--shadow-1).
+  - diff: crisp +/- gutters.
+  - trace: hairline connectors and square nodes.
+  - records: tabular rows.
+- bugs fixed:
+  - artwork: added width/height to all img.cm-artwork__img data-URI images.
+  - cards: added id="projects" anchor target so href="#projects" resolves.
+  - hero: title no longer clips at 390 (caret wraps via leading space).
+  - records: cm-row__body no longer collapses to 0 (meta spans flex:0).
+- pending: none.
