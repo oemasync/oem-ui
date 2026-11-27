@@ -962,15 +962,6 @@
 	/* The bar owns the radius now; the block inside must not draw its own
 	   or the two corners double up. */
 	overflow: hidden;
-	/* Scanline texture. Kept as one local custom property so W01's
-	   --scanline token can replace it in one place once it lands. */
-	--cm-codebar-scanline: repeating-linear-gradient(
-		0deg,
-		transparent 0,
-		transparent 2px,
-		var(--line-soft) 2px,
-		var(--line-soft) 3px
-	);
 }
 /* The pre is an ELEMENT default in base.css with its own border, radius
    and left accent rule. Inside a bar it is the body of the panel, so those
@@ -982,7 +973,7 @@
 	border-inline-start: 0;
 	border-radius: 0;
 	background-color: var(--bg-2);
-	background-image: var(--cm-codebar-scanline, none);
+	background-image: var(--scanline);
 	overflow-x: auto;
 }
 .cm-codebar__bar {
