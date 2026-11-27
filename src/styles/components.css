@@ -8188,6 +8188,7 @@ input.cm-slider:disabled {
 	text-decoration: none;
 	white-space: nowrap;
 	cursor: pointer;
+	min-height: var(--tap);
 }
 .cm-navmenu__trigger:focus-visible,
 .cm-navmenu__trigger[aria-expanded='true'] {
@@ -8920,6 +8921,9 @@ input.cm-slider:disabled {
 	color: var(--ink-dim);
 	text-decoration: underline;
 	cursor: pointer;
+	min-height: var(--tap);
+	display: inline-flex;
+	align-items: center;
 }
 /* consecutive rows from one sender keep the avatar rhythm: earlier
    rows carry an EMPTY .cm-msg__avatar and the gap tightens */
@@ -9149,6 +9153,7 @@ input.cm-slider:disabled {
 	font-size: var(--text-micro);
 	line-height: 1.5;
 	cursor: pointer;
+	min-height: var(--tap);
 }
 .cm-msglist__reaction:hover {
 	border-color: var(--ink-dim);
