@@ -10096,7 +10096,7 @@ input.cm-slider:disabled {
 	fill: var(--ink-faint);
 	font-family: var(--font-mono);
 	font-size: var(--min-font);
-	letter-spacing: var(--cm-eyebrow-tracking);
+	letter-spacing: var(--tracking-wide);
 	text-transform: uppercase;
 	font-variant-numeric: tabular-nums;
 }
@@ -10273,7 +10273,7 @@ input.cm-slider:disabled {
 	color: var(--ink-dim);
 	font-size: max(var(--min-font), var(--text-micro));
 	font-variant-numeric: tabular-nums;
-	letter-spacing: var(--cm-eyebrow-tracking);
+	letter-spacing: var(--tracking-wide);
 	text-transform: uppercase;
 }
 .cm-chart__legend-item {
