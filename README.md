@@ -17,8 +17,8 @@ Live: [ui.mrx.sh](https://ui.mrx.sh) · Source: [github.com/oemasync/oem-ui](htt
 Install in three lines:
 
 ```bash
-cp src/styles/tokens.css src/styles/base.css src/styles/components.css <your-project>/styles/
-cp src/js/cli-mono.js src/js/cli-mono-theme-guard.js <your-project>/js/
+./scripts/install.sh <your-project-dir>
+# FOUC guard must be inlined in <head> before any stylesheet (AGENTS.md rule 4)
 # load order: tokens → base → components, then <script src=".../cli-mono.js">
 ```
 
