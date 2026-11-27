@@ -1928,6 +1928,135 @@ browser behaviour closes the other panels, with no JavaScript. Use a
 1:1 shortcut; the default is 16:9. All borders keep the house's sharp
 corners.
 
+### Number stepper — `.cm-number`
+
+A number field with its own minus and plus, in one frame:
+
+```html
+<span class="cm-number" data-cm-number>
+  <button type="button" class="cm-number__btn" data-cm-number-dec aria-label="Decrease cost">&minus;</button>
+  <input class="cm-number__input" type="number" inputmode="numeric" min="0" max="10" value="2" aria-label="Cost">
+  <button type="button" class="cm-number__btn" data-cm-number-inc aria-label="Increase cost">+</button>
+</span>
+```
+
+Why not an input group with two buttons: that draws the parts, but the
+minus stays live at the minimum and the plus at the maximum, so a press
+does nothing and says nothing. It also draws three frames and three focus
+rings. The stepper owns one frame and one ring (`:focus-within`), and the
+runtime disables each button at the field's own `min` / `max`.
+
+- A step goes through the native value setter, then fires `input` and
+  `change`, so React and friends see a step exactly as they see typing.
+- `step` is honoured and rounded to its own decimal places: a `0.1` step
+  lands on `0.6`, not `0.6000000000000001`.
+- Typing re-syncs the buttons. After changing the value from script, call
+  `cliMono.syncNumber(wrap)`.
+- `.cm-number--wide` gives the field 7ch instead of 4ch.
+- On a coarse pointer each button is `--tap` wide.
+
+### Repeater — `.cm-repeater`
+
+An ordered list the reader edits: add a row, remove one, move one up or
+down. Each row holds its own fields, and a row may hold another repeater.
+
+```html
+<div class="cm-repeater" data-cm-repeater data-min="1" data-max="8">
+  <div class="cm-repeater__head">
+    <span class="cm-repeater__title">Actions</span>
+    <span class="cm-repeater__count" data-cm-repeater-count>1</span>
+  </div>
+  <ol class="cm-repeater__list" data-cm-repeater-list>
+    <li class="cm-repeater__item" data-cm-repeater-item>
+      <div class="cm-repeater__bar">
+        <span class="cm-repeater__index" data-cm-repeater-index>1</span>
+        <span class="cm-repeater__label">Strike</span>
+        <span class="cm-repeater__tools">
+          <button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="Move action 1 up">&uarr;</button>
+          <button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="Move action 1 down">&darr;</button>
+          <button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="Remove action 1">&times;</button>
+        </span>
+      </div>
+      <div class="cm-repeater__body"><!-- the row's own fields --></div>
+    </li>
+  </ol>
+  <p class="cm-repeater__empty">No actions.</p>
+  <template data-cm-repeater-template><!-- one <li> for "add" --></template>
+  <button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ Action</button>
+</div>
+```
+
+The runtime keeps four things true after every change, and only these:
+the row numbers and the count; the first row's up and the last row's down
+disabled; remove disabled at `data-min` and add at `data-max`; and focus.
+Focus never falls to `<body>`: after a remove it goes to the remove button
+now at that position, then the one before it, then the add button. After a
+move it stays on the tool that moved the row. After an add it goes to the
+first control in the new row.
+
+Every change is OFFERED first, as a bubbling, cancelable event on the
+repeater: `cm:repeater-add` (`detail.index`), `cm:repeater-remove`
+(`detail.index`, `detail.item`) and `cm:repeater-move` (`detail.from`,
+`detail.to`, `detail.item`). An app that keeps the list in its own state
+calls `preventDefault()`, updates its state, redraws, and calls
+`cliMono.syncRepeater(rep)`. A static page leaves the event alone and the
+runtime writes the DOM from the `<template>`.
+
+Everything is scoped to the nearest repeater: an inner list's buttons
+never renumber, recount or empty the outer list. The first number in each
+tool's `aria-label` is rewritten with the row's position, so a screen
+reader hears "Remove action 2" after a reorder. The empty state shows
+through `:has()` whenever the list holds no item, by any route. Nested
+lists drop their panel and, from the third level, become a rule down the
+side, so depth reads as "belongs to" instead of as more boxes.
+
+### Dense workbench — `.cm-dense`
+
+A scope, not a variant: put it on a tool palette, an inspector or any
+region of a workbench, and every field, select, textarea, `.cm-btn` and
+`.cm-seg__opt` inside it drops the `--tap` floor and takes `--text-xs`, so
+forty controls share one screen.
+
+```html
+<aside class="cm-dense">
+  <select aria-label="Terrain">…</select>
+  <input type="text" aria-label="Monster">
+  <button type="button" class="cm-btn">Place</button>
+</aside>
+```
+
+Only on a fine pointer. On touch the floor is the point, and a field under
+16px makes iOS zoom the page on focus, so a coarse pointer keeps the
+library's sizes inside `.cm-dense` too.
+
+### Property list — `.cm-props`
+
+A record of any shape, edited in place: one row per field with its key, its
+control and its tools; a field that holds a record or a list folds open
+into another `.cm-props`. For editors drawn from data rather than from a
+hand-written form.
+
+```html
+<div class="cm-props cm-dense">
+  <div class="cm-props__row">
+    <span class="cm-props__key">key</span>
+    <div class="cm-props__value"><input type="text" aria-label="Key"></div>
+    <span class="cm-props__tools"><button class="cm-icon-btn cm-icon-btn--bare" aria-label="Remove key">&times;</button></span>
+  </div>
+  <details class="cm-props__group">
+    <summary class="cm-props__summary">
+      <span class="cm-props__key">goals</span>
+      <span class="cm-props__peek">(requirement: Any, conditions: […])</span>
+    </summary>
+    <div class="cm-props">…</div>
+  </details>
+</div>
+```
+
+The key is the row's title and wraps; the peek is a one-line preview and
+truncates, and hides while the group is open. Depth is a rule down the
+side rather than another frame. Below 40rem the key takes its own line.
+
 ### Hover card and input group
 
 ```html
@@ -2073,6 +2202,34 @@ Three decisions:
 
 Proof lives in `tests/verify-codeblock-trace.py` (WebKit, 20 assertions)
 and `tests/mutate-codeblock-trace.mjs`.
+
+`<Trace>`/`<TraceStep>` is the wrapper - the exact markup above, with the
+state-to-glyph and state-to-class maps owned by the component instead of
+retyped at every call site:
+
+```astro
+---
+import Trace from '../astro/Trace.astro';
+import TraceStep from '../astro/TraceStep.astro';
+---
+<Trace>
+  <TraceStep state="done" title="measured the live list">
+    fetched with a real Safari user agent&hellip;
+  </TraceStep>
+  <TraceStep state="running" title="diff against the pinned ledger" />
+  <TraceStep state="idle" title="author the two components" />
+  <TraceStep state="done" title="shadcn added code-block and trace" id="trace-detail-1">
+    <p>the pinned ledger cannot see this&hellip;</p>
+  </TraceStep>
+</Trace>
+```
+
+`title` is plain text (a step's label is log output, not authored prose);
+the body is a `<slot />` because the real detail content carries `<code>`
+and multiple paragraphs. A step becomes a disclosure (a real `<button>`
+with `aria-expanded`/`aria-controls`, a body hidden by default) only when
+it is given BOTH an `id` and slot content - one without the other falls
+back to a plain row, so a trigger can never point at an empty body.
 
 ### Popover and combobox
 
@@ -4336,6 +4493,36 @@ li.cm-diff__row {
 </ul>
 ```
 
+`<Diff rows={[...]} foldLabel="unchanged" />` is the wrapper - the exact
+markup above, plus one guarantee it is impossible to get wrong by hand: the
+fold's "N unchanged" count is DERIVED from the rows that actually land in
+the fold, never a number the caller supplies, so it can never drift from
+what is collapsed. Every value is interpolated as plain data (never
+`set:html`) because a diff's values are computed from live system state,
+not hand-authored prose - the opposite contract from `<Kbd>`'s `key`.
+
+```astro
+---
+import Diff from '../astro/Diff.astro';
+---
+<Diff
+  rows={[
+    { op: 'create', label: 'new field', value: 'api_key' },
+    { op: 'update', label: 'url base', from: 'http://old', to: 'https://new' },
+    { op: 'delete', label: 'legacy_port' },
+    { op: 'same', label: 'log_level', value: 'info' },
+  ]}
+  foldLabel="unchanged"
+/>
+```
+
+Each row's shape depends on its `op`: `create`/`same` take an optional
+`value` (shown after `label: `, wrapped in `<code>` for `create`, plain
+text for `same`); `update` requires `from` AND `to` together (a value with
+nothing new to show is a `delete`, not an update with an empty `to`) and
+renders as `<del>`/`<ins>`; `delete` shows `label` alone. Omit `foldLabel`
+to show `same` rows inline instead of collapsing them.
+
 The fold is a `<details>` element — expansion is the platform's. The runtime
 never owns it, so there is no `data-cm-diff` attribute and no JS init.
 
@@ -4491,6 +4678,37 @@ poster walls (PLAN-01 Gap 5). Three facts the component guarantees:
 
 `--artwork-shade` and `--artwork-fade` are the only knobs the overlay
 gradient exposes; the fade stops use `--shade` so they follow the theme.
+
+#### Choosing one tile — `cm-artwork__pick`
+
+For a grid the reader picks ONE from: candidate covers, generated
+variants. Wrap each tile in `label.cm-artwork__pick` with a
+`.cm-artwork__radio` as its first child. The control is a real radio, so
+the arrow keys, the form value and the focus come from the platform, and
+the whole picture is the click target.
+
+```html
+<ul class="cm-artwork" role="radiogroup" aria-label="Generated variants">
+  <li>
+    <label class="cm-artwork__pick">
+      <input class="cm-artwork__radio" type="radio" name="art" value="1" checked>
+      <span class="cm-artwork__item">
+        <span class="cm-artwork__frame cm-artwork__frame--poster">
+          <img class="cm-artwork__img" src="v1.webp" alt="Variant 1">
+        </span>
+      </span>
+    </label>
+  </li>
+</ul>
+```
+
+Chosen is drawn twice, as a 3px ring and a check mark in the corner,
+because the palette is greyscale and a ring alone is a thin difference
+between two pictures. The ring is an overlay (`::before`), not the tile's
+own inset shadow: an inset shadow paints under the frame and its picture,
+so it was invisible. Keyboard focus is a separate signal, the library
+outline outside the tile, so "this one is chosen" and "you are here" can
+both be read. `tests/measure-builder-webkit.py` measures all three.
 
 ### Reading progress — `cm-readbar`
 

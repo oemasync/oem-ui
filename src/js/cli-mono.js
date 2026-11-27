@@ -3478,6 +3478,221 @@
 		});
 	}
 
+	/* ---------- number stepper ----------
+	   Delegated at the root, like the toggle group: a consumer that redraws
+	   its form keeps working steppers without a re-bind. A step goes through
+	   the NATIVE value setter and then fires `input` and `change`, so a
+	   framework that tracks the value on its own wrapper (React) sees a step
+	   exactly as it sees typing. */
+	function cmNumberParts(wrap) {
+		if (!wrap) return null;
+		var input = wrap.querySelector('.cm-number__input');
+		if (!input) return null;
+		return {
+			input: input,
+			dec: wrap.querySelector('[data-cm-number-dec]'),
+			inc: wrap.querySelector('[data-cm-number-inc]')
+		};
+	}
+	function cmNumberBound(input, name) {
+		var raw = input.getAttribute(name);
+		if (raw === null || raw === '') return null;
+		var n = parseFloat(raw);
+		return isNaN(n) ? null : n;
+	}
+	function cmSyncNumber(wrap) {
+		var p = cmNumberParts(wrap);
+		if (!p) return;
+		var off = !!(p.input.disabled || p.input.readOnly);
+		var v = parseFloat(p.input.value);
+		var min = cmNumberBound(p.input, 'min');
+		var max = cmNumberBound(p.input, 'max');
+		if (p.dec) p.dec.disabled = off || (!isNaN(v) && min !== null && v <= min);
+		if (p.inc) p.inc.disabled = off || (!isNaN(v) && max !== null && v >= max);
+	}
+	function cmStepNumber(wrap, dir) {
+		var p = cmNumberParts(wrap);
+		if (!p || p.input.disabled || p.input.readOnly) return;
+		var min = cmNumberBound(p.input, 'min');
+		var max = cmNumberBound(p.input, 'max');
+		var step = cmNumberBound(p.input, 'step');
+		if (step === null || step <= 0) step = 1;
+		var v = parseFloat(p.input.value);
+		var next;
+		if (isNaN(v)) {
+			// An empty field starts where the range does: at 0 when 0 is a
+			// legal value, otherwise at the nearest end.
+			next = 0;
+			if (min !== null && next < min) next = min;
+			if (max !== null && next > max) next = max;
+		} else {
+			next = v + dir * step;
+			if (min !== null && next < min) next = min;
+			if (max !== null && next > max) next = max;
+		}
+		// Round away the float dust a 0.1 step leaves behind.
+		var places = (String(step).split('.')[1] || '').length;
+		var text = places ? next.toFixed(places) : String(Math.round(next));
+		if (text === p.input.value) { cmSyncNumber(wrap); return; }
+		var proto = typeof HTMLInputElement !== 'undefined' ? HTMLInputElement.prototype : null;
+		var desc = proto && Object.getOwnPropertyDescriptor(proto, 'value');
+		if (desc && desc.set) desc.set.call(p.input, text);
+		else p.input.value = text;
+		cmSyncNumber(wrap);
+		if (typeof Event === 'function') {
+			p.input.dispatchEvent(new Event('input', { bubbles: true }));
+			p.input.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+	}
+	function onNumberClick(e) {
+		var t = e.target;
+		if (!t || typeof t.closest !== 'function') return;
+		var btn = t.closest('[data-cm-number-dec], [data-cm-number-inc]');
+		if (!btn || btn.disabled) return;
+		var wrap = btn.closest('[data-cm-number]');
+		if (!wrap) return;
+		cmStepNumber(wrap, btn.hasAttribute('data-cm-number-inc') ? 1 : -1);
+	}
+	function onNumberInput(e) {
+		var t = e.target;
+		if (!t || typeof t.closest !== 'function' || !t.classList || !t.classList.contains('cm-number__input')) return;
+		cmSyncNumber(t.closest('[data-cm-number]'));
+	}
+	function cmInitNumbers(root) {
+		var scope = root || document;
+		if (!scope.querySelectorAll) return;
+		Array.prototype.forEach.call(scope.querySelectorAll('[data-cm-number]'), cmSyncNumber);
+	}
+
+	/* ---------- repeater ----------
+	   Every add, remove and move is OFFERED first: a bubbling, cancelable
+	   `cm:repeater-add` / `cm:repeater-remove` / `cm:repeater-move` on the
+	   repeater. An app that keeps the list in its own state calls
+	   preventDefault, changes its state and redraws; a static page leaves it
+	   alone and the runtime writes the DOM. Either way the numbering, the
+	   count, the bounds and the focus are made true afterwards.
+
+	   Everything is scoped to the NEAREST repeater and to its own direct
+	   items, never to descendants: an inner list's remove button must not
+	   renumber, count or empty the outer list it happens to sit inside. */
+	function cmRepeaterOf(el) {
+		return el && typeof el.closest === 'function' ? el.closest('[data-cm-repeater]') : null;
+	}
+	// Elements whose nearest repeater is this one. A nested repeater's own
+	// root matches `closest` on itself, so it is never counted as the outer's.
+	function cmRepeaterOwn(rep, sel) {
+		return Array.prototype.filter.call(rep.querySelectorAll(sel), function (el) {
+			return el.closest('[data-cm-repeater]') === rep;
+		});
+	}
+	function cmRepeaterList(rep) {
+		return cmRepeaterOwn(rep, '[data-cm-repeater-list]')[0] || null;
+	}
+	function cmRepeaterItems(rep) {
+		var list = cmRepeaterList(rep);
+		if (!list) return [];
+		return Array.prototype.filter.call(list.children, function (el) {
+			return el.hasAttribute('data-cm-repeater-item');
+		});
+	}
+	// A control that belongs to this item, not to a repeater nested in it.
+	function cmItemOwn(item, sel) {
+		return Array.prototype.filter.call(item.querySelectorAll(sel), function (el) {
+			return el.closest('[data-cm-repeater-item]') === item;
+		});
+	}
+	function cmRepeaterLimit(rep, name) {
+		var n = parseInt(rep.getAttribute(name), 10);
+		return isNaN(n) ? null : n;
+	}
+	function cmSyncRepeater(rep) {
+		if (!rep) return;
+		var items = cmRepeaterItems(rep);
+		var min = cmRepeaterLimit(rep, 'data-min');
+		var max = cmRepeaterLimit(rep, 'data-max');
+		items.forEach(function (item, i) {
+			cmItemOwn(item, '[data-cm-repeater-index]').forEach(function (el) { el.textContent = String(i + 1); });
+			// Accessible names say "item 3"; the first number in each tool's
+			// label is the position, so it is rewritten with the position.
+			cmItemOwn(item, '[data-cm-repeater-up], [data-cm-repeater-down], [data-cm-repeater-remove]').forEach(function (btn) {
+				var label = btn.getAttribute('aria-label');
+				if (label && /\d+/.test(label)) btn.setAttribute('aria-label', label.replace(/\d+/, String(i + 1)));
+				if (btn.hasAttribute('data-cm-repeater-up')) btn.disabled = i === 0;
+				else if (btn.hasAttribute('data-cm-repeater-down')) btn.disabled = i === items.length - 1;
+				else btn.disabled = min !== null && items.length <= min;
+			});
+		});
+		cmRepeaterOwn(rep, '[data-cm-repeater-count]').forEach(function (el) { el.textContent = String(items.length); });
+		cmRepeaterOwn(rep, '[data-cm-repeater-add]').forEach(function (btn) {
+			btn.disabled = max !== null && items.length >= max;
+		});
+	}
+	function cmRepeaterOffer(rep, name, detail) {
+		if (typeof CustomEvent !== 'function') return true;
+		var ev = new CustomEvent(name, { bubbles: true, cancelable: true, detail: detail });
+		return rep.dispatchEvent(ev);
+	}
+	function cmFocus(el) {
+		if (el && typeof el.focus === 'function') el.focus();
+	}
+	function onRepeaterClick(e) {
+		var t = e.target;
+		if (!t || typeof t.closest !== 'function') return;
+		var btn = t.closest('[data-cm-repeater-add], [data-cm-repeater-remove], [data-cm-repeater-up], [data-cm-repeater-down]');
+		if (!btn || btn.disabled) return;
+		var rep = cmRepeaterOf(btn);
+		if (!rep) return;
+		var items = cmRepeaterItems(rep);
+		var list = cmRepeaterList(rep);
+		if (btn.hasAttribute('data-cm-repeater-add')) {
+			if (!cmRepeaterOffer(rep, 'cm:repeater-add', { index: items.length })) return;
+			var tpl = cmRepeaterOwn(rep, 'template[data-cm-repeater-template]')[0];
+			if (!tpl || !list || !tpl.content) return;
+			var fresh = tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
+			if (!fresh) return;
+			list.appendChild(fresh);
+			cmSyncRepeater(rep);
+			if (typeof init === 'function') init(fresh);
+			cmFocus(fresh.querySelector('input, select, textarea, button'));
+			return;
+		}
+		var item = btn.closest('[data-cm-repeater-item]');
+		var index = items.indexOf(item);
+		if (index < 0) return;
+		if (btn.hasAttribute('data-cm-repeater-remove')) {
+			if (!cmRepeaterOffer(rep, 'cm:repeater-remove', { index: index, item: item })) return;
+			item.parentNode.removeChild(item);
+			cmSyncRepeater(rep);
+			// Focus never falls to <body>: the remove button now at this
+			// position, else the one before it, else the add button.
+			var left = cmRepeaterItems(rep);
+			var next = left[index] || left[index - 1];
+			var target = next ? cmItemOwn(next, '[data-cm-repeater-remove]')[0] : cmRepeaterOwn(rep, '[data-cm-repeater-add]')[0];
+			if (target && target.disabled) target = cmRepeaterOwn(rep, '[data-cm-repeater-add]')[0] || target;
+			cmFocus(target);
+			return;
+		}
+		var up = btn.hasAttribute('data-cm-repeater-up');
+		var to = up ? index - 1 : index + 1;
+		if (to < 0 || to >= items.length) return;
+		if (!cmRepeaterOffer(rep, 'cm:repeater-move', { from: index, to: to, item: item })) return;
+		if (up) list.insertBefore(item, items[to]);
+		else list.insertBefore(item, items[to].nextSibling);
+		cmSyncRepeater(rep);
+		// Focus stays on the tool that moved the row; if that tool just hit
+		// the end and went disabled, its opposite takes it.
+		var same = cmItemOwn(item, up ? '[data-cm-repeater-up]' : '[data-cm-repeater-down]')[0];
+		var other = cmItemOwn(item, up ? '[data-cm-repeater-down]' : '[data-cm-repeater-up]')[0];
+		cmFocus(same && !same.disabled ? same : other);
+	}
+	function cmInitRepeaters(root) {
+		var scope = root || document;
+		if (!scope.querySelectorAll) return;
+		var reps = Array.prototype.slice.call(scope.querySelectorAll('[data-cm-repeater]'));
+		if (scope.matches && scope.matches('[data-cm-repeater]')) reps.unshift(scope);
+		reps.forEach(cmSyncRepeater);
+	}
+
 	/* ---------- toggle group ----------
 	   OPT-IN via [data-cm-seg], because a consumer that already owns
 	   aria-pressed in its framework state must not have the runtime
@@ -5434,6 +5649,8 @@
 		   runs here where a SPA's `init()` call can reach it. */
 		cmInitKeys(root);
 		cmInitSliders(root);
+		cmInitNumbers(root);
+		cmInitRepeaters(root);
 		cmInitComboboxes(root);
 		cmInitMentions(root);
 		cmInitCarousels(root);
@@ -5494,6 +5711,7 @@
 	function hasLibraryMarkup() {
 		return !!document.querySelector(
 			'[data-cm-header], [data-cm-nav-toggle], [data-cm-copy], ' +
+			'[data-cm-number], [data-cm-repeater], ' +
 			'[data-cm-tabs], [data-cm-toast], [data-cm-quiz], [data-cm-scroller], ' +
 			'[data-cm-navmenu], [data-cm-progress], .cm-readbar, .cm-prose-table'
 		);
@@ -6946,6 +7164,10 @@
 		},
 		copyText: copyText,
 		toast: toast,
+		// For a consumer that changes a stepper's value or a repeater's rows
+		// itself and wants the buttons, numbering and count made true again.
+		syncNumber: cmSyncNumber,
+		syncRepeater: cmSyncRepeater,
 		dismissToast: dismiss,
 		chartMarkup: chartMarkup,
 		initProgress: cmInitProgress,
@@ -7032,6 +7254,12 @@
 		document.addEventListener('pointerdown', onCtxOutside, true);
 		document.addEventListener('keydown', onCtxEscape, true);
 		document.addEventListener('click', onSegClick);
+		// Stepper and repeater: delegated for the same reason as the toggle
+		// group - a redrawn form keeps working without a re-bind.
+		document.addEventListener('click', onNumberClick);
+		document.addEventListener('input', onNumberInput);
+		document.addEventListener('change', onNumberInput);
+		document.addEventListener('click', onRepeaterClick);
 		document.addEventListener('click', onSearchClear);
 		document.addEventListener('click', onTableSort);
 		document.addEventListener('input', onSliderInput);

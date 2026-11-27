@@ -41,6 +41,9 @@ import Endpoint from '../astro/Endpoint.astro';
 import Param from '../astro/Param.astro';
 import Tree from '../astro/Tree.astro';
 import Callout from '../astro/Callout.astro';
+import Diff from '../astro/Diff.astro';
+import Trace from '../astro/Trace.astro';
+import TraceStep from '../astro/TraceStep.astro';
 
 /* One route renders both the whole page and each family of it.
  *
@@ -4000,51 +4003,24 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					same in greyscale, and the state is also in the markup rather than
 					only in the paint.
 				</p>
-				<ol class="cm-trace">
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<p class="cm-trace__title">read the failing test</p>
-							<p class="cm-trace__desc">
-								<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
-								names all 66 entries and their order.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<p class="cm-trace__title">measure the live list</p>
-							<p class="cm-trace__desc">
-								Fetched with a real Safari user agent: a plain
-								<code>curl</code> returns the bot wall, not the page.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-running">
-							<span class="cm-trace__icon" aria-hidden="true">&#9679;</span>
-							<p class="cm-trace__title">diff against the pinned ledger</p>
-							<p class="cm-trace__desc">two names are in the live list and not in ours.</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item">
-							<span class="cm-trace__icon" aria-hidden="true">&#9675;</span>
-							<p class="cm-trace__title">author the two components</p>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-error">
-							<span class="cm-trace__icon" aria-hidden="true">&#10007;</span>
-							<p class="cm-trace__title">mutation sweep, first attempt</p>
-							<p class="cm-trace__desc">
-								The sweep refused: it was pointed at a sibling worktree, so
-								another lane's uncommitted edits read as failures here.
-							</p>
-						</div>
-					</li>
-				</ol>
+				<Trace>
+					<TraceStep state="done" title="read the failing test">
+						<code>tests/run.mjs:16520</code> &mdash; the ledger check, which
+						names all 66 entries and their order.
+					</TraceStep>
+					<TraceStep state="done" title="measure the live list">
+						Fetched with a real Safari user agent: a plain
+						<code>curl</code> returns the bot wall, not the page.
+					</TraceStep>
+					<TraceStep state="running" title="diff against the pinned ledger">
+						two names are in the live list and not in ours.
+					</TraceStep>
+					<TraceStep state="idle" title="author the two components" />
+					<TraceStep state="error" title="mutation sweep, first attempt">
+						The sweep refused: it was pointed at a sibling worktree, so
+						another lane's uncommitted edits read as failures here.
+					</TraceStep>
+				</Trace>
 
 				<h3 class="cm-kicker">collapsible step</h3>
 				<p class="cm-head__sub">
@@ -4054,45 +4030,32 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					<code>aria-expanded</code>, not a styled <code>div</code>: a
 					disclosure that a keyboard cannot open is not a disclosure.
 				</p>
-				<ol class="cm-trace">
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<button class="cm-trace__trigger" type="button" aria-expanded="false"
-								aria-controls="trace-detail-1">
-								<span class="cm-trace__title">shadcn added code-block and trace</span>
-							</button>
-							<div class="cm-trace__body" id="trace-detail-1" hidden>
-								<p>
-									The pinned ledger cannot see this: it compares our README
-									against a list written down once, and never re-fetches.
-									That is the point of pinning &mdash; an update is a
-									deliberate act with a diff &mdash; but it means the only
-									thing that can notice an addition is a tool that reads the
-									live site.
-								</p>
-							</div>
-						</div>
-					</li>
-					<li>
-						<div class="cm-trace__item is-done">
-							<span class="cm-trace__icon" aria-hidden="true">&#10003;</span>
-							<button class="cm-trace__trigger" type="button" aria-expanded="true"
-								aria-controls="trace-detail-2">
-								<span class="cm-trace__title">both were measured before being claimed</span>
-							</button>
-							<div class="cm-trace__body" id="trace-detail-2">
-								<p>
-									<code>code-block</code> depends on <code>button</code> and
-									<code>use-highlighted-code</code>; <code>trace</code> depends
-									on <code>collapsible</code>. Both are registry
-									<code>registry:ui</code> entries with a docs page, which is
-									what separates a component from a code sample.
-								</p>
-							</div>
-						</div>
-					</li>
-				</ol>
+				<Trace>
+					<TraceStep state="done" title="shadcn added code-block and trace" id="trace-detail-1">
+						<p>
+							The pinned ledger cannot see this: it compares our README
+							against a list written down once, and never re-fetches.
+							That is the point of pinning &mdash; an update is a
+							deliberate act with a diff &mdash; but it means the only
+							thing that can notice an addition is a tool that reads the
+							live site.
+						</p>
+					</TraceStep>
+					<TraceStep
+						state="done"
+						title="both were measured before being claimed"
+						id="trace-detail-2"
+						open
+					>
+						<p>
+							<code>code-block</code> depends on <code>button</code> and
+							<code>use-highlighted-code</code>; <code>trace</code> depends
+							on <code>collapsible</code>. Both are registry
+							<code>registry:ui</code> entries with a docs page, which is
+							what separates a component from a code sample.
+						</p>
+					</TraceStep>
+				</Trace>
 			</section>
 			)}
 
@@ -4107,49 +4070,29 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 					</p>
 				</SectionHead>
 
-				<ul class="cm-diff">
-					<li class="cm-diff__row" data-op="create" aria-label="create: new field">
-						<span class="cm-diff__op">create</span>
-						<span class="cm-diff__val">new field: <code>api_key</code></span>
-					</li>
-					<li class="cm-diff__row" data-op="update" aria-label="update: url base">
-						<span class="cm-diff__op">update</span>
-						<span class="cm-diff__val">url base: <del class="cm-diff__del">http://old</del> → <ins class="cm-diff__ins">https://new</ins></span>
-					</li>
-					<li class="cm-diff__row" data-op="delete" aria-label="delete: legacy_port">
-						<span class="cm-diff__op">delete</span>
-						<span class="cm-diff__val">legacy_port</span>
-					</li>
-					<li class="cm-diff__fold">
-						<details>
-							<summary>3 unchanged</summary>
-							<ul style="margin:0;padding:0;list-style:none">
-								<li class="cm-diff__row" data-op="same" aria-label="same: log_level">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">log_level: info</span>
-								</li>
-								<li class="cm-diff__row" data-op="same" aria-label="same: bind">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">bind: 0.0.0.0</span>
-								</li>
-								<li class="cm-diff__row" data-op="same" aria-label="same: cache">
-									<span class="cm-diff__op">same</span>
-									<span class="cm-diff__val">cache: 100</span>
-								</li>
-							</ul>
-						</details>
-					</li>
-				</ul>
+				<Diff
+					rows={[
+						{ op: 'create', label: 'new field', value: 'api_key' },
+						{ op: 'update', label: 'url base', from: 'http://old', to: 'https://new' },
+						{ op: 'delete', label: 'legacy_port' },
+						{ op: 'same', label: 'log_level', value: 'info' },
+						{ op: 'same', label: 'bind', value: '0.0.0.0' },
+						{ op: 'same', label: 'cache', value: '100' },
+					]}
+					foldLabel="unchanged"
+				/>
 
 				<h3 class="cm-kicker" style="margin-top:var(--space-4)">long values</h3>
-				<ul class="cm-diff">
-					<li class="cm-diff__row" data-op="update" aria-label="update: path with long value">
-						<span class="cm-diff__op">update</span>
-						<span class="cm-diff__val">
-							/config/rclone/remotes/prod-archive: <del class="cm-diff__del">rclone:securesync-legacy-prod</del> → <ins class="cm-diff__ins">rclone:securesync-v2-prod</ins>
-						</span>
-					</li>
-				</ul>
+				<Diff
+					rows={[
+						{
+							op: 'update',
+							label: '/config/rclone/remotes/prod-archive',
+							from: 'rclone:securesync-legacy-prod',
+							to: 'rclone:securesync-v2-prod',
+						},
+					]}
+				/>
 			</section>
 			)}
 
@@ -4283,6 +4226,49 @@ A record of what a run did, one step per line: an icon, a title, an optional sta
 							</span>
 						</span>
 						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">Untitled draft</span>
+					</li>
+				</ul>
+							<h3 class="cm-kicker">pick one</h3>
+				<p class="cm-head__sub">
+					Wrap the tile in <code>label.cm-artwork__pick</code> with a
+					<code>.cm-artwork__radio</code> first inside it, and the grid is a
+					radio group: arrows move, the form submits the value, the whole
+					picture is the target. Chosen is a ring AND a corner check;
+					keyboard focus is the outline outside the tile.
+				</p>
+				<ul class="cm-artwork" role="radiogroup" aria-label="generated variants">
+					<li>
+						<label class="cm-artwork__pick">
+							<input class="cm-artwork__radio" type="radio" name="art-pick" value="1" />
+							<span class="cm-artwork__item">
+								<span class="cm-artwork__frame cm-artwork__frame--poster">
+									<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20280'%3E%3Crect%20width='200'%20height='280'%20fill='%232a2a2a'/%3E%3Ccircle%20cx='100'%20cy='120'%20r='46'%20fill='%23555555'/%3E%3C/svg%3E" alt="variant 1" loading="lazy" />
+								</span>
+							</span>
+						</label>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">variant 1</span>
+					</li>
+					<li>
+						<label class="cm-artwork__pick">
+							<input class="cm-artwork__radio" type="radio" name="art-pick" value="2" checked />
+							<span class="cm-artwork__item">
+								<span class="cm-artwork__frame cm-artwork__frame--poster">
+									<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20280'%3E%3Crect%20width='200'%20height='280'%20fill='%231e1e1e'/%3E%3Ccircle%20cx='100'%20cy='120'%20r='46'%20fill='%236a6a6a'/%3E%3C/svg%3E" alt="variant 2" loading="lazy" />
+								</span>
+							</span>
+						</label>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">variant 2</span>
+					</li>
+					<li>
+						<label class="cm-artwork__pick">
+							<input class="cm-artwork__radio" type="radio" name="art-pick" value="3" />
+							<span class="cm-artwork__item">
+								<span class="cm-artwork__frame cm-artwork__frame--poster">
+									<img class="cm-artwork__img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20280'%3E%3Crect%20width='200'%20height='280'%20fill='%23262626'/%3E%3Ccircle%20cx='100'%20cy='120'%20r='46'%20fill='%23444444'/%3E%3C/svg%3E" alt="variant 3" loading="lazy" />
+								</span>
+							</span>
+						</label>
+						<span class="cm-artwork__meta" style="margin-top:var(--space-2)">variant 3</span>
 					</li>
 				</ul>
 			</section>
@@ -5752,6 +5738,273 @@ inputs are element defaults, so a bare <code>&lt;input&gt;</code> is already on-
 						<button type="submit" class="cm-btn cm-btn--primary">save</button>
 					</div>
 				</form>
+							<h3 class="cm-kicker">number stepper</h3>
+				<p class="cm-head__sub">
+					One frame, one focus ring, and a minus and plus that go
+					<code>disabled</code> at the field's own <code>min</code> and
+					<code>max</code>. A step goes through the native value setter and
+					fires <code>input</code> and <code>change</code>, so a framework sees it
+					exactly as it sees typing.
+				</p>
+				<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
+					<span class="cm-number" data-cm-number>
+						<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="decrease cost">&minus;</button>
+						<input id="num-cost" class="cm-number__input" type="number" inputmode="numeric" min="0" max="10" value="0" aria-label="cost" />
+						<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="increase cost">+</button>
+					</span>
+					<span class="cm-number cm-number--wide" data-cm-number>
+						<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="decrease weight">&minus;</button>
+						<input id="num-weight" class="cm-number__input" type="number" inputmode="decimal" min="0" max="1" step="0.1" value="0.5" aria-label="weight" />
+						<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="increase weight">+</button>
+					</span>
+				</div>
+
+				<h3 class="cm-kicker">repeater</h3>
+				<p class="cm-head__sub">
+					An ordered list the reader edits: add, remove, move up and down,
+					and a row may hold another repeater. Each change is first offered
+					as a cancelable <code>cm:repeater-add</code> / <code>-remove</code> /
+					<code>-move</code>; left alone, the runtime writes the DOM, renumbers,
+					recounts, disables the ends and keeps focus off <code>&lt;body&gt;</code>.
+				</p>
+				<div id="rep-demo" class="cm-repeater" data-cm-repeater data-min="1">
+					<div class="cm-repeater__head"><span class="cm-repeater__title">actions</span><span class="cm-repeater__count" data-cm-repeater-count>2</span></div>
+					<ol class="cm-repeater__list" data-cm-repeater-list>
+						<li class="cm-repeater__item" data-cm-repeater-item>
+							<div class="cm-repeater__bar">
+								<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+								<span class="cm-repeater__label">strike</span>
+								<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move action 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move action 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove action 1">&times;</button>
+											</span>
+							</div>
+							<div class="cm-repeater__body cm-stack">
+								<div class="cm-field">
+									<span class="cm-field__label">value</span>
+									<span class="cm-number" data-cm-number>
+										<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="lower value">&minus;</button>
+										<input class="cm-number__input" type="number" inputmode="numeric" min="0" max="20" value="3" aria-label="value" />
+										<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="raise value">+</button>
+									</span>
+								</div>
+								<div class="cm-repeater" data-cm-repeater data-max="3">
+									<div class="cm-repeater__head"><span class="cm-repeater__title">effects</span><span class="cm-repeater__count" data-cm-repeater-count>1</span></div>
+									<ol class="cm-repeater__list" data-cm-repeater-list>
+										<li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">bleed</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="2" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li>
+									</ol>
+									<p class="cm-repeater__empty">no effects.</p>
+									<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">new effect</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="1" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li></template>
+									<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ effect</button>
+								</div>
+							</div>
+						</li>
+						<li class="cm-repeater__item" data-cm-repeater-item>
+							<div class="cm-repeater__bar">
+								<span class="cm-repeater__index" data-cm-repeater-index>2</span>
+								<span class="cm-repeater__label">guard</span>
+								<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move action 2 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move action 2 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove action 2">&times;</button>
+											</span>
+							</div>
+							<div class="cm-repeater__body cm-stack">
+								<div class="cm-field">
+									<span class="cm-field__label">value</span>
+									<span class="cm-number" data-cm-number>
+										<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="lower value">&minus;</button>
+										<input class="cm-number__input" type="number" inputmode="numeric" min="0" max="20" value="2" aria-label="value" />
+										<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="raise value">+</button>
+									</span>
+								</div>
+								<div class="cm-repeater" data-cm-repeater data-max="3">
+									<div class="cm-repeater__head"><span class="cm-repeater__title">effects</span><span class="cm-repeater__count" data-cm-repeater-count>0</span></div>
+									<ol class="cm-repeater__list" data-cm-repeater-list>
+										
+									</ol>
+									<p class="cm-repeater__empty">no effects.</p>
+									<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">new effect</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="1" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li></template>
+									<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ effect</button>
+								</div>
+							</div>
+						</li>
+					</ol>
+					<p class="cm-repeater__empty">no actions.</p>
+					<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+							<div class="cm-repeater__bar">
+								<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+								<span class="cm-repeater__label">new action</span>
+								<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move action 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move action 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove action 1">&times;</button>
+											</span>
+							</div>
+							<div class="cm-repeater__body cm-stack">
+								<div class="cm-field">
+									<span class="cm-field__label">value</span>
+									<span class="cm-number" data-cm-number>
+										<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="lower value">&minus;</button>
+										<input class="cm-number__input" type="number" inputmode="numeric" min="0" max="20" value="1" aria-label="value" />
+										<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="raise value">+</button>
+									</span>
+								</div>
+								<div class="cm-repeater" data-cm-repeater data-max="3">
+									<div class="cm-repeater__head"><span class="cm-repeater__title">effects</span><span class="cm-repeater__count" data-cm-repeater-count>0</span></div>
+									<ol class="cm-repeater__list" data-cm-repeater-list>
+										
+									</ol>
+									<p class="cm-repeater__empty">no effects.</p>
+									<template data-cm-repeater-template><li class="cm-repeater__item" data-cm-repeater-item>
+										<div class="cm-repeater__bar">
+											<span class="cm-repeater__index" data-cm-repeater-index>1</span>
+											<span class="cm-repeater__label">new effect</span>
+											<span class="cm-repeater__tools">
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-up aria-label="move effect 1 up">&uarr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-down aria-label="move effect 1 down">&darr;</button>
+												<button type="button" class="cm-icon-btn cm-icon-btn--bare" data-cm-repeater-remove aria-label="remove effect 1">&times;</button>
+											</span>
+										</div>
+										<div class="cm-repeater__body">
+											<div class="cm-field">
+												<span class="cm-field__label">turns</span>
+												<span class="cm-number" data-cm-number>
+													<button type="button" class="cm-number__btn" data-cm-number-dec aria-label="fewer turns">&minus;</button>
+													<input class="cm-number__input" type="number" inputmode="numeric" min="1" max="9" value="1" aria-label="turns" />
+													<button type="button" class="cm-number__btn" data-cm-number-inc aria-label="more turns">+</button>
+												</span>
+											</div>
+										</div>
+									</li></template>
+									<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ effect</button>
+								</div>
+							</div>
+						</li></template>
+					<button type="button" class="cm-btn cm-btn--sm cm-repeater__add" data-cm-repeater-add>+ action</button>
+				<h3 class="cm-kicker">dense workbench</h3>
+				<p class="cm-head__sub">
+					<code>.cm-dense</code> is a scope: every field, select, textarea and
+					button inside it drops the tap floor on a fine pointer, so a tool
+					palette or an inspector fits its controls on one screen. On touch the
+					library's sizes stay.
+				</p>
+				<div class="cm-cols">
+					<div class="cm-field">
+						<span class="cm-field__label">default density</span>
+						<select aria-label="terrain, default density"><option>terrain.flagstone</option><option>terrain.brine_pool</option></select>
+						<input type="text" value="monster.saltglass_thrower" aria-label="monster, default density" />
+						<button type="button" class="cm-btn">place</button>
+					</div>
+					<div class="cm-field cm-dense" id="dense-demo">
+						<span class="cm-field__label">inside .cm-dense</span>
+						<select aria-label="terrain, dense"><option>terrain.flagstone</option><option>terrain.brine_pool</option></select>
+						<input type="text" value="monster.saltglass_thrower" aria-label="monster, dense" />
+						<button type="button" class="cm-btn">place</button>
+					</div>
+				</div>
+
+				<h3 class="cm-kicker">property list</h3>
+				<p class="cm-head__sub">
+					A record of any shape edited in place: key, control, tools; a field
+					that holds a record or a list folds open into another property list,
+					marked by a rule down the side. The key never truncates; the peek
+					beside a folded group does.
+				</p>
+				<div class="cm-props cm-dense" id="props-demo">
+					<div class="cm-props__row">
+						<span class="cm-props__key">key</span>
+						<div class="cm-props__value"><input type="text" value="scenario.lantern_wharf" aria-label="key" /></div>
+						<span class="cm-props__tools"></span>
+					</div>
+					<div class="cm-props__row">
+						<span class="cm-props__key">starting_room</span>
+						<div class="cm-props__value"><input type="number" value="0" aria-label="starting room" /></div>
+						<span class="cm-props__tools"><button type="button" class="cm-icon-btn cm-icon-btn--bare" aria-label="remove starting_room">&times;</button></span>
+					</div>
+					<details class="cm-props__group" open>
+						<summary class="cm-props__summary"><span class="cm-props__key">goals</span><span class="cm-props__peek">(requirement: Any, conditions: [FigureDies(Objective("objective.lantern_wharf.beacon"))])</span></summary>
+						<div class="cm-props">
+							<div class="cm-props__row">
+								<span class="cm-props__key">requirement</span>
+								<div class="cm-props__value"><select aria-label="requirement"><option>Any</option><option>All</option></select></div>
+								<span class="cm-props__tools"></span>
+							</div>
+							<details class="cm-props__group">
+								<summary class="cm-props__summary"><span class="cm-props__key">conditions</span><span class="cm-props__peek">[FigureDies(Objective("objective.lantern_wharf.beacon"))]</span></summary>
+								<div class="cm-props">
+									<div class="cm-props__row">
+										<span class="cm-props__key">0</span>
+										<div class="cm-props__value"><input type="text" value="FigureDies" aria-label="condition 0" /></div>
+										<span class="cm-props__tools"><button type="button" class="cm-icon-btn cm-icon-btn--bare" aria-label="remove condition 0">&times;</button></span>
+									</div>
+								</div>
+							</details>
+						</div>
+					</details>
+				</div>
+				</div>
 			</section>
 			)}
 

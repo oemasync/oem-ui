@@ -10,3 +10,4 @@ verify-datepicker
 verify-chart
 verify-chart-inherited-dir
 verify-status-colour
+measure-builder-webkit
