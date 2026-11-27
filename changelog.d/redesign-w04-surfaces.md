@@ -1,5 +1,5 @@
 ## redesign/w04-surfaces
 
-- Restyled terminal list rows to crisp inverted hover (ink-on-bg) with text colors following.
-- Added machined feel to raised surfaces (alerts) via existing raised ladder; kept forced-colors coverage.
-- Fixed selected row hover visibility so the selected mark stays readable on hover.
+- Restyled terminal list rows to crisp inverted hover (ink-on-bg) with text colors following (including a wildcard override so nested marks stay readable).
+- Alerts now carry the machined top highlight via `--shadow-1`.
+- Merged duplicate selected-row hover rules and kept the selected mark visible on hover.

@@ -1152,11 +1152,7 @@ button.cm-row--on,
 button.cm-row--on:hover {
 	background: var(--bg-2);
 }
-button.cm-row--on:hover {
-	background: var(--ink);
-	color: var(--bg);
-	box-shadow: inset 3px 0 0 var(--bg);
-}
+button.cm-row--on:hover,
 .cm-row--on:hover {
 	background: var(--ink);
 	color: var(--bg);
@@ -1346,7 +1342,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	transition: color var(--cm-t) var(--cm-ease),
 		transform var(--cm-t) var(--cm-ease);
 }
-.cm-row:hover .cm-row__sym { color: var(--ink); transform: translateX(3px); }
+.cm-row:hover .cm-row__sym { color: var(--bg) !important; transform: translateX(3px); }
 
 /* stacked variant: title over desc over meta, taller rows */
 /* Row icon slot: a fixed-width box that centres a glyph or SVG next to
@@ -1360,6 +1356,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	width: 1.1rem;
 	color: var(--ink-dim);
 }
+.cm-row:hover .cm-row__icon { color: var(--bg); }
 
 /* Column body: title over desc, both full width. --stacked renders the
    body as a block for prose-style rows; this is the flex-column form a
@@ -2528,6 +2525,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	border-inline-start-width: 3px;
 	border-radius: var(--radius-sm);
 	background: var(--panel);
+	box-shadow: var(--shadow-1);
 }
 .cm-alert__mark { flex: 0 0 auto; color: var(--ink-faint); }
 .cm-alert__body { min-width: 0; }
