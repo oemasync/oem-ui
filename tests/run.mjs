@@ -12223,7 +12223,7 @@ for (const [name, fn] of pending.splice(0)) {
 	check("the deployed header's GitHub href is the configured one", () => {
 		const gh = config.match(/github:\s*'([^']+)'/);
 		if (!gh) throw new Error("cannot read SITE.github out of config");
-		if (!gh[1].startsWith("https://github.com/omiinaya/"))
+		if (!gh[1].startsWith("https://github.com/oemasync/"))
 			throw new Error("SITE.github does not point at the project's own repository: " + gh[1]);
 	});
 }

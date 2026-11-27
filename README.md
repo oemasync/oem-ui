@@ -1,11 +1,35 @@
-# oem-ui
+<p align="center">
+  <img src="public/oem-ui-logo.svg" alt="oem/ui" width="280" />
+</p>
 
-A mono/terminal design system extracted from [oem/log](https://log.oem.ngo).
+# oem/ui
+
+> terminal, refined — a zero-dependency mono/terminal design system.
 
 Zero dependencies, no build step required. Three CSS layers, one small
-runtime, and optional Astro components you can copy in.
+runtime, and optional Astro components you can copy in. Extracted from
+[oem/log](https://log.oem.ngo).
+
+Live: [ui.mrx.sh](https://ui.mrx.sh) · Source: [github.com/oemasync/oem-ui](https://github.com/oemasync/oem-ui)
 
 **Dark is the default. Light is an explicit choice.**
+
+Install in three lines:
+
+```bash
+cp src/styles/tokens.css src/styles/base.css src/styles/components.css <your-project>/styles/
+cp src/js/cli-mono.js src/js/cli-mono-theme-guard.js <your-project>/js/
+# load order: tokens → base → components, then <script src=".../cli-mono.js">
+```
+
+Design principles:
+
+- Monospace, dark by default, square corners, greyscale — borders do the lifting.
+- Surface ladder for depth: `bg` → `panel` → raised, with a machined inset highlight.
+- Dramatic type scale: display heads, wide-tracked eyebrows.
+- Subtle dot-grid texture; terminal-window specimen frames `[ name ]`.
+- Indexed section heads `01 ── name`; inverted hover; blinking caret on the brand.
+- No new hues.
 
 ---
 

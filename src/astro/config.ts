@@ -19,9 +19,10 @@
 // truth was the one thing the page did not read.
 export const SITE = {
 	title: 'oem/ui',
-	description: 'zero-dependency mono design system: css, js and astro components.',
+	description: 'terminal, refined — a zero-dependency mono/terminal design system: three css layers, one runtime, optional astro components.',
 	author: '@omiinaya',
 	email: 'omar@mrx.sh',
-	github: 'https://github.com/omiinaya/oem-ui',
+	github: 'https://github.com/oemasync/oem-ui',
 	url: 'https://ui.mrx.sh',
+	ogImage: '/og.png',
 } as const;

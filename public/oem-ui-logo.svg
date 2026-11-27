@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 64" role="img" aria-label="oem/ui">
+  <title>oem/ui</title>
+  <text x="0" y="48" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="48" font-weight="700" letter-spacing="-0.02em" fill="currentColor">oem/ui</text>
+  <rect x="184" y="12" width="20" height="40" fill="currentColor">
+    <animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite" />
+  </rect>
+</svg>
