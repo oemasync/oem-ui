@@ -7,13 +7,14 @@ interface Props {
 	title: string;
 	kicker?: string;
 	sub?: string;
+	caret?: boolean;
 }
 
-const { title, kicker, sub } = Astro.props;
+const { title, kicker, sub, caret = false } = Astro.props;
 ---
 
 <header class="cm-head">
 	{kicker && <p class="cm-kicker">{kicker}</p>}
-	<h1>{title}</h1>
+	<h1>{title}{caret && <span class="cm-cursor" aria-hidden="true"></span>}</h1>
 	{sub && <p class="cm-head__sub">{sub}</p>}
 </header>

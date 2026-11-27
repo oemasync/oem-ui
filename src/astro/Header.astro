@@ -186,8 +186,8 @@ const currentPath = Astro.url.pathname;
 				{navGroups.map((g) => (
 					<div class="cm-header__group">
 						{g.href
-							? <a class="cm-header__group-label" href={g.href}>{g.label}</a>
-							: <span class="cm-header__group-label">{g.label}</span>}
+							? <a class="cm-header__group-label" href={g.href}>{g.label} <span class="cm-header__group-count">{g.links.length}</span></a>
+							: <span class="cm-header__group-label">{g.label} <span class="cm-header__group-count">{g.links.length}</span></span>}
 						<div class="cm-header__links">
 							{g.links.map((l) => (
 								<a

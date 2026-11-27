@@ -476,10 +476,24 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 			rail
 		/>
 		<main class={`cm-shell cm-shell--rail cm-stack cm-stack--section${TOC_IDS.length > 0 ? ' cm-shell--toc' : ''}`}>
-			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." />
+			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." caret />
 			<StatusStrip label="status" status="ok">
 				css, js and astro components verified. build-testable.
 			</StatusStrip>
+
+			{family === null && (
+				<div class="cm-term">
+					<div class="cm-term__bar">
+						<span class="cm-term__dot"></span>
+						<span class="cm-term__dot"></span>
+						<span class="cm-term__dot"></span>
+						<span class="cm-term__title">install</span>
+					</div>
+					<div class="cm-term__body">
+						<code class="cm-term__line">$ npm install oem-ui</code>
+					</div>
+				</div>
+			)}
 
 			{family === null && (
 				<div class="cm-family-grid">
