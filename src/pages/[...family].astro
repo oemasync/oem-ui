@@ -1369,20 +1369,21 @@ What a surface shows before it has data, and after it fails. Status is carried b
 			)}
 
 			<!-- ==================================================== chroma
-			     Status colour, opt-in. Two columns of the SAME markup: the
-			     first sits inside data-cm-chroma, the second does not. The
-			     second column is the proof that the attribute is the only
-			     switch - every class in it is also in the first, and it
-			     renders in the greys the library has always used. -->
+			     Status colour, on by default. Two columns of the SAME
+			     markup: the first is the default, the second sits inside
+			     data-cm-chroma="off". The second column is the proof that
+			     the attribute is the only switch - every class in it is
+			     also in the first, and it renders in the greys the library
+			     used before colour was on. -->
 			{shows('surfaces') && (
 			<section id="chroma" class="cm-section cm-section--pad">
 				<SectionHead title="status colour">
-A hue on top of the glyph and the word, never instead of them. It is off until a page or a subtree carries data-cm-chroma, so nothing changes for a consumer that does not ask. Both columns are the same markup, and only the first has the attribute.
+Green is good, yellow is a warning, red is bad, blue is a notice. The hue sits on top of the glyph and the word, never instead of them. It is on by default; data-cm-chroma="off" on a page or a subtree puts it back in grey. Both columns are the same markup, and only the second has the attribute.
 				</SectionHead>
 				<div style="display:grid;gap:var(--space-4);grid-template-columns:repeat(auto-fit,minmax(min(18rem,100%),1fr));align-items:start">
 					{[true, false].map((on) => (
-					<div class="cm-surface cm-surface--flat cm-stack" style="padding:var(--space-4)" data-cm-chroma={on ? '' : undefined}>
-						<h3 class="cm-kicker cm-kicker--flush">{on ? 'with data-cm-chroma' : 'without it'}</h3>
+					<div class="cm-surface cm-surface--flat cm-stack" style="padding:var(--space-4)" data-cm-chroma={on ? undefined : 'off'}>
+						<h3 class="cm-kicker cm-kicker--flush">{on ? 'default' : 'data-cm-chroma="off"'}</h3>
 						<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
 							<span class="cm-chip cm-chip--ok">passing</span>
 							<span class="cm-chip cm-chip--warn">degraded</span>
@@ -1391,6 +1392,14 @@ A hue on top of the glyph and the word, never instead of them. It is off until a
 							<span class="cm-chip cm-tone--warn">in progress</span>
 							<span class="cm-chip">idle</span>
 						</div>
+						<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
+							<span class="cm-status-code cm-status-code--ok">200</span>
+							<span class="cm-status-code cm-status-code--warn">429</span>
+							<span class="cm-status-code cm-status-code--err">503</span>
+							<span class="cm-method cm-method--delete">DELETE</span>
+							<button type="button" class="cm-btn cm-btn--danger">delete host</button>
+						</div>
+						<p class="cm-field__error">the port must be a number</p>
 						<div class="cm-alert cm-alert--err" role="status">
 							<span class="cm-alert__mark" aria-hidden="true"></span>
 							<div class="cm-alert__body">
