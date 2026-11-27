@@ -550,10 +550,46 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 			rail
 		/>
 		<main class={`cm-shell cm-shell--rail cm-stack cm-stack--section${TOC_IDS.length > 0 ? ' cm-shell--toc' : ''}`}>
-			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." />
+			<PageHead kicker="design system" title="oem/ui" sub="mono/terminal components. dark default. works anywhere." caret />
 			<StatusStrip label="status" status="ok">
 				css, js and astro components verified. build-testable.
 			</StatusStrip>
+
+			{family === null && (
+				<div class="cm-term">
+					<div class="cm-term__bar">
+						<span class="cm-term__dot"></span>
+						<span class="cm-term__dot"></span>
+						<span class="cm-term__dot"></span>
+						<span class="cm-term__title">install</span>
+					</div>
+					<div class="cm-term__body">
+						<code class="cm-term__line">$ npm install oem-ui</code>
+					</div>
+				</div>
+			)}
+
+			{family === null && (
+				<div class="cm-family-grid">
+					{NAV_GROUPS.map((g) => (
+						<a class="cm-family-card" href={`/f/${g.label}/`}>
+							<span class="cm-family-card__name">{g.label}</span>
+							<span class="cm-family-card__count">{g.links.length} components</span>
+							<span class="cm-family-card__desc">
+								{g.label === 'foundation' && 'tokens, type, spacing, colour, motion'}
+								{g.label === 'surfaces' && 'panels, cards, badges, meters'}
+								{g.label === 'tables' && 'rows, cells, pagination'}
+								{g.label === 'panels' && 'dialogs, sheets, drawers'}
+								{g.label === 'content' && 'hero, tiles, cards, artwork'}
+								{g.label === 'prose' && 'rhythm, lists, tables in prose'}
+								{g.label === 'layout' && 'stack, grid, rail, shell'}
+								{g.label === 'composed' && 'chat, composer, msglist'}
+								{g.label === 'reference' && 'auth, readme, shortcuts'}
+							</span>
+						</a>
+					))}
+				</div>
+			)}
 
 			<!-- ==================================================== foundation
 			     Every specimen below is rendered FROM the token it documents
@@ -591,7 +627,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 					<code>rem</code> against a 16px root; the floor is
 					<code>--min-font</code>, below which we never render text.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="foundation">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>display</code></span>
 						<span class="cm-spec__sample cm-spec__sample--display" style="font-size:var(--head-display); letter-spacing:var(--tracking-tight)">Aa</span>
@@ -635,7 +671,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 					layers. A gap that is not on this scale is the bug that made
 					oem-links' hero weld its eyebrow to its title.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="foundation">
 					{[
 						['--space-0', '0.125rem', '2px'],
 						['--space-1', '0.25rem', '4px'],
@@ -658,7 +694,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 				</div>
 
 				<h3>shape &amp; motion</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="foundation">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--radius</code></span>
 						<span class="cm-spec__chip" style="border-radius:var(--radius)"></span>
@@ -732,7 +768,7 @@ The design language, shown as specimens. Every value here is rendered from the t
 Two states, two different questions. <code>active</code> marks the page you are on and renders <code>aria-current="page"</code>; the scroll-spy marks what you are reading as you scroll. They coexist on a one-page site, so they cannot be the same attribute. Scroll to watch the first nav above change.
 				</SectionHead>
 
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="nav">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>active</code></span>
 						<span class="cm-spec__sample" style="display:flex;gap:var(--space-1)">
@@ -757,7 +793,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					not a link: a heading wearing a link's class inherits the 44px tap floor
 					and becomes a dead target for a screen reader.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="nav">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>nested list</code></span>
 						<span class="cm-spec__sample" style="display:block;width:15rem;position:relative;overflow:hidden">
@@ -823,7 +859,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					window to see it. The collapse is scoped to the runtime having booted,
 					so a reader without JavaScript still gets every link inline.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="nav">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>closed</code></span>
 						<span class="cm-spec__sample" style="display:flex;align-items:center;gap:var(--space-3)">
@@ -858,7 +894,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					button next to an unoutlined icon reads as a mistake, not a
 					control. Both are the same component; only the framing differs.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="nav">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>boxed</code></span>
 						<span class="cm-spec__sample" style="display:flex;align-items:center;gap:var(--space-3)">
@@ -910,7 +946,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 				     can also see them: a bare .cm-header__link with href="#nav" was lit
 				     is-active by the header's own spy, so a demo of one state lit the
 				     other. Scoping them here keeps the specimen honest. -->
-				<div class="cm-spec" role="list">
+				<div class="cm-spec" data-cm-spec-label="nav" role="list">
 					<div class="cm-spec__row" role="listitem">
 						<span class="cm-spec__label"><code>here</code></span>
 						<span class="cm-spec__sample"><HeaderLink href="#nav">#nav</HeaderLink></span>
@@ -918,7 +954,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					</div>
 					<div class="cm-spec__row" role="listitem">
 						<span class="cm-spec__label"><code>other</code></span>
-						<span class="cm-spec__sample"><HeaderLink href="/somewhere-else/">/other/</HeaderLink></span>
+						<span class="cm-spec__sample"><HeaderLink href="#" aria-disabled="true">/other/</HeaderLink></span>
 						<span class="cm-spec__val"><code>no attribute</code></span>
 					</div>
 					<div class="cm-spec__row" role="listitem">
@@ -978,9 +1014,9 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 											</button>
 											<button type="button" class="cm-sidebar__action" aria-label="project actions">&#8943;</button>
 											<ul class="cm-sidebar__sub" id="sb-sub-1" hidden>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="#data-table">oem-ui</a></li>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="#table">hermes-proxy</a></li>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="#json">spacetime-rpm</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="/f/tables/#data-table">oem-ui</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="/f/tables/#table">hermes-proxy</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="/f/tables/#json">spacetime-rpm</a></li>
 											</ul>
 										</li>
 										<li class="cm-sidebar__item">
@@ -1001,7 +1037,7 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 								<div class="cm-sidebar__groupcontent" id="sb-group-2">
 									<ul class="cm-sidebar__menu">
 										<li class="cm-sidebar__item">
-											<a class="cm-sidebar__link" href="#states">
+											<a class="cm-sidebar__link" href="/f/surfaces/#states">
 												<span aria-hidden="true">&#8776;</span>
 												<span class="cm-sidebar__label">analytics</span>
 												<span class="cm-sidebar__badge">beta</span>
@@ -1102,7 +1138,7 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 				</nav>
 
 				<h3 class="cm-kicker">the rules</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="crumbs">
 					<div class="cm-spec__row" role="listitem">
 						<span class="cm-spec__label"><code>cm-crumbs</code></span>
 						<span class="cm-spec__sample"><code>nav[aria-label]</code></span>
@@ -1541,7 +1577,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</SectionHead>
 
 				<h3 class="cm-kicker">tags</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>plain</code></span>
 						<span class="cm-spec__sample"><span class="cm-tag">linux</span></span>
@@ -1560,7 +1596,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</div>
 
 				<h3 class="cm-kicker">labelled rule</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--rule</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -1573,7 +1609,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</div>
 
 				<h3 class="cm-kicker">state chip</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>default</code></span>
 						<span class="cm-spec__sample"><span class="cm-chip">cold</span></span>
@@ -1609,7 +1645,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</div>
 
 				<h3 class="cm-kicker">status</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--ok</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -1643,7 +1679,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</div>
 
 				<h3 class="cm-kicker">toast</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--ok</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -1719,7 +1755,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</div>
 
 				<h3 class="cm-kicker">terminal</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>lines</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -1737,7 +1773,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 				</div>
 
 				<h3 class="cm-kicker">spinner + rows</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--lg</code></span>
 						<span class="cm-spec__sample">
@@ -1790,7 +1826,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 					element is a real <code>progressbar</code>: <code>aria-valuenow</code>
 					stays the source of truth, and the fill only draws it.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--cm-progress</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -1846,7 +1882,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 					header it pierces, and it sits on <code>--z-readbar</code>,
 					above the header and under popover and toast chrome.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--cm-readbar</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -1898,7 +1934,7 @@ Each row is one modifier against its own base, so the difference is the thing be
 			</div>
 
 			<h3 class="cm-kicker">media</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="surface">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--media</code></span>
 						<span class="cm-spec__sample" style="width:100%">
@@ -3278,7 +3314,7 @@ order by calls desc;`}
 				/>
 
 				<h3 class="cm-kicker">states</h3>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="code">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>idle</code></span>
 						<span class="cm-spec__sample">
@@ -5237,7 +5273,7 @@ A markdown renderer emits <code>&lt;figure&gt;</code>, <code>&lt;figcaption&gt;<
 						</div>
 					</div>
 
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="layout">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label"><code>--measure</code></span>
 						<span class="cm-spec__sample"><span class="cm-lede" style="margin:0">The widest a reading column gets, in characters.</span></span>
@@ -6181,7 +6217,7 @@ A bounded vertical scrollport: the box grows to <code>--scroll-h</code> (14rem
 					dependency.
 				</SectionHead>
 
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="charts">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">runtime</span>
 						<span class="cm-spec__val">the hidden table is the data; the plot is rebuilt from it at the measured width</span>
@@ -6392,7 +6428,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					hues; the docs pair them with text and alignment for exactly this
 					reason.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="chat">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">bubble / variants</span>
 						<span class="cm-spec__val">7 tones, 80% cap</span>
@@ -6493,7 +6529,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<code>aria-label</code> carries the name, so Tab walks the
 					column and the tip opens on focus as well as hover.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="guildrail">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">active</span>
 						<span class="cm-spec__val">aria-current="true" + the __pill</span>
@@ -6608,7 +6644,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					— so the CSS owes a control that is still correct when the
 					consumer does none of it.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="composer">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">consumer js</span>
 						<span class="cm-spec__val">Enter sends · Shift+Enter newline · auto-grow to ~6 lines, then scroll</span>
@@ -6663,7 +6699,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					column, and typing jumps to the next item starting with
 					those characters. group labels are composition only.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="dropdown-depth">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">runtime</span>
 						<span class="cm-spec__val">plain key handler - no per-menu init</span>
@@ -6745,7 +6781,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					the open/closed fingerprint), and the third runs down the
 					page with <code>data-orientation="vertical"</code>.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="navmenu">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">runtime</span>
 						<span class="cm-spec__val">init measures; scroll and resize re-measure</span>
@@ -6927,7 +6963,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					content pins the live edge while following; scroll away and the
 					pill appears.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="scroller">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">runtime</span>
 						<span class="cm-spec__val">data-cm-scroller (init + observer)</span>
@@ -7062,7 +7098,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					layer styles the row it is handed and decides which of a
 					row's two stamps is the visible one.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="msglist">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">row grid</span>
 						<span class="cm-spec__val">gutter · avatar · message · actions (reserved)</span>
@@ -7290,7 +7326,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					the group is a snapping row that composes
 					<code>cm-scroll-fade</code> for its edge.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="attachment">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">states</span>
 						<span class="cm-spec__val">idle / uploading / processing / error / done</span>
@@ -7461,7 +7497,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<code>err</code> so the page never jumps under the pointer.
 					<code>err</code> takes the ink edge and a glyph, never a hue.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="dropzone">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">states</span>
 						<span class="cm-spec__val">idle / over / picked / busy / err</span>
@@ -7526,7 +7562,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					chord always does, and a disabled or hidden control is not in
 					the map at all.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="shortcuts">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">binding</span>
 						<span class="cm-spec__val">data-cm-key / data-cm-key-label</span>
@@ -7588,7 +7624,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 					<code>form.reset()</code>. Failed validation focuses an answer
 					control; successful navigation focuses the new legend.
 				</SectionHead>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="quiz">
 					<div class="cm-spec__row">
 						<span class="cm-spec__label">runtime</span>
 						<span class="cm-spec__val">data-cm-quiz (init + late-markup observer)</span>
@@ -7661,7 +7697,7 @@ Two helpers shadcn ships under utils, in house CSS. <code>scroll-fade</code>
 A filter control, not an inline edit. <code>.cm-inline</code> styles a value being changed in place; this is a four-sided bordered field with a leading glyph and a clear button that appears only once there is a value.
 				</SectionHead>
 
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="search">
 					<div class="cm-field">
 						<label class="cm-field__label" for="q-empty">filter</label>
 						<Search id="q-empty" placeholder="search hosts…" autocomplete="off" />
@@ -7719,7 +7755,7 @@ A filter control, not an inline edit. <code>.cm-inline</code> styles a value bei
 Every class below except <code>.cm-auth</code>, <code>.cm-card--auth</code>, <code>.cm-code-input</code> and <code>.cm-divider</code> was already in this system. A sign-in screen is the card, the field, the alert and the button you have just seen, arranged for credentials.
 				</SectionHead>
 
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="auth">
 					<div class="cm-auth" style="min-height:420px;background:var(--bg-2)">
 						<div class="cm-card cm-card--auth">
 							<div class="cm-card__head">
@@ -7779,7 +7815,7 @@ Every class below except <code>.cm-auth</code>, <code>.cm-card--auth</code>, <co
 					unchanged, so it is the same screen at a different
 					amount of it.
 				</p>
-				<div class="cm-spec">
+				<div class="cm-spec" data-cm-spec-label="auth">
 					<div class="cm-auth cm-auth--wide" style="min-height:280px;background:var(--bg-2)">
 						<div class="cm-card cm-card--auth">
 							<div class="cm-card__head">
