@@ -2779,6 +2779,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	max-height: var(--table-max-h, 30rem);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
+	box-shadow: var(--inset-highlight);
 	-webkit-overflow-scrolling: touch;
 	/* A wide table that scrolls horizontally has no scrollbar affordance
 	   on many phone touch UIs. A subtle left edge fade hints the content
@@ -2802,7 +2803,7 @@ button.cm-row:hover { background: var(--bg-2); }
 	font-weight: 400;
 	font-size: var(--text-micro);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 	background: var(--panel);
 	position: sticky;
 	top: 0;
@@ -12907,6 +12908,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	overflow-x: auto;
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
+	box-shadow: var(--inset-highlight);
 	background: var(--bg);
 	position: relative;
 	max-height: var(--table-max-h, 30rem);
@@ -12924,7 +12926,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	color: var(--ink-dim);
 	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--tracking-wide);
 	font-size: var(--text-micro);
 	white-space: nowrap;
 	background: var(--bg-2);
