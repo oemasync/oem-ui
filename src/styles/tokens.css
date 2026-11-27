@@ -385,6 +385,11 @@
 	   The dot-grid pitch. Kept here (theme-independent) so the grid
 	   does not change density between themes. */
 	--dot-grid-size: 20px;
+	/* ---- media-grid demo floor ------------------------------------
+	   The showcase's media-grid demo overrides the component floor to
+	   120px so the lattice shows 2 columns at 390px. Kept as a token so
+	   the override is not a literal in components.css. */
+	--media-grid-demo-min: 120px;
 	/* ---- focus ring geometry --------------------------------------
 	   Widths and offset for the keyboard focus ring. Colours come from
 	   --focus; geometry lives here so it is retuned once. */
