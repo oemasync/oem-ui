@@ -637,7 +637,7 @@
 	padding: var(--space-3);
 	border: 1px solid var(--line);
 	background: var(--panel);
-	box-shadow: var(--inset-highlight);
+	box-shadow: var(--shadow-1);
 }
 /* The chip is drawn from the token itself, so a swatch cannot claim a
    colour the system does not actually use. */
