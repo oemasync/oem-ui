@@ -13407,3 +13407,4 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	color: var(--ink-faint);
 	font-family: var(--font-mono);
 	margin-inline-end: var(--space-2);
+}
