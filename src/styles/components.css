@@ -4312,7 +4312,7 @@ dialog.cm-dialog--spec:not([open]) {
 	color: var(--ink);
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
-	box-shadow: var(--shadow-card);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 	/* A 40-row timezone list must scroll INSIDE the panel instead of
 	   running off the phone: 60vh keeps the trigger and the last row
 	   both visible, and `contain` stops a swipe over the list from
@@ -4348,8 +4348,8 @@ dialog.cm-dialog--spec:not([open]) {
 }
 .cm-dropdown__item:hover,
 .cm-dropdown__item:focus-visible {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
 	text-decoration: none;
 }
 .cm-dropdown__item[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
@@ -8191,8 +8191,8 @@ input.cm-slider:disabled {
 }
 .cm-navmenu__trigger:focus-visible,
 .cm-navmenu__trigger[aria-expanded='true'] {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
 }
 /* Hover is a POINTER affordance, and a pointer that cannot hover must not
    be given one: on touch, :hover STICKS to the last tapped row and paints
@@ -8201,8 +8201,8 @@ input.cm-slider:disabled {
    behaviour agree about what a pointer is. */
 @media (hover: hover) and (pointer: fine) {
 	.cm-navmenu__trigger:hover {
-		background: var(--bg-3);
-		color: var(--ink);
+		background: var(--ink);
+		color: var(--bg);
 	}
 }
 /* A border pair rotated 45deg IS the mark: no icon font, no inline SVG, and
@@ -8236,6 +8236,7 @@ input.cm-slider:disabled {
 	inset: auto;
 	width: min(20rem, calc(100vw - (2 * var(--gutter))));
 	padding: var(--space-2);
+	box-shadow: var(--shadow-1), var(--shadow-card);
 }
 /* The shared viewport's swap, painted: data-state is the same
    state-attribute fingerprint the rest of the system uses (data-active on
@@ -8260,8 +8261,14 @@ input.cm-slider:disabled {
 }
 .cm-navmenu__link:hover,
 .cm-navmenu__link:focus-visible {
-	background: var(--bg-3);
-	color: var(--ink);
+	background: var(--ink);
+	color: var(--bg);
+}
+.cm-navmenu__link:hover .cm-navmenu__label,
+.cm-navmenu__link:focus-visible .cm-navmenu__label,
+.cm-navmenu__link:hover .cm-navmenu__desc,
+.cm-navmenu__link:focus-visible .cm-navmenu__desc {
+	color: var(--bg);
 }
 /* The copy column stacks because a panel is a table of contents: the label
    is what the reader scans and the description is what tells them which of
@@ -8894,6 +8901,15 @@ input.cm-slider:disabled {
 	align-items: baseline;
 }
 .cm-msg--end .cm-msg__footer { justify-content: flex-end; }
+.cm-msg__header::before {
+	content: "$ ";
+	color: var(--ink-faint);
+}
+.cm-msg__footer {
+	font-variant-numeric: tabular-nums;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
 .cm-msg__action {
 	background: none;
 	border: 0;
@@ -9530,7 +9546,7 @@ input.cm-slider:disabled {
 	cursor: pointer;
 	width: 100%;
 }
-.cm-scroller__link:hover { color: var(--ink); border-color: var(--line); }
+.cm-scroller__link:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .cm-scroller__link[aria-current="true"] {
 	color: var(--ink);
 	border-color: var(--ink);
@@ -10597,6 +10613,7 @@ input.cm-slider:disabled {
 	   two identical fills would make the frame the only edge the box
 	   has. */
 	background: var(--panel-nested);
+	box-shadow: var(--shadow-1);
 	transition: border-color var(--cm-t) var(--cm-ease);
 }
 .cm-composer__bar:focus-within { border-color: var(--focus); }
