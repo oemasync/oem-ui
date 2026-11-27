@@ -1,2 +1,7 @@
-- content family: restyled terminal, cards, tiles, hero to the new terminal-refined language (machined inset top highlight on raised panels, scanline texture on terminal body, bracketed window title, dot-grid on hero, blinking caret, inverted button hover).
-- content: fixed (none beyond restyle).
+- content family: restyled terminal, cards, tiles, hero, diff to the terminal-refined language.
+  - terminal: scanline texture on body (local --cm-term-scanline), bracketed window title `[ name ]`, machined inset top highlight via --shadow-1.
+  - hero: dot-grid texture (local --cm-hero-dot-grid / --cm-hero-dot-size), blinking caret on title (local --cm-hero-caret-blink, reduced-motion guarded, SR-silent via content: '_' / ''), display type retained.
+  - cards, tiles, diff: machined inset top highlight via --shadow-1.
+  - reverted out-of-scope .cm-btn:hover change (owned by buttons worker).
+  - forced-colors: texture removal without !important.
+- pending: --scanline, --dot-grid, --dot-grid-size, --caret-blink tokens arrive via W01 merge; values currently live in one local custom property per component.
