@@ -630,9 +630,14 @@
 }
 .cm-swatch__item {
 	display: flex;
-	align-items: center;
+	flex-direction: column;
+	align-items: flex-start;
 	gap: var(--space-2);
 	min-width: 0;
+	padding: var(--space-3);
+	border: 1px solid var(--line);
+	background: var(--panel);
+	box-shadow: var(--shadow-1);
 }
 /* The chip is drawn from the token itself, so a swatch cannot claim a
    colour the system does not actually use. */
@@ -640,8 +645,8 @@
 	/* The chip is sized off the font, so a swatch grid of long token names
 	   still fits its column. A fixed chip width plus a long name is how
 	   `--accent-bright` ended up rendered as `--accent-bri…`. */
-	width: 1.4em;
-	height: 1.4em;
+	width: var(--swatch-chip);
+	height: var(--swatch-chip);
 	flex: 0 0 auto;
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
@@ -651,6 +656,11 @@
 	/* No overflow, no ellipsis, no wrap: a token name is either shown whole
 	   or it is not a specimen of anything. The grid below gives the label
 	   enough room for the longest name in the system. */
+	white-space: nowrap;
+}
+.cm-swatch__val {
+	font-size: var(--text-micro);
+	color: var(--ink-dim);
 	white-space: nowrap;
 }
 
@@ -671,6 +681,7 @@
 .cm-spec__row:last-child { border-bottom: 0; }
 .cm-spec__label { flex: 0 0 6.5rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .cm-spec__sample { flex: 1; min-width: 0; line-height: 1.1; }
+.cm-spec__sample--display { line-height: var(--leading-display); }
 .cm-spec__val { flex: 0 0 auto; text-align: end; }
 /* A specimen that reports its own live state. The inline row's title
    column is only in play inside a width band, and a static `42ch` beside
@@ -811,9 +822,14 @@
 		color var(--cm-t) var(--cm-ease);
 }
 .cm-btn:hover {
-	background: var(--bg-2);
+	background: var(--ink);
 	border-color: var(--ink);
-	color: var(--ink);
+	color: var(--bg);
+}
+.cm-btn[aria-pressed='true'] {
+	background: var(--ink);
+	color: var(--bg);
+	border-color: var(--ink);
 }
 .cm-btn:active { background: var(--bg-3); }
 .cm-btn[disabled],
@@ -6500,6 +6516,18 @@ button.cm-link:focus-visible {
 	color: var(--ink-dim);
 	font: inherit;
 	cursor: pointer;
+	position: relative;
+}
+/* Enlarge the hit area without growing the chip visually. */
+.cm-chip__x::before {
+	content: '';
+	position: absolute;
+	inset: calc(var(--space-2) * -1);
+}
+@media (pointer: coarse) {
+	.cm-chip__x::before {
+		inset: calc(var(--space-3) * -1);
+	}
 }
 .cm-chip__x:hover { color: var(--ink); }
 
@@ -6912,7 +6940,6 @@ button.cm-link:focus-visible {
    edge; the control is inline-flex, so it is the ROW that wraps. */
 
 /* ---------- disclosure ----------
-
    A summary row that reveals a panel. Native-first where the platform
    helps and wrong where it does not: <details>/<summary> gives keyboard
    and find-in-page for free, but the marker is a browser triangle the
@@ -13033,6 +13060,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	) * {
 		background-color: transparent !important;
 		color: HighlightText !important;
+	}
+
+.cm-btn[aria-pressed='true'] {
+		background-color: Highlight !important;
+		color: HighlightText !important;
+		border-color: Highlight !important;
 	}
 
 	/* The track has no border, only a fill, so here it was an unframed knob

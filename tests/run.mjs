@@ -3187,8 +3187,11 @@ check('every specimen in the showcase is rendered from a token, not typed', () =
 		'spacing bars must be drawn from the token they name, not a literal px value');
 	const specRows = f.match(/\['--space-\d+',/g) || [];
 	assert(specRows.length === 11, `all 11 steps must be listed, found ${specRows.length}`);
-	// swatches: the chip must paint the token it names
-	const chips = f.match(/background:\s*var\(--[\w-]+\)/g) || [];
+	// swatches: the chip must paint the token it names (measured in the built page,
+	// since the markup is now generated from a frontmatter list)
+	const built = builtHtml();
+	const bf = built.slice(built.indexOf('id="foundation"'), built.indexOf('id="buttons"'));
+	const chips = bf.match(/background:\s*var\(--[\w-]+\)/g) || [];
 	assert(chips.length >= 7, `swatch chips must paint their token, found ${chips.length}`);
 	// type scale: each sample must set the size from a token
 	assert(/font-size:\s*var\(--/.test(f),
@@ -3213,8 +3216,10 @@ check('a token name can never be truncated in a swatch', () => {
 		compSrc.indexOf('.cm-spec {'));
 	assert(!/text-overflow:\s*ellipsis/.test(swatchBlock),
 		'swatch labels must not ellipsise; size the chip off the font instead');
-	assert(/\.cm-swatch__chip\s*\{[^}]*width:\s*[\d.]+em/.test(compSrc),
-		'the swatch chip must be font-relative so a long name still fits');
+	assert(/\.cm-swatch__chip\s*\{[^}]*width:\s*var\(--swatch-chip\)/.test(compSrc),
+		'the swatch chip must be sized from the --swatch-chip token');
+	assert(/--swatch-chip\s*:\s*[\d.]+em\b/.test(tokenSrc),
+		'--swatch-chip must be defined as an em value in tokens.css');
 });
 
 /* ================= shared row surface ================= */
