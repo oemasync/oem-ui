@@ -1188,8 +1188,8 @@ html {
 }
 .cm-row__body {
 	flex: 1;
-	min-width: 0;
-	overflow: hidden;
+	min-width: fit-content;
+	overflow: visible;
 	/* title and desc share a baseline row. Without this they run
 	   together as inline text and the desc overruns the date column. */
 	display: flex;
@@ -1357,7 +1357,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    unshrinkable, so the body keeps its clip and the content fits. */
 .cm-row__meta--wrap {
 	white-space: normal;
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-width: 0;
 	display: flex;
 	flex-wrap: wrap;
@@ -1381,7 +1381,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    here it only has to refuse to split itself. */
 .cm-row__meta--nowrap {
 	white-space: nowrap;
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-width: 0;
 	display: flex;
 	flex-wrap: nowrap;
@@ -2047,6 +2047,8 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	border-radius: var(--radius-sm);
 	overflow: hidden;
 	margin: 0 0 1.4em;
+	/* Machined raised panel: a 1px top highlight reads as a bevel. */
+	box-shadow: var(--shadow-1);
 }
 .cm-term__bar {
 	display: flex; align-items: center; gap: var(--space-2);
@@ -2062,7 +2064,9 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    against the border box and can paint an oval. */
 .cm-term__dot { width: 8px; height: 8px; border: 1px solid var(--accent-dim); border-radius: 4px; }
 .cm-term__title { letter-spacing: 0.1em; text-transform: uppercase; }
-.cm-term__body { padding: 1.1em 1.3em; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; }
+.cm-term__title::before { content: '[ '; }
+.cm-term__title::after { content: ' ]'; }
+.cm-term__body { padding: 1.1em 1.3em; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; background-image: var(--scanline); }
 .cm-term__body pre { margin: 0; border: none; background: transparent; padding: 0; }
 .cm-term__prompt { color: var(--ink-faint); user-select: none; }
 .cm-term__line { display: block; white-space: pre-wrap; }
@@ -5780,6 +5784,8 @@ dialog.cm-dialog--spec:not([open]) {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	overflow: hidden;
+	/* Machined raised panel: 1px top highlight. */
+	box-shadow: var(--shadow-1);
 }
 /* The accent is a border, not a gradient or a glow: the palette has
    no hue to spend on decoration, and a left rule reads as "this is
@@ -6266,6 +6272,8 @@ button.cm-row > span > svg {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	text-align: center;
+	/* Machined raised panel: 1px top highlight. */
+	box-shadow: var(--shadow-1);
 }
 .cm-tile__label {
 	font-size: max(var(--min-font), var(--text-micro));
@@ -11699,13 +11707,24 @@ input.cm-slider:disabled {
 	margin-inline: auto;
 	padding: var(--space-8) var(--gutter) var(--space-7);
 	text-align: center;
+	/* Subtle dot-grid texture on the hero surface. */
+	background-image: var(--dot-grid);
+	background-size: var(--dot-grid-size) var(--dot-grid-size);
+	background-position: center;
 }
 .cm-hero__title {
 	font-size: var(--hero-title, clamp(var(--head-h1), 2rem + 4vw, 4rem));
 	line-height: 1.05;
-	letter-spacing: -0.02em;
+	letter-spacing: var(--tracking-tight);
 	font-weight: 700;
 	margin: 0 0 var(--space-4);
+	overflow-wrap: break-word;
+}
+.cm-hero__title::after {
+	content: ' _' / '';
+	margin-inline-start: 0;
+	color: var(--accent-bright);
+	animation: cm-blink var(--caret-blink) steps(2, start) infinite;
 }
 /* The lede is centered here, not in `.cm-lede`: `.cm-lede` is a block that
    starts at the text edge (prose, list rows), and a hero's lede has to be
@@ -11792,6 +11811,7 @@ input.cm-slider:disabled {
 	   failure rather than a nit. */
 	.cm-cursor,
 	.cm-shimmer,
+	.cm-hero__title::after,
 	.cm-scroll-fade,
 	.cm-scroll-fade-y,
 	.cm-scroll-fade-x,
@@ -12223,6 +12243,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-family: var(--font-mono);
 	font-size: max(var(--min-font), var(--text-xs));
 	line-height: 1.6;
+	box-shadow: var(--shadow-1);
 }
 
 /* One row = an op gutter and a value column. `grid-template-columns` is
@@ -13374,8 +13395,11 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	   colour: the knob's position is the state, here as everywhere. */
 	.cm-switch__track { outline: 1px solid CanvasText; }
 	.cm-codebar > pre { background-image: none; }
+	/* Texture is decorative and is dropped by forced colors anyway; make it
+	   explicit so no stray background-image survives. */
+	.cm-term__body,
+	.cm-hero { background-image: none; }
 }
-
 
 /* Terminal prompt for an endpoint line: $ GET /path. */
 .cm-endpoint::before {
@@ -13383,4 +13407,3 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	color: var(--ink-faint);
 	font-family: var(--font-mono);
 	margin-inline-end: var(--space-2);
-}
