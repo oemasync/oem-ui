@@ -481,6 +481,28 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 				css, js and astro components verified. build-testable.
 			</StatusStrip>
 
+			{family === null && (
+				<div class="cm-family-grid">
+					{NAV_GROUPS.map((g) => (
+						<a class="cm-family-card" href={`/f/${g.label}/`}>
+							<span class="cm-family-card__name">{g.label}</span>
+							<span class="cm-family-card__count">{g.links.length} components</span>
+							<span class="cm-family-card__desc">
+								{g.label === 'foundation' && 'tokens, type, spacing, colour, motion'}
+								{g.label === 'surfaces' && 'panels, cards, badges, meters'}
+								{g.label === 'tables' && 'rows, cells, pagination'}
+								{g.label === 'panels' && 'dialogs, sheets, drawers'}
+								{g.label === 'content' && 'hero, tiles, cards, artwork'}
+								{g.label === 'prose' && 'rhythm, lists, tables in prose'}
+								{g.label === 'layout' && 'stack, grid, rail, shell'}
+								{g.label === 'composed' && 'chat, composer, msglist'}
+								{g.label === 'reference' && 'auth, readme, shortcuts'}
+							</span>
+						</a>
+					))}
+				</div>
+			)}
+
 			<!-- ==================================================== foundation
 			     Every specimen below is rendered FROM the token it documents
 			     (var(--ink), var(--space-4), and so on) rather than from a
