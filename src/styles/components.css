@@ -1105,8 +1105,8 @@ html {
 }
 .cm-row__body {
 	flex: 1;
-	min-width: 0;
-	overflow: hidden;
+	min-width: fit-content;
+	overflow: visible;
 	/* title and desc share a baseline row. Without this they run
 	   together as inline text and the desc overruns the date column. */
 	display: flex;
@@ -1267,7 +1267,7 @@ button.cm-row:hover { background: var(--bg-2); }
    unshrinkable, so the body keeps its clip and the content fits. */
 .cm-row__meta--wrap {
 	white-space: normal;
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-width: 0;
 	display: flex;
 	flex-wrap: wrap;
@@ -1286,7 +1286,7 @@ button.cm-row:hover { background: var(--bg-2); }
    here it only has to refuse to split itself. */
 .cm-row__meta--nowrap {
 	white-space: nowrap;
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-width: 0;
 	display: flex;
 	flex-wrap: nowrap;
@@ -11417,11 +11417,16 @@ input.cm-slider:disabled {
 	letter-spacing: -0.02em;
 	font-weight: 700;
 	margin: 0 0 var(--space-4);
+	overflow-wrap: break-word;
 }
 .cm-hero__title::after {
 	content: '_' / '';
 	margin-inline-start: 0.05em;
 	color: var(--accent-bright);
+	width: 0;
+	display: inline-block;
+	overflow: visible;
+	white-space: nowrap;
 	animation: cm-blink var(--cm-hero-caret-blink, 1.1s) steps(2, start) infinite;
 }
 /* The lede is centered here, not in `.cm-lede`: `.cm-lede` is a block that
