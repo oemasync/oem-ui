@@ -4334,8 +4334,8 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	max-height: 100%;
 	margin: 0 0 0 auto;
 	border-radius: 0;
-	border: 1px solid var(--line);
-	border-width: 0 0 0 1px;
+	border: 0;
+	border-inline-start: 1px solid var(--line);
 	background: var(--surface-raised);
 	box-shadow: var(--shadow-1);
 }
