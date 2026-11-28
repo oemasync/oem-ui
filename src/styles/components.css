@@ -173,7 +173,7 @@
 /* ---------- landing family grid ---------- */
 .cm-family-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+	grid-template-columns: repeat(auto-fill, var(--family-grid-track));
 	gap: var(--stack-gap);
 	margin-block: var(--stack-section);
 }
@@ -194,7 +194,7 @@
 }
 .cm-family-card__name {
 	font-weight: 700;
-	letter-spacing: -0.02em;
+	letter-spacing: var(--tracking-snug);
 }
 .cm-family-card__count {
 	color: var(--ink-faint);
@@ -354,14 +354,14 @@
 .cm-head .cm-head__title {
 	font-size: var(--head-display);
 	font-weight: 700;
-	line-height: 1.15;
+	line-height: var(--leading-snug);
 	margin: 0 0 var(--space-2);
 	letter-spacing: var(--tracking-tight);
 }
 .cm-head-row .cm-head__title {
 	font-size: var(--head-h1);
 	font-weight: 700;
-	line-height: 1.15;
+	line-height: var(--leading-snug);
 	margin: 0 0 var(--space-2);
 	letter-spacing: -0.01em;
 }
@@ -3866,7 +3866,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 		height: auto;
 		min-height: 60px;
 		row-gap: var(--space-2);
-		padding: calc(var(--space-2) + 1px) 0;
+		padding: var(--header-pad-y) 0;
 	}
 	/* The burger is the FIRST child of .cm-header__nav in the DOM, so it
 	   leads the row with no `order` at all - visual order and tab order
@@ -5104,8 +5104,8 @@ dialog.cm-dialog--spec:not([open]) {
 	   labelling the other. One step down makes the order unambiguous. */
 	font-size: var(--text);
 	font-weight: 700;
-	line-height: 1.15;
-	letter-spacing: -0.02em;
+	line-height: var(--leading-snug);
+	letter-spacing: var(--tracking-snug);
 	color: var(--ink);
 	/* "5,000+" must wrap inside its tile rather than widen the grid. */
 	overflow-wrap: break-word;

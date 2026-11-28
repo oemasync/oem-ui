@@ -17,6 +17,13 @@
 	   --head-top / --head-h1 are the single source for the top-of-page
 	   head block so every route starts its content at the same y. */
 	--maxw: 860px;
+	/* Landing family grid minimum track: 12rem keeps two columns at 390px. */
+	--family-grid-track: minmax(12rem, 1fr);
+	/* Header phone row vertical padding: --space-2 plus 1px so the 60px
+	   min-height row keeps a hairline of breathing room under the
+	   bottom border after the border-box math; removing the 1px makes
+	   the collapsed header read 1px too short against the tap floor. */
+	--header-pad-y: calc(var(--space-2) + 1px);
 	/* Icon nudge on row hover: a small translate, theme-independent. */
 	--nudge-x: 3px;
 	/* Desktop nav rail. A reference doc with 20 destinations cannot live in
@@ -266,6 +273,7 @@
 	--font-body: var(--font-mono);
 	--leading-display: 1;
 	--leading-tight: 1.1;
+	--leading-snug: 1.15;
 	--callout-mark: 1.25em;
 
 	/* ---- motion ------------------------------------------------
@@ -385,6 +393,7 @@
 	   tracking. Both live here so the scale is retuned in one place. */
 	--tracking-tight: -0.04em;
 	--tracking-wide: 0.12em;
+	--tracking-snug: -0.02em;
 	/* ---- display head (fluid, page-title scale) --------------------
 	   W02 applies this to page-title h1 elements; the token is defined
 	   here so the scale is retuned in one place. Eyebrow labels use
