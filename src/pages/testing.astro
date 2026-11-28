@@ -118,11 +118,21 @@ const STATE_LABEL: Record<string, string> = {
 <!doctype html>
 <html lang="en" data-theme="dark">
 	<head>
+		<script is:inline set:html={themeGuard}></script>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href={SITE.favicon} />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? SITE.url)} />
 		<title>testing — decomp-sh in oem/ui</title>
 		<meta name="description" content="decomp-sh rebuilt with the oem-ui design system. a review surface, not a live app." />
-		<script is:inline set:html={themeGuard}></script>
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={Astro.url} />
+		<meta property="og:title" content="testing — decomp-sh in oem/ui" />
+		<meta property="og:description" content="decomp-sh rebuilt with the oem-ui design system. a review surface, not a live app." />
+		<meta property="og:image" content={new URL(SITE.ogImage, SITE.url)} />
+		<meta name="twitter:card" content="summary" />
 	</head>
 	<body>
 		<Header

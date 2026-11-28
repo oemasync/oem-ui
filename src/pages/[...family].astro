@@ -559,8 +559,18 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 		<script is:inline set:html={themeGuard} />
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href={SITE.favicon} />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? SITE.url)} />
 		<title>oem/ui — component library</title>
 		<meta name="description" content="Zero-dependency mono design system: CSS, JS and Astro components." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={Astro.url} />
+		<meta property="og:title" content="oem/ui — component library" />
+		<meta property="og:description" content="Zero-dependency mono design system: CSS, JS and Astro components." />
+		<meta property="og:image" content={new URL(SITE.ogImage, SITE.url)} />
+		<meta name="twitter:card" content="summary" />
 	</head>
 	<body>
 		<!-- The reading-progress line: a live specimen of .cm-readbar. It is
