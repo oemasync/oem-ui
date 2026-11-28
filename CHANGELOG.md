@@ -1,23 +1,22 @@
 ## Unreleased — terminal-refined redesign
 
 ### Added
-- New design tokens in `src/styles/tokens.css`: `--accent-dim`, `--callout-mark`, `--caret-blink`, `--chart-c2`..`--chart-c5`, `--cm-slider-thumb-h`/`--cm-slider-track-h`, `--dot-grid`/`--dot-grid-size`, `--family-grid-track`, `--focus`/`--focus-offset`/`--focus-width`/`--focus-width-coarse`, `--head-display`, `--header-pad-y`, `--leading-display`/`--leading-snug`/`--leading-tight`, `--media-grid-demo-min`, `--nudge-x`, `--scanline`, `--space-2`, `--surface-raised`, `--swatch-chip`, `--text-micro`, `--tracking-snug`/`--tracking-tight`/`--tracking-wide`, `--underline-offset`. See `docs/contrast-2026-11-27.md` for the measured contrast impact.
+- New design tokens in `src/styles/tokens.css`: `--callout-mark`, `--caret-blink`, `--cm-slider-thumb-h`/`--cm-slider-track-h`, `--dot-grid`/`--dot-grid-size`, `--family-grid-track`, `--focus-offset`, `--focus-width`, `--focus-width-coarse`, `--head-display`, `--header-pad-y`, `--leading-display`, `--leading-snug`, `--leading-tight`, `--media-grid-demo-min`, `--nudge-x`, `--scanline`, `--swatch-chip`, `--tracking-snug`, `--tracking-tight`, `--tracking-wide`, `--underline-offset`. See `docs/contrast-2026-11-27.md` for the measured contrast impact.
 - `scripts/measure-contrast.mjs` for regenerating the contrast document from `tokens.css`.
 - `tests/verify-data-table.py` browser harness (added to `tests/browser-harnesses.txt`).
 - Favicon and Open Graph tags in `src/astro/Head.astro`.
 - Opt-in `.cm-hero__title--caret` modifier for the blinking caret.
-- `src/pages/testing.astro` showcase page (owned by integration).
 
 ### Changed
-- Terminal-refined restyle across components: sheet/drawer/alert panels, calendar, charts, code blocks, dialogs, dropdowns, popovers, tooltips, toasts, hovercards, chat, navigation, search, quiz, auth cards, readme blocks, prose, records, trace, diff, guide, term, artwork, cards, hero, tiles.
+- Terminal-refined restyle across components: sheet/drawer/alert panels, calendar, charts, code blocks, dialogs, dropdowns, popovers, tooltips, toasts, hovercards, chat, navigation, search, quiz, auth cards, readme blocks, prose, hero, cards, tiles, term, artwork.
 - Showcase page (`src/pages/[...family].astro`) reorganised into family pages with section heads, family grid on `/`, install snippet, display-size page head.
-- `--chart-c4` and `--chart-c5` adjusted so every chart series clears 3:1 non-text contrast on `--panel`/`--panel-nested` in both themes.
+- Chart grey ramp `--chart-c2`..`--chart-c5` re-spaced (constant ~1.44 dark / ~1.52 light step) so every series is now >= 3:1 on every surface in both themes.
 - `--accent-dim` adjusted (now AA-large on every surface).
+- Light `--surface-raised` raised from #f5f5f5 to #ffffff.
 
 ### Fixed
-- Calendar overflow on narrow viewports.
+- Calendar/foundation page overflow at 402px and 320px (swatch value wrap).
 - Slider thumb vertical centering (derived from `--cm-slider-track-h`/`--cm-slider-thumb-h`).
-- Chart spec value overflow on narrow viewports (`break-word`).
 - Switch tap target now covers the whole track.
 - Search clear button centering and tap size.
 - `.cm-row__body` no longer collapses to zero height.
@@ -29,7 +28,25 @@
 - Focus-ring geometry driven by `--focus-width`/`--focus-width-coarse`/`--focus-offset`, including coarse-pointer tap floors.
 - Forced-colors handling for states and drawn marks (system colours only).
 - Reduced-motion guards on scanline/caret animations.
-- Screen-reader-silent caret (`content: ' _'`).
+- Screen-reader-silent caret (`content: ' _'` / `''`) and SR-silent bracket labels for `.cm-spec` and `.cm-term` titles.
+
+## Unreleased - workbench controls: dense scope and property list
+
+Built for the Lunehaven scenario editor, a workbench with a tool palette, a
+hex board and an inspector whose forms are drawn from data of any depth.
+It started from the card builder's controls (b31) and found two gaps.
+
+- `.cm-dense` - a density scope. Inside it, on a fine pointer, fields,
+  selects, textareas, `.cm-btn` and `.cm-seg__opt` drop the `--tap` floor
+  and take `--text-xs`. A coarse pointer keeps the library's sizes. Its
+  selectors repeat the field block's exclusions plus the scope class, so
+  they outrank base.css by one class and nothing else. Nothing changes for
+  a page that does not use the class.
+- `.cm-props` - a property list: key, control and tools per row, and
+  folding groups (`<details class="cm-props__group">`) that hold another
+  `.cm-props`. The key wraps and never truncates; the peek truncates.
+  Depth is a rule down the side.
+- `tests/run.mjs` - three source checks.
 
 ## Unreleased - form controls for an editor: stepper, repeater, artwork pick
 
