@@ -60,6 +60,14 @@ tests/run.mjs               contract tests
    `tests/verify-forced-colors.py`.
 10. **`outline: <colour>` draws nothing.** It is the shorthand and resets the
     style to `none`. To recolour a ring, set `outline-color`.
+11. **A state's hue comes from `--tone`, and only on top of a glyph or a
+    word.** Green is ok, yellow is warn, red is err, blue is info. A
+    component that names a state adds its selector to the matching
+    `:where(...)` setter in the "status colour" block of `components.css`,
+    and its rule reads `var(--tone, <the grey it had>)`. Never a literal hue,
+    never `--chroma-*` directly (the `data-cm-chroma="off"` switch only
+    reaches `--tone`), and never a hue as the only cue. Add the state to
+    `STATE_HUES` in `tests/run.mjs` and run `node tests/mutate-chroma.mjs`.
 
 ## Verifying your change
 
