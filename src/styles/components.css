@@ -13396,6 +13396,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	/* Texture is decorative and is dropped by forced colors anyway; make it
 	   explicit so no stray background-image survives. */
 	.cm-term__body,
+	.cm-code,
 	.cm-hero { background-image: none; }
 }
 
