@@ -4310,7 +4310,11 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    fact, not a stylesheet one. */
 .cm-dialog--alert {
 	width: min(26rem, calc(100% - (2 * var(--gutter))));
+	border: 1px solid var(--line);
 	border-top: 3px solid var(--ink);
+	border-radius: 0;
+	background: var(--surface-raised);
+	box-shadow: var(--shadow-1);
 }
 
 /* A dialog anchored to the right edge instead of the centre: the same
@@ -4330,7 +4334,10 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	max-height: 100%;
 	margin: 0 0 0 auto;
 	border-radius: 0;
+	border: 1px solid var(--line);
 	border-width: 0 0 0 1px;
+	background: var(--surface-raised);
+	box-shadow: var(--shadow-1);
 }
 @media (max-width: 640px) {
 	.cm-dialog--sheet {
@@ -8925,6 +8932,12 @@ input.cm-slider:disabled {
    needs a radius. */
 /* the class itself: content clears the home indicator, because a
    drawer pinned to the screen bottom is exactly where one sits */
+.cm-drawer {
+	border-radius: 0;
+	background: var(--surface-raised);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow-1);
+}
 .cm-drawer .cm-dialog__body {
 	padding-bottom: max(var(--space-5), env(safe-area-inset-bottom, 0px));
 }
