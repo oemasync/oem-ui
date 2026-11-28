@@ -344,6 +344,12 @@
    bottom margin of its last child is the only thing at the boundary. */
 .cm-stack > .cm-head:last-child { margin-bottom: 0; }
 .cm-head .cm-kicker { margin-bottom: var(--space-3); }
+/* The weight belongs HERE, not to the element. Measured on rpm: the
+   pages whose title is an <h1> rendered 32px w700, while the pages
+   whose title is a <div class="cm-head__title"> inside the same
+   .cm-head rendered 32px w400 - same size, half the presence. The
+   bold came from the UA stylesheet for <h1> and nothing set it for
+   the div, so a page's title weight depended on its markup. */
 .cm-head h1,
 .cm-head .cm-head__title {
 	font-size: var(--head-display);
@@ -352,12 +358,6 @@
 	margin: 0 0 var(--space-2);
 	letter-spacing: var(--tracking-tight);
 }
-/* The weight belongs HERE, not to the element. Measured on rpm: the
-   pages whose title is an <h1> rendered 32px w700, while the pages
-   whose title is a <div class="cm-head__title"> inside the same
-   .cm-head rendered 32px w400 - same size, half the presence. The
-   bold came from the UA stylesheet for <h1> and nothing set it for
-   the div, so a page's title weight depended on its markup. */
 .cm-head-row .cm-head__title {
 	font-size: var(--head-h1);
 	font-weight: 700;
