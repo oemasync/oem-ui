@@ -4,7 +4,7 @@
 - New design tokens in `src/styles/tokens.css`: `--callout-mark`, `--caret-blink`, `--cm-slider-thumb-h`/`--cm-slider-track-h`, `--dot-grid`/`--dot-grid-size`, `--family-grid-track`, `--focus-offset`, `--focus-width`, `--focus-width-coarse`, `--head-display`, `--header-pad-y`, `--leading-display`, `--leading-snug`, `--leading-tight`, `--media-grid-demo-min`, `--nudge-x`, `--scanline`, `--swatch-chip`, `--tracking-snug`, `--tracking-tight`, `--tracking-wide`, `--underline-offset`. See `docs/contrast-2026-11-27.md` for the measured contrast impact.
 - `scripts/measure-contrast.mjs` for regenerating the contrast document from `tokens.css`.
 - `tests/verify-data-table.py` browser harness (added to `tests/browser-harnesses.txt`).
-- Favicon and Open Graph tags in `src/astro/Head.astro`.
+- Site pages (`src/pages/[...family].astro`, `src/pages/testing.astro`) carry favicon + OG tags; `src/astro/Head.astro` reads favicon/og image from `SITE` config with prop overrides.
 - Opt-in `.cm-hero__title--caret` modifier for the blinking caret.
 
 ### Changed
