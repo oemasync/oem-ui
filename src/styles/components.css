@@ -4900,7 +4900,7 @@ dialog.cm-dialog--spec:not([open]) {
 	.cm-header--rail .cm-header__group .cm-header__link[aria-current='page'] {
 		border-inline-start-color: var(--ink);
 		padding-inline-start: calc(var(--gutter) - 2px);
-		font-weight: 700;
+		color: var(--ink);
 	}
 	/* Controls drop to the foot of the rail. */
 	.cm-header--rail .cm-header__controls {
