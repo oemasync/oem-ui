@@ -1425,7 +1425,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	transition: color var(--cm-t) var(--cm-ease),
 		transform var(--cm-t) var(--cm-ease);
 }
-.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(3px); }
+.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(var(--nudge-x)); }
 
 /* stacked variant: title over desc over meta, taller rows */
 /* Row icon slot: a fixed-width box that centres a glyph or SVG next to

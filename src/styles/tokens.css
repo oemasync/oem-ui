@@ -17,6 +17,8 @@
 	   --head-top / --head-h1 are the single source for the top-of-page
 	   head block so every route starts its content at the same y. */
 	--maxw: 860px;
+	/* Icon nudge on row hover: a small translate, theme-independent. */
+	--nudge-x: 3px;
 	/* Desktop nav rail. A reference doc with 20 destinations cannot live in
 	   a horizontal bar: measured, 7 links wrapped across 7 rows and pushed
 	   the content 256px down. The rail is 232px, wide enough for the longest
