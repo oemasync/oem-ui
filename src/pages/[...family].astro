@@ -112,6 +112,26 @@ const NAV_GROUP_SIZES: [string, number][] = [
 	["reference", 4],
 ];
 
+/* Short descriptions for the family cards on the whole-page build. Kept as a
+   map next to NAV_GROUP_SIZES so a new family that forgets its entry fails
+   the build instead of rendering an empty card. */
+const FAMILY_CARD_DESC: Record<string, string> = {
+	foundation: 'tokens, type, spacing, colour, motion',
+	surfaces: 'panels, cards, badges, meters',
+	tables: 'rows, cells, pagination',
+	panels: 'dialogs, sheets, drawers',
+	content: 'hero, tiles, cards, artwork',
+	prose: 'rhythm, lists, tables in prose',
+	layout: 'stack, grid, rail, shell',
+	composed: 'chat, composer, msglist',
+	reference: 'auth, readme, shortcuts',
+};
+
+{
+	const missing = NAV_GROUP_SIZES.map(([label]) => label).filter((label) => !(label in FAMILY_CARD_DESC));
+	if (missing.length) throw new Error(`family card description missing for: ${missing.join(', ')}`);
+}
+
 export function getStaticPaths() {
 	/* getStaticPaths is compiled into its own chunk and cannot see the
 	   component body's scope, so the family names appear here as plain
@@ -576,15 +596,7 @@ const CHART_SNIPPET = `<div class="cm-chart" data-cm-chart data-cm-chart-type="a
 							<span class="cm-family-card__name">{g.label}</span>
 							<span class="cm-family-card__count">{g.links.length} components</span>
 							<span class="cm-family-card__desc">
-								{g.label === 'foundation' && 'tokens, type, spacing, colour, motion'}
-								{g.label === 'surfaces' && 'panels, cards, badges, meters'}
-								{g.label === 'tables' && 'rows, cells, pagination'}
-								{g.label === 'panels' && 'dialogs, sheets, drawers'}
-								{g.label === 'content' && 'hero, tiles, cards, artwork'}
-								{g.label === 'prose' && 'rhythm, lists, tables in prose'}
-								{g.label === 'layout' && 'stack, grid, rail, shell'}
-								{g.label === 'composed' && 'chat, composer, msglist'}
-								{g.label === 'reference' && 'auth, readme, shortcuts'}
+								{FAMILY_CARD_DESC[g.label]}
 							</span>
 						</a>
 					))}
