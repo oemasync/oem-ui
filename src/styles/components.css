@@ -2063,8 +2063,8 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    against the border box and can paint an oval. */
 .cm-term__dot { width: 8px; height: 8px; border: 1px solid var(--accent-dim); border-radius: 4px; }
 .cm-term__title { letter-spacing: 0.1em; text-transform: uppercase; }
-.cm-term__title::before { content: '[ '; }
-.cm-term__title::after { content: ' ]'; }
+.cm-term__title::before { content: '[ ' / ''; }
+.cm-term__title::after { content: ' ]' / ''; }
 .cm-term__body { padding: 1.1em 1.3em; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; background-image: var(--scanline); }
 .cm-term__body pre { margin: 0; border: none; background: transparent; padding: 0; }
 .cm-term__prompt { color: var(--ink-faint); user-select: none; }
