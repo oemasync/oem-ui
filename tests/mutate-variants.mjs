@@ -51,7 +51,7 @@ const MUTATIONS = [
 		// here. Drop the prop and it goes dark again.
 		name: 'the header loses its extra link (cm-header__icon-link)',
 		file: 'src/pages/index.astro',
-		from: /\t\textraLinks=\{\[\{ href: 'https:\/\/github\.com\/omiinaya\/oem-ui', label: 'github' \}\]\}\n/,
+		from: /		extraLinks=\{\[\{ href: 'https:\/\/github.com\/oemasync\/oem-ui', label: 'github' \}\]\}\n/,
 		to: '',
 		expectFail: 'every class the library defines is rendered somewhere on the page',
 	},
