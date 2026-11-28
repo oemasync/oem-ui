@@ -1188,8 +1188,8 @@ html {
 }
 .cm-row__body {
 	flex: 1;
-	min-width: fit-content;
-	overflow: visible;
+	min-width: 0;
+	overflow: hidden;
 	/* title and desc share a baseline row. Without this they run
 	   together as inline text and the desc overruns the date column. */
 	display: flex;
