@@ -13213,6 +13213,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-size: max(var(--min-font), var(--text-sm));
 }
 
+@media (pointer: coarse) {
+	.cm-msg__action,
+	.cm-msglist__reaction,
+	.cm-navmenu__trigger { min-height: var(--tap); }
+}
+
 /* ---------- forced colors ----------
    Windows High Contrast, and every other `forced-colors: active` mode,
    repaints each background-color to the system canvas, drops each
@@ -13250,13 +13256,6 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    repaint: a chart tells its series apart by grey level alone, so every
    series is one colour here; and the slider's filled portion is a
    gradient, which the mode also drops (the thumb still shows the value). */
-@media (pointer: coarse) {
-	.cm-msg__action,
-	.cm-msglist__reaction,
-	.cm-navmenu__trigger { min-height: var(--tap); }
-}
-
-
 @media (prefers-reduced-motion: reduce) {
 /* Every animation in the system is listed here, not next to its own
 	   rule. A guard that lives beside one component silently leaves the next
