@@ -1,121 +1,35 @@
-## Unreleased - workbench controls: dense scope and property list
-
-### Changed
-- tokens.css: light `--surface-raised` raised from #f5f5f5 to #ffffff; new tokens `--caret-blink`, `--dot-grid`, `--dot-grid-size`, `--focus-offset`, `--focus-width`, `--focus-width-coarse`, `--head-display`, `--inset-highlight`, `--line-strong`, `--scanline`, `--tracking-tight`, `--tracking-wide`.
-- base.css: dot-grid page background, scanline on code/pre surfaces, tighter display tracking, tabular numerals on table cells, focus-ring geometry via --focus-* tokens, caret blink keyframes, forced-colors texture removal (background-image: none).
-- tests/run.mjs: focus-ring checks now resolve `--focus-width` / `--focus-width-coarse` / `--focus-offset` through tokens.css.
-
-- Site shell: indexed section heads (`01 ── name`) via CSS counter on `.cm-section`.
-- Landing: family grid on `/` linking to all nine family pages with component counts; install snippet via `.cm-term`.
-- Page head: display-size title (clamp) with eyebrow and blinking caret.
-- Header: group counts with accessible label; active rail link uses ink + bold left rule; machined bottom rule retained.
-- Specimen frames: terminal-window title bar with per-specimen bracketed label and inset top highlight.
-- Mobile: verified burger and horizontal scroll; no shell-caused overflow (pre-existing lists/tables).
-
-- foundation: swatches as labelled tiles with token name, value and contrast ratio; type scale gains a display step; spacing ruler unchanged.
-- buttons: inverted hover on default .cm-btn; focus ring uses --focus-width/--focus-offset; size/variant matrix with disabled, loading, pressed states.
-- crumbs: demo anchors point to /f/surfaces/#lists.
-- a11y: .cm-chip__x hit area enlarged via pseudo-element; coarse + max-width tap floor for .cm-icon-btn, .cm-btn--sm, .cm-seg__opt at mobile widths.
-
-## redesign/w04-surfaces
-
-- Restyled terminal list rows to crisp inverted hover (ink-on-bg) with text colours following, including the symbol and icon slots.
-- Alerts now carry the machined top highlight via `--shadow-1`.
-- Merged duplicate selected-row hover rules and kept the selected mark visible on hover.
-
-- Restyled `.cm-table` (showcase grid and `DataTable.astro` primitive): headers are uppercase, wide-tracked eyebrow labels; hairline rows invert on hover (ink-on-bg); zebra-free.
-- Numeric columns keep tabular numerals and right alignment.
-- Fixed the switch's real checkbox tap target: it now covers the whole track instead of a 16px box.
-- Hovered rows now reset only text-bearing descendants (status code, cell action, numeric) so controls (switch, checkbox, badge, chip, kbd, status dot) keep their own paint; contrast measured 0 failing samples in both themes.
-- Selected rows (`aria-selected='true'`) keep their selected fill on hover instead of inverting.
-- Adopted design tokens: `--tracking-wide` for header tracking, `--shadow-1` for the raised-panel inset highlight.
-
-- Panels: overlays and sheets restyled as raised machined panels with a 1px inset top highlight.
-- Code blocks: terminal-window frame with bracketed language label and faint scanline (disabled under reduced motion and forced colors).
-- Pager: active page now inverted (ink-on-bg).
-- Dialogs, dropdowns, popovers, tooltips, toasts, hovercards: added the machined inset highlight.
-
-- content family: restyled records, trace, diff, guide, term, artwork, cards, hero, tiles to the terminal-refined language.
-  - terminal: scanline texture via var(--scanline), bracketed window title `[ name ]`, machined inset top highlight via var(--shadow-1).
-  - hero: dot-grid texture via var(--dot-grid)/var(--dot-grid-size), blinking caret via var(--caret-blink) (reduced-motion guarded, SR-silent via content: ' _' / ''), display type with var(--tracking-tight), wraps at every width.
-  - cards, tiles: machined inset top highlight via var(--shadow-1).
-  - diff: crisp +/- gutters.
-  - trace: hairline connectors and square nodes.
-  - records: tabular rows.
-- bugs fixed:
-  - artwork: added width/height to all img.cm-artwork__img data-URI images.
-  - cards: added id="projects" anchor target so href="#projects" resolves.
-  - hero: title no longer clips at 390 (caret wraps via leading space).
-  - records: cm-row__body no longer collapses to 0 (meta spans flex:0).
-- pending: none.
-
-- prose: post head title uses `var(--head-display)` (clamp(2rem, 1.2rem + 3vw, 3.5rem)) with `var(--tracking-tight)` (-0.04em); byline carries tabular numerals.
-- prose: callouts gain a square glyph cell and raised surface highlight (`--shadow-1`); blockquotes gain a heavy leading rule (`var(--space-1)`) on the raised surface.
-- prose: prose tables use an uppercase tracked eyebrow header row (`var(--tracking-wide)`); code blocks in prose sit on the raised surface.
-- prose: media frames use `--shadow-1` and their captions read as eyebrows (`var(--tracking-wide)`).
-- prose: media-grid demo uses `.cm-media-grid--demo` (floor `var(--media-grid-demo-min)`, 120px; measured 2 columns at 390px, 5 at 768px, 6 at 1440px) and its copy states only the measured counts.
-- prose: `.cm-prose pre` uses `background-color` so the base scanline background-image survives.
-- prose: inline code is scoped to `.cm-prose :not(pre) > code` to avoid doubling padding/background in code blocks.
-- prose: spacing comes from `--space-*`; display/tracking values come from W01 tokens.
-- prose: `.cm-video` specimen carries intrinsic width/height (1200x675).
-- prose: forced-colors clears the `.cm-surface` dot-grid background-image (base.css).
-
-# redesign/w09-layout
-
-- Restyled the layout family to the terminal-refined language: form fields as crisp hairline boxes on the panel surface with eyebrow labels, strong rule on focus/invalid/disabled; calendar as a tight tabular grid with inverted selected day, underlined today and panel-nested range fill; scroll area with a machined thumb and track in both engines; charts with framed plot, eyebrow axes, tabular numerals and square legend swatches.
-- Fixed slider thumb vertical centering; derived from local custom properties --cm-slider-track-h / --cm-slider-thumb-h.
-- Fixed chart spec value overflow on narrow viewports (break-word).
-- Added inset top highlight (--shadow-1) to calendar and chart containers.
-- Field focus now uses the strong border rule instead of a heavier ring.
-
-### composed family restyle
-- restyled chat messages with terminal prompt prefix on authors, eyebrow uppercase timestamps, tabular numerals
-- raised panels (dropdown, navmenu) gain inset top highlight; composer bar gains machined inset
-- inverted ink-on-bg hover for dropdown items, navmenu triggers/links and scroller links
-- dropdown menu uses inset highlight alongside existing shadow
-
-- Reference family restyled to the terminal-refined language: search field renders a `$` prompt instead of a magnifier, the current find-bar match is inverted (ink-on-canvas), quiz choices gain hover/checked/focus states, auth cards gain a machined inset top highlight with eyebrow + display heading, readme block uses a bracketed `[ README ]` terminal title.
-- Search clear button measured 32x32 on fine pointers (1440/768/390) and 44x44 on coarse pointers (390, has_touch), vertically centred in the 44px field without growing the row.
-- Fixed `.cm-search__clear` vertical pinning: was anchored to the top edge and overlapped the typed value; now centred with top:50%/translateY(-50%).
-
-# W12 runtime changelog
-
-- `src/js/cli-mono.js`: `init()` now defaults a missing root to `document`, so a bare `cliMono.init()` call (documented public API) no longer throws on `root.querySelectorAll`.
-- `src/js/cli-mono.js`: `cmInitNavmenu`, `cmClampHovercards`, `cmInitCal`, `cmInitResize`, `cmInitScroller`, `cmInitQuiz`, `cmInitForms` now tolerate a null/undefined root the same way the already-guarded binders do.
-- `src/js/cli-mono.js`: `cmApplySort` now skips `[data-cm-empty]` rows (and keeps them at the end of the body) instead of sorting/moving them, which crashed `r.cells[idx]` access on the colspan empty-state row.
-- `tests/verify-table-sort.py`: filter `[data-cm-empty]` rows in the load/click assertions so the empty-state row is never read as a data row.
-- `src/js/cli-mono.js`: removed the now-redundant `(root || document)` leftover in `init()` after `root = root || document;`.
-- `tests/run.mjs`: added contract checks proving `cliMono.init()` with no argument does not throw, and that sorting a table with a `[data-cm-empty]` row never reads that row's cells, keeps it in the body, and sorts data rows.
-- `tests/verify-table-sort.py`: scope assertions to the non-paginated sort table so per-tbody/per-table sorting is checked without cross-table flattening.
-- Bug list: see final report. No out-of-scope fixes applied.
+## Unreleased — terminal-refined redesign
 
 ### Added
-- Brand assets: `public/oem-ui-logo.svg` wordmark with block caret, `public/favicon.svg` + `public/favicon-32.png` + `public/favicon.ico`, `public/og.svg` + `public/og.png` (1200x630).
-- `docs/design-language.md` documenting the "terminal, refined" direction.
-- `SITE.ogImage` in `src/astro/config.ts`.
+- New design tokens in `src/styles/tokens.css`: `--accent-dim`, `--callout-mark`, `--caret-blink`, `--chart-c2`..`--chart-c5`, `--cm-slider-thumb-h`/`--cm-slider-track-h`, `--dot-grid`/`--dot-grid-size`, `--family-grid-track`, `--focus`/`--focus-offset`/`--focus-width`/`--focus-width-coarse`, `--head-display`, `--header-pad-y`, `--leading-display`/`--leading-snug`/`--leading-tight`, `--media-grid-demo-min`, `--nudge-x`, `--scanline`, `--space-2`, `--surface-raised`, `--swatch-chip`, `--text-micro`, `--tracking-snug`/`--tracking-tight`/`--tracking-wide`, `--underline-offset`. See `docs/contrast-2026-11-27.md` for the measured contrast impact.
+- `scripts/measure-contrast.mjs` for regenerating the contrast document from `tokens.css`.
+- `tests/verify-data-table.py` browser harness (added to `tests/browser-harnesses.txt`).
+- Favicon and Open Graph tags in `src/astro/Head.astro`.
+- Opt-in `.cm-hero__title--caret` modifier for the blinking caret.
+- `src/pages/testing.astro` showcase page (owned by integration).
 
 ### Changed
-- `src/astro/config.ts`: GitHub link corrected to `https://github.com/oemasync/oem-ui`; site description refreshed; OG image path added.
-- README top section overhauled: logo, pitch, live link, three-line install, design principles.
+- Terminal-refined restyle across components: sheet/drawer/alert panels, calendar, charts, code blocks, dialogs, dropdowns, popovers, tooltips, toasts, hovercards, chat, navigation, search, quiz, auth cards, readme blocks, prose, records, trace, diff, guide, term, artwork, cards, hero, tiles.
+- Showcase page (`src/pages/[...family].astro`) reorganised into family pages with section heads, family grid on `/`, install snippet, display-size page head.
+- `--chart-c4` and `--chart-c5` adjusted so every chart series clears 3:1 non-text contrast on `--panel`/`--panel-nested` in both themes.
+- `--accent-dim` adjusted (now AA-large on every surface).
 
 ### Fixed
-- Stale test pin expecting `github.com/omiinaya/` updated to `oemasync/`.
+- Calendar overflow on narrow viewports.
+- Slider thumb vertical centering (derived from `--cm-slider-track-h`/`--cm-slider-thumb-h`).
+- Chart spec value overflow on narrow viewports (`break-word`).
+- Switch tap target now covers the whole track.
+- Search clear button centering and tap size.
+- `.cm-row__body` no longer collapses to zero height.
+- Artwork images carry intrinsic width/height.
+- `#projects` anchor target added to cards.
+- Hero title no longer clips at 390px.
 
-Built for the Lunehaven scenario editor, a workbench with a tool palette, a
-hex board and an inspector whose forms are drawn from data of any depth.
-It started from the card builder's controls (b31) and found two gaps.
-
-- `.cm-dense` - a density scope. Inside it, on a fine pointer, fields,
-  selects, textareas, `.cm-btn` and `.cm-seg__opt` drop the `--tap` floor
-  and take `--text-xs`. A coarse pointer keeps the library's sizes. Its
-  selectors repeat the field block's exclusions plus the scope class, so
-  they outrank base.css by one class and nothing else. Nothing changes for
-  a page that does not use the class.
-- `.cm-props` - a property list: key, control and tools per row, and
-  folding groups (`<details class="cm-props__group">`) that hold another
-  `.cm-props`. The key wraps and never truncates; the peek truncates.
-  Depth is a rule down the side.
-- `tests/run.mjs` - three source checks.
+### Accessibility
+- Focus-ring geometry driven by `--focus-width`/`--focus-width-coarse`/`--focus-offset`, including coarse-pointer tap floors.
+- Forced-colors handling for states and drawn marks (system colours only).
+- Reduced-motion guards on scanline/caret animations.
+- Screen-reader-silent caret (`content: ' _'`).
 
 ## Unreleased - form controls for an editor: stepper, repeater, artwork pick
 
