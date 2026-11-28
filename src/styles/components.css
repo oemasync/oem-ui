@@ -709,7 +709,7 @@
 .cm-swatch__val {
 	font-size: var(--text-micro);
 	color: var(--ink-dim);
-	white-space: nowrap;
+	overflow-wrap: break-word;
 }
 
 .cm-spec {
