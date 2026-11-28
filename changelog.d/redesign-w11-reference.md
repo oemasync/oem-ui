@@ -1,3 +1,0 @@
-- Reference family restyled to the terminal-refined language: search field renders a `$` prompt instead of a magnifier, the current find-bar match is inverted (ink-on-canvas), quiz choices gain hover/checked/focus states, auth cards gain a machined inset top highlight with eyebrow + display heading, readme block uses a bracketed `[ README ]` terminal title.
-- Search clear button measured 32x32 on fine pointers (1440/768/390) and 44x44 on coarse pointers (390, has_touch), vertically centred in the 44px field without growing the row.
-- Fixed `.cm-search__clear` vertical pinning: was anchored to the top edge and overlapped the typed value; now centred with top:50%/translateY(-50%).

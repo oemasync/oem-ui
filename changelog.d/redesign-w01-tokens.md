@@ -1,4 +1,0 @@
-### Changed
-- tokens.css: light `--surface-raised` raised from #f5f5f5 to #ffffff; new tokens `--caret-blink`, `--dot-grid`, `--dot-grid-size`, `--focus-offset`, `--focus-width`, `--focus-width-coarse`, `--head-display`, `--inset-highlight`, `--line-strong`, `--scanline`, `--tracking-tight`, `--tracking-wide`.
-- base.css: dot-grid page background, scanline on code/pre surfaces, tighter display tracking, tabular numerals on table cells, focus-ring geometry via --focus-* tokens, caret blink keyframes, forced-colors texture removal (background-image: none).
-- tests/run.mjs: focus-ring checks now resolve `--focus-width` / `--focus-width-coarse` / `--focus-offset` through tokens.css.
