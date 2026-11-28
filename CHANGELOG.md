@@ -17,7 +17,7 @@
 ### Fixed
 - Calendar/foundation page overflow at 402px and 320px (swatch value wrap).
 - Hovered list and table rows now carry their descendants' colour, border and background instead of leaving chips, status codes, icons and table actions at their resting paint.
-- Rows containing form controls (checkbox, switch, input, select, disclosure, code) use a non-inverting hover so native controls keep their own paint.
+- Rows containing form controls (checkbox, switch, input, select, disclosure) use a non-inverting hover so native controls keep their own paint; inline code now follows the inverted hover.
 - Datepicker panel stays inside a 320px viewport.
 - Slider thumb vertical centering (derived from `--cm-slider-track-h`/`--cm-slider-thumb-h`).
 - Switch tap target now covers the whole track.
