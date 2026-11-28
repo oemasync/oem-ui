@@ -11719,9 +11719,8 @@ input.cm-slider:disabled {
 	margin: 0 0 var(--space-4);
 	overflow-wrap: break-word;
 }
-.cm-hero__title::after {
+.cm-hero__title--caret::after {
 	content: ' _' / '';
-	margin-inline-start: 0;
 	color: var(--accent-bright);
 	animation: cm-caret-blink var(--caret-blink) steps(2, start) infinite;
 }
@@ -13270,7 +13269,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	   failure rather than a nit. */
 	.cm-cursor,
 	.cm-shimmer,
-	.cm-hero__title::after,
+	.cm-hero__title--caret::after,
 	.cm-scroll-fade,
 	.cm-scroll-fade-y,
 	.cm-scroll-fade-x,
