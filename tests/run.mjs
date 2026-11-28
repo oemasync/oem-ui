@@ -2377,6 +2377,11 @@ check('the library <Head> guard reads the same keys the runtime does', () => {
 	);
 });
 
+check('Head.astro carries no hardcoded favicon/og:image paths', () => {
+	const src = read('src/astro/Head.astro');
+	assert(!src.includes('/og.png'), 'Head.astro must not hardcode /og.png');
+	assert(!src.includes('/favicon'), 'Head.astro must not hardcode a /favicon path');
+});
 // Every .astro under a consumer's src/, skipping node_modules and dist
 // (which hold copies of the same files and would only add noise).
 const listAstroFiles = (dir) => {
@@ -8739,6 +8744,18 @@ check('the copy button is a real button a keyboard can reach', () => {
    check()'s closure is invisible to the next, and the failure reads like a typo
    rather than a missing fixture. */
 const FAMILY_LIST = ['foundation','surfaces','tables','panels','content','prose','layout','composed','reference'];
+
+check('built pages carry a favicon link and an absolute og:image', () => {
+	const pages = ['dist/index.html', ...FAMILY_LIST.map((f) => `dist/f/${f}/index.html`)];
+	for (const p of pages) {
+		const html = read(p);
+		assert(/<link[^>]*rel=["']icon["'][^>]*>/.test(html), `${p} is missing an icon link`);
+		const m = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/)
+			|| html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["'][^>]*>/);
+		assert(m, `${p} is missing an og:image meta tag`);
+		assert(/^https?:\/\//.test(m[1]), `${p} og:image is not absolute: ${m[1]}`);
+	}
+});
 
 const built = builtHtml() + FAMILY_LIST.flatMap((f) => {
 	// A class that renders ONLY on a family route (the doc TOC's cm-doc__*,
