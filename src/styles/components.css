@@ -657,7 +657,7 @@
    margin, so the head's own bottom padding is what opens the gap to
    the rule. */
 .cm-post-head .cm-kicker { margin-bottom: var(--space-3); }
-.cm-post-head h1 { margin-bottom: var(--space-4); font-size: var(--head-display); letter-spacing: var(--tracking-tight); line-height: 1.1; }
+.cm-post-head h1 { margin-bottom: var(--space-4); font-size: var(--head-display); letter-spacing: var(--tracking-tight); line-height: var(--leading-tight); }
 @media (max-width: 680px) {
 	.cm-post-head h1 { line-height: 1.25; }
 }
@@ -2717,7 +2717,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	font-weight: 600;
 	color: var(--ink);
 }
-.cm-callout__mark { display: inline-flex; align-items: center; justify-content: center; width: 1.25em; height: 1.25em; border: 1px solid var(--line); background: var(--bg-3); color: var(--ink-faint); font-size: var(--text-micro); }
+.cm-callout__mark { display: inline-flex; align-items: center; justify-content: center; width: var(--callout-mark); height: var(--callout-mark); border: 1px solid var(--line); background: var(--bg-3); color: var(--ink-faint); font-size: var(--text-micro); }
 .cm-callout__body { color: var(--ink-dim); }
 /* The body is free-form prose (one or more paragraphs). Its own first
    and last child must not add a second margin on top of the box's own

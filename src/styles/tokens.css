@@ -263,6 +263,8 @@
 		Menlo, Consolas, monospace;
 	--font-body: var(--font-mono);
 	--leading-display: 1;
+	--leading-tight: 1.1;
+	--callout-mark: 1.25em;
 
 	/* ---- motion ------------------------------------------------
 	   every interactive transition in the system is one of these.
