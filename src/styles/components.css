@@ -173,7 +173,7 @@
 /* ---------- landing family grid ---------- */
 .cm-family-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+	grid-template-columns: repeat(auto-fill, var(--family-grid-track));
 	gap: var(--stack-gap);
 	margin-block: var(--stack-section);
 }
@@ -194,7 +194,7 @@
 }
 .cm-family-card__name {
 	font-weight: 700;
-	letter-spacing: -0.02em;
+	letter-spacing: var(--tracking-snug);
 }
 .cm-family-card__count {
 	color: var(--ink-faint);
@@ -344,24 +344,24 @@
    bottom margin of its last child is the only thing at the boundary. */
 .cm-stack > .cm-head:last-child { margin-bottom: 0; }
 .cm-head .cm-kicker { margin-bottom: var(--space-3); }
-.cm-head h1,
-.cm-head .cm-head__title {
-	font-size: var(--head-display);
-	font-weight: 700;
-	line-height: 1.15;
-	margin: 0 0 var(--space-2);
-	letter-spacing: var(--tracking-tight);
-}
 /* The weight belongs HERE, not to the element. Measured on rpm: the
    pages whose title is an <h1> rendered 32px w700, while the pages
    whose title is a <div class="cm-head__title"> inside the same
    .cm-head rendered 32px w400 - same size, half the presence. The
    bold came from the UA stylesheet for <h1> and nothing set it for
    the div, so a page's title weight depended on its markup. */
+.cm-head h1,
+.cm-head .cm-head__title {
+	font-size: var(--head-display);
+	font-weight: 700;
+	line-height: var(--leading-snug);
+	margin: 0 0 var(--space-2);
+	letter-spacing: var(--tracking-tight);
+}
 .cm-head-row .cm-head__title {
 	font-size: var(--head-h1);
 	font-weight: 700;
-	line-height: 1.15;
+	line-height: var(--leading-snug);
 	margin: 0 0 var(--space-2);
 	letter-spacing: -0.01em;
 }
@@ -1425,7 +1425,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	transition: color var(--cm-t) var(--cm-ease),
 		transform var(--cm-t) var(--cm-ease);
 }
-.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(3px); }
+.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(var(--nudge-x)); }
 
 /* stacked variant: title over desc over meta, taller rows */
 /* Row icon slot: a fixed-width box that centres a glyph or SVG next to
@@ -2962,7 +2962,6 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	background: var(--bg-3);
 	color: var(--ink);
 }
-.cm-table td.num { text-align: end; font-variant-numeric: tabular-nums; }
 /* A numeric column aligns on the digit, which is the only way a column of
    durations or sizes can be compared without reading each one. The
    `__num` form matches the BEM of the rest of the block; `.num` above is
@@ -2973,6 +2972,8 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    `.cm-table__num` is 0,1,0, so the cell rule WINS and every duration
    rendered left-aligned with a ragged right edge - measured, and it read
    correctly in the source the whole time. */
+.cm-table td.num { text-align: end; font-variant-numeric: tabular-nums; }
+
 /* A long host or path must not set the column width for the whole
    column - 40 hosts of wildly different lengths otherwise makes every
    row as wide as the worst one. Truncate with an ellipsis so the value
@@ -3866,7 +3867,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 		height: auto;
 		min-height: 60px;
 		row-gap: var(--space-2);
-		padding: calc(var(--space-2) + 1px) 0;
+		padding: var(--header-pad-y) 0;
 	}
 	/* The burger is the FIRST child of .cm-header__nav in the DOM, so it
 	   leads the row with no `order` at all - visual order and tab order
@@ -4309,7 +4310,11 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
    fact, not a stylesheet one. */
 .cm-dialog--alert {
 	width: min(26rem, calc(100% - (2 * var(--gutter))));
+	border: 1px solid var(--line);
 	border-top: 3px solid var(--ink);
+	border-radius: 0;
+	background: var(--surface-raised);
+	box-shadow: var(--shadow-1);
 }
 
 /* A dialog anchored to the right edge instead of the centre: the same
@@ -4329,7 +4334,10 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	max-height: 100%;
 	margin: 0 0 0 auto;
 	border-radius: 0;
-	border-width: 0 0 0 1px;
+	border: 0;
+	border-inline-start: 1px solid var(--line);
+	background: var(--surface-raised);
+	box-shadow: var(--shadow-1);
 }
 @media (max-width: 640px) {
 	.cm-dialog--sheet {
@@ -5104,8 +5112,8 @@ dialog.cm-dialog--spec:not([open]) {
 	   labelling the other. One step down makes the order unambiguous. */
 	font-size: var(--text);
 	font-weight: 700;
-	line-height: 1.15;
-	letter-spacing: -0.02em;
+	line-height: var(--leading-snug);
+	letter-spacing: var(--tracking-snug);
 	color: var(--ink);
 	/* "5,000+" must wrap inside its tile rather than widen the grid. */
 	overflow-wrap: break-word;
@@ -5782,7 +5790,6 @@ dialog.cm-dialog--spec:not([open]) {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	overflow: hidden;
-	/* Machined raised panel: 1px top highlight. */
 	box-shadow: var(--shadow-1);
 }
 /* The accent is a border, not a gradient or a glow: the palette has
@@ -6270,7 +6277,6 @@ button.cm-row > span > svg {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	text-align: center;
-	/* Machined raised panel: 1px top highlight. */
 	box-shadow: var(--shadow-1);
 }
 .cm-tile__label {
@@ -8926,6 +8932,12 @@ input.cm-slider:disabled {
    needs a radius. */
 /* the class itself: content clears the home indicator, because a
    drawer pinned to the screen bottom is exactly where one sits */
+.cm-drawer {
+	border-radius: 0;
+	background: var(--surface-raised);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow-1);
+}
 .cm-drawer .cm-dialog__body {
 	padding-bottom: max(var(--space-5), env(safe-area-inset-bottom, 0px));
 }
@@ -11720,8 +11732,8 @@ input.cm-slider:disabled {
 }
 .cm-hero__title--caret::after {
 	content: ' _' / '';
-	color: var(--accent-bright);
-	animation: cm-caret-blink var(--caret-blink) steps(2, start) infinite;
+	color: var(--ink);
+	animation: cm-caret-blink var(--caret-blink) step-end infinite;
 }
 /* The lede is centered here, not in `.cm-lede`: `.cm-lede` is a block that
    starts at the text edge (prose, list rows), and a hero's lede has to be
@@ -11800,7 +11812,6 @@ input.cm-slider:disabled {
 	background-image: none;
 	color: inherit;
 }
-
 
 /* Narrow screens: the toolbar stops being a grid track and rides the row.
    MEASURED, and it was a real bug: the fourth track is `auto`, which is
@@ -12010,7 +12021,6 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 @media (hover: none) {
 	.cm-codebar__float { opacity: 1; }
 }
-
 
 /* More than one control on the bar's trailing edge. `margin-inline-start:
    auto` is what pushes it away from the language label; without it the
@@ -13114,7 +13124,6 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-props__key { grid-column: 1 / -1; padding-top: 0; }
 }
 
-
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
    at the end of the layer for that reason, and `gap` is a single number
@@ -13217,6 +13226,12 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	font-size: max(var(--min-font), var(--text-sm));
 }
 
+@media (pointer: coarse) {
+	.cm-msg__action,
+	.cm-msglist__reaction,
+	.cm-navmenu__trigger { min-height: var(--tap); }
+}
+
 /* ---------- forced colors ----------
    Windows High Contrast, and every other `forced-colors: active` mode,
    repaints each background-color to the system canvas, drops each
@@ -13254,13 +13269,6 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
    repaint: a chart tells its series apart by grey level alone, so every
    series is one colour here; and the slider's filled portion is a
    gradient, which the mode also drops (the thumb still shows the value). */
-@media (pointer: coarse) {
-	.cm-msg__action,
-	.cm-msglist__reaction,
-	.cm-navmenu__trigger { min-height: var(--tap); }
-}
-
-
 @media (prefers-reduced-motion: reduce) {
 /* Every animation in the system is listed here, not next to its own
 	   rule. A guard that lives beside one component silently leaves the next
@@ -13396,6 +13404,7 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	/* Texture is decorative and is dropped by forced colors anyway; make it
 	   explicit so no stray background-image survives. */
 	.cm-term__body,
+	.cm-code,
 	.cm-hero { background-image: none; }
 }
 

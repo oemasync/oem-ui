@@ -17,6 +17,15 @@
 	   --head-top / --head-h1 are the single source for the top-of-page
 	   head block so every route starts its content at the same y. */
 	--maxw: 860px;
+	/* Landing family grid minimum track: 12rem keeps two columns at 390px. */
+	--family-grid-track: minmax(12rem, 1fr);
+	/* Header phone row vertical padding: --space-2 plus 1px so the 60px
+	   min-height row keeps a hairline of breathing room under the
+	   bottom border after the border-box math; removing the 1px makes
+	   the collapsed header read 1px too short against the tap floor. */
+	--header-pad-y: calc(var(--space-2) + 1px);
+	/* Icon nudge on row hover: a small translate, theme-independent. */
+	--nudge-x: 3px;
 	/* Desktop nav rail. A reference doc with 20 destinations cannot live in
 	   a horizontal bar: measured, 7 links wrapped across 7 rows and pushed
 	   the content 256px down. The rail is 232px, wide enough for the longest
@@ -264,6 +273,7 @@
 	--font-body: var(--font-mono);
 	--leading-display: 1;
 	--leading-tight: 1.1;
+	--leading-snug: 1.15;
 	--callout-mark: 1.25em;
 
 	/* ---- motion ------------------------------------------------
@@ -383,6 +393,7 @@
 	   tracking. Both live here so the scale is retuned in one place. */
 	--tracking-tight: -0.04em;
 	--tracking-wide: 0.12em;
+	--tracking-snug: -0.02em;
 	/* ---- display head (fluid, page-title scale) --------------------
 	   W02 applies this to page-title h1 elements; the token is defined
 	   here so the scale is retuned in one place. Eyebrow labels use
@@ -479,7 +490,7 @@
 	/* accent = neutral white-grey highlight (no color) */
 	--accent: #e8e8e8;
 	--accent-bright: #ffffff;
-	--accent-dim: #5c5c5c;
+	--accent-dim: #6c6c6c;
 	--accent-glow: rgba(255, 255, 255, 0.06);
 
 	/* Status chroma: the only hues in the palette. Nothing reads them
@@ -510,10 +521,10 @@
 	--footer-bg: #080808;
 
 	--chart-c1: #e8e8e8;
-	--chart-c2: #b4b4b4;
-	--chart-c3: #8a8a8a;
-	--chart-c4: #6b6b6b;
-	--chart-c5: #525252;
+	--chart-c2: #c3c3c3;
+	--chart-c3: #a3a3a3;
+	--chart-c4: #868686;
+	--chart-c5: #6c6c6c;
 
 	/* shadow */
 	--shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
@@ -645,10 +656,10 @@
 	   dark values painted three of five series as near-invisible
 	   rules on a white card. */
 	--chart-c1: #111111;
-	--chart-c2: #3f3f3f;
-	--chart-c3: #5f5f5f;
-	--chart-c4: #7d7d7d;
-	--chart-c5: #999999;
+	--chart-c2: #343434;
+	--chart-c3: #4f4f4f;
+	--chart-c4: #6a6a6a;
+	--chart-c5: #888888;
 }
 
 /* ============================================================
@@ -689,7 +700,7 @@
 	--ink-faint: #8b8b8b;
 	--accent: #e8e8e8;
 	--accent-bright: #ffffff;
-	--accent-dim: #5c5c5c;
+	--accent-dim: #6c6c6c;
 	--accent-glow: rgba(255, 255, 255, 0.06);
 
 	/* Status chroma - the same values as the document theme above. */
@@ -746,10 +757,10 @@
 	   cannot disagree, and the light theme is its own five steps
 	   rather than a second dark chart. */
 	--chart-c1: #e8e8e8;
-	--chart-c2: #b4b4b4;
-	--chart-c3: #8a8a8a;
-	--chart-c4: #6b6b6b;
-	--chart-c5: #525252;
+	--chart-c2: #c3c3c3;
+	--chart-c3: #a3a3a3;
+	--chart-c4: #868686;
+	--chart-c5: #6c6c6c;
 }
 
 [data-cm-theme='light'],
@@ -821,10 +832,10 @@
 	/* The same five steps as the document light block above, because
 	   a scoped subtree is the same palette at a different root. */
 	--chart-c1: #111111;
-	--chart-c2: #3f3f3f;
-	--chart-c3: #5f5f5f;
-	--chart-c4: #7d7d7d;
-	--chart-c5: #999999;
+	--chart-c2: #343434;
+	--chart-c3: #4f4f4f;
+	--chart-c4: #6a6a6a;
+	--chart-c5: #888888;
 
 }
 
