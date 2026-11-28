@@ -75,6 +75,9 @@ const guard =
 <meta name="theme-color" content="#0a0a0a" />
 
 <!-- canonical -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
 <link rel="canonical" href={canonicalURL} />
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
@@ -84,6 +87,7 @@ const guard =
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
+<meta property="og:image" content="/og.png" />
 <meta name="twitter:card" content="summary" />
 
 {stylesHref && <link rel="stylesheet" href={stylesHref} />}
