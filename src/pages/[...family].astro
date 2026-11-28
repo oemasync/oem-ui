@@ -241,6 +241,17 @@ const FAMILY_OF: Record<string, string> = (() => {
 	return m;
 })();
 
+/* One rule for turning a section id into a href that works on both the
+   whole-page build (in-page anchor) and a family build (cross-document
+   link when the section lives in another family). Throws on an unknown id
+   so a renamed section cannot silently become `../undefined/#id`. */
+const sectionHref = (id: string): string => {
+	const owner = FAMILY_OF[id];
+	if (!owner) throw new Error(`sectionHref: unknown section id "${id}"`);
+	if (family === null || owner === family) return `#${id}`;
+	return `../${owner}/#${id}`;
+};
+
 /* The sections THIS document contains, in page order - the doc TOC's rows.
    On the whole-page build the rail already lists all 52 sections, so a TOC
    there would be a second nav for the same document; it is rendered on the
@@ -261,10 +272,7 @@ const NAV_GROUPS = (() => {
 		   being shown stay in-page. A nav row that goes nowhere is worse
 		   than a missing row, so this is asserted by the suite. */
 		const links = SECTION_ORDER.slice(at, at + n).map((id) => {
-			const owner = FAMILY_OF[id] ?? label;
-			if (family === null) return { href: `#${id}`, label: id };
-			if (owner === family) return { href: `#${id}`, label: id };
-			return { href: `../${owner}/#${id}`, label: id };
+			return { href: sectionHref(id), label: id };
 		});
 		at += n;
 		/* On the whole-page build the group label doubles as the way into that
@@ -966,7 +974,7 @@ Two states, two different questions. <code>active</code> marks the page you are 
 					</div>
 					<div class="cm-spec__row" role="listitem">
 						<span class="cm-spec__label"><code>other</code></span>
-						<span class="cm-spec__sample"><HeaderLink href={family === null ? '#surface' : (FAMILY_OF['surface'] === family ? '#surface' : `../${FAMILY_OF['surface']}/#surface`)}>/other/</HeaderLink></span>
+						<span class="cm-spec__sample"><HeaderLink href={sectionHref('surface')}>/other/</HeaderLink></span>
 						<span class="cm-spec__val"><code>no attribute</code></span>
 					</div>
 					<div class="cm-spec__row" role="listitem">
@@ -1026,9 +1034,9 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 											</button>
 											<button type="button" class="cm-sidebar__action" aria-label="project actions">&#8943;</button>
 											<ul class="cm-sidebar__sub" id="sb-sub-1" hidden>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={family === null ? '#data-table' : (FAMILY_OF['data-table'] === family ? '#data-table' : `../${FAMILY_OF['data-table']}/#data-table`)}>oem-ui</a></li>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={family === null ? '#table' : (FAMILY_OF['table'] === family ? '#table' : `../${FAMILY_OF['table']}/#table`)}>hermes-proxy</a></li>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={family === null ? '#json' : (FAMILY_OF['json'] === family ? '#json' : `../${FAMILY_OF['json']}/#json`)}>spacetime-rpm</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={sectionHref('data-table')}>oem-ui</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={sectionHref('table')}>hermes-proxy</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={sectionHref('json')}>spacetime-rpm</a></li>
 											</ul>
 										</li>
 										<li class="cm-sidebar__item">
@@ -1049,7 +1057,7 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 								<div class="cm-sidebar__groupcontent" id="sb-group-2">
 									<ul class="cm-sidebar__menu">
 										<li class="cm-sidebar__item">
-											<a class="cm-sidebar__link" href={family === null ? '#states' : (FAMILY_OF['states'] === family ? '#states' : `../${FAMILY_OF['states']}/#states`)}>
+											<a class="cm-sidebar__link" href={sectionHref('states')}>
 												<span aria-hidden="true">&#8776;</span>
 												<span class="cm-sidebar__label">analytics</span>
 												<span class="cm-sidebar__badge">beta</span>
