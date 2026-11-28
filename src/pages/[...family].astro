@@ -4466,7 +4466,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 				<div class="cm-block">
 					<div class="cm-head-row">
 						<div class="cm-head-row__text">
-							<h3 class="cm-section__title">Project index</h3>
+							<h3 class="cm-section__title" id="projects">Project index</h3>
 							<p class="cm-head__sub">
 								<code>.cm-projects</code> resolves to
 								<code>auto-fit / minmax(17rem, 1fr)</code>, so the column
@@ -4475,7 +4475,7 @@ A card is a unit of content with a title, so <code>.cm-cards</code> is a grid an
 						</div>
 					</div>
 
-					<ul class="cm-projects" id="projects">
+					<ul class="cm-projects">
 						<Project href="#projects" name="spacetime-rpm" period="2024–now"
 							blurb="A reverse proxy with a certificate lifecycle nobody has to think about."
 							stack={["rust", "spacetimedb", "tls"]} />
