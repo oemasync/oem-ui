@@ -1178,7 +1178,48 @@ html {
    `:last-child` on the row, not on the list, so a row followed by any
    other element - a footer action, a nested list - keeps its rule. */
 .cm-row:last-child { border-bottom: 0; }
+/* An inverted row takes its descendants with it: chips, status codes, tone
+   marks and icons drop their own paint and read as the inverted ink. Rows
+   that carry form controls cannot invert native controls, so they use the
+   non-inverting hover below instead. */
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover * {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover::before,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover::after,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover *::before,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover *::after {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover {
+	background: var(--ink);
+}
+/* Controls in a row keep their own paint; the row only tints. */
+.cm-row:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+button.cm-row:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+}
 .cm-row:hover { background: var(--ink); color: var(--bg); }
+.cm-row:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+button.cm-row:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+}
+.cm-row--on:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: inset 3px 0 0 var(--ink);
+}
 .cm-row__idx {
 	color: var(--ink-faint);
 	font-size: var(--text-micro);
@@ -1234,13 +1275,40 @@ button.cm-row--on,
 button.cm-row--on:hover {
 	background: var(--bg-2);
 }
-button.cm-row--on:hover,
-.cm-row--on:hover {
+button.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover,
+.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover {
 	background: var(--ink);
 	color: var(--bg);
 	box-shadow: inset 3px 0 0 var(--bg);
 }
+button.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover,
+.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover * {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+button.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover::before,
+button.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover::after,
+.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover::before,
+.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover::after,
+button.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover *::before,
+button.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover *::after,
+.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover *::before,
+.cm-row--on:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover *::after {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+button.cm-row--on:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover,
+.cm-row--on:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: inset 3px 0 0 var(--ink);
+}
 button.cm-row:hover { background: var(--ink); color: var(--bg); }
+button.cm-row:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):hover {
+	background: var(--bg-3);
+}
 
 .cm-row__title {
 	font-weight: 700;
@@ -1367,10 +1435,10 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 .cm-row__meta--wrap > * { min-width: 0; }
 .cm-row__meta--wrap > * { min-width: 0; }
 
-.cm-row:hover .cm-row__title,
-.cm-row:hover .cm-row__idx,
-.cm-row:hover .cm-row__meta,
-.cm-row:hover .cm-row__desc { color: var(--bg); }
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-row__title,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-row__idx,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-row__meta,
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-row__desc { color: var(--bg); }
 /* The other direction: a meta slot whose contents are ONE string that
    must not break across lines. MEASURED on rpm in WebKit at 390px:
    the `→ ip : port` slot was left wrappable and broke into two rows -
@@ -1425,7 +1493,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	transition: color var(--cm-t) var(--cm-ease),
 		transform var(--cm-t) var(--cm-ease);
 }
-.cm-row:hover .cm-row__sym { color: var(--bg); transform: translateX(var(--nudge-x)); }
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-row__sym { color: var(--bg); transform: translateX(var(--nudge-x)); }
 
 /* stacked variant: title over desc over meta, taller rows */
 /* Row icon slot: a fixed-width box that centres a glyph or SVG next to
@@ -1439,7 +1507,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	width: 1.1rem;
 	color: var(--ink-dim);
 }
-.cm-row:hover .cm-row__icon { color: var(--bg); }
+.cm-row:not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-row__icon { color: var(--bg); }
 
 /* Column body: title over desc, both full width. --stacked renders the
    body as a block for prose-style rows; this is the flex-column form a
@@ -2945,22 +3013,49 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	text-align: end;
 	font-variant-numeric: tabular-nums;
 }
+/* An inverted row takes its cells and their contents with it. Rows that
+   carry form controls cannot invert native controls, so they tint instead. */
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td,
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td * {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td::before,
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td::after,
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td *::before,
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td *::after {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td {
+	background: var(--ink);
+	border-color: currentColor;
+}
+.cm-table tbody tr:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):not([aria-selected='true']):hover td {
+	background: var(--bg-3);
+	color: var(--ink);
+}
 .cm-table tbody tr:not([aria-selected='true']):hover td {
 	background: var(--ink);
 	color: var(--bg);
+	border-color: currentColor;
 }
-/* Only text-bearing descendants that carry their own colour or background
-   get reset on hover; controls (switch, checkbox, badge, chip, status dot,
-   kbd) keep their own paint. */
-.cm-table tbody tr:not([aria-selected='true']):hover td .cm-status-code,
-.cm-table tbody tr:not([aria-selected='true']):hover td .cm-table__action,
-.cm-table tbody tr:not([aria-selected='true']):hover td .cm-table__num {
+.cm-table tbody tr:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):not([aria-selected='true']):hover td {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td .cm-status-code,
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td .cm-table__action,
+.cm-table tbody tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover td .cm-table__num {
 	background: transparent;
 	color: var(--bg);
 }
 .cm-table tbody tr[aria-selected='true'] td {
 	background: var(--bg-3);
 	color: var(--ink);
+	border-color: var(--ink-dim);
 }
 /* A numeric column aligns on the digit, which is the only way a column of
    durations or sizes can be compared without reading each one. The
@@ -13224,13 +13319,40 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 .cm-table__td--right { text-align: end; font-variant-numeric: tabular-nums; }
 .cm-table__tr { display: table-row; }
 .cm-table__tr:last-child .cm-table__td { border-bottom: none; }
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td,
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td * {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td::before,
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td::after,
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td *::before,
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td *::after {
+	background-color: transparent;
+	color: var(--bg);
+	border-color: currentColor;
+}
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td {
+	background: var(--ink);
+	border-color: currentColor;
+}
+.cm-table__tr:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):not([aria-selected='true']):hover .cm-table__td {
+	background: var(--bg-3);
+	color: var(--ink);
+}
 .cm-table__tr:not([aria-selected='true']):hover .cm-table__td {
 	background: var(--ink);
 	color: var(--bg);
+	border-color: currentColor;
 }
-.cm-table__tr:not([aria-selected='true']):hover .cm-table__td .cm-status-code,
-.cm-table__tr:not([aria-selected='true']):hover .cm-table__td .cm-table__action,
-.cm-table__tr:not([aria-selected='true']):hover .cm-table__td .cm-table__num {
+.cm-table__tr:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure)):not([aria-selected='true']):hover .cm-table__td {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td .cm-status-code,
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td .cm-table__action,
+.cm-table__tr:not([aria-selected='true']):not(:has(:where(input, select, textarea, summary, pre, code, .cm-switch, .cm-disclosure))):hover .cm-table__td .cm-table__num {
 	background: transparent;
 	color: var(--bg);
 }

@@ -16,6 +16,9 @@
 
 ### Fixed
 - Calendar/foundation page overflow at 402px and 320px (swatch value wrap).
+- Hovered list and table rows now carry their descendants' colour, border and background instead of leaving chips, status codes, icons and table actions at their resting paint.
+- Rows containing form controls (checkbox, switch, input, select, disclosure, code) use a non-inverting hover so native controls keep their own paint.
+- Datepicker panel stays inside a 320px viewport.
 - Slider thumb vertical centering (derived from `--cm-slider-track-h`/`--cm-slider-thumb-h`).
 - Switch tap target now covers the whole track.
 - Search clear button centering and tap size.
@@ -26,6 +29,7 @@
 
 ### Accessibility
 - Focus-ring geometry driven by `--focus-width`/`--focus-width-coarse`/`--focus-offset`, including coarse-pointer tap floors.
+- Hovered inverted rows keep every descendant readable in both themes and with status colour on or off; forced-colours hover state for selected list rows.
 - Forced-colors handling for states and drawn marks (system colours only).
 - Reduced-motion guards on scanline/caret animations.
 - Screen-reader-silent caret (`content: ' _'` / `''`) and SR-silent bracket labels for `.cm-spec` and `.cm-term` titles.
