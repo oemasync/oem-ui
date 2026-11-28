@@ -5782,7 +5782,6 @@ dialog.cm-dialog--spec:not([open]) {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	overflow: hidden;
-	/* Machined raised panel: 1px top highlight. */
 	box-shadow: var(--shadow-1);
 }
 /* The accent is a border, not a gradient or a glow: the palette has
@@ -6270,7 +6269,6 @@ button.cm-row > span > svg {
 	border: 1px solid var(--line);
 	border-radius: var(--radius-sm);
 	text-align: center;
-	/* Machined raised panel: 1px top highlight. */
 	box-shadow: var(--shadow-1);
 }
 .cm-tile__label {
