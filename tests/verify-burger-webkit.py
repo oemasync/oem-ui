@@ -89,7 +89,7 @@ async def main():
         check('every menu row clears 44px', open_state['rowH'] >= 44, f"{open_state['rowH']}px")
 
         # Tapping a link must close the panel.
-        await pg.click('.cm-header__links a[href="#states"]')
+        await pg.click('.cm-header__links a[href="#foundation"]')
         await pg.wait_for_timeout(400)
         after_tap = await pg.evaluate("""() => ({
             d: getComputedStyle(document.querySelector('.cm-header__links')).display,

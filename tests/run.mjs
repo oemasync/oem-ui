@@ -497,7 +497,7 @@ check('cliMono.init() with no argument does not throw', () => {
 	};
 	const ctx = {
 		document: doc,
-		window: { addEventListener: () => {}, removeEventListener: () => {}, scrollY: 0, innerWidth: 1280, innerHeight: 900, innerHeight: 900, requestAnimationFrame: () => 1, location: { hostname: 'localhost' }, ResizeObserver: undefined, IntersectionObserver: undefined, MutationObserver: undefined },
+		window: { addEventListener: () => {}, removeEventListener: () => {}, scrollY: 0, innerWidth: 1280, innerHeight: 900, requestAnimationFrame: () => 1, location: { hostname: 'localhost' }, ResizeObserver: undefined, IntersectionObserver: undefined, MutationObserver: undefined },
 		localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
 		navigator: { clipboard: undefined },
 		module: { exports: {} },
