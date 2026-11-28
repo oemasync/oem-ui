@@ -720,7 +720,7 @@
 	box-shadow: var(--shadow-1);
 }
 .cm-spec::before {
-	content: '[ ' attr(data-cm-spec-label, 'specimen') ' ]';
+	content: '[ ' attr(data-cm-spec-label) ' ]' / '';
 	display: block;
 	padding: var(--space-1) var(--space-3);
 	border-bottom: 1px solid var(--line);
