@@ -979,6 +979,12 @@
 @media (pointer: coarse) {
 	.cm-btn--sm { min-height: var(--tap); }
 }
+/* On a narrow viewport the small variant also clears the tap floor, even
+   when the pointer is fine: a 28px target on a phone-sized screen is too
+   small regardless of input device. */
+@media (max-width: 48rem) {
+	.cm-btn--sm { min-height: var(--tap); }
+}
 .cm-btn--block { width: 100%; }
 
 .cm-btn-group { display: flex; gap: var(--space-3); flex-wrap: wrap; }
