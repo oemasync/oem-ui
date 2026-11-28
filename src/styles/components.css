@@ -11799,7 +11799,6 @@ input.cm-slider:disabled {
 	color: inherit;
 }
 
-
 /* Narrow screens: the toolbar stops being a grid track and rides the row.
    MEASURED, and it was a real bug: the fourth track is `auto`, which is
    minmax(auto, max-content) -- it CANNOT shrink past the toolbar's own
@@ -12008,7 +12007,6 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 @media (hover: none) {
 	.cm-codebar__float { opacity: 1; }
 }
-
 
 /* More than one control on the bar's trailing edge. `margin-inline-start:
    auto` is what pushes it away from the language label; without it the
@@ -13111,7 +13109,6 @@ dialog.cm-lightbox--spec:not([open]) .cm-lightbox__close {
 	.cm-props { grid-template-columns: minmax(0, 1fr) auto; }
 	.cm-props__key { grid-column: 1 / -1; padding-top: 0; }
 }
-
 
 /* ============ stack ownership (LAST, on purpose) ============
    These two rules must beat every component's own block margin. They are
