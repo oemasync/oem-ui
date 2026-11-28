@@ -546,8 +546,6 @@
 	/* ---- texture + rule tokens (dark) ---- */
 	--dot-grid: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(255, 255, 255, 0.025) 2px, rgba(255, 255, 255, 0.025) 3px);
-	--line-strong: #3a3a3a;
-	--inset-highlight: 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ================= light — explicit opt-in ================= */
@@ -636,8 +634,6 @@
 	/* ---- texture + rule tokens (light) ---- */
 	--dot-grid: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
 	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0, 0, 0, 0.025) 2px, rgba(0, 0, 0, 0.025) 3px);
-	--line-strong: #a0a0a0;
-	--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
 	scrollbar-color: #b8b8b8 #f0f0f0;
 
 	/* The same five steps, inverted for a light surface: c1 is the
@@ -732,8 +728,6 @@
 	/* ---- texture + rule tokens (dark) ---- */
 	--dot-grid: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(255, 255, 255, 0.025) 2px, rgba(255, 255, 255, 0.025) 3px);
-	--line-strong: #3a3a3a;
-	--inset-highlight: 0 1px 0 rgba(255, 255, 255, 0.06);
 	scrollbar-color: #3a3a3a #0a0a0a;
 
 	/* ---- the chart series scale (five steps, no chroma) --------
@@ -820,8 +814,6 @@
 	/* ---- texture + rule tokens (light) ---- */
 	--dot-grid: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
 	--scanline: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0, 0, 0, 0.025) 2px, rgba(0, 0, 0, 0.025) 3px);
-	--line-strong: #a0a0a0;
-	--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
 	scrollbar-color: #b8b8b8 #f0f0f0;
 
 	/* The same five steps as the document light block above, because
@@ -897,8 +889,6 @@
 		   two-theme set at two. A scrim never paints on paper - its
 		   backdrop is a hidden dialog - so this is consistency, not ink. */
 		--scrim: rgba(24, 24, 24, 0.42);
-		--line-strong: #a0a0a0;
-		--inset-highlight: 0 1px 0 rgba(0, 0, 0, 0.06);
 		--dot-grid: none;
 		--scanline: none;
 	}

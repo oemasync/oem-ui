@@ -2027,9 +2027,8 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	height: 1em;
 	background: var(--ink);
 	margin-inline-start: 0.1em;
-	animation: cm-blink var(--caret-blink) step-end infinite;
+	animation: cm-caret-blink var(--caret-blink) step-end infinite;
 }
-@keyframes cm-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
 /* ---------- mono divider with optional label ---------- */
 .cm-rule { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-6) 0; }
@@ -3521,7 +3520,7 @@ button.cm-row:hover { background: var(--ink); color: var(--bg); }
 	margin: 0;
 	padding: 0 var(--gutter);
 	background: var(--header-bg);
-	border-bottom: 1px solid var(--line-strong);
+	border-bottom: 1px solid var(--line);
 }
 
 /* NO backdrop-filter on .cm-header, and none on .cm-header__nav either.
@@ -11724,7 +11723,7 @@ input.cm-slider:disabled {
 	content: ' _' / '';
 	margin-inline-start: 0;
 	color: var(--accent-bright);
-	animation: cm-blink var(--caret-blink) steps(2, start) infinite;
+	animation: cm-caret-blink var(--caret-blink) steps(2, start) infinite;
 }
 /* The lede is centered here, not in `.cm-lede`: `.cm-lede` is a block that
    starts at the text edge (prose, list rows), and a hero's lede has to be
