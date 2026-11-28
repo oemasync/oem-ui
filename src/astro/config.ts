@@ -24,5 +24,7 @@ export const SITE = {
 	email: 'omar@mrx.sh',
 	github: 'https://github.com/oemasync/oem-ui',
 	url: 'https://ui.mrx.sh',
+	// A consumer that copies this file must change this to its own icon path.
+	favicon: '/favicon.svg',
 	ogImage: '/og.png',
 } as const;

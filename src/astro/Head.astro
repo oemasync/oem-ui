@@ -30,10 +30,16 @@ interface Props {
 	 * from the DOM precisely so it does not have to be passed in.
 	 */
 	legacyKey?: string;
+	/** path to your favicon, overriding SITE.favicon */
+	favicon?: string;
+	/** path to your OG image, overriding SITE.ogImage */
+	ogImage?: string;
 }
 
-const { title, description = SITE.description, stylesHref, themeKey, legacyKey } = Astro.props;
+const { title, description = SITE.description, stylesHref, themeKey, legacyKey, favicon = SITE.favicon, ogImage = SITE.ogImage } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://example.com');
+const faviconURL = favicon;
+const ogImageURL = ogImage ? new URL(ogImage, Astro.site ?? SITE.url) : null;
 const fullTitle = title === SITE.title ? title : `${title} — ${SITE.title}`;
 
 /* The guard reads its keys from <html> at run time, which is the whole
@@ -75,9 +81,7 @@ const guard =
 <meta name="theme-color" content="#0a0a0a" />
 
 <!-- canonical -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-<link rel="shortcut icon" href="/favicon.ico" />
+{faviconURL && <link rel="icon" type="image/svg+xml" href={faviconURL} />}
 <link rel="canonical" href={canonicalURL} />
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
@@ -87,7 +91,7 @@ const guard =
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content="/og.png" />
+{ogImageURL && <meta property="og:image" content={ogImageURL} />}
 <meta name="twitter:card" content="summary" />
 
 {stylesHref && <link rel="stylesheet" href={stylesHref} />}
