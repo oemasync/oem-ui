@@ -13,10 +13,11 @@ Every count below is derived from the specimen's own 23 rows, so a
 mutant that changes page math, filter semantics, sort comparators or
 the selection model has a number to disagree with.
 """
+import os
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/'
+URL = os.environ.get('OEM_UI_URL', sys.argv[1] if len(sys.argv) > 1 else 'http://192.168.1.68:4321/')
 SC = '#data-table'
 TBL = SC + ' table'
 
