@@ -152,7 +152,6 @@
 	background: none;
 	border: 0;
 	counter-increment: cm-section;
-	scroll-margin-top: calc(var(--header-h, 4rem) + 1.5rem);
 }
 .cm-section__title::before {
 	content: counter(cm-section, decimal-leading-zero) ' ── ';
