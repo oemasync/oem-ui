@@ -1026,9 +1026,9 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 											</button>
 											<button type="button" class="cm-sidebar__action" aria-label="project actions">&#8943;</button>
 											<ul class="cm-sidebar__sub" id="sb-sub-1" hidden>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="/f/tables/#data-table">oem-ui</a></li>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="/f/tables/#table">hermes-proxy</a></li>
-												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href="/f/tables/#json">spacetime-rpm</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={family === null ? '#data-table' : (FAMILY_OF['data-table'] === family ? '#data-table' : `../${FAMILY_OF['data-table']}/#data-table`)}>oem-ui</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={family === null ? '#table' : (FAMILY_OF['table'] === family ? '#table' : `../${FAMILY_OF['table']}/#table`)}>hermes-proxy</a></li>
+												<li class="cm-sidebar__subitem"><a class="cm-sidebar__sublink" href={family === null ? '#json' : (FAMILY_OF['json'] === family ? '#json' : `../${FAMILY_OF['json']}/#json`)}>spacetime-rpm</a></li>
 											</ul>
 										</li>
 										<li class="cm-sidebar__item">
@@ -1049,7 +1049,7 @@ shadcn's Sidebar is a layout, not a widget: a panel that knows which side it is 
 								<div class="cm-sidebar__groupcontent" id="sb-group-2">
 									<ul class="cm-sidebar__menu">
 										<li class="cm-sidebar__item">
-											<a class="cm-sidebar__link" href="/f/surfaces/#states">
+											<a class="cm-sidebar__link" href={family === null ? '#states' : (FAMILY_OF['states'] === family ? '#states' : `../${FAMILY_OF['states']}/#states`)}>
 												<span aria-hidden="true">&#8776;</span>
 												<span class="cm-sidebar__label">analytics</span>
 												<span class="cm-sidebar__badge">beta</span>
